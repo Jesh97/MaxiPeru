@@ -10,14 +10,17 @@ public class DetalleCompra {
     @JsonProperty("id_compra")
     private int idCompra;
 
-    @JsonProperty("id_producto")
-    private int idProducto;
+    @JsonProperty("id_articulo")
+    private int idArticulo;
 
     @JsonProperty("cantidad")
     private double cantidad;
 
     @JsonProperty("precio_unitario")
     private double precioUnitario;
+
+    @JsonProperty("bonificacion")
+    private double bonificacion;
 
     @JsonProperty("coste_unitario_transporte")
     private double costeUnitarioTransporte;
@@ -28,8 +31,8 @@ public class DetalleCompra {
     @JsonProperty("precio_con_descuento")
     private double precioConDescuento;
 
-    @JsonProperty("igv_producto")
-    private double igvProducto;
+    @JsonProperty("igv_insumo")
+    private double igvInsumo;
 
     @JsonProperty("total")
     private double total;
@@ -37,18 +40,19 @@ public class DetalleCompra {
     @JsonProperty("peso_total")
     private double pesoTotal;
 
-    public DetalleCompra(int idDetalle, int idCompra, int idProducto, double cantidad, double precioUnitario,
-                         double costeUnitarioTransporte, double costeTotalTransporte, double precioConDescuento,
-                         double igvProducto, double total, double pesoTotal) {
+    public DetalleCompra(int idDetalle, int idCompra, int idArticulo, double cantidad, double precioUnitario,
+                         double bonificacion, double costeUnitarioTransporte, double costeTotalTransporte,
+                         double precioConDescuento, double igvInsumo, double total, double pesoTotal) {
         this.idDetalle = idDetalle;
         this.idCompra = idCompra;
-        this.idProducto = idProducto;
+        this.idArticulo = idArticulo;
         this.cantidad = cantidad;
         this.precioUnitario = precioUnitario;
+        this.bonificacion = bonificacion;
         this.costeUnitarioTransporte = costeUnitarioTransporte;
         this.costeTotalTransporte = costeTotalTransporte;
         this.precioConDescuento = precioConDescuento;
-        this.igvProducto = igvProducto;
+        this.igvInsumo = igvInsumo;
         this.total = total;
         this.pesoTotal = pesoTotal;
     }
@@ -72,12 +76,12 @@ public class DetalleCompra {
         this.idCompra = idCompra;
     }
 
-    public int getIdProducto() {
-        return idProducto;
+    public int getIdArticulo() {
+        return idArticulo;
     }
 
-    public void setIdProducto(int idProducto) {
-        this.idProducto = idProducto;
+    public void setIdArticulo(int idArticulo) {
+        this.idArticulo = idArticulo;
     }
 
     public double getCantidad() {
@@ -94,6 +98,14 @@ public class DetalleCompra {
 
     public void setPrecioUnitario(double precioUnitario) {
         this.precioUnitario = precioUnitario;
+    }
+
+    public double getBonificacion() {
+        return bonificacion;
+    }
+
+    public void setBonificacion(double bonificacion) {
+        this.bonificacion = bonificacion;
     }
 
     public double getCosteUnitarioTransporte() {
@@ -120,12 +132,12 @@ public class DetalleCompra {
         this.precioConDescuento = precioConDescuento;
     }
 
-    public double getIgvProducto() {
-        return igvProducto;
+    public double getIgvInsumo() {
+        return igvInsumo;
     }
 
-    public void setIgvProducto(double igvProducto) {
-        this.igvProducto = igvProducto;
+    public void setIgvInsumo(double igvInsumo) {
+        this.igvInsumo = igvInsumo;
     }
 
     public double getTotal() {
@@ -149,13 +161,14 @@ public class DetalleCompra {
         return "DetalleCompra{" +
                 "idDetalle=" + idDetalle +
                 ", idCompra=" + idCompra +
-                ", idProducto=" + idProducto +
+                ", idArticulo=" + idArticulo +
                 ", cantidad=" + cantidad +
                 ", precioUnitario=" + precioUnitario +
+                ", bonificacion=" + bonificacion +
                 ", costeUnitarioTransporte=" + costeUnitarioTransporte +
                 ", costeTotalTransporte=" + costeTotalTransporte +
                 ", precioConDescuento=" + precioConDescuento +
-                ", igvProducto=" + igvProducto +
+                ", igvInsumo=" + igvInsumo +
                 ", total=" + total +
                 ", pesoTotal=" + pesoTotal +
                 '}';

@@ -1,34 +1,29 @@
 package sistema.Modelo.Compra;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class Descuento {
 
-    @JsonProperty("id_descuento")
+    public enum TipoAplicacion {GLOBAL, ITEM}
+    public enum TipoValor {PORCENTAJE, SOLES}
+
     private int idDescuento;
-
-    @JsonProperty("id_compra")
-    private int idCompra; // Puede ser nulo
-
-    @JsonProperty("id_detalle")
-    private int idDetalle; // Puede ser nulo
-
-    @JsonProperty("nivel")
-    private String nivel;
-
-    @JsonProperty("tipo")
-    private String tipo;
-
-    @JsonProperty("valor")
+    private Integer idCompra;
+    private Integer idDetalleCompra;
+    private String motivo;
+    private TipoAplicacion tipoAplicacion;
+    private TipoValor tipoValor;
     private double valor;
+    private Double tasaIGV;
 
-    public Descuento(int idDescuento, int idCompra, int idDetalle, String nivel, String tipo, double valor) {
+    public Descuento(int idDescuento, Integer idCompra, Integer idDetalleCompra, String motivo,
+                     TipoAplicacion tipoAplicacion, TipoValor tipoValor, double valor, Double tasaIGV) {
         this.idDescuento = idDescuento;
         this.idCompra = idCompra;
-        this.idDetalle = idDetalle;
-        this.nivel = nivel;
-        this.tipo = tipo;
+        this.idDetalleCompra = idDetalleCompra;
+        this.motivo = motivo;
+        this.tipoAplicacion = tipoAplicacion;
+        this.tipoValor = tipoValor;
         this.valor = valor;
+        this.tasaIGV = tasaIGV;
     }
 
     public Descuento() {
@@ -42,7 +37,7 @@ public class Descuento {
         this.idDescuento = idDescuento;
     }
 
-    public int getIdCompra() {
+    public Integer getIdCompra() {
         return idCompra;
     }
 
@@ -50,28 +45,36 @@ public class Descuento {
         this.idCompra = idCompra;
     }
 
-    public int getIdDetalle() {
-        return idDetalle;
+    public Integer getIdDetalleCompra() {
+        return idDetalleCompra;
     }
 
-    public void setIdDetalle(Integer idDetalle) {
-        this.idDetalle = idDetalle;
+    public void setIdDetalleCompra(Integer idDetalleCompra) {
+        this.idDetalleCompra = idDetalleCompra;
     }
 
-    public String getNivel() {
-        return nivel;
+    public String getMotivo() {
+        return motivo;
     }
 
-    public void setNivel(String nivel) {
-        this.nivel = nivel;
+    public void setMotivo(String motivo) {
+        this.motivo = motivo;
     }
 
-    public String getTipo() {
-        return tipo;
+    public TipoAplicacion getTipoAplicacion() {
+        return tipoAplicacion;
     }
 
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
+    public void setTipoAplicacion(TipoAplicacion tipoAplicacion) {
+        this.tipoAplicacion = tipoAplicacion;
+    }
+
+    public TipoValor getTipoValor() {
+        return tipoValor;
+    }
+
+    public void setTipoValor(TipoValor tipoValor) {
+        this.tipoValor = tipoValor;
     }
 
     public double getValor() {
@@ -82,15 +85,25 @@ public class Descuento {
         this.valor = valor;
     }
 
+    public Double getTasaIGV() {
+        return tasaIGV;
+    }
+
+    public void setTasaIGV(Double tasaIGV) {
+        this.tasaIGV = tasaIGV;
+    }
+
     @Override
     public String toString() {
         return "Descuento{" +
                 "idDescuento=" + idDescuento +
                 ", idCompra=" + idCompra +
-                ", idDetalle=" + idDetalle +
-                ", nivel=" + nivel +
-                ", tipo=" + tipo +
+                ", idDetalleCompra=" + idDetalleCompra +
+                ", motivo='" + motivo + '\'' +
+                ", tipoAplicacion=" + tipoAplicacion +
+                ", tipoValor=" + tipoValor +
                 ", valor=" + valor +
+                ", tasaIGV=" + tasaIGV +
                 '}';
     }
 }
