@@ -5,7 +5,7 @@ import sistema.Servlet.Compra.CompraServlet;
 import sistema.Servlet.Compra.ListarCompra;
 import sistema.Servlet.Login.CerrarSesion;
 import sistema.Servlet.Login.LoginServlet;
-import sistema.Servlet.Produccion.BuscarProducto;
+import sistema.Servlet.Produccion.BuscarArticulo;
 import sistema.Servlet.Proveedor.BuscarProveedorServlet;
 import sistema.Servlet.Proveedor.ProveedorServlet;
 import sistema.Servlet.Usuario.DeshabilitarUsuario;
@@ -33,7 +33,7 @@ public class App {
         webserver.addServlet(ProveedorServlet.class,"/proveedores");
         webserver.addServlet(CompraServlet.class,"/CompraServlet");
         webserver.addServlet(BuscarProveedorServlet.class,"/buscarProveedor");
-        webserver.addServlet(BuscarProducto.class,"/buscarProducto");
+        webserver.addServlet(BuscarArticulo.class,"/buscarProducto");
         webserver.addServlet(ListarCompra.class,"/listarCompra");
 
         URL myURL = new URL("http://localhost:8081");

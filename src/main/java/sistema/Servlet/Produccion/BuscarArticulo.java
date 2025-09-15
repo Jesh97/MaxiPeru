@@ -5,15 +5,15 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import sistema.Controller.ProductoController;
-import sistema.Modelo.Producto;
-import sistema.repository.ProductoRepository;
+import sistema.Controller.ArticuloController;
+import sistema.Modelo.Articulo;
+import sistema.repository.ArticuloRepository;
 import java.io.IOException;
 import java.util.List;
 
 @WebServlet("/buscarProducto")
-public class BuscarProducto extends HttpServlet {
-    private final ProductoRepository productoDAO = new ProductoController();
+public class BuscarArticulo extends HttpServlet {
+    private final ArticuloRepository productoDAO = new ArticuloController();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -27,7 +27,7 @@ public class BuscarProducto extends HttpServlet {
         }
 
         try {
-            List<Producto> lista = productoDAO.buscarProducto(busqueda);
+            List<Articulo> lista = productoDAO.buscarProducto(busqueda);
 
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(lista); // Ahora genera JSON con los nombres correctos

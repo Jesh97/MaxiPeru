@@ -1,6 +1,6 @@
 package sistema.Modelo;
 
-public class Producto {
+public class Articulo {
 
     private int idProducto;
     private String codigo;
@@ -14,7 +14,7 @@ public class Producto {
     private int idCategoria;
     private int idUnidad;
 
-    public Producto(int idProducto, String codigo, String descripcion, int cantidad, double precioUnitario,
+    public Articulo(int idProducto, String codigo, String descripcion, int cantidad, double precioUnitario,
                     double pesoUnitario, String aroma, String color, int idMarca, int idCategoria, int idUnidad) {
         this.idProducto = idProducto;
         this.codigo = codigo;
@@ -29,7 +29,7 @@ public class Producto {
         this.idUnidad = idUnidad;
     }
 
-    public Producto() {
+    public Articulo() {
     }
 
     public int getIdProducto() {

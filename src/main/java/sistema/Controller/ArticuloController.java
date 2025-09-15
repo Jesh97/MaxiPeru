@@ -1,8 +1,8 @@
 package sistema.Controller;
 
 import sistema.Ejecucion.Conexion;
-import sistema.Modelo.Producto;
-import sistema.repository.ProductoRepository;
+import sistema.Modelo.Articulo;
+import sistema.repository.ArticuloRepository;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProductoController implements ProductoRepository {
+public class ArticuloController implements ArticuloRepository {
 
     private Connection getConnection() throws SQLException {
         Connection conn = Conexion.obtenerConexion();
@@ -21,8 +21,8 @@ public class ProductoController implements ProductoRepository {
     }
 
     @Override
-    public List<Producto> buscarProducto(String busqueda) throws SQLException {
-        List<Producto> productos = new ArrayList<>();
+    public List<Articulo> buscarProducto(String busqueda) throws SQLException {
+        List<Articulo> productos = new ArrayList<>();
         String sql = "{call sp_buscar_producto(?)}";
 
         try (Connection conn = getConnection();
@@ -32,7 +32,7 @@ public class ProductoController implements ProductoRepository {
 
             try (ResultSet rs = cs.executeQuery()) {
                 while (rs.next()) {
-                    Producto producto = new Producto();
+                    Articulo producto = new Articulo();
                     producto.setIdProducto(rs.getInt("id_producto"));
                     producto.setCodigo(rs.getString("codigo"));
                     producto.setDescripcion(rs.getString("descripcion"));
