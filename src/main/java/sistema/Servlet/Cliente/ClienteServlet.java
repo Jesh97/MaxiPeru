@@ -5,7 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import sistema.Controller.ClienteController;
 import sistema.Ejecucion.Auditoria;
-import sistema.Modelo.Cliente;
+import sistema.Modelo.Cliente.Cliente;
 import sistema.repository.ClienteRepository;
 import java.io.IOException;
 import java.io.PrintWriter;

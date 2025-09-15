@@ -1,7 +1,7 @@
 package sistema.Controller;
 
 import sistema.Ejecucion.Conexion;
-import sistema.Modelo.Cliente;
+import sistema.Modelo.Cliente.Cliente;
 import sistema.repository.ClienteRepository;
 import java.sql.*;
 import java.util.ArrayList;

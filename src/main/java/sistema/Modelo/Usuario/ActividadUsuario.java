@@ -1,6 +1,4 @@
-package sistema.Modelo;
-
-import java.sql.Timestamp;
+package sistema.Modelo.Usuario;
 
 public class ActividadUsuario {
 

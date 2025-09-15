@@ -8,7 +8,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sistema.Controller.CompraController;
-import sistema.Modelo.*;
+import sistema.Modelo.Compra.*;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.SQLException;

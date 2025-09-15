@@ -1,6 +1,6 @@
 package sistema.repository;
 
-import sistema.Modelo.Articulo;
+import sistema.Modelo.Articulo.Articulo;
 
 import java.sql.SQLException;
 import java.util.List;

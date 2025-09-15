@@ -5,7 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import sistema.Controller.ProveedorController;
 import sistema.Ejecucion.Auditoria;
-import sistema.Modelo.Proveedor;
+import sistema.Modelo.Proveedor.Proveedor;
 import sistema.repository.ProveedorRepository;
 import java.io.IOException;
 import java.io.PrintWriter;

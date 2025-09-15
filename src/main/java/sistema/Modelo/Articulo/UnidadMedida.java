@@ -1,4 +1,4 @@
-package sistema.Modelo;
+package sistema.Modelo.Articulo;
 
 public class UnidadMedida {
 

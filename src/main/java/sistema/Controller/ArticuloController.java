@@ -1,7 +1,7 @@
 package sistema.Controller;
 
 import sistema.Ejecucion.Conexion;
-import sistema.Modelo.Articulo;
+import sistema.Modelo.Articulo.Articulo;
 import sistema.repository.ArticuloRepository;
 import java.sql.CallableStatement;
 import java.sql.Connection;

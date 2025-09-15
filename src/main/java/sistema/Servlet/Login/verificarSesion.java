@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import sistema.Modelo.Usuario.Usuario;
+
 import java.io.IOException;
 
 @WebServlet("/verificarSesion")
@@ -17,7 +19,7 @@ public class verificarSesion extends HttpServlet {
         String rol = null;
 
         if (session != null && session.getAttribute("usuario") != null) {
-            sistema.Modelo.Usuario usuario = (sistema.Modelo.Usuario) session.getAttribute("usuario");
+            Usuario usuario = (Usuario) session.getAttribute("usuario");
             activa = true;
             rol = usuario.getRol().trim().toLowerCase();
         }

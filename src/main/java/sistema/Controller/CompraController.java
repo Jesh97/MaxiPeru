@@ -1,7 +1,7 @@
 package sistema.Controller;
 
 import sistema.Ejecucion.Conexion;
-import sistema.Modelo.*;
+import sistema.Modelo.Compra.*;
 import sistema.repository.CompraRepository;
 import java.sql.*;
 import java.sql.Date;

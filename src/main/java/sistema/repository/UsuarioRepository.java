@@ -1,8 +1,8 @@
 package sistema.repository;
 
 import jakarta.servlet.http.HttpServletRequest;
-import sistema.Modelo.ActividadUsuario;
-import sistema.Modelo.Usuario;
+import ActividadUsuario;
+import sistema.Modelo.Usuario.Usuario;
 import java.util.List;
 
 public interface UsuarioRepository {

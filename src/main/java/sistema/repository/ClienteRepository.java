@@ -1,6 +1,6 @@
 package sistema.repository;
 
-import sistema.Modelo.Cliente;
+import sistema.Modelo.Cliente.Cliente;
 import java.util.List;
 
 public interface ClienteRepository {

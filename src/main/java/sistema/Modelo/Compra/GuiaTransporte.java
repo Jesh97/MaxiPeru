@@ -1,4 +1,4 @@
-package sistema.Modelo;
+package sistema.Modelo.Compra;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;

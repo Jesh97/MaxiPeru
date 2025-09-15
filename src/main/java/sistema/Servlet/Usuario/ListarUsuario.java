@@ -5,7 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import sistema.Controller.UsuarioController;
 import sistema.Ejecucion.Auditoria;
-import sistema.Modelo.Usuario;
+import sistema.Modelo.Usuario.Usuario;
 import sistema.repository.UsuarioRepository;
 import java.io.IOException;
 import java.util.List;

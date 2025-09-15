@@ -1,7 +1,7 @@
 package sistema.Controller;
 
 import sistema.Ejecucion.Conexion;
-import sistema.Modelo.Proveedor;
+import sistema.Modelo.Proveedor.Proveedor;
 import sistema.repository.ProveedorRepository;
 import java.sql.*;
 import java.util.ArrayList;

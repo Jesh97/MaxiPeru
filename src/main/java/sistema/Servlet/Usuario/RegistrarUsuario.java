@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sistema.Controller.UsuarioController;
 import sistema.Ejecucion.Auditoria;
-import sistema.Modelo.Usuario;
+import sistema.Modelo.Usuario.Usuario;
 import sistema.repository.UsuarioRepository;
 import java.io.IOException;
 import java.util.ArrayList;

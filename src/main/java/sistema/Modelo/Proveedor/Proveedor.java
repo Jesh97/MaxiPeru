@@ -1,4 +1,4 @@
-package sistema.Modelo;
+package sistema.Modelo.Proveedor;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

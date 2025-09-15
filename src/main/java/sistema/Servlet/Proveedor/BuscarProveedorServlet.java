@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sistema.Controller.ProveedorController;
-import sistema.Modelo.Proveedor;
+import sistema.Modelo.Proveedor.Proveedor;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
