@@ -2,7 +2,7 @@ package sistema.Controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sistema.Ejecucion.Conexion;
-import ActividadUsuario;
+import sistema.Modelo.Usuario.ActividadUsuario;
 import sistema.Modelo.Usuario.Usuario;
 import sistema.repository.UsuarioRepository;
 import java.sql.Connection;

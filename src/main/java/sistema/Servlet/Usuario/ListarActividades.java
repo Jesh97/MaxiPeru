@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import sistema.Controller.UsuarioController;
-import ActividadUsuario;
+import sistema.Modelo.Usuario.ActividadUsuario;
 import sistema.Modelo.Usuario.Usuario;
 import sistema.repository.UsuarioRepository;
 import java.io.IOException;

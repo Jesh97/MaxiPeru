@@ -1,7 +1,7 @@
 package sistema.repository;
 
 import jakarta.servlet.http.HttpServletRequest;
-import ActividadUsuario;
+import sistema.Modelo.Usuario.ActividadUsuario;
 import sistema.Modelo.Usuario.Usuario;
 import java.util.List;
 

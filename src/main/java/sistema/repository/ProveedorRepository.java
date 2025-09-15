@@ -1,7 +1,6 @@
 package sistema.repository;
 
 import sistema.Modelo.Proveedor.Proveedor;
-
 import java.sql.SQLException;
 import java.util.List;
 
