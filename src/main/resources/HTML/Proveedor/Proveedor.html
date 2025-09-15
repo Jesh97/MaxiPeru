@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Proveedores — Panel Corporativo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-6 text-primary">Gestión de Proveedores</h1>
+        <button class="btn btn-lg btn-primary" onclick="abrirModalNuevo()">
+            <i class="bi bi-building-add me-2"></i>Nuevo Proveedor
+        </button>
+    </div>
+
+    <div class="input-group mb-4 shadow-sm">
+        <input type="search" id="buscarInput" class="form-control" placeholder="Buscar proveedor por RUC o Razón Social">
+        <button class="btn btn-outline-secondary" onclick="buscarProveedores()">
+            <i class="bi bi-search"></i>
+        </button>
+    </div>
+
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+            <tr>
+                <th>RUC</th>
+                <th>Razón Social</th>
+                <th>Ciudad</th>
+                <th>Direccion</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody id="proveedorTableBody"></tbody>
+        </table>
+    </div>
+
+    <nav class="mt-4" aria-label="Paginación de proveedores">
+        <ul class="pagination justify-content-center" id="paginacion"></ul>
+    </nav>
+</div>
+
+<!-- Modal Proveedor -->
+<div class="modal fade" id="proveedorModal" tabindex="-1" aria-labelledby="proveedorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form id="proveedorForm" novalidate>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="proveedorModalLabel">Registrar Proveedor</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body px-4 py-3">
+                    <input type="hidden" id="id">
+                    <div class="mb-3">
+                        <label for="ruc" class="form-label">RUC:</label>
+                        <input type="text" class="form-control" id="ruc" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="razonSocial" class="form-label">Razón Social:</label>
+                        <input type="text" class="form-control" id="razonSocial" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ciudad" class="form-label">Ciudad:</label>
+                        <input type="text" class="form-control" id="ciudad" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ciudad" class="form-label">Direccion:</label>
+                        <input type="text" class="form-control" id="direccion" required>
+                    </div>
+                </div>
+                <div class="modal-footer px-4 py-3">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../JS/proveedor/proveedor.js"></script>
+</body>
+</html>

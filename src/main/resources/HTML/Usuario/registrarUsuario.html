@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>MaxiPerú | Registro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/CSS/Usuario/registroUsuario.css" />
+    <style>
+        .modal.hidden {
+            display: none;
+        }
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            max-width: 400px;
+            text-align: left;
+        }
+        .modal-content ul {
+            padding-left: 1.5rem;
+            color: red;
+        }
+        .close-button, #cerrarModal {
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="form-card">
+        <form id="registroForm" class="form register-form">
+            <h2>Registro de Usuario</h2>
+            <div class="form-grid">
+                <div class="form-col">
+                    <div class="input-box">
+                        <label><i class="fas fa-user-circle"></i> Nombre completo</label>
+                        <input type="text" name="nombre" placeholder="Ingrese su nombre" required>
+                    </div>
+                    <div class="input-box">
+                        <label><i class="fas fa-envelope"></i> Correo electrónico</label>
+                        <input type="email" name="correo" placeholder="ejemplo@correo.com" required>
+                    </div>
+                    <div class="input-box">
+                        <label><i class="fas fa-user-tag"></i> Rol</label>
+                        <select name="rol" required>
+                            <option value="" disabled selected>Seleccionar rol</option>
+                            <option value="Administrador">Administrador</option>
+                            <option value="Producción">Producción</option>
+                        </select>
+                    </div>
+                    <div class="input-box">
+                        <label><i class="fas fa-toggle-on"></i> Estado</label>
+                        <select name="estado" required>
+                            <option value="" disabled selected>Seleccionar estado</option>
+                            <option value="Habilitado">Habilitado</option>
+                            <option value="Deshabilitado">Deshabilitado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-col">
+                    <div class="input-box">
+                        <label><i class="fas fa-user"></i> Nombre de usuario</label>
+                        <input type="text" name="username" placeholder="Nombre de usuario" required>
+                    </div>
+                    <div class="input-box password-box">
+                        <label><i class="fas fa-lock"></i> Contraseña</label>
+                        <input type="password" name="password" placeholder="********" class="password" required
+                               pattern="^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$"
+                               title="Debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial">
+                        <i class="fas fa-eye toggle-password"></i>
+                    </div>
+                    <div class="password-rules" id="passwordRules">
+                        <p><span id="lengthCheck" class="invalid"><i class="fas fa-times"></i></span> Mínimo 8 caracteres</p>
+                        <p><span id="uppercaseCheck" class="invalid"><i class="fas fa-times"></i></span> Al menos una letra mayúscula</p>
+                        <p><span id="numberCheck" class="invalid"><i class="fas fa-times"></i></span> Al menos un número</p>
+                        <p><span id="specialCheck" class="invalid"><i class="fas fa-times"></i></span> Al menos un carácter especial</p>
+                    </div>
+                </div>
+            </div>
+            <button type="submit">Registrarme</button>
+            <p class="switch">¿Ya tienes cuenta? <a href="/index.html">Inicia sesión</a></p>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de error -->
+<div id="errorModal" class="modal hidden">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h3>Error de registro</h3>
+        <ul id="modalErrores"></ul>
+        <button id="cerrarModal">Entendido</button>
+    </div>
+</div>
+
+<script src="/JS/usuario/registroUsuario.js"></script>
+</body>
+</html>

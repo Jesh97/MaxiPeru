@@ -1,0 +1,98 @@
+/* ===============================
+   BOTONES (general)
+================================== */
+.btn {
+    border-radius: 12px;
+    font-weight: 700;
+    padding: 10px 20px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.btn-primary {
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+    border: none;
+    color: white;
+    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+}
+.btn-primary:hover {
+    background: linear-gradient(90deg, var(--accent-dark), var(--accent));
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.55);
+}
+.btn-outline-secondary {
+    border: 2px solid var(--secondary);
+    background: white;
+    color: var(--secondary-dark);
+    font-weight: 600;
+}
+.btn-outline-secondary:hover {
+    background: var(--secondary);
+    color: white;
+    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.4);
+}
+
+/* Botón Guía de Remisión */
+#contenedorBtnGuia {
+    margin-top: 32px;
+    gap: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    max-width: 750px;
+    margin-left: auto;
+    margin-right: auto;
+}
+#btnGuia {
+    padding: 10px 24px;
+    font-weight: 700;
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: white;
+    border: none;
+    box-shadow: 0 5px 16px rgba(16, 185, 129, 0.45);
+    transition: background 0.35s ease;
+    min-width: 140px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+#btnGuia:hover {
+    background: var(--accent-dark);
+}
+#btnReferencia {
+    padding: 10px 24px;
+    font-weight: 700;
+    border-radius: var(--radius);
+    background: var(--secondary);
+    color: white;
+    border: none;
+    box-shadow: 0 5px 16px rgba(245, 158, 11, 0.45);
+    transition: background 0.35s ease;
+    min-width: 160px;
+    margin-left: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+#btnReferencia:hover {
+    background: var(--secondary-dark);
+}
+@media (max-width: 576px) {
+    #contenedorBtnGuia {
+        justify-content: center;
+        gap: 12px;
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    #btnGuia, #btnReferencia {
+        min-width: unset;
+        width: 100%;
+        margin-left: 0;
+        font-size: 0.95rem;
+        padding: 10px 0;
+    }
+}

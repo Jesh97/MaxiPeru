@@ -1,0 +1,113 @@
+/* ===============================
+   BASE Y RESET
+================================== */
+html, body {
+    margin: 0;
+    font-family: var(--font-main);
+    background: var(--page-bg);
+    color: var(--muted-dark);
+    line-height: 1.8;
+    font-size: 13px; /* Base un poco más pequeña para compactar */
+}
+
+/* ===============================
+   HEADER
+================================== */
+header.site-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.08);
+    border-bottom: 3px solid var(--secondary);
+}
+header .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+header .small-desc {
+    font-size: 0.9rem;
+    color: var(--primary-light);
+}
+header.site-header .brand i {
+    font-size: 1.6rem;
+    color: white;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15));
+}
+
+/* ===============================
+   CONTENEDOR PRINCIPAL
+================================== */
+main.container {
+    padding-top: 110px;
+    padding-bottom: 40px;
+    max-width: 1700px;
+    margin: auto;
+    padding-left: 24px;
+    padding-right: 24px;
+    background: linear-gradient(135deg, var(--primary-lighter) 0%, var(--accent-light) 100%);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+@media (max-width: 576px) {
+    main.container {
+        padding-left: 12px;
+        padding-right: 12px;
+        background: var(--page-bg);
+        box-shadow: none;
+        border-radius: 0;
+    }
+}
+
+/* ===============================
+   TARJETAS / SECCIONES
+================================== */
+.card-section {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px 18px; /* Padding reducido para compacidad */
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--muted-light);
+    transition: all 0.3s ease;
+    border-left: 5px solid var(--accent);
+}
+.card-section:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-left-color: var(--primary);
+}
+@media (max-width: 768px) {
+    .card-section { padding: 16px 12px; }
+}
+
+/* ===============================
+   TÍTULOS DE SECCIÓN
+================================== */
+.section-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--secondary-light);
+    padding-bottom: 5px;
+    text-transform: uppercase;
+}
+@media (max-width: 768px) {
+    .section-title { font-size: 1rem; }
+}

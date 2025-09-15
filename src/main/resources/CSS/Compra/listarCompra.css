@@ -1,0 +1,65 @@
+body {
+    background: #f2f7fb;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h2 {
+    font-weight: 900;
+    letter-spacing: 0.5px;
+}
+
+#compras-table th, #compras-table td {
+    vertical-align: middle;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+#compras-table tbody tr:hover {
+    background: #e3f2fd;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.badge {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.modal-body {
+    background-color: #ffffff;
+}
+
+#info-proveedor {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    background: linear-gradient(90deg, #e3f2fd, #ffffff);
+}
+
+.nav-pills .nav-link {
+    font-weight: 600;
+    border-radius: 0.5rem;
+}
+
+.table-striped>tbody>tr:nth-of-type(odd) {
+    background-color: #f9fafb;
+}
+
+.table-striped>tbody>tr:hover {
+    background-color: #d0e7ff;
+}
+
+.table-bordered th, .table-bordered td {
+    border-color: #dee2e6;
+}
+
+.table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+    background-color: #cce5ff;
+}
+
+.modal-header.bg-gradient-primary {
+    background: linear-gradient(90deg, #0d6efd, #6610f2);
+}
+
+.btn-outline-primary {
+    font-weight: 600;
+}

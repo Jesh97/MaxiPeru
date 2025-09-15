@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Registro de Compras | Proveedores — Versión Corporativa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../CSS/Compra/compra.css">
+</head>
+<body>
+<header class="site-header">
+    <div class="brand">
+        <i class="bi bi-cart-check-fill fs-4"></i>
+        <div>
+            <h1>Registro de Compras a Proveedores</h1>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <form id="formCompra" novalidate>
+
+        <section class="card-section">
+            <div class="section-title"><i class="bi bi-info-circle"></i> Datos Generales de la Compra</div>
+
+            <div class="row g-3">
+                <div class="col-md-6 position-relative">
+                    <label class="form-label small-muted">Proveedor</label>
+                    <input type="text" id="busquedaProveedor" class="form-control" placeholder="RUC o Razón Social" autocomplete="off" aria-describedby="provHelp">
+                    <div id="sugerenciasProveedor" class="list-group d-none" role="listbox" aria-label="Sugerencias proveedor"></div>
+                    <input type="hidden" id="proveedorId">
+                    <div id="provHelp" class="form-text small-muted">Busca por RUC o razón social. Selecciona uno de la lista.</div>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="tipoComprobante" class="form-label">Tipo Comprobante</label>
+                    <div class="input-group">
+                        <select id="tipoComprobante" name="tipo_comprobante" class="form-control" required>
+                            <option value="">Seleccione</option>
+                        </select>
+                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#modalNuevoComprobante"><i class="bi bi-plus-lg"></i></button>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small-muted">Moneda</label>
+                    <select id="moneda" class="input-group">
+                        <option>Soles</option>
+                        <option>Dólares</option>
+                        <option>Euros</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3" id="divTipoCambio" style="display:none;">
+                    <label class="form-label small-muted">Tipo de Cambio (S/ por unidad)</label>
+                    <input type="number" min="0" step="0.0001" id="tipoCambioInput" class="form-control" value="3.6" />
+                    <div class="form-text small-muted">Indica cuánto vale 1 unidad de la moneda seleccionada en soles.</div>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label small-muted">Serie</label>
+                    <input id="serie" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small-muted">Correlativo</label>
+                    <input id="correlativo" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label for="fechaEmision">Fecha Emisión</label>
+                    <input type="date" id="fechaEmision" name="fecha_emision" class="form-control" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small-muted">Tipo de Pago</label>
+                    <div class="input-group">
+                        <select id="tipoPago" name="tipo_pago" class="form-control">
+                            <option value="">Seleccione</option>
+                        </select>
+                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#modalNuevoTipoPago"><i class="bi bi-plus-lg"></i></button>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small-muted">Fecha de Vencimiento</label>
+                    <input id="fechaVencimiento" name="fecha_vencimiento" type="date" class="form-control" readonly />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small-muted">Forma de Pago</label>
+                    <div class="input-group">
+                        <select id="formaPago" name="forma_pago" class="form-control" required>
+                            <option value="">Seleccione</option>
+                        </select>
+                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#modalNuevaFormaPago"><i class="bi bi-plus-lg"></i></button>
+                    </div>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="w-100">
+                        <label class="form-label small-muted">Marque si el precio incluye IGV</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="incluyeIgv" id="igvSi" value="si" checked>
+                                <label class="form-check-label small-muted" for="igvSi">Sí</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="incluyeIgv" id="igvNo" value="no">
+                                <label class="form-check-label small-muted" for="igvNo">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="w-100">
+                        <label class="form-label small-muted">Indique si la compra incluye bonificación</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="hayBonificacion" id="bonifSi" value="si">
+                                <label class="form-check-label small-muted" for="bonifSi">Sí</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="hayBonificacion" id="bonifNo" value="no" checked>
+                                <label class="form-check-label small-muted" for="bonifNo">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="w-100">
+                        <label class="form-label small-muted">Indique si la compra tiene descuento</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="hayDescuento" id="descuentoSi" value="si">
+                                <label class="form-check-label small-muted" for="descuentoSi">Sí</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="hayDescuento" id="descuentoNo" value="no" checked>
+                                <label class="form-check-label small-muted" for="descuentoNo">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3" id="tipoDescuentoContainer" style="display:none;">
+                    <label class="form-label small-muted">Tipo de descuento</label>
+                    <select id="tipoDescuento" class="form-select">
+                        <option value="">Seleccione</option>
+                        <option value="global">Descuento global</option>
+                        <option value="por_item">Descuento por ítem</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="w-100">
+                        <label class="form-label small-muted">Traslado incluido</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="hayTraslado" id="trasladoSi" value="si">
+                                <label class="form-check-label small-muted" for="trasladoSi">Sí</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="hayTraslado" id="trasladoNo" value="no" checked>
+                                <label class="form-check-label small-muted" for="trasladoNo">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="contenedorBtnGuia" style="display:flex;">
+                    <button id="btnGuia" type="button" class="btn btn-outline-primary me-2">Guía de Transporte</button>
+                    <button type="button" id="btnReferencia" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Agregar datos de referencia">
+                        <i class="bi bi-file-earmark-text"></i> Documento de Referencia
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="card-section">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="section-title"><i class="bi bi-list-check"></i> Detalle de Productos</div>
+                <div class="d-flex flex-column flex-md-row align-items-md-center">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center">
+                        <div id="btnContainer" class="d-flex align-items-center position-relative">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <div class="tabs-productos">
+                <ul class="nav nav-tabs" id="tabProductosHeader" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general-pane" type="button" role="tab" aria-controls="general-pane" aria-selected="true">General</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="financiero-tab" data-bs-toggle="tab" data-bs-target="#financiero-pane" type="button" role="tab" aria-controls="financiero-pane" aria-selected="false">Financiero</button>
+                    </li>
+                    <li class="nav-item d-none" role="presentation">
+                        <button class="nav-link" id="guia-transporte-tab" data-bs-toggle="tab" data-bs-target="#guia-transporte-pane" type="button" role="tab" aria-controls="guia-transporte-pane" aria-selected="false">Guía de Transporte</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="totales-tab" data-bs-toggle="tab" data-bs-target="#totales-pane" type="button" role="tab" aria-controls="totales-pane" aria-selected="false">Totales</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="tabProductosContent">
+                    <div class="tab-pane fade show active" id="general-pane" role="tabpanel" aria-labelledby="general-tab" tabindex="0">
+                        <div class="table-responsive mt-3">
+                            <table class="table align-middle table-hover" id="tablaProductosGeneral">
+                                <thead class="text-nowrap">
+                                <tr>
+                                    <th scope="col">Código</th>
+                                    <th scope="col">Cantidad</th>
+                                    <th scope="col">Unidad Medida</th>
+                                    <th scope="col">Descripción</th>
+                                    <th scope="col">Precio Unitario</th>
+                                    <th scope="col">Total</th>
+                                    <th scope="col" style="width: 50px;"></th>
+                                </tr>
+                                </thead>
+                                <tbody id="bodyProductosGeneral">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="financiero-pane" role="tabpanel" aria-labelledby="financiero-tab" tabindex="0">
+                        <div class="table-responsive mt-3">
+                            <table class="table align-middle table-hover" id="tablaProductosFinanciero">
+                                <thead>
+                                <tr>
+                                    <th style="min-width:200px">Descripción</th>
+                                    <th class="col-bonif" style="width:110px">Bonificación</th>
+                                    <th class="col-descuento-item" style="width:120px">Descuento</th>
+                                    <th class="col-descuento-item" style="width:140px">Precio c/ Descuento</th>
+                                    <th style="width:140px" class="col-precio-convertido d-none">Precio Convertido (S/)</th>
+                                    <th style="width:70px"></th>
+                                </tr>
+                                </thead>
+                                <tbody id="bodyProductosFinanciero">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="guia-transporte-pane" role="tabpanel" aria-labelledby="guia-transporte-tab" tabindex="0">
+                        <div class="table-responsive mt-3">
+                            <table class="table align-middle table-hover" id="tablaProductosGuiaTransporte">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Código</th>
+                                    <th scope="col">Cantidad</th>
+                                    <th scope="col">Peso</th>
+                                    <th style="min-width:200px">Descripción</th>
+                                    <th scope="col">Costo Unitario de Transporte</th>
+                                    <th scope="col">Costo de Transporte</th>
+                                    <th style="width: 70px;"></th>
+                                </tr>
+                                </thead>
+                                <tbody id="bodyProductosGuiaTransporte">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card shadow-sm mt-4">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="bi bi-box-seam"></i> Distribución por Cajas</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="contenedorCajas" class="d-flex flex-wrap gap-3">
+                                </div>
+                                <div class="mt-3 text-end">
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCajas"><i class="bi bi-plus-lg"></i> Asignar Productos a Cajas</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="totales-pane" role="tabpanel" aria-labelledby="totales-tab" tabindex="0">
+                        <div class="d-flex justify-content-end mb-2">
+                            <button id="btnToggleTotales" class="btn btn-secondary btn-sm">Mostrar Totales por Cantidad</button>
+                        </div>
+                        <div class="table-responsive mt-3">
+                            <table class="table align-middle table-hover" id="tablaProductosTotales">
+                                <thead class="text-nowrap">
+                                <tr>
+                                    <th scope="col">Unidad Medida</th>
+                                    <th scope="col">Descripción</th>
+                                    <th scope="col">Precio Venta</th>
+                                    <th scope="col">IGV</th>
+                                    <th scope="col">Peso</th>
+                                    <th scope="col">Costo Transporte</th>
+                                    <th scope="col">Total</th>
+                                    <th scope="col" style="width: 50px;"></th>
+                                </tr>
+                                </thead>
+                                <tbody id="bodyProductosTotales">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="row g-3">
+            <div class="col-lg-7">
+                <section class="card-section">
+                    <div class="section-title"><i class="bi bi-pencil-square"></i> Observaciones</div>
+                    <textarea id="observacionesGenerales" class="form-control" rows="5" placeholder="Escribe observaciones generales..."></textarea>
+                </section>
+
+                <section class="card-section mt-3" id="descuentoGlobalContainer" style="display:none;">
+                    <div class="section-title"><i class="bi bi-percent"></i> Descuento Global</div>
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-4">
+                            <label class="form-label small-muted">Tipo de descuento</label>
+                            <select id="tipoValorDescuento" class="form-select">
+                                <option value="porcentaje">Porcentaje (%)</option>
+                                <option value="monto">Monto (S/)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small-muted">Valor</label>
+                            <input type="number" id="valorDescuento" class="form-control" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-lg-5">
+                <section class="card-section totals">
+                    <div class="section-title"><i class="bi bi-calculator"></i> Totales</div>
+                    <div class="mb-2 small-muted">Moneda seleccionada: <strong id="monedaLabel">Soles</strong></div>
+                    <div class="line"><span class="muted">Subtotal (sin IGV)</span><span id="subtotalSinIgv">S/ 0.00</span></div>
+                    <div class="line"><span class="muted">IGV (18%)</span><span id="totalIgv">S/ 0.00</span></div>
+                    <div class="line" style="font-size:1.15rem; margin-top:8px;"><span>Total de Compra</span><span id="totalCompraFinal">S/ 0.00</span></div>
+                    <div class="mt-3 small-muted">Coste de transporte total: <span id="costeTransporteLabel">0.00</span></div>
+                    <div class="line"><span class="muted">Peso Total Productos</span><span id="totalPesoProductos">0.000 kg</span></div>
+                    <div class="line" style="font-weight: 700; font-size:1.2rem; margin-top:8px;">
+                        <span>Total a Pagar</span><span id="totalAPagar">S/ 0.00</span>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="button" id="guardarCompraBtn" class="btn btn-success btn-lg"><i class="bi bi-save"></i> Guardar Compra</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </form>
+
+    <section class="card-section mt-4">
+        <div class="section-title"><i class="bi bi-clock-history"></i> Compras Registradas</div>
+        <div class="text-center py-4">
+            <a href="listarCompra.html" class="btn btn-primary btn-lg">
+                <i class="bi bi-card-list"></i> Ver Lista de Compras
+            </a>
+        </div>
+    </section>
+</main>
+
+<div class="modal fade" id="modalGuia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form id="formGuia">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-truck"></i> Datos Guía de Transporte</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0"><i class="bi bi-file-earmark-text"></i> Factura</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small-muted">RUC / Razón Social</label>
+                                    <input id="rucGuia" type="text" class="form-control" placeholder="RUC" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small-muted">Fecha de Emisión</label>
+                                    <input id="fechaEmisionGuia" type="date" class="form-control" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small-muted">Tipo de Comprobante</label>
+                                    <select id="tipoComprobanteGuia" class="form-select">
+                                        <option value="">Seleccione</option>
+                                        <option>Boleta</option>
+                                        <option>Factura</option>
+                                        <option>Nota de Pedido</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small-muted">Serie</label>
+                                    <input id="serieGuia" type="text" class="form-control" placeholder="Serie" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small-muted">Correlativo</label>
+                                    <input id="correlativoGuia" type="text" class="form-control" placeholder="Correlativo" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small-muted">Ciudad de Traslado</label>
+                                    <input id="ciudadTrasladoGuia" type="text" class="form-control" placeholder="Ciudad de traslado" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="bi bi-truck"></i> Guía de Transporte</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small-muted">Serie Guía</label>
+                                    <input id="serieGuiaTransporte" type="text" class="form-control" placeholder="Serie guía" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small-muted">Correlativo Guía</label>
+                                    <input id="correlativoGuiaTransporte" type="text" class="form-control" placeholder="Correlativo guía" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small-muted">Costo Total de Transporte</label>
+                                    <input id="costeTransporteGuia" type="number" min="0" step="0.01" class="form-control" value="0.00"/>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small-muted">Peso Total</label>
+                                    <input id="pesoGuia" type="number" min="0" step="0.01" class="form-control" placeholder="Peso total" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small-muted">Fecha Pedido</label>
+                                    <input id="fechaPedido" type="date" class="form-control"/>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small-muted">Fecha Entrega</label>
+                                    <input id="fechaEntrega" type="date" class="form-control"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" id="guardarGuia" class="btn btn-primary" data-bs-dismiss="modal">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalReferencia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="formReferencia">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-file-earmark-text"></i> Datos de Referencia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small-muted">Número de Cotización</label>
+                        <input id="numeroCotizacion" type="text" class="form-control"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small-muted">Orden de compra</label>
+                        <input id="numeroPedido" type="text" class="form-control"/>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" id="guardarReferencia" class="btn btn-primary" data-bs-dismiss="modal">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCajas" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-box-seam"></i> Asignar Productos a Cajas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Productos disponibles</h6>
+                        <div class="list-group" id="productosDisponibles">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6>Cajas</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="btnAgregarNuevaCaja"><i class="bi bi-plus"></i> Agregar Caja</button>
+                        </div>
+                        <div id="contenedorCajasModal">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnGuardarDistribucion" data-bs-dismiss="modal">Guardar Distribución</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAsignarCaja" tabindex="-1" aria-labelledby="modalAsignarCajaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAsignarCajaLabel">Asignar Producto a Caja</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalConfirm" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center p-3">
+            <i class="bi bi-check-circle-fill text-success fs-1"></i>
+            <div class="mt-3 fs-4" id="confirmMessage">Compra guardada con éxito.</div>
+            <button type="button" class="btn btn-primary mt-4" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNuevoComprobante" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Nuevo Tipo de Comprobante</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="nuevoComprobanteInput" class="form-label">Nombre del Comprobante</label>
+                    <input type="text" class="form-control" id="nuevoComprobanteInput" placeholder="Ej: Recibo por Honorarios">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarComprobante">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNuevaFormaPago" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Nueva Forma de Pago</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="nuevaFormaPagoInput" class="form-label">Nombre de la Forma de Pago</label>
+                    <input type="text" class="form-control" id="nuevaFormaPagoInput" placeholder="Ej: Tarjeta de Crédito">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarFormaPago">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNuevoTipoPago" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Nuevo Tipo de Pago</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="nuevoTipoPagoInput" class="form-label">Nombre del Tipo de Pago</label>
+                    <input type="text" class="form-control" id="nuevoTipoPagoInput" placeholder="Ej: Crédito a 90 días">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarTipoPago">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDescuentoItem" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Aplicar Descuento por Ítem</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formDescuentoItem">
+                    <div class="mb-3">
+                        <label class="form-label small-muted">Tasa de IGV</label>
+                        <select id="tasaIgvDescuento" class="form-select">
+                            <option value="18">18%</option>
+                            <option value="10">10%</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small-muted">Tipo de Descuento</label>
+                        <div class="input-group">
+                            <select id="tipoValorDescuentoItem" class="form-select">
+                                <option value="porcentaje">Porcentaje (%)</option>
+                                <option value="monto">Monto (S/)</option>
+                            </select>
+                            <input type="number" id="valorDescuentoItem" class="form-control" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="motivoDescuento" class="form-label small-muted">Motivo del Descuento</label>
+                        <select class="form-select" id="motivoDescuento">
+                            <option value="" disabled selected>Seleccione un motivo</option>
+                            <option value="volumen">Descuento por Volumen</option>
+                            <option value="pronto_pago">Descuento por Pronto Pago</option>
+                            <option value="promocional">Descuento Promocional / Temporada</option>
+                            <option value="fidelidad">Descuento por Fidelidad</option>
+                            <option value="pronto_pedido">Descuento por Pronto Pedido</option>
+                            <option value="comercial">Descuento Comercial (Distribuidores)</option>
+                            <option value="defectos">Descuento por Defectos / Mercancía en Mal Estado</option>
+                            <option value="convenio">Descuento por Convenio / Relación Comercial</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarDescuentoItem">Guardar Descuento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8V-n7D6T4tH9A4K0Pz0B9x9qD4z4z4p9w8J9Q4x5R5z2K7E6p6B8D8F7B5p5g6D9A6B8A7E9p9F9F8d6A6A6" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+<script src="../../JS/compra/compra.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>MaxiPerú | Recuperar Contraseña</title>
+    <link rel="stylesheet" href="/CSS/Usuario/recuperarCuenta.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="container">
+    <div class="form-container">
+        <form class="form" action="recuperarClave" method="post">
+            <h2>¿Olvidaste tu contraseña?</h2>
+            <p class="form-description">
+                Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+            </p>
+
+            <div class="input-box">
+                <i class="fas fa-envelope"></i>
+                <input type="email" name="correo" placeholder="Correo electrónico" required />
+            </div>
+
+            <button type="submit">Enviar enlace</button>
+
+            <p class="switch">
+                <a href="/index.html"><i class="fas fa-arrow-left"></i> Volver al inicio de sesión</a>
+            </p>
+        </form>
+    </div>
+
+    <div class="logo">
+        <img src="/img/logo2.png" alt="Logo MaxiPerú" />
+    </div>
+</div>
+
+</body>
+</html>

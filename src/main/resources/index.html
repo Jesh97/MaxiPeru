@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>MaxiPerú | Iniciar Sesión</title>
+    <link rel="stylesheet" href="CSS/Login/login.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="container">
+    <div class="form-container">
+        <form class="form" action="login" method="post">
+            <h2>Iniciar Sesión</h2>
+
+            <div class="input-box">
+                <i class="fas fa-user"></i>
+                <input type="text" name="username" placeholder="Usuario" required />
+            </div>
+
+            <div class="input-box">
+                <i class="fas fa-lock"></i>
+                <input type="password" name="password" placeholder="Contraseña" class="password" required />
+                <i class="fas fa-eye toggle-password"></i>
+            </div>
+
+            <button type="submit">Ingresar</button>
+
+            <p class="forgot-password">
+                <a href="HTML/Usuario/recuperarCuenta.html">¿Olvidaste tu contraseña?</a>
+            </p>
+        </form>
+    </div>
+
+    <div class="logo">
+        <img src="./img/logo2.png" alt="Logo MaxiPerú" />
+    </div>
+</div>
+
+<!-- MODAL DE ERROR -->
+<div id="errorModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle icon"></i>
+            <h2>Error</h2>
+        </div>
+        <div class="modal-body">
+            <p id="modalMessage"></p>
+            <button id="modalOkButton" class="modal-ok-button">Entendido</button>
+        </div>
+    </div>
+</div>
+
+
+<script src="JS/login/login.js"></script>
+</body>
+</html>

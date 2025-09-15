@@ -1,0 +1,26 @@
+/* ===============================
+   TOTALES
+================================== */
+.totals .line {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    font-weight: 700;
+    font-size: 1rem;
+    border-bottom: 2px solid var(--secondary-light);
+    color: var(--muted-dark);
+    user-select: none;
+}
+.totals .line:last-child {
+    border-bottom: none;
+}
+.totals .muted {
+    color: var(--muted);
+    font-weight: 600;
+}
+#totalAPagar {
+    font-size: 1.35rem;
+    color: var(--accent-dark);
+    font-weight: 900;
+    text-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+}

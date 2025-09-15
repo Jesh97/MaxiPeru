@@ -1,0 +1,235 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #ed1e79, #0071bc);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    display: flex;
+    background: #ffffff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+    max-width: 900px;
+    width: 95%;
+    transition: all 0.3s ease;
+}
+
+.logo {
+    background: #f7f7f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40%;
+    padding: 20px;
+    border-right: 1px solid #e0e0e0;
+}
+
+.logo img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.form-container {
+    width: 60%;
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.form h2 {
+    color: #ed1e79;
+    margin-bottom: 25px;
+    text-align: center;
+    font-size: 28px;
+}
+
+.input-box {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-box input {
+    width: 100%;
+    padding: 12px 45px 12px 35px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.input-box input:focus {
+    border-color: #ed1e79;
+    outline: none;
+}
+
+.input-box i {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: #777;
+    font-size: 16px;
+}
+
+.input-box .toggle-password {
+    right: 10px;
+    left: auto;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button {
+    padding: 12px;
+    background: #0071bc;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    width: 100%;
+}
+
+button:hover {
+    background: #005fa3;
+}
+
+.switch, .forgot-password {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.switch a, .forgot-password a {
+    color: #ed1e79;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.switch a:hover, .forgot-password a:hover {
+    text-decoration: underline;
+    color: #c41460;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Poppins', sans-serif;
+}
+
+.modal-content {
+    background: linear-gradient(to bottom right, #fff, #f0f4f8);
+    padding: 25px 30px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    animation: fadeIn 0.3s ease-out;
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.modal-header .icon {
+    font-size: 48px;
+    color: #e74c3c;
+    animation: bounce 0.8s infinite alternate;
+}
+
+.modal-header h2 {
+    font-size: 22px;
+    color: #333;
+    margin-top: 10px;
+}
+
+.modal-body p {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.modal-footer {
+    text-align: center;
+}
+
+#closeModalBtn {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#closeModalBtn:hover {
+    background: #c0392b;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-6px); }
+}
+
+.modal-ok-button {
+    background-color: #ff4d4f;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background-color 0.3s ease;
+}
+.modal-ok-button:hover {
+    background-color: #e03e3f;
+}
+
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        max-width: 95%;
+    }
+
+    .form-container, .logo {
+        width: 100%;
+        border-right: none;
+    }
+
+    .form-container {
+        padding: 30px 20px;
+    }
+}
