@@ -1115,7 +1115,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 caja.fleteTotal = fleteIngresado;
             }
         });
-
         return nuevaCajaEl;
     }
 
@@ -1234,7 +1233,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             modalAsignar.hide();
         });
-
         modalBody.appendChild(form);
         modalAsignar.show();
     }
