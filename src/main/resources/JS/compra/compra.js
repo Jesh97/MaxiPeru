@@ -26,19 +26,16 @@ let totalCompraFinalCalculado = 0;
 let totalAPagarCalculado = 0;
 let totalPesoProductosCalculado = 0;
 let costeTransporteCalculado = 0;
-
 let cajas = [];
 let proximoIdCaja = 1;
-
-// INICIO: VARIABLES Y LÓGICA AÑADIDA PARA DESCUENTO POR ÍTEM
 let itemEnEdicion = null;
+
 const modalDescuentoItem = new bootstrap.Modal($('#modalDescuentoItem'));
 const tasaIgvDescuentoSelect = $('#tasaIgvDescuento');
 const tipoValorDescuentoItemSelect = $('#tipoValorDescuentoItem');
 const valorDescuentoItemInput = $('#valorDescuentoItem');
 const motivoDescuentoTextarea = $('#motivoDescuento');
 const guardarDescuentoItemBtn = $('#guardarDescuentoItem');
-// FIN: VARIABLES Y LÓGICA AÑADIDA PARA DESCUENTO POR ÍTEM
 
 document.addEventListener('DOMContentLoaded', () => {
     const inputProveedor = $('#busquedaProveedor');
@@ -340,7 +337,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-
         actualizarTotales();
     }
 
@@ -465,7 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', clickFueraListener);
     }
 
-
     handleProductTypeChange();
 
     function unidadAbreviatura(unidad) {
@@ -515,30 +510,23 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-
         $$('#tablaProductosGeneral tr[data-fila-id]').forEach(trGeneral => {
             const filaId = trGeneral.dataset.filaId;
             const trFinanciero = $(`#tablaProductosFinanciero tr[data-fila-id="${filaId}"]`);
             const trGuiaTransporte = $(`#tablaProductosGuiaTransporte tr[data-fila-id="${filaId}"]`);
             const trTotales = $(`#tablaProductosTotales tr[data-fila-id="${filaId}"]`);
-
             const idProducto = trGeneral.querySelector('.idProducto')?.value;
             const cantidad = parseFloat(trGeneral.querySelector('.cantidad')?.value) || 0;
             const precioUnitario = parseFloat(trGeneral.querySelector('.precioUnitario')?.value) || 0;
-
             const costoUnitarioTransporteGlobal = costosTransporteGlobales[filaId] ? (costosTransporteGlobales[filaId].costoAcumulado / costosTransporteGlobales[filaId].cantidadAcumulada) : 0;
-
             const costeTransporteFila = cantidad * costoUnitarioTransporteGlobal;
-
-
             const codigoProducto = trGeneral.querySelector('.codigo').value;
             const descripcionProducto = trGeneral.querySelector('.descripcion').value;
-
             const bonificacion = trFinanciero.querySelector('.bonificacion')?.checked ?? false;
+
             let precioBaseUnitario = (hayBonificacion && bonificacion) ? 0 : precioUnitario;
             let precioBaseUnitarioSoles = precioBaseUnitario * tipoCambioValor;
             let precioVentaTotal = precioBaseUnitarioSoles * cantidad;
-
             let igvTasa = IGV_RATE;
             let descuentoValor = 0;
             let descuentoTipo = 'porcentaje';
@@ -569,10 +557,9 @@ document.addEventListener('DOMContentLoaded', () => {
             totalIgvPorItem += igvProducto;
 
             const unidad = trGeneral.querySelector('.unidadMedida')?.value;
-
             const unidadShort = unidadAbreviatura(unidad);
-            if (trTotales.querySelector('.unidadMedida-readonly')) trTotales.querySelector('.unidadMedida-readonly').textContent = unidadShort;
 
+            if (trTotales.querySelector('.unidadMedida-readonly')) trTotales.querySelector('.unidadMedida-readonly').textContent = unidadShort;
             if (trGuiaTransporte.querySelector('.descripcion-readonly')) trGuiaTransporte.querySelector('.descripcion-readonly').textContent = descripcionProducto;
             if (trFinanciero.querySelector('.descripcion-readonly')) trFinanciero.querySelector('.descripcion-readonly').textContent = descripcionProducto;
             if (trTotales.querySelector('.descripcion-readonly')) trTotales.querySelector('.descripcion-readonly').textContent = descripcionProducto;
@@ -596,18 +583,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const precioUnitarioVenta = subtotalProducto / cantidad;
             const igvUnitario = precioUnitarioVenta * igvTasa;
             const totalUnitario = precioUnitarioVenta + igvUnitario;
-
             const totalFila = subtotalProducto + igvProducto + costeTransporteFila;
 
             if (trTotales.querySelector('.precioUnitario-total')) trTotales.querySelector('.precioUnitario-total').textContent = formatCurrency(precioUnitarioVenta, 'PEN');
             if (trTotales.querySelector('.precioTotal-total')) trTotales.querySelector('.precioTotal-total').textContent = formatCurrency(subtotalProducto, 'PEN');
-
             if (trTotales.querySelector('.igvUnitario-total')) trTotales.querySelector('.igvUnitario-total').textContent = formatCurrency(igvUnitario, 'PEN');
             if (trTotales.querySelector('.igvTotal-total')) trTotales.querySelector('.igvTotal-total').textContent = formatCurrency(igvProducto, 'PEN');
-
             if (trTotales.querySelector('.costoUnitarioTransporte-total')) trTotales.querySelector('.costoUnitarioTransporte-total').textContent = formatCurrency(costoUnitarioTransporteGlobal, 'PEN');
             if (trTotales.querySelector('.costeTransporte-total')) trTotales.querySelector('.costeTransporte-total').textContent = formatCurrency(costeTransporteFila, 'PEN');
-
             if (trTotales.querySelector('.totalUnitario-total')) trTotales.querySelector('.totalUnitario-total').textContent = formatCurrency(totalUnitario, 'PEN');
             if (trTotales.querySelector('.totalTotal-total')) trTotales.querySelector('.totalTotal-total').textContent = formatCurrency(totalFila, 'PEN');
 
@@ -646,12 +629,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         totalCompraFinalCalculado = subtotalSinIgvCalculado + totalIgvCalculado;
-
         costeTransporteCalculado = costeTransporteProductos;
-
         totalAPagarCalculado = totalCompraFinalCalculado + costeTransporteCalculado;
         totalPesoProductosCalculado = pesoTotalProductos;
-
         const costeTotalIngresado = parseFloat(guia.costeTotalTransporte) || 0;
         const tolerancia = 0.01;
 
@@ -722,7 +702,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function actualizarVisibilidadTraslado() {
         const hayTraslado = trasladoSi.checked;
-
         const guiaTabItem = $('#guia-transporte-tab').closest('.nav-item');
         const guiaContent = $('#guia-transporte-pane');
 
@@ -772,13 +751,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const trFinanciero = $(`#tablaProductosFinanciero tr[data-fila-id="${filaId}"]`);
                 const trGuiaTransporte = $(`#tablaProductosGuiaTransporte tr[data-fila-id="${filaId}"]`);
                 const trTotales = $(`#tablaProductosTotales tr[data-fila-id="${filaId}"]`);
-
                 const idProducto = tr.querySelector('.idProducto')?.value;
                 const cantidad = parseFloat(tr.querySelector('.cantidad')?.value) || 0;
                 const precioUnitario = parseFloat(tr.querySelector('.precioUnitario')?.value) || 0;
                 const costoUnitarioTransporte = parseFloat(trGuiaTransporte.querySelector('.costoUnitTransporte')?.value) || 0;
                 const costeTransporteFila = costoUnitarioTransporte * cantidad;
-
                 const descuentos = [];
                 const descuentoItemValor = parseFloat(trFinanciero.dataset.descuentoItemValor) || 0;
                 const descuentoItemTipo = trFinanciero.dataset.descuentoItemTipo;
