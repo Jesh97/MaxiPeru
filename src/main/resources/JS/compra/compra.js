@@ -36,6 +36,7 @@ const tipoValorDescuentoItemSelect = $('#tipoValorDescuentoItem');
 const valorDescuentoItemInput = $('#valorDescuentoItem');
 const motivoDescuentoTextarea = $('#motivoDescuento');
 const guardarDescuentoItemBtn = $('#guardarDescuentoItem');
+const modalTotalesPorCantidad = new bootstrap.Modal($('#modalTotalesPorCantidad'));
 
 document.addEventListener('DOMContentLoaded', () => {
     const inputProveedor = $('#busquedaProveedor');
@@ -1293,7 +1294,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
     function actualizarResumenCajasEnGuia() {
         const contenedorResumen = $('#contenedorCajas');
         contenedorResumen.innerHTML = '';
@@ -1370,20 +1370,72 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const btnToggleTotales = $('#btnToggleTotales');
+    const btnToggleTotales = document.getElementById('btnToggleTotales');
     if (btnToggleTotales) {
         btnToggleTotales.addEventListener('click', () => {
             const esUnitario = btnToggleTotales.textContent.includes('Mostrar Totales por Cantidad');
 
-            $$('.precioUnitario-total, .igvUnitario-total, .pesoUnitario-total, .costoUnitarioTransporte-total, .totalUnitario-total').forEach(el => {
-                el.classList.toggle('d-none', !esUnitario);
-            });
-            $$('.precioTotal-total, .igvTotal-total, .pesoTotal-total, .costeTransporte-total, .totalTotal-total').forEach(el => {
-                el.classList.toggle('d-none', esUnitario);
-            });
-
-            btnToggleTotales.textContent = esUnitario ? 'Mostrar Totales Unitarios' : 'Mostrar Totales por Cantidad';
+            if (esUnitario) {
+                mostrarModalTotales();
+            } else {
+                document.querySelectorAll('.precioUnitario-total, .igvUnitario-total, .pesoUnitario-total, .costoUnitarioTransporte-total, .totalUnitario-total').forEach(el => {
+                    el.classList.remove('d-none');
+                });
+                document.querySelectorAll('.precioTotal-total, .igvTotal-total, .pesoTotal-total, .costeTransporte-total, .totalTotal-total').forEach(el => {
+                    el.classList.add('d-none');
+                });
+                btnToggleTotales.textContent = 'Mostrar Totales por Cantidad';
+            }
         });
+    }
+
+    function mostrarModalTotales() {
+        const modalBody = document.querySelector('#modalTotalesPorCantidad .modal-body');
+        modalBody.innerHTML = '';
+        const table = document.createElement('table');
+        table.className = 'table table-striped table-sm';
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th class="text-end">Precio Total</th>
+                    <th class="text-end">IGV Total</th>
+                    <th class="text-end">Peso Total</th>
+                    <th class="text-end">Costo Transporte</th>
+                    <th class="text-end">Total Final</th>
+                </tr>
+            </thead>
+            <tbody id="bodyModalTotales"></tbody>
+        `;
+        modalBody.appendChild(table);
+
+        const tbodyModal = document.querySelector('#bodyModalTotales');
+
+        document.querySelectorAll('#tablaProductosGeneral tr[data-fila-id]').forEach(trGeneral => {
+            const filaId = trGeneral.dataset.filaId;
+            const trTotales = document.querySelector(`#tablaProductosTotales tr[data-fila-id="${filaId}"]`);
+            if (trTotales) {
+                const descripcion = trGeneral.querySelector('.descripcion').value;
+                const precioTotal = trTotales.querySelector('.precioTotal-total').textContent;
+                const igvTotal = trTotales.querySelector('.igvTotal-total').textContent;
+                const pesoTotal = trTotales.querySelector('.pesoTotal-total').textContent;
+                const costeTransporte = trTotales.querySelector('.costeTransporte-total').textContent;
+                const totalTotal = trTotales.querySelector('.totalTotal-total').textContent;
+
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td>${descripcion}</td>
+                    <td class="text-end">${precioTotal}</td>
+                    <td class="text-end">${igvTotal}</td>
+                    <td class="text-end">${pesoTotal}</td>
+                    <td class="text-end">${costeTransporte}</td>
+                    <td class="text-end">${totalTotal}</td>
+                `;
+                tbodyModal.appendChild(newRow);
+            }
+        });
+        const myModal = new bootstrap.Modal(document.getElementById('modalTotalesPorCantidad'));
+        myModal.show();
     }
 
     actualizarVisibilidadBonificacion();

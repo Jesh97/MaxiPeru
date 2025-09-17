@@ -284,7 +284,9 @@
 
                     <div class="tab-pane fade" id="totales-pane" role="tabpanel" aria-labelledby="totales-tab" tabindex="0">
                         <div class="d-flex justify-content-end mb-2">
-                            <button id="btnToggleTotales" class="btn btn-secondary btn-sm">Mostrar Totales por Cantidad</button>
+                            <button id="btnToggleTotales" type="button" class="btn btn-primary btn-sm me-2">
+                                <i class="bi bi-calculator"></i> Mostrar Totales por Cantidad
+                            </button>
                         </div>
                         <div class="table-responsive mt-3">
                             <table class="table align-middle table-hover" id="tablaProductosTotales">
@@ -652,6 +654,22 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="guardarDescuentoItem">Guardar Descuento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalTotalesPorCantidad" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-bar-chart-fill"></i> Totales por Cantidad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
