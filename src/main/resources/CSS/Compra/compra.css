@@ -1,12 +1,12 @@
 :root {
-    --primary: #2563eb;
+    --primary: #1a56db;
     --primary-dark: #1e40af;
-    --primary-light: #e8f0ff;
+    --primary-light: #eff6ff;
     --primary-lighter: #dbe9ff;
     --secondary: #f59e0b;
     --secondary-dark: #b45309;
     --secondary-light: #fef3c7;
-    --accent: #10b981;
+    --accent: #059669;
     --accent-dark: #047857;
     --accent-light: #d1fae5;
     --danger: #ef4444;
@@ -20,9 +20,9 @@
     --info-light: #bfdbfe;
     --muted: #6b7280;
     --muted-dark: #4b5563;
-    --muted-light: #d1d5db;
+    --muted-light: #e5e7eb;
     --card-bg: #ffffff;
-    --page-bg: #f8f9fb;
+    --page-bg: #f8f9fa;
     --radius: 12px;
     --shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
     --shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.06);
@@ -34,8 +34,9 @@ html, body {
     font-family: var(--font-main);
     background: var(--page-bg);
     color: var(--muted-dark);
-    line-height: 1.8;
-    font-size: 13px;
+    line-height: 1.6;
+    font-size: 14px;
+    font-weight: 400;
 }
 
 header.site-header {
@@ -45,51 +46,47 @@ header.site-header {
     right: 0;
     z-index: 1000;
     background: linear-gradient(90deg, var(--primary), var(--primary-dark));
-    padding: 14px 28px;
+    padding: 18px 32px;
     display: flex;
     align-items: center;
-    gap: 14px;
-    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.08);
-    border-bottom: 3px solid var(--secondary);
+    gap: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border-bottom: 4px solid var(--secondary);
 }
 
 header .brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 header h1 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: white;
     margin: 0;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-header .small-desc {
-    font-size: 0.9rem;
-    color: var(--primary-light);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 header.site-header .brand i {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     color: white;
-    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
 main.container {
-    padding: 110px 24px 40px;
+    padding: 120px 24px 40px;
     max-width: 1700px;
     margin: auto;
-    background: linear-gradient(135deg, var(--primary-lighter) 0%, var(--accent-light) 100%);
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--accent-light) 100%);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
+    padding: 40px;
 }
 
 @media (max-width: 576px) {
     main.container {
-        padding: 12px;
+        padding: 20px;
         background: var(--page-bg);
         box-shadow: none;
         border-radius: 0;
@@ -99,52 +96,50 @@ main.container {
 .card-section {
     background: var(--card-bg);
     border-radius: var(--radius);
-    padding: 20px 18px;
-    margin-bottom: 24px;
+    padding: 24px;
+    margin-bottom: 32px;
     box-shadow: var(--shadow);
     border: 1px solid var(--muted-light);
     transition: all 0.3s ease;
-    border-left: 5px solid var(--accent);
-    border-bottom: 4px solid;
-    border-image: linear-gradient(to right, var(--accent), var(--primary)) 1;
+    border-left: 6px solid var(--primary);
 }
 
 .card-section:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
     box-shadow: var(--shadow-hover);
-    border-left-color: var(--primary);
+    border-left-color: var(--accent);
 }
 
 @media (max-width: 768px) {
     .card-section {
-        padding: 16px 12px;
+        padding: 16px;
     }
 }
 
 .section-title {
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: white;
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 20px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    background: linear-gradient(90deg, var(--primary), var(--accent));
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--primary), var(--info));
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
 }
 
 .section-title i {
     color: var(--secondary-light);
-    font-size: 1.5rem;
+    font-size: 1.8rem;
 }
 
 @media (max-width: 768px) {
     .section-title {
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
 }
 
@@ -165,10 +160,10 @@ main.container {
 .nav-tabs .nav-link {
     border: none;
     border-radius: var(--radius) var(--radius) 0 0;
-    border-bottom: 3px solid transparent;
+    border-bottom: 4px solid transparent;
     color: var(--muted-dark);
     font-weight: 600;
-    padding: 1rem 1.5rem;
+    padding: 1.2rem 1.8rem;
     transition: all 0.3s ease;
     background-color: var(--primary-lighter);
     position: relative;
@@ -178,7 +173,7 @@ main.container {
 .nav-tabs .nav-link:hover {
     color: var(--primary);
     background-color: var(--primary-light);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
 }
 
 .nav-tabs .nav-link.active {
@@ -199,10 +194,10 @@ main.container {
 .nav-tabs .nav-link.active::after {
     content: '';
     position: absolute;
-    bottom: -3px;
+    bottom: -4px;
     left: 0;
     width: 100%;
-    height: 3px;
+    height: 4px;
     background: var(--accent);
     animation: tabActiveUnderline 0.3s ease-out forwards;
 }
@@ -211,8 +206,8 @@ main.container {
     display: flex;
     align-items: center;
     gap: 16px;
-    margin-bottom: 20px;
-    padding: 10px;
+    margin-bottom: 24px;
+    padding: 12px;
     background: var(--page-bg);
     border-radius: var(--radius);
     border: 1px solid var(--muted-light);
@@ -223,7 +218,7 @@ main.container {
     flex-grow: 1;
     border-radius: 10px;
     border: 1.4px solid var(--muted-light);
-    padding: 10px 12px;
+    padding: 12px 14px;
     font-size: 0.9rem;
     background: var(--card-bg);
     color: var(--muted-dark);
@@ -291,13 +286,20 @@ main.container {
 
 .table thead th {
     font-weight: 700;
-    padding: 14px 12px;
-    font-size: 0.9rem;
+    padding: 16px 14px;
+    font-size: 0.95rem;
     text-align: center;
     border-bottom: 2px solid var(--primary);
     position: sticky;
     top: 0;
     z-index: 10;
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.table thead th.descripcion-header {
+    min-width: 550px;
+    text-align: left;
 }
 
 .table thead th.general-header {
@@ -323,8 +325,8 @@ main.container {
 .table tbody td {
     vertical-align: middle;
     text-align: center;
-    padding: 12px 10px;
-    font-size: 0.85rem;
+    padding: 14px 12px;
+    font-size: 0.9rem;
     color: var(--muted-dark);
     border-bottom: 1px solid var(--muted-light);
 }
@@ -342,11 +344,11 @@ main.container {
 
 .table tbody input, .table tbody .form-select {
     border: 1px solid var(--muted-light);
-    border-radius: 6px;
-    padding: 6px 10px;
+    border-radius: 8px;
+    padding: 8px 12px;
     background: var(--card-bg);
     transition: all 0.2s ease;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--primary-dark);
     font-weight: 500;
 }
@@ -394,17 +396,17 @@ main.container {
     font-weight: 500;
     color: var(--primary-dark);
     text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 180px;
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: none;
+    min-width: 500px;
 }
 
 #descuentoGlobalContainer {
-    border-left: 5px solid var(--primary);
+    border-left: 6px solid var(--primary);
     background: linear-gradient(to right, var(--primary-lighter), var(--page-bg));
-    padding: 20px 18px;
-    margin-bottom: 24px;
+    padding: 24px;
+    margin-bottom: 32px;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     border: 1px solid var(--primary-light);
@@ -419,8 +421,8 @@ main.container {
 .btn-traslado-section {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    margin-top: 20px;
+    gap: 16px;
+    margin-top: 24px;
 }
 
 .d-none {
@@ -430,7 +432,7 @@ main.container {
 .btn {
     border-radius: 12px;
     font-weight: 700;
-    padding: 10px 20px;
+    padding: 12px 24px;
     font-size: 1rem;
     transition: all 0.3s ease;
     cursor: pointer;
@@ -461,12 +463,12 @@ main.container {
     background: linear-gradient(90deg, var(--accent), var(--accent-dark));
     border: none;
     color: white;
-    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 5px 15px rgba(5, 150, 105, 0.4);
 }
 
 .btn-primary:hover {
     background: linear-gradient(90deg, var(--accent-dark), var(--accent));
-    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.55);
+    box-shadow: 0 6px 18px rgba(5, 150, 105, 0.55);
     transform: translateY(-2px);
 }
 
@@ -480,7 +482,7 @@ main.container {
 .btn-outline-primary:hover {
     background: var(--primary);
     color: white;
-    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 3px 10px rgba(26, 86, 219, 0.4);
 }
 
 .btn-outline-secondary {
@@ -517,23 +519,23 @@ main.container {
 }
 
 #contenedorBtnGuia {
-    margin-top: 20px;
+    margin-top: 24px;
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
 }
 
 #btnGuia, #btnReferencia {
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    min-width: 150px;
+    letter-spacing: 0.05em;
+    min-width: 160px;
 }
 
 #btnGuia {
     background: linear-gradient(45deg, var(--primary), var(--info));
-    box-shadow: 0 5px 16px rgba(37, 99, 235, 0.45);
+    box-shadow: 0 5px 16px rgba(26, 86, 219, 0.45);
 }
 
 #btnGuia:hover {
@@ -557,54 +559,53 @@ main.container {
 
 .modal-content {
     border-radius: var(--radius);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
-    background: linear-gradient(145deg, var(--primary-lighter), var(--accent-light));
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(145deg, var(--primary-light), var(--accent-light));
     border: 2px solid var(--primary);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .modal-header {
     background: linear-gradient(90deg, var(--primary), var(--accent));
-    border-bottom: 3px solid var(--secondary);
+    border-bottom: 4px solid var(--secondary);
     color: white;
-    padding: 20px 24px;
+    padding: 24px 30px;
     border-top-left-radius: var(--radius);
     border-top-right-radius: var(--radius);
-    box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.2);
-    font-weight: 700;
-    font-size: 1.3rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.25);
+    font-weight: 800;
+    font-size: 1.6rem;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
 }
 
 .modal-body {
-    padding: 24px 32px;
+    padding: 32px;
     color: var(--muted-dark);
     font-size: 1rem;
-    line-height: 1.5;
+    line-height: 1.8;
     background: var(--card-bg);
     border-radius: 0 0 var(--radius) var(--radius);
     box-shadow: inset 0 3px 12px rgba(16, 185, 129, 0.1);
 }
 
 .modal-footer {
-    background: var(--primary-lighter);
+    background: var(--primary-light);
     border-top: 3px solid var(--secondary);
-    padding: 20px 32px;
+    padding: 24px 32px;
     border-bottom-left-radius: var(--radius);
     border-bottom-right-radius: var(--radius);
     display: flex;
     justify-content: flex-end;
-    gap: 18px;
+    gap: 20px;
     box-shadow: inset 0 4px 8px rgba(16, 185, 129, 0.1);
 }
 
 .modal-footer button.btn {
-    min-width: 140px;
+    min-width: 150px;
     font-weight: 700;
-    padding: 10px 24px;
+    padding: 12px 28px;
     border-radius: var(--radius);
     font-size: 1rem;
     cursor: pointer;
@@ -615,7 +616,7 @@ main.container {
 .totals .line {
     display: flex;
     justify-content: space-between;
-    padding: 10px 0;
+    padding: 12px 0;
     font-weight: 700;
     font-size: 1rem;
     border-bottom: 2px solid var(--secondary-light);
@@ -633,10 +634,10 @@ main.container {
 }
 
 #totalAPagar {
-    font-size: 1.35rem;
+    font-size: 1.5rem;
     color: var(--accent-dark);
     font-weight: 900;
-    text-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+    text-shadow: 0 0 8px rgba(5, 150, 105, 0.5);
 }
 
 #totalPesoProductos {
@@ -679,15 +680,15 @@ main.container {
 .form-group {
     display: flex;
     flex-direction: column;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
     max-width: 100%;
 }
 
 .form-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px 24px;
-    margin-bottom: 16px;
+    gap: 20px 30px;
+    margin-bottom: 20px;
 }
 
 .form-row > .form-group {
@@ -697,9 +698,9 @@ main.container {
 
 label {
     font-weight: 600;
-    color: var(--muted-dark);
+    color: var(--primary-dark);
     font-size: 0.9rem;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
     cursor: pointer;
     user-select: none;
 }
@@ -707,8 +708,8 @@ label {
 .form-control, .input-group, textarea, .form-select, .search-and-add-row-container input[type="text"] {
     border-radius: 10px;
     border: 1.4px solid var(--muted-light);
-    padding: 10px 12px;
-    font-size: 0.9rem;
+    padding: 12px 14px;
+    font-size: 0.95rem;
     background: var(--page-bg);
     color: var(--muted-dark);
     transition: all 0.3s ease;
@@ -725,14 +726,14 @@ label {
 
 .form-control:focus, .form-select:focus, textarea:focus, .search-and-add-row-container input[type="text"]:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 8px 3px rgba(16, 185, 129, 0.25);
+    box-shadow: 0 0 8px 3px rgba(5, 150, 105, 0.25);
     background: white;
     color: var(--muted-dark);
     outline: none;
 }
 
 #observacionesGenerales {
-    min-height: 100px;
+    min-height: 120px;
     resize: vertical;
 }
 
@@ -741,22 +742,22 @@ label {
         margin: 1rem 1.5rem;
     }
     .modal-body {
-        padding: 18px 20px;
+        padding: 20px;
     }
     .modal-footer {
-        padding: 16px 20px;
+        padding: 18px 20px;
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
     }
     .modal-footer button.btn {
         width: 100%;
         min-width: unset;
-        padding: 12px 0;
+        padding: 14px 0;
         font-size: 1.1rem;
     }
     .form-row {
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
     }
     .form-row > .form-group {
         max-width: 100% !important;
@@ -773,24 +774,21 @@ label {
 
 @media (max-width: 576px) {
     .modal-header {
-        font-size: 1.15rem;
-        padding: 16px 20px;
+        font-size: 1.25rem;
+        padding: 20px;
     }
     .modal-body {
         font-size: 0.95rem;
-        padding: 16px 18px;
+        padding: 18px;
     }
     .modal-footer {
-        padding: 14px 16px;
+        padding: 16px;
     }
     header.site-header {
-        padding: 10px 15px;
+        padding: 12px 20px;
     }
     header h1 {
-        font-size: 1rem;
-    }
-    header .small-desc {
-        display: none;
+        font-size: 1.15rem;
     }
 }
 
@@ -799,61 +797,61 @@ label {
 .guia-transporte-container {
     background: var(--card-bg);
     border-radius: var(--radius);
-    padding: 24px;
+    padding: 32px;
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
     border: 1px solid var(--muted-light);
 }
 
 .guia-transporte-container .btn-primary {
-    margin-bottom: 24px;
+    margin-bottom: 32px;
     width: fit-content;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 #contenedorCajas {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 40px;
 }
 
 /* Estilos mejorados para la caja de resumen */
 .caja-resumen {
     background: var(--card-bg);
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-left 0.3s ease;
     overflow: hidden;
     border: 1px solid var(--muted-light);
-    border-left: 6px solid var(--primary);
+    border-left: 8px solid var(--primary);
 }
 
 .caja-resumen:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
     border-left-color: var(--accent);
 }
 
 .caja-resumen .card-header {
     background: linear-gradient(90deg, var(--info), var(--primary-dark));
     color: white;
-    padding: 18px 24px;
-    font-weight: 700;
-    font-size: 1.2rem;
+    padding: 20px 28px;
+    font-weight: 800;
+    font-size: 1.35rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 3px solid var(--secondary);
+    border-bottom: 4px solid var(--secondary);
     user-select: none;
-    box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.2);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+    box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.2);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .caja-resumen .flete-total {
     font-weight: 900;
-    font-size: 1.4rem;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    font-size: 1.6rem;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
     color: var(--secondary-light);
 }
 
@@ -866,8 +864,8 @@ label {
 
 .caja-resumen .table thead th {
     font-weight: 600;
-    padding: 12px 16px;
-    font-size: 0.85rem;
+    padding: 14px 20px;
+    font-size: 0.9rem;
     text-align: left;
     background-color: var(--primary-lighter);
     border-bottom: 1px solid var(--primary-light);
@@ -875,8 +873,8 @@ label {
 }
 
 .caja-resumen .table tbody td {
-    padding: 12px 16px;
-    font-size: 0.85rem;
+    padding: 14px 20px;
+    font-size: 0.9rem;
     color: var(--muted-dark);
     text-align: left;
     vertical-align: middle;
@@ -899,7 +897,7 @@ label {
 /* Estilos para el Modal de Cajas */
 .modal-cajas-content {
     background: var(--page-bg);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
     border: 2px solid var(--primary);
 }
 
@@ -920,8 +918,8 @@ label {
 .productos-disponibles-container {
     background: var(--primary-light);
     border-radius: var(--radius);
-    padding: 16px;
-    min-height: 200px;
+    padding: 20px;
+    min-height: 250px;
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
     border: 2px dashed var(--primary);
 }
@@ -930,8 +928,8 @@ label {
     background: var(--card-bg);
     border-radius: 8px;
     border: 2px solid var(--muted-light);
-    min-height: 80px;
-    padding: 8px;
+    min-height: 100px;
+    padding: 10px;
     box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -939,8 +937,8 @@ label {
 .productos-en-caja .list-group-item {
     background: var(--card-bg);
     border-radius: 6px;
-    padding: 8px 12px;
-    margin-bottom: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
     border: 1px solid var(--muted-light);
     cursor: grab;
     display: flex;
@@ -1049,4 +1047,111 @@ label {
     border-top: none;
     padding: 24px 32px;
     border-radius: 0 0 16px 16px;
+}
+
+/* Estilos agregados para el modal de Totales por Cantidad */
+#modalTotalesPorCantidad .modal-dialog {
+    max-width: 1100px;
+}
+
+#modalTotalesPorCantidad .modal-content {
+    background: linear-gradient(135deg, var(--info-light), var(--primary-light));
+    border: 2px solid var(--info);
+    border-radius: 16px;
+}
+
+#modalTotalesPorCantidad .modal-header {
+    background: linear-gradient(90deg, var(--info-dark), var(--info));
+    border-bottom: 3px solid var(--secondary);
+    color: white;
+    font-weight: 800;
+    font-size: 1.5rem;
+    padding: 24px 30px;
+}
+
+#modalTotalesPorCantidad .modal-title i {
+    color: var(--secondary-light);
+}
+
+#modalTotalesPorCantidad .modal-body {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 0 0 14px 14px;
+}
+
+#modalTotalesPorCantidad table.table {
+    border-collapse: separate;
+    border-spacing: 0 12px;
+}
+
+#modalTotalesPorCantidad .table thead th {
+    background: linear-gradient(to right, var(--info-light), var(--info-light));
+    color: var(--info-dark);
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 14px;
+    border-bottom: 2px solid var(--info);
+    text-align: right;
+}
+
+#modalTotalesPorCantidad .table thead th:first-child {
+    text-align: left;
+}
+
+#modalTotalesPorCantidad .table tbody td {
+    background: var(--page-bg);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    font-size: 0.95rem;
+    padding: 14px;
+    font-weight: 500;
+    text-align: right;
+    color: var(--muted-dark);
+    transition: all 0.2s ease;
+    border: none;
+}
+
+#modalTotalesPorCantidad .table tbody tr:hover td {
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    transform: scale(1.01);
+}
+
+#modalTotalesPorCantidad .table tbody td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+
+#modalTotalesPorCantidad .modal-footer {
+    background: var(--info-light);
+    border-top: 2px solid var(--info);
+}
+
+/* Modificaciones para el campo de descripción */
+.table tbody td.descripcion-readonly {
+    min-width: 500px;
+    white-space: normal;
+    word-wrap: break-word;
+    text-align: left;
+}
+
+.table tbody input.descripcion {
+    min-width: 500px;
+}
+
+/* Nuevo estilo para apilar las secciones de productos */
+/* Este estilo hace que el contenedor de productos disponibles y cajas asignadas se apilen verticalmente */
+.modal-body .row.gx-5 {
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* Ajusta el espacio entre las secciones */
+}
+
+/* Asegura que en pantallas medianas las columnas no se dividan */
+@media (min-width: 768px) {
+    .modal-body .row.gx-5 .col-md-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
 }
