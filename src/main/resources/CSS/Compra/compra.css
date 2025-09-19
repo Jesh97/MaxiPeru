@@ -1,31 +1,40 @@
 :root {
-    --primary: #1a56db;
-    --primary-dark: #1e40af;
-    --primary-light: #eff6ff;
-    --primary-lighter: #dbe9ff;
-    --secondary: #f59e0b;
-    --secondary-dark: #b45309;
-    --secondary-light: #fef3c7;
-    --accent: #059669;
-    --accent-dark: #047857;
-    --accent-light: #d1fae5;
-    --danger: #ef4444;
-    --danger-dark: #b91c1c;
-    --danger-light: #fee2e2;
-    --warning: #facc15;
-    --warning-dark: #a16207;
-    --warning-light: #fef9c3;
-    --info: #3b82f6;
-    --info-dark: #1e40af;
-    --info-light: #bfdbfe;
-    --muted: #6b7280;
-    --muted-dark: #4b5563;
-    --muted-light: #e5e7eb;
-    --card-bg: #ffffff;
-    --page-bg: #f8f9fa;
-    --radius: 12px;
-    --shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
-    --shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.06);
+    /* Paleta de colores más refinada para un ambiente corporativo */
+    --primary: #214170;
+    --primary-dark: #1A3150;
+    --primary-light: #E9EEF6;
+    --primary-lighter: #DDE5F2;
+
+    --secondary: #E3B448;
+    --secondary-dark: #C99831;
+    --secondary-light: #FCF4E2;
+
+    --accent: #55A88B;
+    --accent-dark: #408A72;
+    --accent-light: #E7F6F1;
+
+    --danger: #D9534F;
+    --danger-dark: #C0392B;
+    --danger-light: #FCE8E7;
+
+    --warning: #F0B429;
+    --warning-dark: #CC9A20;
+    --warning-light: #FDF9E2;
+
+    --info: #3498DB;
+    --info-dark: #2A79B3;
+    --info-light: #E5F3FD;
+
+    --muted: #6C7A89;
+    --muted-dark: #4A5665;
+    --muted-light: #EFEFEF;
+
+    --card-bg: #FFFFFF;
+    --page-bg: #F9FAFB;
+
+    --radius: 14px;
+    --shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+    --shadow-hover: 0 12px 30px rgba(0, 0, 0, 0.08);
     --font-main: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
@@ -51,7 +60,7 @@ header.site-header {
     align-items: center;
     gap: 16px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    border-bottom: 4px solid var(--secondary);
+    border-bottom: 5px solid var(--secondary);
 }
 
 header .brand {
@@ -100,7 +109,7 @@ main.container {
     margin-bottom: 32px;
     box-shadow: var(--shadow);
     border: 1px solid var(--muted-light);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     border-left: 6px solid var(--primary);
 }
 
@@ -127,9 +136,9 @@ main.container {
     padding: 12px 16px;
     border-radius: 10px;
     background: linear-gradient(90deg, var(--primary), var(--info));
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
 }
 
 .section-title i {
@@ -163,7 +172,7 @@ main.container {
     border-bottom: 4px solid transparent;
     color: var(--muted-dark);
     font-weight: 600;
-    padding: 1.2rem 1.8rem;
+    padding: 1rem 1.6rem;
     transition: all 0.3s ease;
     background-color: var(--primary-lighter);
     position: relative;
@@ -219,7 +228,7 @@ main.container {
     border-radius: 10px;
     border: 1.4px solid var(--muted-light);
     padding: 12px 14px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     background: var(--card-bg);
     color: var(--muted-dark);
     transition: all 0.3s ease;
@@ -228,7 +237,7 @@ main.container {
 
 .search-and-add-row-container input[type="text"]:focus {
     border-color: var(--info);
-    box-shadow: 0 0 8px 3px rgba(59, 130, 246, 0.25);
+    box-shadow: 0 0 8px 3px rgba(52, 152, 219, 0.25);
     background: white;
     outline: none;
 }
@@ -346,16 +355,16 @@ main.container {
     border: 1px solid var(--muted-light);
     border-radius: 8px;
     padding: 8px 12px;
+    font-size: 0.9rem;
     background: var(--card-bg);
     transition: all 0.2s ease;
-    font-size: 0.9rem;
-    color: var(--primary-dark);
     font-weight: 500;
+    color: var(--primary-dark);
 }
 
 .table tbody input:focus, .table tbody .form-select:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 0 5px rgba(33, 65, 112, 0.3);
     background-color: white;
     outline: none;
 }
@@ -434,9 +443,9 @@ main.container {
     font-weight: 700;
     padding: 12px 24px;
     font-size: 1rem;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
     position: relative;
     overflow: hidden;
     z-index: 1;
@@ -449,7 +458,7 @@ main.container {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
     transform: translateX(-100%) skewX(-30deg);
     transition: all 0.7s cubic-bezier(0.165, 0.84, 0.44, 1);
     z-index: -1;
@@ -463,12 +472,12 @@ main.container {
     background: linear-gradient(90deg, var(--accent), var(--accent-dark));
     border: none;
     color: white;
-    box-shadow: 0 5px 15px rgba(5, 150, 105, 0.4);
+    box-shadow: 0 6px 16px rgba(85, 168, 139, 0.4);
 }
 
 .btn-primary:hover {
     background: linear-gradient(90deg, var(--accent-dark), var(--accent));
-    box-shadow: 0 6px 18px rgba(5, 150, 105, 0.55);
+    box-shadow: 0 8px 20px rgba(85, 168, 139, 0.55);
     transform: translateY(-2px);
 }
 
@@ -482,7 +491,7 @@ main.container {
 .btn-outline-primary:hover {
     background: var(--primary);
     color: white;
-    box-shadow: 0 3px 10px rgba(26, 86, 219, 0.4);
+    box-shadow: 0 3px 10px rgba(33, 65, 112, 0.4);
 }
 
 .btn-outline-secondary {
@@ -495,7 +504,7 @@ main.container {
 .btn-outline-secondary:hover {
     background: var(--secondary);
     color: white;
-    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.4);
+    box-shadow: 0 3px 10px rgba(227, 180, 72, 0.4);
 }
 
 .btn-success {
@@ -529,13 +538,13 @@ main.container {
 
 #btnGuia, #btnReferencia {
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     min-width: 160px;
 }
 
 #btnGuia {
     background: linear-gradient(45deg, var(--primary), var(--info));
-    box-shadow: 0 5px 16px rgba(26, 86, 219, 0.45);
+    box-shadow: 0 6px 18px rgba(33, 65, 112, 0.45);
 }
 
 #btnGuia:hover {
@@ -544,7 +553,7 @@ main.container {
 
 #btnReferencia {
     background: linear-gradient(45deg, var(--secondary), var(--warning));
-    box-shadow: 0 5px 16px rgba(245, 158, 11, 0.45);
+    box-shadow: 0 6px 18px rgba(227, 180, 72, 0.45);
 }
 
 #btnReferencia:hover {
@@ -587,7 +596,7 @@ main.container {
     line-height: 1.8;
     background: var(--card-bg);
     border-radius: 0 0 var(--radius) var(--radius);
-    box-shadow: inset 0 3px 12px rgba(16, 185, 129, 0.1);
+    box-shadow: inset 0 3px 12px rgba(85, 168, 139, 0.1);
 }
 
 .modal-footer {
@@ -599,7 +608,7 @@ main.container {
     display: flex;
     justify-content: flex-end;
     gap: 20px;
-    box-shadow: inset 0 4px 8px rgba(16, 185, 129, 0.1);
+    box-shadow: inset 0 4px 8px rgba(85, 168, 139, 0.1);
 }
 
 .modal-footer button.btn {
@@ -610,7 +619,7 @@ main.container {
     font-size: 1rem;
     cursor: pointer;
     transition: background 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    box-shadow: 0 4px 12px rgba(85, 168, 139, 0.25);
 }
 
 .totals .line {
@@ -637,7 +646,7 @@ main.container {
     font-size: 1.5rem;
     color: var(--accent-dark);
     font-weight: 900;
-    text-shadow: 0 0 8px rgba(5, 150, 105, 0.5);
+    text-shadow: 0 0 10px rgba(85, 168, 139, 0.5);
 }
 
 #totalPesoProductos {
@@ -726,7 +735,7 @@ label {
 
 .form-control:focus, .form-select:focus, textarea:focus, .search-and-add-row-container input[type="text"]:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 8px 3px rgba(5, 150, 105, 0.25);
+    box-shadow: 0 0 8px 3px rgba(85, 168, 139, 0.25);
     background: white;
     color: var(--muted-dark);
     outline: none;
@@ -896,69 +905,136 @@ label {
 
 /* Estilos para el Modal de Cajas */
 .modal-cajas-content {
-    background: var(--page-bg);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
-    border: 2px solid var(--primary);
+    background: linear-gradient(145deg, var(--page-bg) 0%, var(--primary-light) 100%);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--primary-light);
+    border-radius: 18px;
 }
 
 .modal-cajas-header {
-    background: linear-gradient(90deg, var(--primary-dark), var(--primary)) !important;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
     color: white;
-    border-bottom: 3px solid var(--secondary);
-    font-weight: 700;
-    font-size: 1.3rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    padding: 24px 30px;
+    border-bottom: 4px solid var(--secondary);
+    font-weight: 800;
+    font-size: 1.5rem;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.modal-cajas-header .btn-close {
+    filter: invert(1);
 }
 
 .modal-cajas-footer {
-    background: var(--primary-lighter) !important;
+    background: var(--primary-lighter);
     border-top: 3px solid var(--secondary);
+    padding: 20px 30px;
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 18px;
+    box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.05);
+}
+
+.productos-disponibles-container,
+.productos-en-caja {
+    transition: all 0.3s ease-in-out;
 }
 
 .productos-disponibles-container {
-    background: var(--primary-light);
+    background: var(--card-bg);
     border-radius: var(--radius);
-    padding: 20px;
+    padding: 24px;
     min-height: 250px;
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
-    border: 2px dashed var(--primary);
+    border: 2px dashed var(--muted-light);
 }
 
 .productos-en-caja {
-    background: var(--card-bg);
-    border-radius: 8px;
-    border: 2px solid var(--muted-light);
+    background: var(--primary-light);
+    border-radius: var(--radius);
+    border: 2px dashed var(--accent);
     min-height: 100px;
-    padding: 10px;
+    padding: 16px;
     box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.05);
+    overflow-y: auto;
 }
 
 .productos-disponibles-container .list-group-item,
 .productos-en-caja .list-group-item {
-    background: var(--card-bg);
-    border-radius: 6px;
-    padding: 10px 14px;
-    margin-bottom: 10px;
+    background: var(--page-bg);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
     border: 1px solid var(--muted-light);
     cursor: grab;
     display: flex;
     justify-content: space-between;
     align-items: center;
     transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    font-size: 0.95rem;
+    font-weight: 500;
 }
 
 .productos-disponibles-container .list-group-item:hover {
-    background: var(--primary-lighter);
+    background: var(--info-light);
+    border-color: var(--info);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.15);
 }
 
 .productos-en-caja .list-group-item {
-    background: var(--info-light);
-    border-color: var(--info-dark);
+    background: var(--accent-light);
+    border-color: var(--accent);
 }
 
 .productos-en-caja .list-group-item:hover {
-    background: var(--info);
+    background: var(--accent);
     color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(85, 168, 139, 0.25);
+}
+
+.productos-en-caja .list-group-item:hover span {
+    color: white;
+}
+
+.productos-en-caja .list-group-item .text-muted {
+    color: var(--accent-dark) !important;
+}
+
+/* Animación para el arrastre */
+.productos-disponibles-container .list-group-item.dragging,
+.productos-en-caja .list-group-item.dragging {
+    opacity: 0.6;
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.productos-disponibles-container .list-group-item span.text-muted,
+.productos-en-caja .list-group-item span.text-muted {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--muted) !important;
+}
+
+/* Nuevo estilo para apilar las secciones de productos */
+.modal-body .row.gx-5 {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Asegura que en pantallas medianas las columnas no se dividan */
+@media (min-width: 768px) {
+    .modal-body .row.gx-5 .col-md-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
 }
 
 /* Nuevos estilos para la tabla de costos de transporte */
@@ -1038,7 +1114,7 @@ label {
 #modalDescuentoItem .form-control:focus,
 #modalDescuentoItem .form-select:focus {
     border-color: var(--secondary);
-    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+    box-shadow: 0 0 0 4px rgba(227, 180, 72, 0.2);
     background-color: white;
 }
 
@@ -1138,20 +1214,4 @@ label {
 
 .table tbody input.descripcion {
     min-width: 500px;
-}
-
-/* Nuevo estilo para apilar las secciones de productos */
-/* Este estilo hace que el contenedor de productos disponibles y cajas asignadas se apilen verticalmente */
-.modal-body .row.gx-5 {
-    display: flex;
-    flex-direction: column;
-    gap: 30px; /* Ajusta el espacio entre las secciones */
-}
-
-/* Asegura que en pantallas medianas las columnas no se dividan */
-@media (min-width: 768px) {
-    .modal-body .row.gx-5 .col-md-6 {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
 }

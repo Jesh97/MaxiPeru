@@ -1064,7 +1064,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Configurar la búsqueda en tiempo real
         const busquedaProductoModal = $('#busquedaProductoModal');
         if (busquedaProductoModal) {
             busquedaProductoModal.addEventListener('input', () => {
@@ -1237,7 +1236,6 @@ document.addEventListener('DOMContentLoaded', () => {
         modalBody.appendChild(form);
         modalAsignar.show();
     }
-
 
     function crearItemProductoCaja(filaId, cantidad, descripcion) {
         const item = document.createElement('div');
