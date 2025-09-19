@@ -2,23 +2,17 @@ package sistema.Modelo.Compra;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.math.BigDecimal;
+
 public class Caja {
-    @JsonProperty("id_caja_compra")
-    private int idCajaCompra;
 
-    @JsonProperty("id_compra")
-    private int idCompra;
+    private int idCajaCompra;     // PK
+    private int idCompra;         // FK hacia Compra
+    private String nombreCaja;    // Nombre identificador de la caja
+    private int cantidad;         // Número de cajas
+    private BigDecimal costoCaja; // Costo de la caja
 
-    @JsonProperty("nombre_caja")
-    private String nombreCaja;
-
-    @JsonProperty("cantidad")
-    private int cantidad;
-
-    @JsonProperty("costo_caja")
-    private double costoCaja;
-
-    public Caja(int idCajaCompra, int idCompra, String nombreCaja, int cantidad, double costoCaja) {
+    public Caja(int idCajaCompra, int idCompra, String nombreCaja, int cantidad, BigDecimal costoCaja) {
         this.idCajaCompra = idCajaCompra;
         this.idCompra = idCompra;
         this.nombreCaja = nombreCaja;
@@ -61,11 +55,11 @@ public class Caja {
         this.cantidad = cantidad;
     }
 
-    public double getCostoCaja() {
+    public BigDecimal getCostoCaja() {
         return costoCaja;
     }
 
-    public void setCostoCaja(double costoCaja) {
+    public void setCostoCaja(BigDecimal costoCaja) {
         this.costoCaja = costoCaja;
     }
 

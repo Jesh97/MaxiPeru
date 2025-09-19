@@ -5,59 +5,31 @@ import java.time.LocalDate;
 
 public class GuiaTransporte {
 
-    @JsonProperty("id_guia")
     private int idGuia;
-
-    @JsonProperty("id_compra")
     private int idCompra;
-
-    @JsonProperty("ruc_guia")
     private String rucGuia;
-
-    @JsonProperty("fecha_emision")
-    private LocalDate fechaEmision;
-
-    @JsonProperty("tipo_comprobante")
+    private String razonSocialGuia;
     private String tipoComprobante;
-
-    @JsonProperty("serie")
     private String serie;
-
-    @JsonProperty("correlativo")
     private String correlativo;
-
-    @JsonProperty("numero_guia")
     private String numeroGuia;
-
-    @JsonProperty("serie_guia")
     private String serieGuia;
-
-    @JsonProperty("correlativo_guia")
     private String correlativoGuia;
-
-    @JsonProperty("ciudad_traslado")
     private String ciudadTraslado;
-
-    @JsonProperty("coste_total_transporte")
     private double costeTotalTransporte;
-
-    @JsonProperty("peso")
     private double peso;
-
-    @JsonProperty("fecha_pedido")
+    private LocalDate fechaEmision;
     private LocalDate fechaPedido;
-
-    @JsonProperty("fecha_entrega")
     private LocalDate fechaEntrega;
 
-    public GuiaTransporte(int idGuia, int idCompra, String rucGuia, LocalDate fechaEmision, String tipoComprobante,
-                          String serie, String correlativo, String numeroGuia, String serieGuia, String correlativoGuia,
-                          String ciudadTraslado, double costeTotalTransporte, double peso, LocalDate fechaPedido,
-                          LocalDate fechaEntrega) {
+    public GuiaTransporte(int idGuia, int idCompra, String rucGuia, String razonSocialGuia, String tipoComprobante,
+                          String serie, String correlativo, String numeroGuia, String serieGuia,
+                          String correlativoGuia, String ciudadTraslado, double costeTotalTransporte,
+                          double peso, LocalDate fechaEmision, LocalDate fechaPedido, LocalDate fechaEntrega) {
         this.idGuia = idGuia;
         this.idCompra = idCompra;
         this.rucGuia = rucGuia;
-        this.fechaEmision = fechaEmision;
+        this.razonSocialGuia = razonSocialGuia;
         this.tipoComprobante = tipoComprobante;
         this.serie = serie;
         this.correlativo = correlativo;
@@ -67,6 +39,7 @@ public class GuiaTransporte {
         this.ciudadTraslado = ciudadTraslado;
         this.costeTotalTransporte = costeTotalTransporte;
         this.peso = peso;
+        this.fechaEmision = fechaEmision;
         this.fechaPedido = fechaPedido;
         this.fechaEntrega = fechaEntrega;
     }
@@ -98,12 +71,12 @@ public class GuiaTransporte {
         this.rucGuia = rucGuia;
     }
 
-    public LocalDate getFechaEmision() {
-        return fechaEmision;
+    public String getRazonSocialGuia() {
+        return razonSocialGuia;
     }
 
-    public void setFechaEmision(LocalDate fechaEmision) {
-        this.fechaEmision = fechaEmision;
+    public void setRazonSocialGuia(String razonSocialGuia) {
+        this.razonSocialGuia = razonSocialGuia;
     }
 
     public String getTipoComprobante() {
@@ -178,6 +151,14 @@ public class GuiaTransporte {
         this.peso = peso;
     }
 
+    public LocalDate getFechaEmision() {
+        return fechaEmision;
+    }
+
+    public void setFechaEmision(LocalDate fechaEmision) {
+        this.fechaEmision = fechaEmision;
+    }
+
     public LocalDate getFechaPedido() {
         return fechaPedido;
     }
@@ -200,7 +181,7 @@ public class GuiaTransporte {
                 "idGuia=" + idGuia +
                 ", idCompra=" + idCompra +
                 ", rucGuia='" + rucGuia + '\'' +
-                ", fechaEmision=" + fechaEmision +
+                ", razonSocialGuia='" + razonSocialGuia + '\'' +
                 ", tipoComprobante='" + tipoComprobante + '\'' +
                 ", serie='" + serie + '\'' +
                 ", correlativo='" + correlativo + '\'' +
@@ -210,6 +191,7 @@ public class GuiaTransporte {
                 ", ciudadTraslado='" + ciudadTraslado + '\'' +
                 ", costeTotalTransporte=" + costeTotalTransporte +
                 ", peso=" + peso +
+                ", fechaEmision=" + fechaEmision +
                 ", fechaPedido=" + fechaPedido +
                 ", fechaEntrega=" + fechaEntrega +
                 '}';

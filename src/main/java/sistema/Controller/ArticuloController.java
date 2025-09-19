@@ -23,7 +23,7 @@ public class ArticuloController implements ArticuloRepository {
     @Override
     public List<Articulo> buscarProducto(String busqueda) throws SQLException {
         List<Articulo> productos = new ArrayList<>();
-        String sql = "{call sp_buscar_producto(?)}";
+        String sql = "{call sp_buscar_articulos_para_venta(?)}";
 
         try (Connection conn = getConnection();
              CallableStatement cs = conn.prepareCall(sql)) {
@@ -33,7 +33,7 @@ public class ArticuloController implements ArticuloRepository {
             try (ResultSet rs = cs.executeQuery()) {
                 while (rs.next()) {
                     Articulo producto = new Articulo();
-                    producto.setIdProducto(rs.getInt("id_producto"));
+                    producto.setIdProducto(rs.getInt("id"));
                     producto.setCodigo(rs.getString("codigo"));
                     producto.setDescripcion(rs.getString("descripcion"));
                     producto.setCantidad(rs.getInt("cantidad"));

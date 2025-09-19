@@ -127,7 +127,7 @@ public class ProveedorController implements ProveedorRepository {
                     Proveedor proveedor = new Proveedor();
                     proveedor.setId(rs.getInt("id"));
                     proveedor.setRuc(rs.getString("ruc"));
-                    proveedor.setRazonSocial(rs.getString("razon_social"));
+                    proveedor.setRazonSocial(rs.getString("razonSocial"));
                     proveedor.setDireccion(rs.getString("direccion"));
                     proveedor.setTelefono(rs.getString("telefono"));
                     proveedor.setCorreo(rs.getString("correo"));

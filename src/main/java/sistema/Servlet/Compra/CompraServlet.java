@@ -1,21 +1,18 @@
 package sistema.Servlet.Compra;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sistema.Controller.CompraController;
 import sistema.Modelo.Compra.*;
-
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @WebServlet("/CompraServlet")
 public class CompraServlet extends HttpServlet {
@@ -24,7 +21,7 @@ public class CompraServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
 
         response.setContentType("text/plain;charset=UTF-8");
         ObjectMapper mapper = new ObjectMapper();
@@ -38,7 +35,7 @@ public class CompraServlet extends HttpServlet {
         }
 
         try {
-            JsonNode root = mapper.readTree(jsonBuffer.toString());
+            var root = mapper.readTree(jsonBuffer.toString());
 
             // ---------- 1. Parsear Compra ----------
             Compra compra = new Compra();
@@ -71,20 +68,20 @@ public class CompraServlet extends HttpServlet {
             compra.setTotalPeso(root.path("totalPeso").asDouble(0));
             compra.setCosteTransporte(root.path("costeTransporte").asDouble(0));
 
-            // ---------- 2. Parsear DocumentoReferencia ----------
+            // ---------- 2. DocumentoReferencia ----------
             DocumentoReferencia docRef = null;
             if (root.has("referencia")) {
                 docRef = new DocumentoReferencia();
-                JsonNode dr = root.get("referencia");
+                var dr = root.get("referencia");
                 docRef.setNumeroCotizacion(dr.path("numeroCotizacion").asText("").trim());
                 docRef.setNumeroPedido(dr.path("numeroPedido").asText("").trim());
             }
 
-            // ---------- 3. Parsear GuiaTransporte ----------
+            // ---------- 3. GuiaTransporte ----------
             GuiaTransporte guia = null;
             if (root.has("guia")) {
                 guia = new GuiaTransporte();
-                JsonNode gt = root.get("guia");
+                var gt = root.get("guia");
                 guia.setRucGuia(gt.path("ruc").asText("").trim());
                 guia.setTipoComprobante(gt.path("tipoComprobante").asText("").trim());
                 guia.setSerie(gt.path("serie").asText("").trim());
@@ -93,7 +90,6 @@ public class CompraServlet extends HttpServlet {
                 guia.setCiudadTraslado(gt.path("ciudadTraslado").asText("").trim());
                 guia.setCosteTotalTransporte(gt.path("costeTotalTransporte").asDouble(0));
                 guia.setPeso(gt.path("peso").asDouble(0));
-
                 guia.setSerieGuia(gt.path("serieGuiaTransporte").asText("").trim());
                 guia.setCorrelativoGuia(gt.path("correlativoGuiaTransporte").asText("").trim());
 
@@ -108,34 +104,31 @@ public class CompraServlet extends HttpServlet {
                 }
             }
 
-            // ---------- 4. Parsear Detalles ----------
+            // ---------- 4. Detalles ----------
             List<DetalleCompra> detalles = new ArrayList<>();
             if (root.has("detalles")) {
-                int tempId = 1; // ID temporal para vincular con descuentos
-                for (JsonNode d : root.get("detalles")) {
-                    if (!d.has("idProducto") || d.path("idProducto").asInt() == 0) continue; // FIX: Omitir productos sin ID válido
+                int tempId = 1;
+                for (var d : root.get("detalles")) {
+                    if (!d.has("idProducto") || d.path("idProducto").asInt() == 0) continue;
                     DetalleCompra detalle = new DetalleCompra();
-                    detalle.setIdDetalle(tempId++); // Asignar un ID temporal
+                    detalle.setIdDetalle(tempId++);
                     detalle.setIdProducto(d.path("idProducto").asInt());
                     detalle.setCantidad(d.path("cantidad").asDouble(0));
                     detalle.setPrecioUnitario(d.path("precioUnitario").asDouble(0));
-
-                    // Usar los valores calculados que ya vienen en el JSON
                     detalle.setCosteUnitarioTransporte(d.path("costeUnitarioTransporte").asDouble(0));
                     detalle.setCosteTotalTransporte(d.path("costeTotalTransporte").asDouble(0));
                     detalle.setPrecioConDescuento(d.path("precioConDescuento").asDouble(0));
                     detalle.setIgvProducto(d.path("igvProducto").asDouble(0));
                     detalle.setTotal(d.path("total").asDouble(0));
                     detalle.setPesoTotal(d.path("pesoTotal").asDouble(0));
-
                     detalles.add(detalle);
                 }
             }
 
-            // ---------- 5. Parsear Descuentos (unificados) ----------
+            // ---------- 5. Descuentos ----------
             List<Descuento> descuentos = new ArrayList<>();
             if (root.has("descuentosGlobales")) {
-                for (JsonNode desc : root.get("descuentosGlobales")) {
+                for (var desc : root.get("descuentosGlobales")) {
                     Descuento descuento = new Descuento();
                     descuento.setNivel("global");
                     descuento.setTipo(desc.path("tipo").asText("").trim());
@@ -144,18 +137,17 @@ public class CompraServlet extends HttpServlet {
                 }
             }
 
-            // Parsear descuentos por ítem
             if (root.has("detalles")) {
                 int tempId = 1;
-                for (JsonNode d : root.get("detalles")) {
+                for (var d : root.get("detalles")) {
                     if (!d.has("idProducto") || d.path("idProducto").asInt() == 0) continue;
                     if (d.has("descuentos")) {
-                        for (JsonNode desc : d.get("descuentos")) {
+                        for (var desc : d.get("descuentos")) {
                             Descuento descuento = new Descuento();
                             descuento.setNivel("item");
                             descuento.setTipo(desc.path("tipo").asText("").trim());
                             descuento.setValor(desc.path("valor").asDouble(0));
-                            descuento.setIdDetalle(tempId); // Asignar el ID temporal
+                            descuento.setIdDetalle(tempId);
                             descuentos.add(descuento);
                         }
                     }
@@ -163,10 +155,41 @@ public class CompraServlet extends HttpServlet {
                 }
             }
 
-            // ---------- 6. Registrar Compra con todo ----------
-            int idCompra = compraController.registrarCompra(compra, guia, docRef, detalles, descuentos);
+            // ---------- 6. CajasCompra ----------
+            List<Caja> cajasCompra = new ArrayList<>();
+            Map<Integer, List<DetalleCaja>> detallesCajaMap = new HashMap<>();
 
-            response.getWriter().write("Compra registrada con éxito. ID: " + idCompra);
+            int tempIdCaja = 1;
+            if (root.has("cajasCompra")) {
+                for (var c : root.get("cajasCompra")) {
+                    Caja caja = new Caja();
+                    caja.setIdCajaCompra(tempIdCaja); // ID temporal
+                    caja.setNombreCaja(c.path("nombreCaja").asText("").trim());
+                    caja.setCantidad(c.path("cantidad").asInt(0));
+                    caja.setCostoCaja(c.path("costoCaja").decimalValue());
+                    cajasCompra.add(caja);
+
+                    List<DetalleCaja> listaDetalles = new ArrayList<>();
+                    if (c.has("detalles")) {
+                        for (var dc : c.get("detalles")) {
+                            DetalleCaja detCaja = new DetalleCaja();
+                            detCaja.setIdCajaCompra(tempIdCaja);
+                            detCaja.setIdArticulo(dc.path("idArticulo").asInt(0));
+                            detCaja.setCantidad(BigDecimal.valueOf(dc.path("cantidad").asInt(0)));
+                            listaDetalles.add(detCaja);
+                        }
+                    }
+                    detallesCajaMap.put(tempIdCaja, listaDetalles);
+                    tempIdCaja++;
+                }
+            }
+
+            // ---------- 7. Llamar Controller ----------
+            int idCompra = compraController.registrarCompra(
+                    compra, guia, docRef, detalles, descuentos, cajasCompra, detallesCajaMap
+            );
+
+            response.getWriter().write("Compra registrada con ID: " + idCompra);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -175,7 +198,7 @@ public class CompraServlet extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("Error procesando JSON: " + e.getMessage());
+            response.getWriter().write("Error: " + e.getMessage());
         }
     }
 }

@@ -395,6 +395,33 @@ BEGIN
     VALUES (p_id_compra, p_numero_cotizacion, p_numero_pedido);
 END$$
 
+### Procedimientos de descuentos
+DROP PROCEDURE IF EXISTS `sp_agregar_descuento_global`$$
+CREATE PROCEDURE `sp_agregar_descuento_global`(
+    IN p_id_compra INT,
+    IN p_motivo VARCHAR(255),
+    IN p_tipo_valor ENUM('porcentaje', 'soles'),
+    IN p_valor DECIMAL(12,2),
+    IN p_tasa_igv DECIMAL(5,2)
+)
+BEGIN
+    INSERT INTO descuento (id_compra, motivo, tipo_aplicacion, tipo_valor, valor, tasa_igv)
+    VALUES (p_id_compra, p_motivo, 'global', p_tipo_valor, p_valor, p_tasa_igv);
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_agregar_descuento_item`$$
+CREATE PROCEDURE `sp_agregar_descuento_item`(
+    IN p_id_detalle_compra INT,
+    IN p_motivo VARCHAR(255),
+    IN p_tipo_valor ENUM('porcentaje', 'soles'),
+    IN p_valor DECIMAL(12,2),
+    IN p_tasa_igv DECIMAL(5,2)
+)
+BEGIN
+    INSERT INTO descuento (id_detalle_compra, motivo, tipo_aplicacion, tipo_valor, valor, tasa_igv)
+    VALUES (p_id_detalle_compra, p_motivo, 'item', p_tipo_valor, p_valor, p_tasa_igv);
+END$$
+
 ---
 
 ### Procedimientos de gastos
@@ -454,33 +481,5 @@ BEGIN
     );
 END$$
 
----
-
-### Procedimientos de descuentos
-DROP PROCEDURE IF EXISTS `sp_agregar_descuento_global`$$
-CREATE PROCEDURE `sp_agregar_descuento_global`(
-    IN p_id_compra INT,
-    IN p_motivo VARCHAR(255),
-    IN p_tipo_valor ENUM('porcentaje', 'soles'),
-    IN p_valor DECIMAL(12,2),
-    IN p_tasa_igv DECIMAL(5,2)
-)
-BEGIN
-    INSERT INTO descuento (id_compra, motivo, tipo_aplicacion, tipo_valor, valor, tasa_igv)
-    VALUES (p_id_compra, p_motivo, 'global', p_tipo_valor, p_valor, p_tasa_igv);
-END$$
-
-DROP PROCEDURE IF EXISTS `sp_agregar_descuento_item`$$
-CREATE PROCEDURE `sp_agregar_descuento_item`(
-    IN p_id_detalle_compra INT,
-    IN p_motivo VARCHAR(255),
-    IN p_tipo_valor ENUM('porcentaje', 'soles'),
-    IN p_valor DECIMAL(12,2),
-    IN p_tasa_igv DECIMAL(5,2)
-)
-BEGIN
-    INSERT INTO descuento (id_detalle_compra, motivo, tipo_aplicacion, tipo_valor, valor, tasa_igv)
-    VALUES (p_id_detalle_compra, p_motivo, 'item', p_tipo_valor, p_valor, p_tasa_igv);
-END$$
 
 DELIMITER ;

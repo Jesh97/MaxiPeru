@@ -2,22 +2,17 @@ package sistema.Modelo.Compra;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.math.BigDecimal;
+
 public class DetalleCaja {
 
-    @JsonProperty("id_detalle_caja")
-    private int idDetalleCaja;
+    private int idDetalleCajaCompra; // PK
+    private int idCajaCompra;        // FK hacia CajaCompra
+    private int idArticulo;          // FK hacia Artículo
+    private BigDecimal cantidad;
 
-    @JsonProperty("id_caja_compra")
-    private int idCajaCompra;
-
-    @JsonProperty("id_articulo")
-    private int idArticulo;
-
-    @JsonProperty("cantidad")
-    private int cantidad;
-
-    public DetalleCaja(int idDetalleCaja, int idCajaCompra, int idArticulo, int cantidad) {
-        this.idDetalleCaja = idDetalleCaja;
+    public DetalleCaja(int idDetalleCajaCompra, int idCajaCompra, int idArticulo, BigDecimal cantidad) {
+        this.idDetalleCajaCompra = idDetalleCajaCompra;
         this.idCajaCompra = idCajaCompra;
         this.idArticulo = idArticulo;
         this.cantidad = cantidad;
@@ -26,12 +21,12 @@ public class DetalleCaja {
     public DetalleCaja() {
     }
 
-    public int getIdDetalleCaja() {
-        return idDetalleCaja;
+    public int getIdDetalleCajaCompra() {
+        return idDetalleCajaCompra;
     }
 
-    public void setIdDetalleCaja(int idDetalleCaja) {
-        this.idDetalleCaja = idDetalleCaja;
+    public void setIdDetalleCajaCompra(int idDetalleCajaCompra) {
+        this.idDetalleCajaCompra = idDetalleCajaCompra;
     }
 
     public int getIdCajaCompra() {
@@ -50,18 +45,18 @@ public class DetalleCaja {
         this.idArticulo = idArticulo;
     }
 
-    public int getCantidad() {
+    public BigDecimal getCantidad() {
         return cantidad;
     }
 
-    public void setCantidad(int cantidad) {
+    public void setCantidad(BigDecimal cantidad) {
         this.cantidad = cantidad;
     }
 
     @Override
     public String toString() {
         return "DetalleCaja{" +
-                "idDetalleCaja=" + idDetalleCaja +
+                "idDetalleCajaCompra=" + idDetalleCajaCompra +
                 ", idCajaCompra=" + idCajaCompra +
                 ", idArticulo=" + idArticulo +
                 ", cantidad=" + cantidad +

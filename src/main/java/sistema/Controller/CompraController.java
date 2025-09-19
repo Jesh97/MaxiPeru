@@ -19,49 +19,71 @@ public class CompraController implements CompraRepository {
 
     @Override
     public int registrarCompra(Compra compra, GuiaTransporte guia, DocumentoReferencia docRef,
-                               List<DetalleCompra> detalles, List<Descuento> descuentos) throws SQLException {
+                               List<DetalleCompra> detalles, List<Descuento> descuentos,
+                               List<Caja> cajas, Map<Integer, List<DetalleCaja>> detallesCaja) throws SQLException {
         int idCompra = -1;
+
         try (Connection conn = getConnection()) {
             try {
                 conn.setAutoCommit(false);
 
+                // 1. Registrar cabecera de compra
                 idCompra = registrarCompraCabecera(conn, compra);
 
+                // 2. Registrar guía
                 if (compra.isHayTraslado() && guia != null) {
                     registrarGuia(conn, idCompra, guia);
                 }
 
-                if (docRef != null && (docRef.getNumeroCotizacion() != null || docRef.getNumeroPedido() != null)) {
+                // 3. Registrar referencia
+                if (docRef != null &&
+                        (docRef.getNumeroCotizacion() != null || docRef.getNumeroPedido() != null)) {
                     registrarReferencia(conn, idCompra, docRef);
                 }
 
+                // 4. Registrar detalles
                 Map<Integer, Integer> tempIdToRealIdMap = new HashMap<>();
-
                 if (detalles != null) {
                     for (DetalleCompra detalle : detalles) {
-                        int tempDetalleId = detalle.getIdDetalle(); // Obtener el ID temporal del servlet
+                        int tempDetalleId = detalle.getIdDetalle();
                         detalle.setIdCompra(idCompra);
-
                         int idDetalleReal = registrarDetalleCompra(conn, detalle);
-
-                        // Mapear el ID temporal con el ID real
                         tempIdToRealIdMap.put(tempDetalleId, idDetalleReal);
                     }
                 }
 
+                // 5. Registrar descuentos
                 if (descuentos != null) {
                     for (Descuento d : descuentos) {
-                        if (d.getNivel().equalsIgnoreCase("item")) {
-                            // Asignar el ID real de detalle
+                        if ("item".equalsIgnoreCase(d.getNivel())) {
                             int realIdDetalle = tempIdToRealIdMap.getOrDefault(d.getIdDetalle(), -1);
                             if (realIdDetalle != -1) {
                                 d.setIdCompra(idCompra);
                                 d.setIdDetalle(realIdDetalle);
                                 registrarDescuento(conn, d);
                             }
-                        } else if (d.getNivel().equalsIgnoreCase("global")) {
+                        } else if ("global".equalsIgnoreCase(d.getNivel())) {
                             d.setIdCompra(idCompra);
                             registrarDescuento(conn, d);
+                        }
+                    }
+                }
+
+                // 6. Registrar cajas
+                Map<Integer, Integer> tempCajaToRealId = new HashMap<>();
+                if (cajas != null) {
+                    for (Caja caja : cajas) {
+                        int tempIdCaja = caja.getIdCajaCompra();
+                        caja.setIdCompra(idCompra);
+                        int idCajaReal = registrarCajaCompra(conn, caja);
+                        tempCajaToRealId.put(tempIdCaja, idCajaReal);
+
+                        // Detalles de la caja
+                        if (detallesCaja != null && detallesCaja.containsKey(tempIdCaja)) {
+                            for (DetalleCaja detCaja : detallesCaja.get(tempIdCaja)) {
+                                detCaja.setIdCajaCompra(idCajaReal);
+                                registrarDetalleCajaCompra(conn, detCaja);
+                            }
                         }
                     }
                 }
@@ -74,6 +96,7 @@ public class CompraController implements CompraRepository {
                 conn.setAutoCommit(true);
             }
         }
+
         return idCompra;
     }
 
@@ -82,7 +105,7 @@ public class CompraController implements CompraRepository {
         List<Map<String, Object>> compras = new ArrayList<>();
         String sql = "{CALL sp_listar_compras_completas()}";
 
-        try (Connection conn = Conexion.obtenerConexion();
+        try (Connection conn = getConnection();
              CallableStatement cs = conn.prepareCall(sql);
              ResultSet rs = cs.executeQuery()) {
 
@@ -121,8 +144,8 @@ public class CompraController implements CompraRepository {
                     compra.put("proveedor", proveedor);
 
                     compra.put("detalles", new ArrayList<>());
-                    compra.put("guia", null); // Corregido: el nombre ahora coincide con el JS
-                    compra.put("referencia", null); // Corregido: el nombre ahora coincide con el JS
+                    compra.put("guia", null);
+                    compra.put("referencia", null);
 
                     compraMap.put(idCompra, compra);
                 }
@@ -144,7 +167,7 @@ public class CompraController implements CompraRepository {
 
                 ((List<Map<String, Object>>) compra.get("detalles")).add(detalle);
 
-                // Guía de transporte (solo asignar si hay datos)
+                // Guía
                 if (rs.getObject("id_guia") != null) {
                     Map<String, Object> guia = new HashMap<>();
                     guia.put("id_guia", rs.getInt("id_guia"));
@@ -165,19 +188,19 @@ public class CompraController implements CompraRepository {
                     compra.put("guia", guia);
                 }
 
-                // Referencia de compra (solo asignar si hay datos)
+                // Referencia
                 if (rs.getObject("id_referencia") != null) {
                     Map<String, Object> referencia = new HashMap<>();
                     referencia.put("id_referencia", rs.getInt("id_referencia"));
                     referencia.put("numero_cotizacion", rs.getString("numero_cotizacion"));
                     referencia.put("numero_pedido", rs.getString("numero_pedido"));
-
                     compra.put("referencia", referencia);
                 }
             }
 
             compras.addAll(compraMap.values());
         }
+
         return compras;
     }
 
@@ -186,20 +209,20 @@ public class CompraController implements CompraRepository {
         String sql = "{call sp_registrar_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, compra.getIdProveedor());
-            cs.setString(2, compra.getTipoComprobante() != null ? compra.getTipoComprobante() : "");
-            cs.setString(3, compra.getSerie() != null ? compra.getSerie() : "");
-            cs.setString(4, compra.getCorrelativo() != null ? compra.getCorrelativo() : "");
+            cs.setString(2, compra.getTipoComprobante());
+            cs.setString(3, compra.getSerie());
+            cs.setString(4, compra.getCorrelativo());
             cs.setDate(5, compra.getFechaEmision() != null ? Date.valueOf(compra.getFechaEmision()) : null);
             cs.setDate(6, compra.getFechaVencimiento() != null ? Date.valueOf(compra.getFechaVencimiento()) : null);
-            cs.setString(7, compra.getTipoPago() != null ? compra.getTipoPago() : "");
-            cs.setString(8, compra.getFormaPago() != null ? compra.getFormaPago() : "");
-            cs.setString(9, compra.getMoneda() != null ? compra.getMoneda() : "");
+            cs.setString(7, compra.getTipoPago());
+            cs.setString(8, compra.getFormaPago());
+            cs.setString(9, compra.getMoneda());
             cs.setDouble(10, compra.getTipoCambio());
             cs.setBoolean(11, compra.isIncluyeIgv());
             cs.setBoolean(12, compra.isHayBonificacion());
             cs.setBoolean(13, compra.isHayDescuento());
             cs.setBoolean(14, compra.isHayTraslado());
-            cs.setString(15, compra.getObservation() != null ? compra.getObservation() : "");
+            cs.setString(15, compra.getObservation());
             cs.setDouble(16, compra.getSubtotal());
             cs.setDouble(17, compra.getIgv());
             cs.setDouble(18, compra.getTotal());
@@ -253,13 +276,13 @@ public class CompraController implements CompraRepository {
         String sql = "{call sp_registrar_guia(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idCompra);
-            cs.setString(2, guia.getRucGuia() != null ? guia.getRucGuia() : "");
+            cs.setString(2, guia.getRucGuia());
             cs.setDate(3, guia.getFechaEmision() != null ? Date.valueOf(guia.getFechaEmision()) : null);
-            cs.setString(4, guia.getTipoComprobante() != null ? guia.getTipoComprobante() : "");
-            cs.setString(5, guia.getSerie() != null ? guia.getSerie() : "");
-            cs.setString(6, guia.getCorrelativo() != null ? guia.getCorrelativo() : "");
-            cs.setString(7, guia.getNumeroGuia() != null ? guia.getNumeroGuia() : "");
-            cs.setString(8, guia.getCiudadTraslado() != null ? guia.getCiudadTraslado() : "");
+            cs.setString(4, guia.getTipoComprobante());
+            cs.setString(5, guia.getSerie());
+            cs.setString(6, guia.getCorrelativo());
+            cs.setString(7, guia.getNumeroGuia());
+            cs.setString(8, guia.getCiudadTraslado());
             cs.setDouble(9, guia.getCosteTotalTransporte());
             cs.setDouble(10, guia.getPeso());
             cs.setDate(11, guia.getFechaPedido() != null ? Date.valueOf(guia.getFechaPedido()) : null);
@@ -272,19 +295,36 @@ public class CompraController implements CompraRepository {
         String sql = "{call sp_registrar_referencia(?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idCompra);
-            cs.setString(2, docRef.getNumeroCotizacion() != null ? docRef.getNumeroCotizacion() : "");
-            cs.setString(3, docRef.getNumeroPedido() != null ? docRef.getNumeroPedido() : "");
+            cs.setString(2, docRef.getNumeroCotizacion());
+            cs.setString(3, docRef.getNumeroPedido());
             cs.execute();
         }
     }
 
-    private boolean existeProducto(Connection conn, int idProducto) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM producto WHERE id_producto = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, idProducto);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() && rs.getInt(1) > 0;
-            }
+    // ================== MÉTODOS NUEVOS PARA CAJAS ==================
+
+    private int registrarCajaCompra(Connection conn, Caja caja) throws SQLException {
+        int idCajaCompra;
+        String sql = "{call sp_agregar_caja_compra(?, ?, ?, ?, ?)}";
+        try (CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, caja.getIdCompra());
+            cs.setString(2, caja.getNombreCaja());
+            cs.setInt(3, caja.getCantidad());
+            cs.setBigDecimal(4, caja.getCostoCaja());
+            cs.registerOutParameter(5, Types.INTEGER);
+            cs.execute();
+            idCajaCompra = cs.getInt(5);
+        }
+        return idCajaCompra;
+    }
+
+    private void registrarDetalleCajaCompra(Connection conn, DetalleCaja detalle) throws SQLException {
+        String sql = "{call sp_agregar_detalle_caja_compra(?, ?, ?)}";
+        try (CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, detalle.getIdCajaCompra());
+            cs.setInt(2, detalle.getIdArticulo());
+            cs.setBigDecimal(3, detalle.getCantidad());
+            cs.execute();
         }
     }
 }
