@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Registro de Gastos | Empresa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos generales de la página */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f9; /* Fondo más suave y moderno */
+        }
+
+        /* Encabezado del sitio */
+        .site-header {
+            background-color: #0f172a; /* Azul oscuro casi negro para elegancia */
+            padding: 2rem 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border-bottom: 2px solid #2563eb;
+        }
+
+        /* Contenedor de las tarjetas */
+        .card {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* Esquinas más redondeadas */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            border: 1px solid #e2e8f0;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Estilos de etiquetas y campos de entrada */
+        .form-label {
+            font-weight: 600;
+            color: #475569;
+        }
+        .input-field {
+            width: 100%;
+            padding: 0.9rem 1.25rem;
+            border-radius: 1rem;
+            border: 1px solid #cbd5e1;
+            background-color: #f8fafc;
+            transition: all 0.2s ease-in-out;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Botón primario de guardar */
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            padding: 1.2rem 2.5rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.4);
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px rgba(37, 99, 235, 0.5);
+        }
+
+        /* Botón de agregar item */
+        .btn-add {
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .btn-add:hover {
+            background-color: #cbd5e1;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Botón de remover item */
+        .btn-remove {
+            color: #ef4444;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-remove:hover {
+            color: #dc2626;
+            transform: scale(1.15);
+        }
+
+        /* Estilos de la tabla de items */
+        .table thead th {
+            background-color: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+        }
+        .table tbody tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .table td, .table th {
+            padding: 1rem;
+        }
+
+        /* Tarjeta de totales */
+        .totals-card {
+            background-color: #dbeafe;
+            border: 2px solid #93c5fd;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(147, 197, 253, 0.4);
+        }
+        .totals-card .total-value {
+            color: #1e40af;
+            font-size: 2.25rem;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+<header class="site-header shadow-lg">
+    <div class="brand container mx-auto flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <i class="bi bi-wallet-fill text-4xl text-white"></i>
+            <h1 class="text-white text-3xl font-bold tracking-wider">Registro de Gastos</h1>
+        </div>
+        <i class="bi bi-person-circle text-3xl text-white cursor-pointer hover:text-gray-300 transition-colors"></i>
+    </div>
+</header>
+
+<main class="container mx-auto px-4 py-16">
+    <form id="formGasto" class="space-y-12">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <!-- Sección de Datos Generales y Detalle de Productos -->
+            <div class="lg:col-span-2 space-y-12">
+                <!-- Tarjeta de Datos Generales -->
+                <section class="card p-10">
+                    <h2 class="flex items-center text-xl md:text-2xl font-bold text-gray-800 mb-8 border-b-2 pb-6">
+                        <i class="bi bi-info-circle text-cyan-600 mr-4"></i>Datos Generales del Gasto
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="col-span-1">
+                            <label class="block form-label mb-3">Proveedor</label>
+                            <input type="text" id="busquedaProveedor" class="input-field" placeholder="RUC o Razón Social" required>
+                        </div>
+                        <div class="col-span-1">
+                            <label for="fechaGasto" class="block form-label mb-3">Fecha del Gasto</label>
+                            <input type="date" id="fechaGasto" name="fecha_gasto" class="input-field" required>
+                        </div>
+                        <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div>
+                                <label for="tipoComprobante" class="block form-label mb-3">Tipo Comprobante</label>
+                                <select id="tipoComprobante" name="tipo_comprobante" class="input-field" required>
+                                    <option value="" disabled selected>Seleccione</option>
+                                    <option value="boleta">Boleta</option>
+                                    <option value="factura">Factura</option>
+                                    <option value="recibo">Recibo por Honorarios</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="serieComprobante" class="block form-label mb-3">Serie</label>
+                                <input type="text" id="serieComprobante" name="serie_comprobante" class="input-field" required>
+                            </div>
+                            <div>
+                                <label for="correlativoComprobante" class="block form-label mb-3">Correlativo</label>
+                                <input type="text" id="correlativoComprobante" name="correlativo_comprobante" class="input-field" required>
+                            </div>
+                        </div>
+                        <div class="col-span-1">
+                            <label for="categoriaGasto" class="block form-label mb-3">Categoría del Gasto</label>
+                            <select id="categoriaGasto" name="categoria_gasto" class="input-field" required>
+                                <option value="" disabled selected>Seleccione</option>
+                                <option>Gastos Administrativos</option>
+                                <option>Gastos Operativos</option>
+                                <option>Gastos Financieros</option>
+                                <option>Otros</option>
+                            </select>
+                        </div>
+                        <div class="col-span-1" id="placaContainer" style="display:none;">
+                            <label for="placa" class="block form-label mb-3">Marca de Placa</label>
+                            <input type="text" id="placa" name="placa" class="input-field">
+                        </div>
+                        <div class="col-span-2">
+                            <label for="motivoGasto" class="block form-label mb-3">Motivo del Gasto</label>
+                            <select id="motivoGasto" name="motivo_gasto" class="input-field" required>
+                                <option value="" disabled selected>Seleccione</option>
+                                <option>Material de Oficina</option>
+                                <option>Viajes y Viáticos</option>
+                                <option>Servicios Básicos (Agua, Luz)</option>
+                                <option>Mantenimiento</option>
+                                <option>Publicidad y Marketing</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tarjeta de Detalle de Productos -->
+                <section class="card p-10">
+                    <h2 class="flex items-center justify-between text-xl md:text-2xl font-bold text-gray-800 mb-8 border-b-2 pb-6">
+                        <div class="flex items-center">
+                            <i class="bi bi-list-check text-emerald-600 mr-4"></i>
+                            <span>Detalle de Productos/Servicios</span>
+                        </div>
+                        <button type="button" class="btn-add flex items-center space-x-2" id="agregarItemGastoBtn">
+                            <i class="bi bi-plus-lg text-sm"></i>
+                            <span>Agregar</span>
+                        </button>
+                    </h2>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table class="w-full table-auto text-sm">
+                            <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="px-6 py-4 text-left font-semibold w-2/5">Descripción</th>
+                                <th class="px-6 py-4 text-left font-semibold w-1/6">Und. Medida</th>
+                                <th class="px-6 py-4 text-center font-semibold w-1/6">Cantidad</th>
+                                <th class="px-6 py-4 text-center font-semibold w-1/6">P. Unitario</th>
+                                <th class="px-6 py-4 text-right font-semibold w-1/6">Total</th>
+                                <th class="px-6 py-4"></th>
+                            </tr>
+                            </thead>
+                            <tbody id="bodyItemsGasto" class="divide-y divide-gray-200 text-gray-700">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Sección de Observaciones y Totales -->
+            <div class="lg:col-span-1 space-y-12">
+                <!-- Tarjeta de Observaciones -->
+                <section class="card p-10">
+                    <h2 class="flex items-center text-xl md:text-2xl font-bold text-gray-800 mb-8 border-b-2 pb-6">
+                        <i class="bi bi-pencil-square text-indigo-600 mr-4"></i>Observaciones
+                    </h2>
+                    <textarea id="observacionesGasto" class="input-field" rows="5" placeholder="Escribe observaciones adicionales..."></textarea>
+                </section>
+
+                <!-- Tarjeta de Totales -->
+                <section class="totals-card p-10">
+                    <h2 class="flex items-center text-xl md:text-2xl font-bold text-gray-800 mb-8 border-b-2 border-blue-200 pb-6">
+                        <i class="bi bi-calculator text-blue-600 mr-4"></i>Totales del Gasto
+                    </h2>
+                    <div class="space-y-6 text-gray-700">
+                        <div class="flex justify-between items-center text-lg">
+                            <span>Subtotal (sin IGV)</span>
+                            <span id="subtotalGasto" class="font-bold text-xl text-gray-800">S/ 0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center text-lg">
+                            <span>IGV (18%)</span>
+                            <span id="igvGasto" class="font-bold text-xl text-gray-800">S/ 0.00</span>
+                        </div>
+                        <div class="h-px bg-gray-300 my-6"></div>
+                        <div class="flex justify-between items-center font-extrabold text-2xl md:text-3xl">
+                            <span>Total del Gasto</span>
+                            <span id="totalGasto" class="text-blue-700 total-value">S/ 0.00</span>
+                        </div>
+                    </div>
+                    <div class="mt-10">
+                        <button type="button" id="guardarGastoBtn" class="btn-primary w-full flex items-center justify-center space-x-3 font-bold text-xl">
+                            <i class="bi bi-save"></i>
+                            <span>Guardar Gasto</span>
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </form>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const categoriaGasto = document.getElementById('categoriaGasto');
+        const placaContainer = document.getElementById('placaContainer');
+        const agregarItemGastoBtn = document.getElementById('agregarItemGastoBtn');
+        const bodyItemsGasto = document.getElementById('bodyItemsGasto');
+        const subtotalGasto = document.getElementById('subtotalGasto');
+        const igvGasto = document.getElementById('igvGasto');
+        const totalGasto = document.getElementById('totalGasto');
+
+        // Lógica para mostrar/ocultar el campo de placa
+        categoriaGasto.addEventListener('change', (e) => {
+            if (e.target.value === 'Gastos Operativos') {
+                placaContainer.style.display = 'block';
+            } else {
+                placaContainer.style.display = 'none';
+            }
+        });
+
+        // Lógica para agregar una nueva fila al detalle de productos
+        agregarItemGastoBtn.addEventListener('click', () => {
+            const newRow = document.createElement('tr');
+            newRow.classList.add('border-b', 'border-gray-200');
+            newRow.innerHTML = `
+                <td class="px-6 py-4 w-2/5"><input type="text" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Descripción" required></td>
+                <td class="px-6 py-4"><input type="text" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Und. Medida" required></td>
+                <td class="px-6 py-4"><input type="number" class="w-24 text-center rounded-md border border-gray-300 px-3 py-2 text-sm cantidad-item focus:outline-none focus:ring-1 focus:ring-blue-500" value="1" min="1" required></td>
+                <td class="px-6 py-4"><input type="number" class="w-28 text-center rounded-md border border-gray-300 px-3 py-2 text-sm precio-item focus:outline-none focus:ring-1 focus:ring-blue-500" value="0.00" step="0.01" min="0" required></td>
+                <td class="px-6 py-4 text-right total-item font-semibold text-gray-800">S/ 0.00</td>
+                <td class="px-6 py-4 text-center">
+                    <button type="button" class="p-2 btn-remove remove-item-btn">
+                        <i class="bi bi-trash-fill text-lg"></i>
+                    </button>
+                </td>
+            `;
+            bodyItemsGasto.appendChild(newRow);
+            calcularTotales();
+        });
+
+        // Lógica para calcular totales y remover filas
+        bodyItemsGasto.addEventListener('input', (e) => {
+            const target = e.target;
+            if (target.classList.contains('cantidad-item') || target.classList.contains('precio-item')) {
+                const row = target.closest('tr');
+                const cantidadInput = row.querySelector('.cantidad-item');
+                const precioInput = row.querySelector('.precio-item');
+                const totalItemSpan = row.querySelector('.total-item');
+
+                const cantidad = parseFloat(cantidadInput.value) || 0;
+                const precio = parseFloat(precioInput.value) || 0;
+                const totalItem = cantidad * precio;
+
+                totalItemSpan.textContent = `S/ ${totalItem.toFixed(2)}`;
+                calcularTotales();
+            }
+        });
+
+        bodyItemsGasto.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-item-btn')) {
+                e.target.closest('tr').remove();
+                calcularTotales();
+            }
+        });
+
+        function calcularTotales() {
+            let subtotal = 0;
+            document.querySelectorAll('#bodyItemsGasto tr').forEach(row => {
+                const cantidad = parseFloat(row.querySelector('.cantidad-item').value) || 0;
+                const precio = parseFloat(row.querySelector('.precio-item').value) || 0;
+                subtotal += cantidad * precio;
+            });
+
+            const igv = subtotal * 0.18;
+            const total = subtotal + igv;
+
+            subtotalGasto.textContent = `S/ ${subtotal.toFixed(2)}`;
+            igvGasto.textContent = `S/ ${igv.toFixed(2)}`;
+            totalGasto.textContent = `S/ ${total.toFixed(2)}`;
+        }
+    });
+</script>
+
+</body>
+</html>

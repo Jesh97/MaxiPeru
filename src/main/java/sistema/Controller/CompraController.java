@@ -136,13 +136,12 @@ public class CompraController implements CompraRepository {
                     Map<String, Object> proveedor = new HashMap<>();
                     proveedor.put("id", rs.getInt("id_proveedor"));
                     proveedor.put("ruc", rs.getString("ruc"));
-                    proveedor.put("razon_social", rs.getString("razon_social"));
+                    proveedor.put("razonSocial", rs.getString("razonSocial"));
                     proveedor.put("direccion", rs.getString("direccion"));
                     proveedor.put("telefono", rs.getString("telefono"));
                     proveedor.put("correo", rs.getString("correo"));
                     proveedor.put("ciudad", rs.getString("ciudad"));
                     compra.put("proveedor", proveedor);
-
                     compra.put("detalles", new ArrayList<>());
                     compra.put("guia", null);
                     compra.put("referencia", null);

@@ -869,6 +869,66 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    async function cargarTipoComprobantes() {
+        try {
+            const response = await fetch(TIPO_COMPROBANTE_SERVLET_URL);
+            if (!response.ok) throw new Error("Error al obtener comprobantes");
+            const lista = await response.json();
+
+            const select = document.getElementById("tipoComprobante");
+            select.innerHTML = '<option value="">Seleccione</option>';
+
+            lista.forEach(item => {
+                const option = document.createElement("option");
+                option.value = item.id;
+                option.textContent = item.nombre;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Error cargando comprobantes:", error);
+        }
+    }
+
+    async function cargarFormaPago() {
+        try {
+            const response = await fetch(FORMA_PAGO_SERVLET_URL);
+            if (!response.ok) throw new Error("Error al obtener formas de pago");
+            const lista = await response.json();
+
+            const select = document.getElementById("formaPago");
+            select.innerHTML = '<option value="">Seleccione</option>';
+
+            lista.forEach(item => {
+                const option = document.createElement("option");
+                option.value = item.id;
+                option.textContent = item.nombre;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Error cargando formas de pago:", error);
+        }
+    }
+
+    async function cargarTipoPago() {
+        try {
+            const response = await fetch(TIPO_PAGO_SERVLET_URL);
+            if (!response.ok) throw new Error("Error al obtener tipos de pago");
+            const lista = await response.json();
+
+            const select = document.getElementById("tipoPago");
+            select.innerHTML = '<option value="">Seleccione</option>';
+
+            lista.forEach(item => {
+                const option = document.createElement("option");
+                option.value = item.id;
+                option.textContent = item.nombre;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Error cargando tipos de pago:", error);
+        }
+    }
+
     if ($('#btnGuardarComprobante')) {
         $('#btnGuardarComprobante').addEventListener('click', async () => {
             const nuevoComprobante = $('#nuevoComprobanteInput')?.value.trim();
@@ -881,6 +941,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     if (response.ok) {
                         console.log('Nuevo tipo de comprobante guardado');
+                        // 🔄 refrescar lista de comprobantes
+                        await cargarTipoComprobantes();
                     }
                 } catch (error) {
                     console.error("Error al guardar tipo de comprobante:", error);
@@ -902,6 +964,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     if (response.ok) {
                         console.log('Nueva forma de pago guardada');
+                        // 🔄 refrescar lista de formas de pago
+                        await cargarFormaPago();
                     }
                 } catch (error) {
                     console.error("Error al guardar forma de pago:", error);
@@ -923,6 +987,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     if (response.ok) {
                         console.log('Nuevo tipo de pago guardado');
+                        // 🔄 refrescar lista de tipos de pago
+                        await cargarTipoPago();
                     }
                 } catch (error) {
                     console.error("Error al guardar tipo de pago:", error);
@@ -931,6 +997,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+        cargarTipoComprobantes();
+        cargarFormaPago();
+        cargarTipoPago();
 
     if (bonifSi && bonifNo) {
         bonifSi.addEventListener('change', actualizarVisibilidadBonificacion);

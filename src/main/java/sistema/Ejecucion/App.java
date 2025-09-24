@@ -1,5 +1,8 @@
 package sistema.Ejecucion;
 
+import sistema.Servlet.Adicional.FormaPagoServlet;
+import sistema.Servlet.Adicional.TipoComprobanteServlet;
+import sistema.Servlet.Adicional.TipoPagoServlet;
 import sistema.Servlet.Cliente.ClienteServlet;
 import sistema.Servlet.Compra.CompraServlet;
 import sistema.Servlet.Compra.ListarCompra;
@@ -35,6 +38,9 @@ public class App {
         webserver.addServlet(BuscarProveedorServlet.class,"/buscarProveedor");
         webserver.addServlet(BuscarArticulo.class,"/buscarProducto");
         webserver.addServlet(ListarCompra.class,"/listarCompra");
+        webserver.addServlet(TipoComprobanteServlet.class,"/guardarTipoComprobante");
+        webserver.addServlet(FormaPagoServlet.class,"/guardarFormaPago");
+        webserver.addServlet(TipoPagoServlet.class,"/guardarTipoPago");
 
         URL myURL = new URL("http://localhost:8081");
         System.out.println("*********************************************************");
