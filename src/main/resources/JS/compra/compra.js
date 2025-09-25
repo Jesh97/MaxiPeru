@@ -29,6 +29,8 @@ let costeTransporteCalculado = 0;
 let cajas = [];
 let proximoIdCaja = 1;
 let itemEnEdicion = null;
+let lotes = {};
+let proximoIdLote = 1;
 
 const modalDescuentoItem = new bootstrap.Modal($('#modalDescuentoItem'));
 const tasaIgvDescuentoSelect = $('#tasaIgvDescuento');
@@ -37,6 +39,7 @@ const valorDescuentoItemInput = $('#valorDescuentoItem');
 const motivoDescuentoTextarea = $('#motivoDescuento');
 const guardarDescuentoItemBtn = $('#guardarDescuentoItem');
 const modalTotalesPorCantidad = new bootstrap.Modal($('#modalTotalesPorCantidad'));
+const modalLotes = new bootstrap.Modal($('#modalLotes'));
 
 document.addEventListener('DOMContentLoaded', () => {
     const inputProveedor = $('#busquedaProveedor');
@@ -81,9 +84,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalNuevaFormaPago = new bootstrap.Modal( $('#modalNuevaFormaPago'));
     const modalNuevoTipoPago = new bootstrap.Modal($('#modalNuevoTipoPago'));
     const modalCajas = new bootstrap.Modal($('#modalCajas'));
+    const btnGuardarLote = $('#btnGuardarLote');
+    const btnAgregarLote = $('#btnAgregarLote');
 
     let debounceTimer = null;
     let debounceTimerProducto = null;
+    let filaIdLoteActual = null;
 
     if (inputProveedor) {
         inputProveedor.addEventListener('input', () => {
@@ -184,9 +190,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <td><input type="number" min="0" step="0.01" value="${producto.precioUnitario || '0.00'}" class="form-control form-control-sm precioUnitario text-end"></td>
             <td class="totalProducto text-end">S/ 0.00</td>
             <td class="align-middle text-center">
-                <button type="button" class="btn btn-outline-danger btn-sm eliminarProducto" title="Eliminar producto">
-                    <i class="bi bi-trash"></i>
-                </button>
+                <div class="d-flex justify-content-center align-items-center">
+                    <button type="button" class="btn btn-outline-info btn-sm btn-lotes me-2" title="Asignar Lotes">
+                        <i class="bi bi-box-seam"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm eliminarProducto" title="Eliminar producto">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
             </td>
             <input type="hidden" class="idProducto" value="${producto.idProducto || 0}" />
         `;
@@ -267,6 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ...caja,
                         productos: caja.productos.filter(p => p.filaId !== filaId)
                     })).filter(caja => caja.productos.length > 0);
+                    delete lotes[filaId];
                     actualizarTotales();
                     actualizarResumenCajasEnGuia();
                 });
@@ -320,6 +332,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        const btnLotes = trGeneral.querySelector('.btn-lotes');
+        if (btnLotes) {
+            btnLotes.addEventListener('click', () => {
+                filaIdLoteActual = filaId;
+                iniciarModalLotes();
+                modalLotes.show();
+            });
+        }
+
+
         const cantidadInput = trGeneral.querySelector('.cantidad');
         if (cantidadInput) {
             cantidadInput.addEventListener('change', () => {
@@ -335,6 +357,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (cantidadAsignada > nuevaCantidad) {
                     alert(`La cantidad total asignada en las cajas (${cantidadAsignada}) no puede ser mayor que la cantidad general del producto (${nuevaCantidad}).`);
                     cantidadInput.value = nuevaCantidad;
+                }
+
+                let cantidadLotes = (lotes[filaId] || []).reduce((sum, lote) => sum + lote.cantidad, 0);
+                 if (cantidadLotes > nuevaCantidad) {
+                    alert(`La cantidad total asignada en los lotes (${cantidadLotes}) no puede ser mayor que la cantidad general del producto (${nuevaCantidad}).`);
+                    cantidadInput.value = nuevaCantidad;
+                    // Opcionalmente, podrías limpiar los lotes si la cantidad general disminuye
+                    lotes[filaId] = [];
+                    actualizarResumenLotesEnModal();
                 }
             });
         }
@@ -783,6 +814,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     descuentos: descuentos,
                     bonificacion: trFinanciero.querySelector('.bonificacion')?.checked ?? false,
                     unidadMedida: tr.querySelector('.unidadMedida')?.value,
+                    lotes: lotes[filaId] || []
                 });
             });
 
@@ -845,6 +877,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     crearFilaProducto();
                     actualizarTotales();
                     cajas = [];
+                    lotes = {};
                     actualizarResumenCajasEnGuia();
                 }
 
@@ -1503,6 +1536,126 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const myModal = new bootstrap.Modal(document.getElementById('modalTotalesPorCantidad'));
         myModal.show();
+    }
+
+    // Funcionalidad de Lotes
+    function iniciarModalLotes() {
+        const contenedorLotes = $('#contenedorLotes');
+        contenedorLotes.innerHTML = '';
+        const cantidadTotalProducto = parseInt($(`#tablaProductosGeneral tr[data-fila-id="${filaIdLoteActual}"] .cantidad`).value, 10) || 0;
+        const lotesProducto = lotes[filaIdLoteActual] || [];
+
+        let cantidadAsignada = 0;
+        lotesProducto.forEach(lote => {
+            cantidadAsignada += lote.cantidad;
+            crearFilaLote(lote.id, lote.cantidad, lote.fechaVencimiento);
+        });
+
+        actualizarResumenLotesEnModal(cantidadTotalProducto, cantidadAsignada);
+    }
+
+    function crearFilaLote(idLote, cantidad, fechaVencimiento) {
+        const contenedorLotes = $('#contenedorLotes');
+        const filaLote = document.createElement('div');
+        filaLote.className = 'd-flex align-items-center mb-2';
+        filaLote.dataset.idLote = idLote;
+        filaLote.innerHTML = `
+            <div class="input-group input-group-sm me-2">
+                <span class="input-group-text">Cantidad</span>
+                <input type="number" class="form-control lote-cantidad" value="${cantidad}" min="1">
+            </div>
+            <div class="input-group input-group-sm me-2">
+                <span class="input-group-text">F. Venc.</span>
+                <input type="date" class="form-control lote-fecha-vencimiento" value="${fechaVencimiento}">
+            </div>
+            <button type="button" class="btn btn-danger btn-sm btn-eliminar-lote">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+        contenedorLotes.appendChild(filaLote);
+
+        filaLote.querySelector('.lote-cantidad').addEventListener('input', validarCantidadesLotes);
+        filaLote.querySelector('.btn-eliminar-lote').addEventListener('click', () => {
+            filaLote.remove();
+            validarCantidadesLotes();
+        });
+    }
+
+    function validarCantidadesLotes() {
+        const cantidadTotalProducto = parseInt($(`#tablaProductosGeneral tr[data-fila-id="${filaIdLoteActual}"] .cantidad`).value, 10) || 0;
+        let cantidadAsignada = 0;
+        $$('#contenedorLotes .lote-cantidad').forEach(input => {
+            cantidadAsignada += parseInt(input.value, 10) || 0;
+        });
+
+        if (cantidadAsignada > cantidadTotalProducto) {
+            alert(`La cantidad total de lotes (${cantidadAsignada}) no puede ser mayor que la cantidad general del producto (${cantidadTotalProducto}).`);
+        }
+
+        actualizarResumenLotesEnModal(cantidadTotalProducto, cantidadAsignada);
+    }
+
+    function actualizarResumenLotesEnModal(cantidadTotal, cantidadAsignada) {
+        const resumenEl = $('#resumenLotes');
+        resumenEl.innerHTML = `
+            Total del Producto: <strong>${cantidadTotal}</strong> | Cantidad Asignada: <strong>${cantidadAsignada}</strong> | Restante: <strong>${cantidadTotal - cantidadAsignada}</strong>
+        `;
+    }
+
+    if(btnAgregarLote) {
+        btnAgregarLote.addEventListener('click', () => {
+            crearFilaLote(proximoIdLote++, 1, '');
+            validarCantidadesLotes();
+        });
+    }
+
+    if(btnGuardarLote) {
+        btnGuardarLote.addEventListener('click', () => {
+            const lotesGuardar = [];
+            let cantidadAsignada = 0;
+            let esValido = true;
+
+            $$('#contenedorLotes .d-flex').forEach(filaLote => {
+                const cantidadInput = filaLote.querySelector('.lote-cantidad');
+                const fechaInput = filaLote.querySelector('.lote-fecha-vencimiento');
+                const cantidad = parseInt(cantidadInput.value, 10) || 0;
+                const fechaVencimiento = fechaInput.value;
+
+                if (cantidad <= 0 || !fechaVencimiento) {
+                    esValido = false;
+                    return;
+                }
+
+                cantidadAsignada += cantidad;
+                lotesGuardar.push({
+                    id: filaLote.dataset.idLote,
+                    cantidad,
+                    fechaVencimiento
+                });
+            });
+
+            const cantidadTotalProducto = parseInt($(`#tablaProductosGeneral tr[data-fila-id="${filaIdLoteActual}"] .cantidad`).value, 10) || 0;
+
+            if (!esValido) {
+                alert('Todos los lotes deben tener una cantidad mayor a 0 y una fecha de vencimiento.');
+                return;
+            }
+
+            if (cantidadAsignada > cantidadTotalProducto) {
+                alert(`La cantidad total de lotes (${cantidadAsignada}) excede la cantidad general del producto (${cantidadTotalProducto}).`);
+                return;
+            }
+
+            if (cantidadAsignada < cantidadTotalProducto) {
+                alert(`La cantidad total de lotes (${cantidadAsignada}) es menor que la cantidad general del producto (${cantidadTotalProducto}).`);
+                if (!confirm('¿Desea continuar de todos modos? La cantidad restante no se asignará a un lote.')) {
+                    return;
+                }
+            }
+
+            lotes[filaIdLoteActual] = lotesGuardar;
+            modalLotes.hide();
+        });
     }
 
     actualizarVisibilidadBonificacion();

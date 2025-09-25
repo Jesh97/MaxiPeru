@@ -188,6 +188,9 @@
                 <div class="d-flex flex-column flex-md-row align-items-md-center">
                     <div class="d-flex flex-column flex-md-row align-items-md-center">
                         <div id="btnContainer" class="d-flex align-items-center position-relative">
+                            <button type="button" class="btn btn-sm btn-info me-2" data-bs-toggle="modal" data-bs-target="#modalLotes">
+                                <i class="bi bi-calendar-date"></i> Lotes y Vencimiento
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -654,6 +657,29 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="guardarDescuentoItem">Guardar Descuento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalLotes" tabindex="-1" aria-labelledby="modalLotesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLotesLabel"><i class="bi bi-box-seam"></i> Gestión de Lotes y Fechas de Vencimiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="resumenLotes" class="alert alert-info py-2 small"></div>
+                <div id="contenedorLotes">
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-3" id="btnAgregarLote">
+                    <i class="bi bi-plus-lg"></i> Agregar Lote
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarLote">Guardar Lotes</button>
             </div>
         </div>
     </div>
