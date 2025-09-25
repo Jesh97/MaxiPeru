@@ -416,14 +416,6 @@
                                     <label class="form-label small-muted">Ciudad de Traslado</label>
                                     <input id="ciudadTrasladoGuia" type="text" class="form-control" placeholder="Ciudad de traslado" />
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small-muted">Punto de Partida</label>
-                                    <input id="puntoPartida" type="text" class="form-control" placeholder="Punto de partida" />
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small-muted">Punto de Llegada</label>
-                                    <input id="puntoLlegada" type="text" class="form-control" placeholder="Punto de llegada" />
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -671,7 +663,7 @@
 </div>
 
 <div class="modal fade" id="modalLotes" tabindex="-1" aria-labelledby="modalLotesLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalLotesLabel"><i class="bi bi-box-seam"></i> Gestión de Lotes y Fechas de Vencimiento</h5>
@@ -679,9 +671,11 @@
             </div>
             <div class="modal-body">
                 <div id="resumenLotes" class="alert alert-info py-2 small"></div>
-                <div id="contenedorLotes">
+
+                <div id="contenedorLotes" class="card shadow-sm p-3">
                 </div>
-                <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-3" id="btnAgregarLote">
+
+                <button type="button" class="btn btn-primary btn-sm w-100 mt-3" id="btnAgregarLote">
                     <i class="bi bi-plus-lg"></i> Agregar Lote
                 </button>
             </div>
