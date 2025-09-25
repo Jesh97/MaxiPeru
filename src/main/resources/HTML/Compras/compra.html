@@ -297,11 +297,11 @@
                                 <tr>
                                     <th scope="col">Unidad Medida</th>
                                     <th scope="col">Descripción</th>
-                                    <th scope="col">Precio Venta</th>
-                                    <th scope="col">IGV</th>
-                                    <th scope="col">Peso</th>
-                                    <th scope="col">Costo Transporte</th>
-                                    <th scope="col">Total</th>
+                                    <th id="th-precio-totales">Precio Unit.</th>
+                                    <th>IGV Unit.</th>
+                                    <th id="th-peso-totales">Peso Unit.</th>
+                                    <th id="th-costo-transporte-totales">Costo Unit. de Transporte</th>
+                                    <th id="th-total-totales">Total Unit.</th>
                                     <th scope="col" style="width: 50px;"></th>
                                 </tr>
                                 </thead>
@@ -415,6 +415,14 @@
                                 <div class="col-md-4">
                                     <label class="form-label small-muted">Ciudad de Traslado</label>
                                     <input id="ciudadTrasladoGuia" type="text" class="form-control" placeholder="Ciudad de traslado" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small-muted">Punto de Partida</label>
+                                    <input id="puntoPartida" type="text" class="form-control" placeholder="Punto de partida" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small-muted">Punto de Llegada</label>
+                                    <input id="puntoLlegada" type="text" class="form-control" placeholder="Punto de llegada" />
                                 </div>
                             </div>
                         </div>

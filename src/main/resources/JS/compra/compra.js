@@ -17,9 +17,11 @@ const TIPO_PAGO_SERVLET_URL = '/guardarTipoPago';
 let referencia = { numeroCotizacion: '', numeroPedido: '' };
 let guia = {
     ruc: '', fechaEmision: '', tipoComprobante: '', serie: '', correlativo: '',
+    puntoPartida: '',puntoLlegada: '',
     costeTotalTransporte: 0.00, ciudadTraslado: '', numeroGuia: '', serieGuiaTransporte: '',
     correlativoGuiaTransporte: '', peso: '', fechaPedido: '', fechaEntrega: ''
 };
+
 let subtotalSinIgvCalculado = 0;
 let totalIgvCalculado = 0;
 let totalCompraFinalCalculado = 0;
@@ -122,6 +124,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
+    const precioUnitario = $('#th-precio-totales');
+    const pesoUnitario = $('#th-peso-totales');
+    const costoUnitarioTransporte = $('#th-costo-transporte-totales');
+    const totalUnitario = $('#th-total-totales');
+
+    if (precioUnitario) {
+        precioUnitario.textContent = esTotalPorCantidad ? 'Precio Total' : 'Precio Unitario';
+    }
+    if (pesoUnitario) {
+        pesoUnitario.textContent = esTotalPorCantidad ? 'Peso Total' : 'Peso Unitario';
+    }
+    if (costoUnitarioTransporte) {
+        costoUnitarioTransporte.textContent = esTotalPorCantidad ? 'Costo Total de Transporte' : 'Costo Unitario de Transporte';
+    }
+    if (totalUnitario) {
+        totalUnitario.textContent = esTotalPorCantidad ? 'Total por Cantidad' : 'Total Unitario';
+    }
+}
 
     function renderProveedorSuggestions(items) {
         sugerencias.innerHTML = '';
@@ -614,7 +636,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const precioUnitarioVenta = subtotalProducto / cantidad;
             const igvUnitario = precioUnitarioVenta * igvTasa;
-            const totalUnitario = precioUnitarioVenta + igvUnitario;
+
+            // MODIFICACIÓN: solo en la pestaña de Totales se muestra la suma
+            const totalUnitario = precioUnitario + costoUnitarioTransporteGlobal;
+
             const totalFila = subtotalProducto + igvProducto + costeTransporteFila;
 
             if (trTotales.querySelector('.precioUnitario-total')) trTotales.querySelector('.precioUnitario-total').textContent = formatCurrency(precioUnitarioVenta, 'PEN');
@@ -632,6 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
             trGeneral.dataset.costeUnitarioTransporte = costoUnitarioTransporteGlobal.toFixed(4);
             trGeneral.dataset.costeTotalTransporte = costeTransporteFila.toFixed(2);
 
+            // Restablecido: El total de la pestaña General sigue multiplicando por la cantidad
             if (trGeneral.querySelector('.totalProducto')) {
                 trGeneral.querySelector('.totalProducto').textContent = formatCurrency(precioUnitario * cantidad, 'PEN');
             }
