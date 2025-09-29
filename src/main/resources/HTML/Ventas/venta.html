@@ -120,8 +120,8 @@
                                 <th scope="col" class="table-description-col">Descripción</th>
                                 <th scope="col">Cant.</th>
                                 <th scope="col">Unidad</th>
-                                <th scope="col">Peso</th>
-                                <th scope="col">P. Unitario</th>
+                                <th scope="col">Peso Unit.</th>
+                                <th scope="col">Precio Unit.</th>
                                 <th scope="col" class="descuento-header" style="display:none;">Descuento</th>
                                 <th scope="col">Total</th>
                                 <th scope="col" style="min-width: 120px;">Acciones</th>
@@ -166,8 +166,8 @@
                             <label class="form-check-label" for="aplicaIgv">Incluir IGV (18%)</label>
                         </div>
 
-                        <div class="line"><span class="text-muted">Subtotal (Neto)</span><span id="subtotalSinIgv" class="fw-bold">S/ 0.00</span></div>
-                        <div class="line"><span class="text-muted text-danger">Descuento Aplicado</span><span id="descuentoVenta" class="text-danger fw-bold">S/ 0.00</span></div>
+                        <div class="line"><span class="text-muted">Subtotal</span><span id="subtotalSinIgv" class="fw-bold">S/ 0.00</span></div>
+                        <div class="line"><span class="text-muted text-danger">Descuento</span><span id="descuentoVenta" class="text-danger fw-bold">S/ 0.00</span></div>
                         <div class="line"><span class="text-muted">IGV (18%)</span><span id="igvVenta" class="fw-bold">S/ 0.00</span></div>
 
                         <div class="line bold">
@@ -175,14 +175,14 @@
                         </div>
 
                         <div class="line bold mt-3" style="font-size: 1.2rem; border-top: 1px dotted var(--border-color); padding-top: 1rem;">
-                            <span class="text-dark fw-bold">PESO TOTAL (Logística)</span><span id="pesoTotalVenta" class="fw-bold text-success">0.00 Kg</span>
+                            <span class="text-dark fw-bold">PESO TOTAL</span><span id="pesoTotalVenta" class="fw-bold text-success">0.00 Kg</span>
                         </div>
                         <div class="d-grid gap-3 mt-4">
                             <button type="button" id="guardarVentaBtn" class="btn btn-custom btn-save">
                                 <i class="bi bi-save"></i> Procesar y Guardar Venta
                             </button>
                             <button type="button" id="verVentasBtn" class="btn btn-custom btn-list">
-                                <i class="bi bi-list-ul"></i> Administrar Ventas
+                                <i class="bi bi-list-ul"></i> Listar Ventas
                             </button>
                         </div>
                     </section>
@@ -388,10 +388,6 @@
                     <div class="col-md-6">
                         <label class="form-label small-muted">DNI</label>
                         <input type="text" class="form-control" placeholder="DNI del cliente">
-                    </div>
-                    <div class="col-12 mt-4">
-                        <label class="form-label small-muted">Comentarios de la Entrega (Opcional)</label>
-                        <textarea class="form-control" rows="2" placeholder="Ej: Recibido conforme por el Gerente de Almacén."></textarea>
                     </div>
                 </div>
             </div>
