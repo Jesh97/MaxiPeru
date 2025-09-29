@@ -1,132 +1,121 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const selectors = {
-        bodyItemsGasto: '#bodyItemsGasto',
-        agregarItemBtn: '#agregarItemGastoBtn',
-        subtotalSpan: '#subtotalGasto',
-        igvSpan: '#igvGasto',
-        totalSpan: '#totalGasto',
-        guardarBtn: '#guardarGastoBtn',
-        formGasto: '#formGasto'
-    };
+    const categoriaGasto = document.getElementById('categoriaGasto');
+    const placaContainer = document.getElementById('placaContainer');
+    const agregarItemGastoBtn = document.getElementById('agregarItemGastoBtn');
+    const bodyItemsGasto = document.getElementById('bodyItemsGasto');
+    const subtotalGasto = document.getElementById('subtotalGasto');
+    const igvGasto = document.getElementById('igvGasto');
+    const totalGasto = document.getElementById('totalGasto');
+    const totalPesoGasto = document.getElementById('totalPesoGasto');
+    const emptyTableMessage = document.getElementById('emptyTableMessage');
 
-    const elements = {
-        bodyItemsGasto: document.querySelector(selectors.bodyItemsGasto),
-        agregarItemBtn: document.querySelector(selectors.agregarItemBtn),
-        subtotalSpan: document.querySelector(selectors.subtotalSpan),
-        igvSpan: document.querySelector(selectors.igvSpan),
-        totalSpan: document.querySelector(selectors.totalSpan),
-        guardarBtn: document.querySelector(selectors.guardarBtn),
-        formGasto: document.querySelector(selectors.formGasto)
-    };
+    const IGV_RATE = 0.18;
 
-    /**
-     * Utilidad de debounce para limitar la frecuencia de ejecución de una función.
-     * @param {Function} func La función a ejecutar.
-     * @param {number} delay El retraso en milisegundos.
-     */
-    const debounce = (func, delay) => {
-        let timeout;
-        return (...args) => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func(...args), delay);
-        };
-    };
+    categoriaGasto.addEventListener('change', (e) => {
+        const placaInput = placaContainer.querySelector('input');
+        if (e.target.value === 'Gastos Operativos') {
+            placaContainer.classList.remove('hidden');
+            placaInput.setAttribute('required', 'required');
+        } else {
+            placaContainer.classList.add('hidden');
+            placaInput.removeAttribute('required');
+            placaInput.value = '';
+        }
+    });
 
-    /**
-     * Actualiza los totales de subtotal, IGV y total.
-     */
-    const updateTotals = () => {
-        let subtotal = 0;
-        elements.bodyItemsGasto.querySelectorAll('tr').forEach(row => {
-            const cantidad = parseFloat(row.querySelector('.item-cantidad').value) || 0;
-            const precio = parseFloat(row.querySelector('.item-precio').value) || 0;
-            const baseTotal = cantidad * precio;
-            subtotal += baseTotal;
-            row.querySelector('.item-total').textContent = baseTotal.toFixed(2);
-        });
+    function updateTableVisibility() {
+        if (bodyItemsGasto.children.length === 0) {
+            emptyTableMessage.classList.remove('hidden');
+        } else {
+            emptyTableMessage.classList.add('hidden');
+        }
+    }
+    updateTableVisibility();
 
-        const igv = subtotal * 0.18;
-        const total = subtotal + igv;
+    agregarItemGastoBtn.addEventListener('click', () => {
+        const newRow = document.createElement('tr');
+        newRow.classList.add('hover:bg-gray-50');
 
-        elements.subtotalSpan.textContent = `S/ ${subtotal.toFixed(2)}`;
-        elements.igvSpan.textContent = `S/ ${igv.toFixed(2)}`;
-        elements.totalSpan.textContent = `S/ ${total.toFixed(2)}`;
-    };
-
-    /**
-     * Crea y añade una nueva fila de ítem al formulario.
-     */
-    const createItemRow = (descripcion = '', cantidad = 1, precio = 0) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><input type="text" class="form-control form-control-sm item-descripcion" placeholder="Descripción del producto/servicio" value="${descripcion}" required></td>
-            <td><input type="number" class="form-control form-control-sm item-cantidad text-center" value="${cantidad}" min="1"></td>
-            <td><input type="number" class="form-control form-control-sm item-precio text-end" value="${precio.toFixed(2)}" min="0" step="0.01"></td>
-            <td class="text-end"><span class="item-total">0.00</span></td>
-            <td class="text-center">
-                <button type="button" class="btn btn-sm btn-outline-danger border-0 eliminar-item-btn" aria-label="Eliminar ítem">
-                    <i class="bi bi-x-lg"></i>
+        newRow.innerHTML = `
+            <td class="px-4 py-3"><input type="text" placeholder="Descripción del bien o servicio" class="w-full rounded-lg border input-field-premium px-3 py-2 text-sm" required value=""></td>
+            <td class="px-4 py-3">
+                <select class="w-full rounded-lg border input-field-premium px-3 py-2 text-sm text-center" required>
+                    <option value="" disabled selected>--</option>
+                    <option value="Und">Und</option>
+                    <option value="Lt">Lt</option>
+                    <option value="Kg">Kg</option>
+                    <option value="Gl">Gl</option>
+                </select>
+            </td>
+            <td class="px-4 py-3"><input type="number" class="w-full rounded-lg border input-field-premium px-3 py-2 text-sm text-center peso-item" step="0.001" min="0" value="0.000"></td>
+            <td class="px-4 py-3"><input type="number" class="w-full rounded-lg border input-field-premium px-3 py-2 text-sm text-center cantidad-item" min="1" required value=""></td>
+            <td class="px-4 py-3"><input type="number" class="w-full rounded-lg border input-field-premium px-3 py-2 text-sm text-center precio-item" step="0.01" min="0.01" required value="0.01"></td>
+            <td class="px-4 py-3 text-right total-item font-extrabold text-[--primary]">S/ 0.01</td>
+            <td class="px-4 py-3 text-center">
+                <button type="button" class="p-2 text-[--danger] rounded-full transition-colors duration-200 hover:bg-red-50 remove-item-btn" title="Eliminar ítem">
+                    <i class="bi bi-trash-fill text-lg"></i>
                 </button>
             </td>
         `;
+        bodyItemsGasto.appendChild(newRow);
+        calcularTotales();
+        updateTableVisibility();
+    });
 
-        const inputs = row.querySelectorAll('.item-cantidad, .item-precio');
-        inputs.forEach(input => input.addEventListener('input', debounce(updateTotals, 300)));
+    bodyItemsGasto.addEventListener('input', (e) => {
+        const target = e.target;
+        if (target.classList.contains('cantidad-item') || target.classList.contains('precio-item') || target.classList.contains('peso-item')) {
+            const row = target.closest('tr');
+            const cantidad = parseFloat(row.querySelector('.cantidad-item').value) || 0;
+            const precio = parseFloat(row.querySelector('.precio-item').value) || 0;
 
-        const eliminarBtn = row.querySelector('.eliminar-item-btn');
-        eliminarBtn.addEventListener('click', () => {
-            row.remove();
-            updateTotals();
-            if (elements.bodyItemsGasto.querySelectorAll('tr').length === 0) {
-                // Si no hay filas, creamos una vacía para mantener la interfaz limpia
-                createItemRow();
-            }
+            const totalItem = (cantidad * precio);
+
+            row.querySelector('.total-item').textContent = `S/ ${totalItem.toFixed(2)}`;
+            calcularTotales();
+        }
+    });
+
+    bodyItemsGasto.addEventListener('click', (e) => {
+        if (e.target.closest('.remove-item-btn')) {
+            e.target.closest('tr').remove();
+            calcularTotales();
+            updateTableVisibility();
+        }
+    });
+
+    function calcularTotales() {
+        let subtotalBruto = 0;
+        let totalPeso = 0;
+
+        document.querySelectorAll('#bodyItemsGasto tr').forEach(row => {
+            const cantidad = parseFloat(row.querySelector('.cantidad-item').value) || 0;
+            const precio = parseFloat(row.querySelector('.precio-item').value) || 0;
+            const pesoUnitario = parseFloat(row.querySelector('.peso-item').value) || 0;
+
+            subtotalBruto += cantidad * precio;
+            totalPeso += (pesoUnitario * cantidad);
         });
 
-        elements.bodyItemsGasto.appendChild(row);
-        updateTotals();
-    };
-
-    /**
-     * Maneja el envío del formulario, validando todos los campos.
-     */
-    const handleFormSubmit = (event) => {
-        event.preventDefault();
-        elements.formGasto.classList.add('was-validated');
-
-        const itemsValidos = elements.bodyItemsGasto.querySelectorAll('tr').length > 0;
-        const formValido = elements.formGasto.checkValidity() && itemsValidos;
-
-        if (formValido) {
-            const formData = new FormData(elements.formGasto);
-            const gastoData = Object.fromEntries(formData.entries());
-            gastoData.items = [];
-            elements.bodyItemsGasto.querySelectorAll('tr').forEach(row => {
-                gastoData.items.push({
-                    descripcion: row.querySelector('.item-descripcion').value,
-                    cantidad: parseFloat(row.querySelector('.item-cantidad').value),
-                    precio: parseFloat(row.querySelector('.item-precio').value),
-                });
-            });
-
-            console.log('Datos del gasto:', gastoData);
-            alert('¡Gasto guardado con éxito! Revisa la consola para ver los datos.');
-
-            elements.formGasto.reset();
-            elements.bodyItemsGasto.innerHTML = '';
-            elements.formGasto.classList.remove('was-validated');
-            createItemRow();
-        } else {
-            alert('Por favor, complete todos los campos obligatorios y agregue al menos un ítem a la tabla.');
-        }
-    };
-
-    // Event Listeners
-    elements.agregarItemBtn.addEventListener('click', () => createItemRow());
-    elements.guardarBtn.addEventListener('click', handleFormSubmit);
-
-    // Fila inicial al cargar la página
-    if (elements.bodyItemsGasto.querySelectorAll('tr').length === 0) {
-        createItemRow();
+        const subtotal = Math.round(subtotalBruto * 100) / 100;
+        const igv = Math.round(subtotal * IGV_RATE * 100) / 100;
+        const total = Math.round((subtotal + igv) * 100) / 100;
+        totalPesoGasto.textContent = totalPeso.toFixed(3);
+        subtotalGasto.textContent = `S/ ${subtotal.toFixed(2)}`;
+        igvGasto.textContent = `S/ ${igv.toFixed(2)}`;
+        totalGasto.textContent = `S/ ${total.toFixed(2)}`;
     }
+
+    document.getElementById('formGasto').addEventListener('submit', (e) => {
+        e.preventDefault();
+        console.log('--- Gasto Registrado ---');
+        console.log('Subtotal:', subtotalGasto.textContent);
+        console.log('IGV:', igvGasto.textContent);
+        console.log('Total:', totalGasto.textContent);
+        console.log('Total Peso:', totalPesoGasto.textContent);
+    });
+
+    document.getElementById('listaGastosBtn').addEventListener('click', () => {
+        console.log('Navegando a la lista de gastos pendientes...');
+    });
 });

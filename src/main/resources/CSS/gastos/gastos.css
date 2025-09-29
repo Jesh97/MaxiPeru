@@ -1,114 +1,63 @@
 :root {
-    --primary-color: #34495e; /* Azul oscuro corporativo */
-    --secondary-color: #95a5a6; /* Gris neutro */
-    --accent-color: #2ecc71; /* Verde para acciones positivas */
-    --bg-color: #ecf0f1; /* Gris claro de fondo */
-    --card-bg-color: #ffffff;
-    --text-color-primary: #2c3e50;
-    --text-color-muted: #7f8c8d;
-    --border-color: #e0e6ed;
-    --box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    --primary: #1f2937; /* Gris oscuro / Texto principal */
+    --secondary: #fbbf24; /* Amarillo / Acento principal */
+    --accent: #10b981; /* Verde / Botón Añadir */
+    --danger: #ef4444; /* Rojo / Eliminar */
+    --muted: #4b5563; /* Gris medio / Etiquetas */
+    --card-bg: #ffffff; /* Fondo de tarjetas */
+    --header-bg: #111827; /* Fondo de encabezado y resumen */
+    --page-bg: #f8f8f8; /* Fondo de la página */
 }
 
 body {
-    font-family: 'Roboto', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color-primary);
-    line-height: 1.6;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--page-bg);
+    color: var(--primary);
+    min-height: 100vh;
 }
 
-.site-header {
-    background: var(--primary-color);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+.card-shadow-premium {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.card-shadow-premium:hover {
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.15);
+    transform: translateY(-4px);
+}
+
+.input-field-premium {
+    background-color: #ffffff;
+    border-color: #d1d5db;
+    font-size: 0.95rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.input-field-premium:focus {
+    border-color: var(--secondary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.3);
+}
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.table-header-premium {
+    background-color: #f3f4f6;
+    color: var(--primary);
+    border-bottom: 3px solid var(--secondary);
+}
+
+.summary-card-premium {
+    background: var(--header-bg);
     color: white;
-}
-
-.form-label {
-    font-weight: 500;
-    color: var(--text-color-primary);
-}
-
-.form-control,
-.form-select {
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    padding: 0.85rem 1rem;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-.form-control-lg,
-.form-select-lg {
-    padding: 1rem 1.25rem;
-}
-
-.form-control:focus,
-.form-select:focus {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 0.2rem rgba(46, 204, 113, 0.25);
-}
-
-.card {
-    border: none;
-    border-radius: 15px;
-    box-shadow: var(--box-shadow);
-    background-color: var(--card-bg-color);
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-}
-
-.table {
-    --bs-table-hover-bg: #f5f7f9;
-}
-
-.table thead th {
-    background-color: var(--bg-color);
-    border-bottom: 2px solid var(--border-color);
-    font-weight: 600;
-    color: var(--text-color-muted);
-}
-
-.table td, .table th {
-    padding: 1rem;
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    font-weight: 600;
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.btn-primary:hover {
-    background-color: #2c3e50;
-    border-color: #2c3e50;
-    transform: translateY(-2px);
-}
-
-.btn-outline-secondary {
-    border-color: var(--secondary-color);
-    color: var(--secondary-color);
-    font-weight: 500;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-secondary:hover {
-    background-color: var(--secondary-color);
-    color: white;
-}
-
-.bg-light {
-    background-color: #f9fbfd !important;
-}
-
-.h6.text-uppercase {
-    font-size: 0.8rem;
-    letter-spacing: 1.5px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }

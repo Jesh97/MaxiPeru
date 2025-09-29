@@ -3,215 +3,142 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Registro de Ventas | Clientes — Versión Corporativa</title>
+    <title>Registro de Ventas Ultra Premium</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../../CSS/venta/ventas.css">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8f9fa;
-        }
-        .site-header {
-            background-color: #007bff;
-            color: white;
-            padding: 1rem 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-bottom-left-radius: 10px;
-            border-bottom-right-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        .container {
-            margin-top: 2rem;
-        }
-        .card-section {
-            background-color: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            margin-bottom: 1.5rem;
-        }
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #495057;
-        }
-        .totals {
-            background-color: #e9ecef;
-            border-left: 5px solid #007bff;
-            padding: 1.5rem;
-            border-radius: 10px;
-        }
-        .totals .line {
-            display: flex;
-            justify-content: space-between;
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-        }
-        .totals .line.bold {
-            font-weight: 700;
-            font-size: 1.2rem;
-            margin-top: 8px;
-        }
-        .btn-custom-blue {
-            background-color: #007bff;
-            color: white;
-            border-radius: 8px;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            transition: background-color 0.3s ease;
-        }
-        .btn-custom-blue:hover {
-            background-color: #0056b3;
-            color: white;
-        }
-        .table thead th {
-            background-color: #f1f3f5;
-            color: #495057;
-        }
-        .form-control, .form-select, .btn {
-            border-radius: 8px;
-        }
-        .product-search-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #dee2e6;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-        }
-        .product-search-list li {
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .product-search-list li:hover {
-            background-color: #e9ecef;
-        }
     </style>
 </head>
 <body>
 <header class="site-header">
-    <div class="brand">
-        <i class="bi bi-cart-plus-fill fs-4"></i>
-        <div>
-            <h1>Registro de Ventas a Clientes</h1>
+    <div class="container text-center">
+        <div class="d-flex align-items-center justify-content-center">
+            <i class="bi bi-cart-plus-fill fs-1 me-3" style="color: var(--primary-color);"></i>
+            <h1>Sistema de Gestión de Ventas</h1>
         </div>
     </div>
 </header>
 
 <main class="container">
     <form id="formVenta" novalidate>
-        <section class="card-section">
-            <div class="section-title"><i class="bi bi-info-circle"></i> Datos Generales de la Venta</div>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label small-muted">Cliente</label>
-                    <input type="text" id="busquedaCliente" class="form-control" placeholder="RUC o Razón Social" required>
-                </div>
-                <div class="col-md-3">
-                    <label for="tipoComprobante" class="form-label small-muted">Tipo Comprobante</label>
-                    <select id="tipoComprobante" name="tipo_comprobante" class="form-control" required>
-                        <option value="">Seleccione</option>
-                        <option value="boleta">Boleta</option>
-                        <option value="factura">Factura</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small-muted">Moneda</label>
-                    <select id="moneda" class="form-control">
-                        <option>Soles</option>
-                        <option>Dólares</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="fechaEmision">Fecha Emisión</label>
-                    <input type="date" id="fechaEmision" name="fecha_emision" class="form-control" required>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small-muted">Tipo de Pago</label>
-                    <select id="tipoPago" name="tipo_pago" class="form-control">
-                        <option value="">Seleccione</option>
-                        <option>Contado</option>
-                        <option>Crédito</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small-muted">Estado</label>
-                    <select id="estadoVenta" class="form-control">
-                        <option>Pagada</option>
-                        <option>Pendiente de Pago</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small-muted">Tipo de Descuento</label>
-                    <div class="d-flex gap-3">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="tipoDescuento" id="descuentoGlobal" value="global" checked>
-                            <label class="form-check-label small-muted" for="descuentoGlobal">Global</label>
+        <div class="row">
+            <div class="col-12">
+                <section class="card-section">
+                    <div class="section-title"><i class="bi bi-info-circle"></i> Datos Generales de la Venta</div>
+                    <div class="row g-4">
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label small-muted">Cliente</label>
+                            <input type="text" id="busquedaCliente" class="form-control" placeholder="RUC o Razón Social" required>
                         </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="tipoDescuento" id="descuentoPorItem" value="porItem">
-                            <label class="form-check-label small-muted" for="descuentoPorItem">Por Ítem</label>
+                        <div class="col-md-6 col-lg-3">
+                            <label for="tipoComprobante" class="form-label small-muted">Tipo Comprobante</label>
+                            <select id="tipoComprobante" name="tipo_comprobante" class="form-select" required>
+                                <option value="">Seleccione</option>
+                                <option value="boleta">Boleta</option>
+                                <option value="factura">Factura</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 col-lg-2">
+                            <label class="form-label small-muted">Moneda</label>
+                            <select id="moneda" class="form-select">
+                                <option>Soles</option>
+                                <option>Dólares</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 col-lg-2">
+                            <label for="fechaEmision" class="form-label small-muted">Fecha Emisión</label>
+                            <input type="date" id="fechaEmision" name="fecha_emision" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 col-lg-2">
+                            <label for="fechaVencimiento" class="form-label small-muted">Fecha Vencimiento</label>
+                            <input type="date" id="fechaVencimiento" name="fecha_vencimiento" class="form-control">
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label small-muted">Tipo de Pago</label>
+                            <select id="tipoPago" name="tipo_pago" class="form-select">
+                                <option value="">Seleccione</option>
+                                <option>Contado</option>
+                                <option>Crédito</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label small-muted">Estado</label>
+                            <select id="estadoVenta" class="form-select">
+                                <option>Pagada</option>
+                                <option>Pendiente de Pago</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label small-muted">Tipo de Descuento</label>
+                            <div class="d-flex gap-3 pt-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="tipoDescuento" id="descuentoGlobal" value="global" checked>
+                                    <label class="form-check-label small-muted" for="descuentoGlobal">Global</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="tipoDescuento" id="descuentoPorItem" value="porItem">
+                                    <label class="form-check-label small-muted" for="descuentoPorItem">Por Ítem</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label small-muted">¿Hay traslado?</label>
+                            <select id="opcionTraslado" class="form-select">
+                                <option value="">Seleccione</option>
+                                <option value="no">No (Entrega en Tienda)</option>
+                                <option value="si">Sí (Guía de Remisión)</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-            </div>
-        </section>
+                </section>
 
-        <section class="card-section">
-            <div class="section-title"><i class="bi bi-list-check"></i> Detalle de Productos/Servicios</div>
-            <div class="mb-3">
-                <label class="form-label small-muted">Buscar y Agregar Productos</label>
-                <input type="text" id="busquedaProductos" class="form-control" placeholder="Buscar por código o descripción">
-                <ul id="listaResultadosBusqueda" class="product-search-list"></ul>
-            </div>
+                <section class="card-section">
+                    <div class="section-title"><i class="bi bi-list-check"></i> Detalle de Productos/Servicios</div>
+                    <div class="mb-4 row g-3">
+                        <div class="col-lg-6">
+                            <label class="form-label small-muted">Buscar y Agregar Productos</label>
+                            <input type="text" id="busquedaProductos" class="form-control" placeholder="Buscar por código o descripción">
+                            <ul id="listaResultadosBusqueda" class="product-search-list"></ul>
+                        </div>
+                        <div class="col-lg-6 d-flex align-items-end">
+                            <div class="d-grid gap-2 w-100">
+                                <button type="button" class="btn" id="agregarItemVentaBtn">
+                                    <i class="bi bi-plus-lg"></i> Agregar Ítem Manualmente
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="table-responsive mt-3">
-                <table class="table align-middle table-hover" id="tablaItemsVenta">
-                    <thead class="text-nowrap">
-                    <tr>
-                        <th scope="col">Código</th>
-                        <th scope="col">Descripción</th>
-                        <th scope="col">Cantidad</th>
-                        <th scope="col">Precio Unitario</th>
-                        <th scope="col">Descuento</th>
-                        <th scope="col">Total</th>
-                        <th scope="col" style="width: 50px;"></th>
-                    </tr>
-                    </thead>
-                    <tbody id="bodyItemsVenta">
-                    <!-- Items will be added dynamically here -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="d-grid gap-2 mt-3">
-                <button type="button" class="btn btn-outline-secondary" id="agregarItemVentaBtn">
-                    <i class="bi bi-plus-lg"></i> Agregar Ítem Manualmente
-                </button>
-            </div>
-        </section>
+                    <div class="table-responsive mt-3">
+                        <table class="table align-middle table-hover" id="tablaItemsVenta">
+                            <thead class="text-nowrap">
+                            <tr>
+                                <th scope="col">Código</th>
+                                <th scope="col" class="table-description-col">Descripción</th>
+                                <th scope="col">Cant.</th>
+                                <th scope="col">Unidad</th>
+                                <th scope="col">Peso</th>
+                                <th scope="col">P. Unitario</th>
+                                <th scope="col" class="descuento-header" style="display:none;">Descuento</th>
+                                <th scope="col">Total</th>
+                                <th scope="col" style="min-width: 120px;">Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody id="bodyItemsVenta">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
 
-        <div class="row g-3">
-            <div class="col-lg-7">
                 <section class="card-section" id="descuentoGlobalContainer">
                     <div class="section-title"><i class="bi bi-percent"></i> Descuento Global</div>
-                    <div class="row g-3">
+                    <div class="row g-4">
                         <div class="col-md-6">
                             <label class="form-label small-muted">Valor Descuento</label>
-                            <input type="number" id="valorDescuentoGlobal" class="form-control" min="0" step="0.01">
+                            <input type="number" id="valorDescuentoGlobal" class="form-control" min="0" step="0.01" placeholder="Ej: 0.00">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small-muted">Tipo</label>
@@ -222,51 +149,68 @@
                         </div>
                     </div>
                 </section>
-                <section class="card-section mt-3">
-                    <div class="section-title"><i class="bi bi-pencil-square"></i> Observaciones</div>
-                    <textarea id="observacionesVenta" class="form-control" rows="5" placeholder="Escribe observaciones adicionales..."></textarea>
-                </section>
-            </div>
 
-            <div class="col-lg-5">
-                <section class="card-section totals">
-                    <div class="section-title"><i class="bi bi-calculator"></i> Totales de la Venta</div>
-                    <div class="line"><span class="muted">Subtotal (sin IGV)</span><span id="subtotalSinIgv">S/ 0.00</span></div>
-                    <div class="line"><span class="muted">Descuento</span><span id="descuentoVenta">S/ 0.00</span></div>
-                    <div class="line"><span class="muted">IGV (18%)</span><span id="igvVenta">S/ 0.00</span></div>
-                    <div class="line bold">
-                        <span>Total a Pagar</span><span id="totalVenta">S/ 0.00</span>
-                    </div>
-                    <div class="d-grid gap-2 mt-3">
-                        <button type="button" id="guardarVentaBtn" class="btn btn-custom-blue btn-lg">
-                            <i class="bi bi-save"></i> Guardar Venta
-                        </button>
-                    </div>
-                </section>
+                <div class="bottom-row-flex">
+                    <section class="card-section">
+                        <div class="section-title"><i class="bi bi-pencil-square"></i> Observaciones</div>
+                        <textarea id="observacionesVenta" class="form-control" rows="5" placeholder="Escribe observaciones adicionales o requerimientos especiales..."></textarea>
+                    </section>
+
+                    <section class="card-section totals">
+                        <div class="section-title" style="border-bottom: 3px solid var(--primary-color); padding-bottom: 1rem;">
+                            <i class="bi bi-calculator" style="color: var(--primary-color);"></i> Resumen Financiero
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="aplicaIgv" checked>
+                            <label class="form-check-label" for="aplicaIgv">Incluir IGV (18%)</label>
+                        </div>
+
+                        <div class="line"><span class="text-muted">Subtotal (Neto)</span><span id="subtotalSinIgv" class="fw-bold">S/ 0.00</span></div>
+                        <div class="line"><span class="text-muted text-danger">Descuento Aplicado</span><span id="descuentoVenta" class="text-danger fw-bold">S/ 0.00</span></div>
+                        <div class="line"><span class="text-muted">IGV (18%)</span><span id="igvVenta" class="fw-bold">S/ 0.00</span></div>
+
+                        <div class="line bold">
+                            <span>TOTAL FINAL</span><span id="totalVenta">S/ 0.00</span>
+                        </div>
+
+                        <div class="line bold mt-3" style="font-size: 1.2rem; border-top: 1px dotted var(--border-color); padding-top: 1rem;">
+                            <span class="text-dark fw-bold">PESO TOTAL (Logística)</span><span id="pesoTotalVenta" class="fw-bold text-success">0.00 Kg</span>
+                        </div>
+                        <div class="d-grid gap-3 mt-4">
+                            <button type="button" id="guardarVentaBtn" class="btn btn-custom btn-save">
+                                <i class="bi bi-save"></i> Procesar y Guardar Venta
+                            </button>
+                            <button type="button" id="verVentasBtn" class="btn btn-custom btn-list">
+                                <i class="bi bi-list-ul"></i> Administrar Ventas
+                            </button>
+                        </div>
+                    </section>
+                </div>
+
             </div>
         </div>
     </form>
 </main>
 
-<!-- Modal para Descuento por Ítem -->
 <div class="modal fade" id="modalDescuentoItem" tabindex="-1" aria-labelledby="modalDescuentoItemLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-md">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalDescuentoItemLabel">Aplicar Descuento al Ítem</h5>
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="modalDescuentoItemLabel"><i class="bi bi-tag-fill me-2"></i> Aplicar Descuento al Ítem</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="itemDescripcionModal" class="form-label">Ítem:</label>
+                    <label for="itemDescripcionModal" class="form-label small-muted">Ítem:</label>
                     <input type="text" class="form-control" id="itemDescripcionModal" readonly>
                 </div>
                 <div class="mb-3">
-                    <label for="valorDescuentoItem" class="form-label">Valor del Descuento</label>
-                    <input type="number" id="valorDescuentoItem" class="form-control" min="0" step="0.01">
+                    <label for="valorDescuentoItem" class="form-label small-muted">Valor del Descuento</label>
+                    <input type="number" id="valorDescuentoItem" class="form-control" min="0" step="0.01" placeholder="Ej: 0.00">
                 </div>
-                <div class="mb-3">
-                    <label for="tipoDescuentoItem" class="form-label">Tipo de Descuento</label>
+                <div class="mb-2">
+                    <label for="tipoDescuentoItem" class="form-label small-muted">Tipo de Descuento</label>
                     <select id="tipoDescuentoItem" class="form-select">
                         <option value="monto">Monto (S/)</option>
                         <option value="porcentaje">Porcentaje (%)</option>
@@ -275,207 +219,194 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="guardarDescuentoItemBtn">Guardar</button>
+                <button type="button" class="btn btn-primary" id="guardarDescuentoItemBtn">Guardar Descuento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalLotesVencimiento" tabindex="-1" aria-labelledby="modalLotesVencimientoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header text-white">
+                <h5 class="modal-title" id="modalLotesVencimientoLabel"><i class="bi bi-box-seam-fill me-2"></i> Registro de Lotes y Vencimiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small-muted mb-3 fs-6">
+                    Ítem: <strong id="itemLoteDescripcion" class="text-primary"></strong> |
+                    Cantidad Total: <strong id="itemLoteCantidadTotal" class="text-primary"></strong>
+                </p>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm align-middle" id="tablaLotes">
+                        <thead>
+                        <tr class="bg-light">
+                            <th style="width: 30%">N° Lote (Opcional)</th>
+                            <th style="width: 30%">Cantidad (Obligatorio)</th>
+                            <th style="width: 30%">Fecha Vencimiento (Opcional)</th>
+                            <th style="width: 10%"></th>
+                        </tr>
+                        </thead>
+                        <tbody id="bodyLotes">
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <td colspan="4" class="text-end">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="agregarLoteBtn">
+                                    <i class="bi bi-plus-lg"></i> Agregar Lote
+                                </button>
+                            </td>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="alert alert-warning mt-3 py-2" role="alert" id="alertaLotes" style="display:none;">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> La suma de las cantidades de los lotes (<strong id="sumaLotes">0</strong>) debe coincidir exactamente con la cantidad total del ítem (<strong id="totalItemLote">0</strong>).
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="guardarLotesBtn">Guardar Lotes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalTraslado" tabindex="-1" aria-labelledby="modalTrasladoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header text-white">
+                <h5 class="modal-title" id="modalTrasladoLabel"><i class="bi bi-truck me-2"></i> Datos de Traslado (Guía de Remisión)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <h6 class="section-heading">Información del Transporte</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small-muted">Modalidad de Transporte</label>
+                                <select id="modalidadTransporte" class="form-select">
+                                    <option value="">Seleccione...</option>
+                                    <option value="publico">Transporte Público</option>
+                                    <option value="privado">Transporte Privado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small-muted">Peso (Kg)</label>
+                                <input type="number" class="form-control" placeholder="Peso total">
+                            </div>
+                        </div>
+                        <div id="transportePublicoContainer" class="row g-3 mt-3" style="display:none;">
+                            <div class="col-md-6">
+                                <label class="form-label small-muted">RUC de la Empresa</label>
+                                <input type="text" class="form-control" placeholder="RUC de la Empresa">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small-muted">Razón Social</label>
+                                <input type="text" class="form-control" placeholder="Razón Social">
+                            </div>
+                        </div>
+                        <div id="transportePrivadoContainer" class="row g-3 mt-3" style="display:none;">
+                            <div class="col-md-4">
+                                <label class="form-label small-muted">Marca del Vehículo</label>
+                                <input type="text" class="form-control" placeholder="Marca del Vehículo">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small-muted">DNI del Conductor</label>
+                                <input type="text" class="form-control" placeholder="DNI del Conductor">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small-muted">Nombre del Conductor</label>
+                                <input type="text" class="form-control" placeholder="Nombre del Conductor">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <h6 class="section-heading">Rutas y Fechas</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small-muted">Punto de Partida</label>
+                                <input type="text" class="form-control" placeholder="Dirección de Partida">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small-muted">Punto de Llegada</label>
+                                <input type="text" class="form-control" placeholder="Dirección de Llegada">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small-muted">Fecha de Traslado</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+
+                        <h6 class="section-heading mt-4 pt-3 border-top">Observaciones</h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <textarea class="form-control" rows="3" placeholder="Observaciones adicionales"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <h6 class="section-heading">Conformidad del Cliente</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small-muted">Nombre y Apellido</label>
+                                <input type="text" class="form-control" placeholder="Nombre y Apellido del cliente">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small-muted">DNI</label>
+                                <input type="text" class="form-control" placeholder="DNI del cliente">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary">Guardar Datos de Traslado</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalConformidadCliente" tabindex="-1" aria-labelledby="modalConformidadClienteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header text-white">
+                <h5 class="modal-title" id="modalConformidadClienteLabel"><i class="bi bi-person-check-fill me-2"></i> Confirmación de Entrega en Tienda</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label small-muted">Nombre y Apellido</label>
+                        <input type="text" class="form-control" placeholder="Nombre y Apellido del cliente">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small-muted">DNI</label>
+                        <input type="text" class="form-control" placeholder="DNI del cliente">
+                    </div>
+                    <div class="col-12 mt-4">
+                        <label class="form-label small-muted">Comentarios de la Entrega (Opcional)</label>
+                        <textarea class="form-control" rows="2" placeholder="Ej: Recibido conforme por el Gerente de Almacén."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary">Guardar Conformidad</button>
             </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8V-n7D6T4tH9A4K0Pz0B9x9qD4z4z4p9w8J9Q4x5R5z2K7E6p6B8D8F7B5p5g6D9A6B8A7E9p9F9F8d6A6A6" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
 <script src="../../JS/venta/ventas.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const bodyItemsVenta = document.getElementById('bodyItemsVenta');
-        const agregarItemVentaBtn = document.getElementById('agregarItemVentaBtn');
-        const subtotalSinIgvSpan = document.getElementById('subtotalSinIgv');
-        const descuentoVentaSpan = document.getElementById('descuentoVenta');
-        const igvVentaSpan = document.getElementById('igvVenta');
-        const totalVentaSpan = document.getElementById('totalVenta');
-        const tipoDescuentoRadios = document.querySelectorAll('input[name="tipoDescuento"]');
-        const descuentoGlobalContainer = document.getElementById('descuentoGlobalContainer');
-        const valorDescuentoGlobalInput = document.getElementById('valorDescuentoGlobal');
-        const tipoDescuentoGlobalSelect = document.getElementById('tipoDescuentoGlobal');
-        const busquedaProductosInput = document.getElementById('busquedaProductos');
-        const listaResultadosBusqueda = document.getElementById('listaResultadosBusqueda');
-
-        // Modal elements
-        const modalDescuentoItem = new bootstrap.Modal(document.getElementById('modalDescuentoItem'));
-        let currentRow = null;
-        const itemDescripcionModal = document.getElementById('itemDescripcionModal');
-        const valorDescuentoItem = document.getElementById('valorDescuentoItem');
-        const tipoDescuentoItem = document.getElementById('tipoDescuentoItem');
-        const guardarDescuentoItemBtn = document.getElementById('guardarDescuentoItemBtn');
-
-        // Dummy products for search
-        const products = [
-            { codigo: 'P001', descripcion: 'Laptop Core i7', precio: 3500.00 },
-            { codigo: 'P002', descripcion: 'Teclado Mecánico RGB', precio: 250.00 },
-            { codigo: 'P003', descripcion: 'Mouse Inalámbrico Logitech', precio: 120.50 },
-            { codigo: 'P004', descripcion: 'Monitor 27" 4K', precio: 1500.00 },
-            { codigo: 'S001', descripcion: 'Soporte Técnico 1h', precio: 80.00 },
-            { codigo: 'S002', descripcion: 'Instalación de Software', precio: 150.00 },
-        ];
-
-        const updateTotals = () => {
-            let subtotalSinDescuento = 0;
-            let totalDescuentoAplicado = 0;
-
-            const rows = bodyItemsVenta.querySelectorAll('tr');
-
-            rows.forEach(row => {
-                const cantidad = parseFloat(row.querySelector('.item-cantidad').value) || 0;
-                const precio = parseFloat(row.querySelector('.item-precio').value) || 0;
-                const baseTotal = cantidad * precio;
-                subtotalSinDescuento += baseTotal;
-
-                // Apply per-item discount if it exists
-                let itemDiscount = 0;
-                const valorDescItem = parseFloat(row.dataset.descuentoValor) || 0;
-                const tipoDescItem = row.dataset.descuentoTipo || 'monto';
-
-                if (valorDescItem > 0) {
-                    if (tipoDescItem === 'porcentaje') {
-                        itemDiscount = baseTotal * (valorDescItem / 100);
-                    } else {
-                        itemDiscount = valorDescItem;
-                    }
-                }
-                totalDescuentoAplicado += itemDiscount;
-
-                const finalItemTotal = baseTotal - itemDiscount;
-                row.querySelector('.item-total').textContent = Math.max(0, finalItemTotal).toFixed(2);
-            });
-
-            // Apply global discount if selected
-            if (document.getElementById('descuentoGlobal').checked) {
-                const valor = parseFloat(valorDescuentoGlobalInput.value) || 0;
-                const tipo = tipoDescuentoGlobalSelect.value;
-                const currentSubtotal = subtotalSinDescuento - totalDescuentoAplicado;
-                if (tipo === 'porcentaje') {
-                    const globalDiscount = currentSubtotal * (valor / 100);
-                    totalDescuentoAplicado = totalDescuentoAplicado + globalDiscount;
-                } else {
-                    totalDescuentoAplicado = totalDescuentoAplicado + valor;
-                }
-            }
-
-            const subtotalFinal = subtotalSinDescuento - totalDescuentoAplicado;
-            const igv = subtotalFinal > 0 ? subtotalFinal * 0.18 : 0;
-            const totalFinal = subtotalFinal + igv;
-
-            subtotalSinIgvSpan.textContent = `S/ ${subtotalSinDescuento.toFixed(2)}`;
-            descuentoVentaSpan.textContent = `S/ ${totalDescuentoAplicado.toFixed(2)}`;
-            igvVentaSpan.textContent = `S/ ${igv.toFixed(2)}`;
-            totalVentaSpan.textContent = `S/ ${Math.max(0, totalFinal).toFixed(2)}`;
-        };
-
-        const createItemRow = (product = null) => {
-            const row = document.createElement('tr');
-            row.dataset.descuentoValor = 0;
-            row.dataset.descuentoTipo = 'monto';
-
-            row.innerHTML = `
-                <td><input type="text" class="form-control form-control-sm item-codigo" value="${product ? product.codigo : ''}" placeholder="Código"></td>
-                <td><input type="text" class="form-control form-control-sm item-descripcion" value="${product ? product.descripcion : ''}" placeholder="Descripción"></td>
-                <td><input type="number" class="form-control form-control-sm item-cantidad" value="1" min="1"></td>
-                <td><input type="number" class="form-control form-control-sm item-precio" value="${product ? product.precio.toFixed(2) : '0.00'}" min="0" step="0.01"></td>
-                <td><span class="item-descuento">S/ 0.00</span> <button type="button" class="btn btn-sm btn-outline-info aplicar-descuento-btn"><i class="bi bi-tag"></i></button></td>
-                <td><span class="item-total">0.00</span></td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-outline-danger eliminar-item-btn" aria-label="Eliminar ítem">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            `;
-
-            const inputs = row.querySelectorAll('.item-cantidad, .item-precio');
-            inputs.forEach(input => input.addEventListener('input', updateTotals));
-
-            const eliminarBtn = row.querySelector('.eliminar-item-btn');
-            eliminarBtn.addEventListener('click', () => {
-                row.remove();
-                updateTotals();
-            });
-
-            const aplicarDescuentoBtn = row.querySelector('.aplicar-descuento-btn');
-            aplicarDescuentoBtn.addEventListener('click', () => {
-                currentRow = row;
-                itemDescripcionModal.value = row.querySelector('.item-descripcion').value;
-                valorDescuentoItem.value = row.dataset.descuentoValor;
-                tipoDescuentoItem.value = row.dataset.descuentoTipo;
-                modalDescuentoItem.show();
-            });
-
-            bodyItemsVenta.appendChild(row);
-            updateTotals();
-        };
-
-        // Event listener for adding an item manually
-        agregarItemVentaBtn.addEventListener('click', () => createItemRow());
-
-        // Event listener for discount type radio buttons
-        tipoDescuentoRadios.forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                if (e.target.value === 'global') {
-                    descuentoGlobalContainer.style.display = 'block';
-                } else {
-                    descuentoGlobalContainer.style.display = 'none';
-                    valorDescuentoGlobalInput.value = 0;
-                }
-                updateTotals();
-            });
-        });
-
-        // Event listeners for global discount inputs
-        valorDescuentoGlobalInput.addEventListener('input', updateTotals);
-        tipoDescuentoGlobalSelect.addEventListener('change', updateTotals);
-
-        // Event listeners for product search
-        busquedaProductosInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            listaResultadosBusqueda.innerHTML = '';
-            if (query.length > 1) {
-                const filteredProducts = products.filter(p =>
-                    p.codigo.toLowerCase().includes(query) ||
-                    p.descripcion.toLowerCase().includes(query)
-                );
-                filteredProducts.forEach(product => {
-                    const li = document.createElement('li');
-                    li.textContent = `${product.descripcion} (${product.codigo}) - S/ ${product.precio.toFixed(2)}`;
-                    li.addEventListener('click', () => {
-                        createItemRow(product);
-                        busquedaProductosInput.value = '';
-                        listaResultadosBusqueda.innerHTML = '';
-                    });
-                    listaResultadosBusqueda.appendChild(li);
-                });
-            }
-        });
-
-        // Event listener for saving per-item discount from modal
-        guardarDescuentoItemBtn.addEventListener('click', () => {
-            if (currentRow) {
-                currentRow.dataset.descuentoValor = valorDescuentoItem.value;
-                currentRow.dataset.descuentoTipo = tipoDescuentoItem.value;
-                const descuentoSpan = currentRow.querySelector('.item-descuento');
-                const valor = parseFloat(valorDescuentoItem.value) || 0;
-                if (tipoDescuentoItem.value === 'porcentaje') {
-                    descuentoSpan.textContent = `-${valor.toFixed(2)}%`;
-                } else {
-                    descuentoSpan.textContent = `S/ -${valor.toFixed(2)}`;
-                }
-                updateTotals();
-                modalDescuentoItem.hide();
-            }
-        });
-
-        // Initial row
-        createItemRow();
-
-        document.getElementById('guardarVentaBtn').addEventListener('click', () => {
-            alert('Venta guardada. (Esto es una demostración)');
-        });
-    });
-</script>
 </body>
 </html>
