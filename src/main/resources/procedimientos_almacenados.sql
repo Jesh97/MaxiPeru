@@ -2,58 +2,52 @@ use bd_maxiperu;
 
 DELIMITER $$
 
--- ====================================================================
--- PROCEDIMIENTOS DE BÚSQUEDA DE ARTÍCULOS
--- ====================================================================
-
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_para_compra`$$
-CREATE PROCEDURE sp_buscar_articulos_para_compra (
+CREATE PROCEDURE `sp_buscar_articulos_para_compra` (
     IN p_busqueda VARCHAR(100)
 )
 BEGIN
-    SELECT DISTINCT
+    SELECT
         a.id, a.codigo, a.descripcion, a.cantidad,
         a.precio_unitario, a.peso_unitario, a.aroma, a.color
     FROM articulo a
-    INNER JOIN articulo_tipo at ON a.id = at.id_articulo
-    INNER JOIN tipo_articulo ta ON at.id_tipo = ta.id
     WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
-      AND ta.nombre IN ('Compra', 'Insumo');
+      AND a.id_tipo_articulo IN (
+        2,  -- INSUMOS DE PRODUCCION
+        3,  -- PRODUCTOS COMERCIALES
+        4   -- ENVASES Y EMBALAJE
+      );
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_para_venta`$$
-CREATE PROCEDURE sp_buscar_articulos_para_venta (
+CREATE PROCEDURE `sp_buscar_articulos_para_venta` (
     IN p_busqueda VARCHAR(100)
 )
 BEGIN
-    SELECT DISTINCT
+    SELECT
         a.id, a.codigo, a.descripcion, a.cantidad,
         a.precio_unitario, a.peso_unitario, a.aroma, a.color
     FROM articulo a
-    INNER JOIN articulo_tipo at ON a.id = at.id_articulo
-    INNER JOIN tipo_articulo ta ON at.id_tipo = ta.id
     WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
-      AND ta.nombre IN ('Compra', 'Venta');
+      AND a.id_tipo_articulo IN (
+        1,  -- PRODUCTO TERMINADO
+        3   -- PRODUCTOS COMERCIALES
+      );
 END$$
+
 
 DROP PROCEDURE IF EXISTS `sp_buscar_insumos`$$
-CREATE PROCEDURE sp_buscar_insumos (
+CREATE PROCEDURE `sp_buscar_insumos` (
     IN p_busqueda VARCHAR(100)
 )
 BEGIN
-    SELECT DISTINCT
+    SELECT
         a.id, a.codigo, a.descripcion, a.cantidad,
         a.precio_unitario, a.peso_unitario, a.aroma, a.color
     FROM articulo a
-    INNER JOIN articulo_tipo at ON a.id = at.id_articulo
-    INNER JOIN tipo_articulo ta ON at.id_tipo = ta.id
     WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
-      AND ta.nombre = 'Insumo';
+      AND a.id_tipo_articulo = 2; -- INSUMOS DE PRODUCCION
 END$$
-
--- ====================================================================
--- PROCEDIMIENTOS DE PROVEEDORES, CLIENTES Y ARTÍCULOS (Sin Modificar)
--- ====================================================================
 
 -- Procedimientos de proveedores
 DROP PROCEDURE IF EXISTS `sp_agregar_proveedor`$$

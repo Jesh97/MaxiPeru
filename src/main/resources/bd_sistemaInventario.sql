@@ -100,30 +100,31 @@ CREATE TABLE tipo_gasto (
 -- 2. TABLAS DE ARTÍCULOS
 -- ====================================================================
 
-CREATE TABLE articulo (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    codigo VARCHAR(50) NOT NULL UNIQUE,
-    descripcion VARCHAR(255) NOT NULL,
-    cantidad INT NOT NULL,
-    precio_unitario DECIMAL(12,2) DEFAULT 0,
-    peso_unitario DECIMAL(10,3) DEFAULT 0,
-    aroma VARCHAR(50) NOT NULL,
-    color VARCHAR(50) NOT NULL,
-    id_marca INT NOT NULL,
-    id_categoria INT NOT NULL,
-    id_unidad INT NOT NULL,
-    FOREIGN KEY (id_marca) REFERENCES marca(id_marca) ON DELETE CASCADE,
-    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria) ON DELETE CASCADE,
-    FOREIGN KEY (id_unidad) REFERENCES unidad_medida(id_unidad) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE articulo_tipo (
-    id_articulo INT NOT NULL,
-    id_tipo INT NOT NULL,
-    PRIMARY KEY (id_articulo, id_tipo),
-    FOREIGN KEY (id_articulo) REFERENCES articulo(id) ON DELETE CASCADE,
-    FOREIGN KEY (id_tipo) REFERENCES tipo_articulo(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `articulo` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(50) NOT NULL,
+  `descripcion` varchar(255) NOT NULL,
+  `cantidad` int(11) DEFAULT 0,
+  `precio_unitario` decimal(12,2) DEFAULT 0.00,
+  `peso_unitario` decimal(10,3) DEFAULT 0.000,
+  `densidad` decimal(10,3) DEFAULT 0.000,
+  `aroma` varchar(50) DEFAULT NULL,
+  `color` varchar(50) DEFAULT NULL,
+  `id_marca` int(11) DEFAULT NULL,
+  `id_categoria` int(11) DEFAULT NULL,
+  `id_unidad` int(11) DEFAULT NULL,
+  `id_tipo_articulo` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `descripcion_UNIQUE` (`descripcion`),
+  KEY `articulo_ibfk_1` (`id_marca`),
+  KEY `articulo_ibfk_2` (`id_categoria`),
+  KEY `articulo_ibfk_3` (`id_unidad`),
+  KEY `articulo_ibfk_4_idx` (`id_tipo_articulo`),
+  CONSTRAINT `articulo_ibfk_1` FOREIGN KEY (`id_marca`) REFERENCES `marca` (`id_marca`) ON DELETE CASCADE,
+  CONSTRAINT `articulo_ibfk_2` FOREIGN KEY (`id_categoria`) REFERENCES `categoria` (`id_categoria`) ON DELETE CASCADE,
+  CONSTRAINT `articulo_ibfk_3` FOREIGN KEY (`id_unidad`) REFERENCES `unidad_medida` (`id_unidad`) ON DELETE CASCADE,
+  CONSTRAINT `articulo_ibfk_4` FOREIGN KEY (`id_tipo_articulo`) REFERENCES `tipo_articulo` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=607 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ====================================================================
 -- 3. TABLAS DE COMPRA
