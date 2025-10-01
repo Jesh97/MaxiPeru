@@ -3,7 +3,7 @@ package sistema.Servlet.Adicional;
 import com.google.gson.Gson;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import sistema.Controller.AdicionalController;
+import sistema.Controller.Compra.AdicionalController;
 import sistema.Modelo.Compra.FormaPago;
 import java.io.*;
 import java.util.List;

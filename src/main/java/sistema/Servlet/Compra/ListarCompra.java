@@ -1,12 +1,11 @@
 package sistema.Servlet.Compra;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import sistema.Controller.CompraController;
+import sistema.Controller.Compra.CompraController;
 import sistema.repository.CompraRepository;
 import java.io.IOException;
 import java.util.List;

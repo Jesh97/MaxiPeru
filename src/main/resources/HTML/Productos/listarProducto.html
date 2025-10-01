@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Productos</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { text-align: center; }
+        .filters { margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .filters select { padding: 5px; }
+        .table-container { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1200px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; white-space: nowrap; }
+        th { background-color: #f2f2f2; }
+        tr:hover { background-color: #f9f9f9; }
+        .actions button { margin-right: 5px; padding: 4px 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<h1>Lista de Productos</h1>
+
+<div class="filters">
+    <label>Marca:
+        <select id="filtroMarca">
+            <option value="">Todas</option>
+        </select>
+    </label>
+    <label>Categoría:
+        <select id="filtroCategoria">
+            <option value="">Todas</option>
+        </select>
+    </label>
+    <label>Tipo:
+        <select id="filtroTipo">
+            <option value="">Todos</option>
+        </select>
+    </label>
+    <button onclick="aplicarFiltros()">Filtrar</button>
+    <button onclick="listarProductos()">Mostrar Todos</button>
+</div>
+
+<div class="table-container">
+    <table id="tabla-articulos">
+        <thead>
+        <tr>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Peso</th>
+            <th>Densidad</th>
+            <th>Aroma</th>
+            <th>Color</th>
+            <th>Marca</th>
+            <th>Categoría</th>
+            <th>Unidad</th>
+            <th>Tipo</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Se llenará dinámicamente con JS -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    let productos = [];
+    let marcas = new Set();
+    let categorias = new Set();
+    let tipos = new Set();
+
+    async function listarProductos() {
+        const res = await fetch('articulo?action=listar');
+        productos = await res.json();
+        llenarFiltros();
+        mostrarTabla(productos);
+    }
+
+    function llenarFiltros() {
+        marcas.clear(); categorias.clear(); tipos.clear();
+        productos.forEach(p => {
+            marcas.add(p.idMarca + '|' + p.marcaNombre);
+            categorias.add(p.idCategoria + '|' + p.categoriaNombre);
+            tipos.add(p.idTipoArticulo + '|' + p.tipoNombre);
+        });
+
+        const selectMarca = document.getElementById('filtroMarca');
+        const selectCategoria = document.getElementById('filtroCategoria');
+        const selectTipo = document.getElementById('filtroTipo');
+
+        selectMarca.innerHTML = '<option value="">Todas</option>';
+        selectCategoria.innerHTML = '<option value="">Todas</option>';
+        selectTipo.innerHTML = '<option value="">Todos</option>';
+
+        marcas.forEach(m => { let [id, nombre] = m.split('|'); selectMarca.innerHTML += `<option value="${id}">${nombre}</option>`; });
+        categorias.forEach(c => { let [id, nombre] = c.split('|'); selectCategoria.innerHTML += `<option value="${id}">${nombre}</option>`; });
+        tipos.forEach(t => { let [id, nombre] = t.split('|'); selectTipo.innerHTML += `<option value="${id}">${nombre}</option>`; });
+    }
+
+    function aplicarFiltros() {
+        const marca = document.getElementById('filtroMarca').value;
+        const categoria = document.getElementById('filtroCategoria').value;
+        const tipo = document.getElementById('filtroTipo').value;
+
+        const filtrados = productos.filter(p =>
+            (marca === '' || p.idMarca == marca) &&
+            (categoria === '' || p.idCategoria == categoria) &&
+            (tipo === '' || p.idTipoArticulo == tipo)
+        );
+
+        mostrarTabla(filtrados);
+    }
+
+    function mostrarTabla(lista) {
+        const tbody = document.querySelector('#tabla-articulos tbody');
+        tbody.innerHTML = '';
+
+        lista.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${p.codigo}</td>
+                <td>${p.descripcion}</td>
+                <td>${p.cantidad}</td>
+                <td>${p.precioUnitario}</td>
+                <td>${p.pesoUnitario}</td>
+                <td>${p.densidad}</td>
+                <td>${p.aroma}</td>
+                <td>${p.color}</td>
+                <td>${p.marcaNombre}</td>
+                <td>${p.categoriaNombre}</td>
+                <td>${p.unidadNombre}</td>
+                <td>${p.tipoNombre}</td>
+                <td class="actions">
+                    <button onclick="editarProducto(${p.idProducto})">Editar</button>
+                    <button onclick="eliminarProducto(${p.idProducto})">Eliminar</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function editarProducto(id) {
+        window.location.href = `html/articulo_form.html?id=${id}`;
+    }
+
+    async function eliminarProducto(id) {
+        if(!confirm('¿Deseas eliminar este producto?')) return;
+        await fetch(`articulo?action=eliminar&id=${id}`);
+        listarProductos();
+    }
+
+    listarProductos();
+</script>
+</body>
+</html>

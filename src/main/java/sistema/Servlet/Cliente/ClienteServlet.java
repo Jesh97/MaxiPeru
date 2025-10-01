@@ -3,7 +3,7 @@ package sistema.Servlet.Cliente;
 import com.google.gson.Gson;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import sistema.Controller.ClienteController;
+import sistema.Controller.Venta.ClienteController;
 import sistema.Ejecucion.Auditoria;
 import sistema.Modelo.Cliente.Cliente;
 import sistema.repository.ClienteRepository;

@@ -1,4 +1,4 @@
-package sistema.Controller;
+package sistema.Controller.Venta;
 
 import sistema.Ejecucion.Conexion;
 import sistema.Modelo.Cliente.Cliente;

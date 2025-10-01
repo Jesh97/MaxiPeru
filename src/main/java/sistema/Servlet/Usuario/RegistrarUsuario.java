@@ -5,7 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import sistema.Controller.UsuarioController;
+import sistema.Controller.Usuario.UsuarioController;
 import sistema.Ejecucion.Auditoria;
 import sistema.Modelo.Usuario.Usuario;
 import sistema.repository.UsuarioRepository;

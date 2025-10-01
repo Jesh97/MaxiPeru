@@ -3,7 +3,7 @@ package sistema.Servlet.Proveedor;
 import com.google.gson.Gson;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import sistema.Controller.ProveedorController;
+import sistema.Controller.Compra.ProveedorController;
 import sistema.Ejecucion.Auditoria;
 import sistema.Modelo.Proveedor.Proveedor;
 import sistema.repository.ProveedorRepository;

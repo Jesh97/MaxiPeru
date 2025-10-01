@@ -2,7 +2,7 @@ package sistema.Ejecucion;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import sistema.Controller.UsuarioController;
+import sistema.Controller.Usuario.UsuarioController;
 import sistema.Modelo.Usuario.Usuario;
 
 public class Auditoria {

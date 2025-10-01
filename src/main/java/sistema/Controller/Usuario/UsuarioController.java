@@ -1,4 +1,4 @@
-package sistema.Controller;
+package sistema.Controller.Usuario;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sistema.Ejecucion.Conexion;

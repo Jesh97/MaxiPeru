@@ -5,7 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import sistema.Controller.CompraController;
+import sistema.Controller.Compra.CompraController;
 import sistema.Modelo.Compra.*;
 import java.io.BufferedReader;
 import java.io.IOException;

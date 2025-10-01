@@ -8,25 +8,30 @@ public class Articulo {
     private int cantidad;
     private double precioUnitario;
     private double pesoUnitario;
+    private double densidad;
     private String aroma;
     private String color;
     private int idMarca;
     private int idCategoria;
     private int idUnidad;
+    private int idTipoArticulo;
 
     public Articulo(int idProducto, String codigo, String descripcion, int cantidad, double precioUnitario,
-                    double pesoUnitario, String aroma, String color, int idMarca, int idCategoria, int idUnidad) {
+                    double pesoUnitario, double densidad, String aroma, String color, int idMarca,
+                    int idCategoria, int idUnidad, int idTipoArticulo) {
         this.idProducto = idProducto;
         this.codigo = codigo;
         this.descripcion = descripcion;
         this.cantidad = cantidad;
         this.precioUnitario = precioUnitario;
         this.pesoUnitario = pesoUnitario;
+        this.densidad = densidad;
         this.aroma = aroma;
         this.color = color;
         this.idMarca = idMarca;
         this.idCategoria = idCategoria;
         this.idUnidad = idUnidad;
+        this.idTipoArticulo = idTipoArticulo;
     }
 
     public Articulo() {
@@ -80,6 +85,14 @@ public class Articulo {
         this.pesoUnitario = pesoUnitario;
     }
 
+    public double getDensidad() {
+        return densidad;
+    }
+
+    public void setDensidad(double densidad) {
+        this.densidad = densidad;
+    }
+
     public String getAroma() {
         return aroma;
     }
@@ -120,20 +133,30 @@ public class Articulo {
         this.idUnidad = idUnidad;
     }
 
+    public int getIdTipoArticulo() {
+        return idTipoArticulo;
+    }
+
+    public void setIdTipoArticulo(int idTipoArticulo) {
+        this.idTipoArticulo = idTipoArticulo;
+    }
+
     @Override
     public String toString() {
-        return "Producto{" +
+        return "Articulo{" +
                 "idProducto=" + idProducto +
                 ", codigo='" + codigo + '\'' +
                 ", descripcion='" + descripcion + '\'' +
                 ", cantidad=" + cantidad +
                 ", precioUnitario=" + precioUnitario +
                 ", pesoUnitario=" + pesoUnitario +
+                ", densidad=" + densidad +
                 ", aroma='" + aroma + '\'' +
                 ", color='" + color + '\'' +
                 ", idMarca=" + idMarca +
                 ", idCategoria=" + idCategoria +
                 ", idUnidad=" + idUnidad +
+                ", idTipoArticulo=" + idTipoArticulo +
                 '}';
     }
 }

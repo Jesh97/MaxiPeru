@@ -1,4 +1,4 @@
-package sistema.Controller;
+package sistema.Controller.Compra;
 
 import sistema.Ejecucion.Conexion;
 import sistema.Modelo.Compra.*;
