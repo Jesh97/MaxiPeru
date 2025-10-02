@@ -3,11 +3,11 @@ package sistema.Modelo.Articulo;
 public class Categoria {
 
     private int idCategoria;
-    private String nombreCategoria;
+    private String nombre;
 
     public Categoria(int idCategoria, String nombreCategoria) {
         this.idCategoria = idCategoria;
-        this.nombreCategoria = nombreCategoria;
+        this.nombre = nombreCategoria;
     }
 
     public Categoria() {
@@ -22,18 +22,18 @@ public class Categoria {
     }
 
     public String getNombreCategoria() {
-        return nombreCategoria;
+        return nombre;
     }
 
     public void setNombreCategoria(String nombreCategoria) {
-        this.nombreCategoria = nombreCategoria;
+        this.nombre = nombreCategoria;
     }
 
     @Override
     public String toString() {
         return "Categoria{" +
                 "idCategoria=" + idCategoria +
-                ", nombreCategoria='" + nombreCategoria + '\'' +
+                ", nombreCategoria='" + nombre + '\'' +
                 '}';
     }
 }

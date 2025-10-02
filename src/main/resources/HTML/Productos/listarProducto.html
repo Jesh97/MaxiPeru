@@ -3,155 +3,554 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Productos</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        h1 { text-align: center; }
-        .filters { margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .filters select { padding: 5px; }
-        .table-container { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 1200px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; white-space: nowrap; }
-        th { background-color: #f2f2f2; }
-        tr:hover { background-color: #f9f9f9; }
-        .actions button { margin-right: 5px; padding: 4px 8px; cursor: pointer; }
-    </style>
+    <title>Gestión de Artículos (CRUD) con Servlets V8</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../../CSS/Producto/listarProducto.css">
 </head>
 <body>
-<h1>Lista de Productos</h1>
 
-<div class="filters">
-    <label>Marca:
-        <select id="filtroMarca">
-            <option value="">Todas</option>
-        </select>
-    </label>
-    <label>Categoría:
-        <select id="filtroCategoria">
-            <option value="">Todas</option>
-        </select>
-    </label>
-    <label>Tipo:
-        <select id="filtroTipo">
-            <option value="">Todos</option>
-        </select>
-    </label>
-    <button onclick="aplicarFiltros()">Filtrar</button>
-    <button onclick="listarProductos()">Mostrar Todos</button>
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
 </div>
 
-<div class="table-container">
-    <table id="tabla-articulos">
-        <thead>
-        <tr>
-            <th>Código</th>
-            <th>Descripción</th>
-            <th>Cantidad</th>
-            <th>Precio</th>
-            <th>Peso</th>
-            <th>Densidad</th>
-            <th>Aroma</th>
-            <th>Color</th>
-            <th>Marca</th>
-            <th>Categoría</th>
-            <th>Unidad</th>
-            <th>Tipo</th>
-            <th>Acciones</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!-- Se llenará dinámicamente con JS -->
-        </tbody>
-    </table>
+<div class="container">
+    <h1>Gestión de Inventario de Artículos</h1>
+
+    <div class="controls">
+        <button class="btn-primary" onclick="abrirFormulario()">+ Agregar Nuevo Artículo</button>
+        <button class="btn-info" onclick="listarArticulos()">Actualizar Lista</button>
+    </div>
+
+    <div class="filters">
+        <label>Marca:
+            <select id="filtroMarca" onchange="aplicarFiltros()"><option value="">Todas</option></select>
+        </label>
+        <label>Categoría:
+            <select id="filtroCategoria" onchange="aplicarFiltros()"><option value="">Todas</option></select>
+        </label>
+        <label>Tipo:
+            <select id="filtroTipo" onchange="aplicarFiltros()"><option value="">Todos</option></select>
+        </label>
+    </div>
+
+    <div class="table-container">
+        <table id="tabla-articulos">
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Descripción</th>
+                <th class="data-center">Stock</th>
+                <th class="data-center">Precio (S/)</th>
+                <th class="data-center">Peso (Kg)</th>
+                <th class="data-center">Unidad</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="paginacion-controles" class="pagination-controls"></div>
+</div>
+
+<div id="articuloModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="cerrarFormulario()">&times;</span>
+        <h2>Formulario de Artículo</h2>
+        <form id="articuloForm">
+            <input type="hidden" id="idProducto" name="id_producto">
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="codigo">Código:</label>
+                    <input type="text" id="codigo" name="codigo" required>
+                </div>
+                <div class="form-group">
+                    <label for="descripcion">Descripción:</label>
+                    <input type="text" id="descripcion" name="descripcion" required>
+                </div>
+                <div class="form-group">
+                    <label for="cantidad">Stock (Cantidad):</label>
+                    <input type="number" id="cantidad" name="cantidad" required min="0">
+                </div>
+                <div class="form-group">
+                    <label for="precioUnitario">Precio Unitario (S/):</label>
+                    <input type="number" id="precioUnitario" name="precio_unitario" step="0.01" required min="0">
+                </div>
+                <div class="form-group">
+                    <label for="pesoUnitario">Peso Unitario (kg):</label>
+                    <input type="number" id="pesoUnitario" name="peso_unitario" step="0.001" required min="0">
+                </div>
+                <div class="form-group">
+                    <label for="densidad">Densidad:</label>
+                    <input type="number" id="densidad" name="densidad" step="0.001" required min="0">
+                </div>
+                <div class="form-group">
+                    <label for="aroma">Aroma:</label>
+                    <input type="text" id="aroma" name="aroma">
+                </div>
+                <div class="form-group">
+                    <label for="color">Color:</label>
+                    <input type="text" id="color" name="color">
+                </div>
+
+                <div class="form-group">
+                    <label for="idMarca">Marca:</label>
+                    <select id="idMarca" name="id_marca" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="idCategoria">Categoría:</label>
+                    <select id="idCategoria" name="id_categoria" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="idUnidad">Unidad de Medida:</label>
+                    <select id="idUnidad" name="id_unidad" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="idTipoArticulo">Tipo de Artículo:</label>
+                    <select id="idTipoArticulo" name="id_tipo_articulo" required></select>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Guardar Artículo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="detallesModal" class="modal">
+    <div class="modal-content" style="max-width: 550px;">
+        <span class="close" onclick="document.getElementById('detallesModal').style.display='none';">&times;</span>
+        <h2>Detalles Secundarios del Artículo</h2>
+        <div id="detallesContent">
+
+        </div>
+    </div>
+</div>
+
+<div id="messageModal" class="modal">
+    <div class="modal-content message-content">
+        <span class="close" onclick="document.getElementById('messageModal').style.display='none';">&times;</span>
+        <h3 id="messageTitle"></h3>
+        <p id="messageText"></p>
+        <div class="message-actions">
+            <button id="messageOkBtn" class="btn-primary">Aceptar</button>
+            <button id="messageCancelBtn" class="btn-delete" style="display:none;">Cancelar</button>
+        </div>
+    </div>
 </div>
 
 <script>
-    let productos = [];
-    let marcas = new Set();
-    let categorias = new Set();
-    let tipos = new Set();
+    const API_ARTICULOS = '/productos';
+    const API_CATALOGO = '/CatalogoServlet';
 
-    async function listarProductos() {
-        const res = await fetch('articulo?action=listar');
-        productos = await res.json();
-        llenarFiltros();
-        mostrarTabla(productos);
+    let articulos = [];
+    const catalogos = {};
+    const ARTICULOS_POR_PAGINA = 35;
+    let paginaActual = 1;
+    let articulosFiltrados = [];
+    let confirmationCallback = null;
+
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    function showLoading(show) {
+        loadingOverlay.style.display = show ? 'flex' : 'none';
     }
 
-    function llenarFiltros() {
-        marcas.clear(); categorias.clear(); tipos.clear();
-        productos.forEach(p => {
-            marcas.add(p.idMarca + '|' + p.marcaNombre);
-            categorias.add(p.idCategoria + '|' + p.categoriaNombre);
-            tipos.add(p.idTipoArticulo + '|' + p.tipoNombre);
+    function showCustomAlert(title, message) {
+        const modal = document.getElementById('messageModal');
+        document.getElementById('messageTitle').textContent = title;
+        document.getElementById('messageText').textContent = message;
+        document.getElementById('messageCancelBtn').style.display = 'none';
+        document.getElementById('messageOkBtn').onclick = () => { modal.style.display = 'none'; };
+        modal.style.display = 'flex';
+    }
+
+    function showCustomConfirm(title, message, callback) {
+        const modal = document.getElementById('messageModal');
+        document.getElementById('messageTitle').textContent = title;
+        document.getElementById('messageText').textContent = message;
+        document.getElementById('messageCancelBtn').style.display = 'inline-block';
+
+        confirmationCallback = callback;
+
+        document.getElementById('messageOkBtn').onclick = () => {
+            modal.style.display = 'none';
+            if (confirmationCallback) confirmationCallback(true);
+        };
+
+        document.getElementById('messageCancelBtn').onclick = () => {
+            modal.style.display = 'none';
+            if (confirmationCallback) confirmationCallback(false);
+        };
+        modal.style.display = 'flex';
+    }
+
+    function cerrarFormulario() {
+        document.getElementById('articuloModal').style.display = 'none';
+    }
+
+    function getNombreCatalogoById(entidad, id, keyId, keyNombre) {
+        if (!catalogos[entidad] || !id) return 'Desconocida';
+        const item = catalogos[entidad].find(i => String(i[keyId]) === String(id));
+        return item ? item[keyNombre] : 'Desconocida';
+    }
+
+    function mostrarDetalles(id) {
+        const articulo = articulos.find(a => a.idProducto === id);
+        const detallesContent = document.getElementById('detallesContent');
+        detallesContent.innerHTML = '';
+
+        if (!articulo) {
+            showCustomAlert('Error', 'Artículo no encontrado.');
+            return;
+        }
+
+        const categoriaId = articulo.categoria?.idCategoria || articulo.idCategoria || 0;
+        const marcaId = articulo.marca?.idMarca || articulo.idMarca || 0;
+        const tipoId = articulo.tipoArticulo?.id || articulo.idTipoArticulo || 0;
+        // La unidad ya está en la tabla, por lo que no necesitamos el ID de la unidad aquí.
+
+        const categoriaNombre = articulo.categoria?.nombre || getNombreCatalogoById('categoria', categoriaId, 'idCategoria', 'nombre');
+        const marcaNombre = articulo.marca?.nombre || getNombreCatalogoById('marca', marcaId, 'idMarca', 'nombre');
+        const tipoNombre = articulo.tipoArticulo?.nombre || getNombreCatalogoById('tipo', tipoId, 'id', 'nombre');
+
+        // Se incluyen solo los campos que no están visibles en la tabla principal.
+        // ORDENADO para mejor visualización: Marca > Categoría > Tipo > Densidad > Color > Aroma
+        const details = [
+            { label: 'Marca', value: marcaNombre },
+            { label: 'Categoría', value: categoriaNombre },
+            { label: 'Tipo de Artículo', value: tipoNombre },
+            { label: 'Densidad', value: (articulo.densidad !== undefined && articulo.densidad !== null) ? articulo.densidad.toFixed(3) : 'N/A' },
+            { label: 'Color', value: articulo.color || 'N/A' },
+            { label: 'Aroma', value: articulo.aroma || 'N/A' }
+        ];
+
+        detallesContent.innerHTML = details.map(item => `
+            <div class="detail-row">
+                <div class="detail-label">${item.label}:</div>
+                <div class="detail-value">${item.value}</div>
+            </div>
+        `).join('');
+
+        document.getElementById('detallesModal').style.display = 'flex';
+    }
+
+    function abrirFormulario(id = 0) {
+        const modal = document.getElementById('articuloModal');
+        const form = document.getElementById('articuloForm');
+        form.reset();
+        document.getElementById('idProducto').value = 0;
+        modal.querySelector('h2').textContent = 'Nuevo Artículo';
+
+        if (id > 0) {
+            const articulo = articulos.find(a => a.idProducto === id);
+            if (articulo) {
+                document.getElementById('idProducto').value = articulo.idProducto;
+                document.getElementById('codigo').value = articulo.codigo;
+                document.getElementById('descripcion').value = articulo.descripcion;
+                document.getElementById('cantidad').value = articulo.cantidad;
+                document.getElementById('precioUnitario').value = articulo.precioUnitario;
+                document.getElementById('pesoUnitario').value = articulo.pesoUnitario;
+                document.getElementById('densidad').value = articulo.densidad;
+                document.getElementById('aroma').value = articulo.aroma || '';
+                document.getElementById('color').value = articulo.color || '';
+
+                document.getElementById('idMarca').value = String(articulo.marca?.idMarca || articulo.idMarca || '');
+                document.getElementById('idCategoria').value = String(articulo.categoria?.idCategoria || articulo.idCategoria || '');
+                document.getElementById('idUnidad').value = String(articulo.unidad?.idUnidad || articulo.idUnidad || '');
+                document.getElementById('idTipoArticulo').value = String(articulo.tipoArticulo?.id || articulo.idTipoArticulo || '');
+
+                modal.querySelector('h2').textContent = 'Editar Artículo';
+            }
+        }
+        modal.style.display = 'flex';
+    }
+
+    async function cargarCatalogos() {
+        showLoading(true);
+        const endpoints = [
+            { id: 'idMarca', entidad: 'marca', keyId: 'idMarca', keyNombre: 'nombre', filtro: 'filtroMarca' },
+            { id: 'idCategoria', entidad: 'categoria', keyId: 'idCategoria', keyNombre: 'nombre', filtro: 'filtroCategoria' },
+            { id: 'idUnidad', entidad: 'unidad', keyId: 'idUnidad', keyNombre: 'nombre', keyAbrev: 'abreviatura', filtro: null },
+            { id: 'idTipoArticulo', entidad: 'tipo', keyId: 'id', keyNombre: 'nombre', filtro: 'filtroTipo' }
+        ];
+
+        for (const end of endpoints) {
+            try {
+                let data = null;
+                const res = await fetch(`${API_CATALOGO}?entidad=${end.entidad}`);
+                if (res.ok) {
+                    data = await res.json();
+                } else {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+
+                if (!data) throw new Error(`Fallo al obtener datos de ${end.entidad}.`);
+
+                catalogos[end.entidad] = data;
+
+                const selectForm = document.getElementById(end.id);
+                selectForm.innerHTML = `<option value="">-- Seleccione --</option>`;
+
+                if (end.filtro) {
+                    const selectFiltro = document.getElementById(end.filtro);
+                    selectFiltro.innerHTML = '<option value="">Todas</option>';
+                }
+
+                data.forEach(item => {
+                    const optionText = end.keyAbrev
+                        ? `${item[end.keyNombre]} (${item[end.keyAbrev] || 's/a'})`
+                        : item[end.keyNombre];
+
+                    const optionValue = item[end.keyId];
+
+                    const option = `<option value="${optionValue}">${optionText}</option>`;
+                    selectForm.innerHTML += option;
+
+                    if (end.filtro) {
+                        const selectFiltro = document.getElementById(end.filtro);
+                        selectFiltro.innerHTML += `<option value="${optionValue}">${item[end.keyNombre]}</option>`;
+                    }
+                });
+            } catch (error) {
+                console.error(`Error al cargar ${end.entidad}:`, error);
+                showCustomAlert('Error de Catálogo', `No se pudo cargar la lista de ${end.entidad}. Verifica el Servlet.`);
+            }
+        }
+        showLoading(false);
+    }
+
+    async function listarArticulos() {
+        showLoading(true);
+        try {
+            const res = await fetch(`${API_ARTICULOS}?accion=listar`);
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+            articulos = await res.json();
+
+            if (!Array.isArray(articulos)) {
+                 articulos = [];
+            }
+
+            paginaActual = 1;
+            aplicarFiltros();
+        } catch (error) {
+            console.error('Error al listar artículos:', error);
+            showCustomAlert('Error de Carga', 'Error al cargar la lista de artículos. Verifica si el Servlet "/productos" está activo.');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function guardarArticulo(event) {
+        event.preventDefault();
+        showLoading(true);
+        const idProducto = document.getElementById('idProducto').value;
+        const formData = new URLSearchParams(new FormData(event.target)).toString();
+
+        let url = API_ARTICULOS;
+        let method = idProducto === "0" ? 'POST' : 'PUT';
+        let statusMensaje = idProducto === "0" ? 'agregado' : 'actualizado';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.exito) {
+                showCustomAlert('Éxito', `Artículo ${statusMensaje} con éxito.`);
+                cerrarFormulario();
+                await listarArticulos();
+            } else {
+                let msg = `Error al guardar el artículo: ${data.mensaje}`;
+                if (method === 'PUT') {
+                    msg += ` (Se intentó actualizar el ID: ${idProducto})`;
+                }
+                showCustomAlert('Error', msg);
+            }
+
+        } catch (error) {
+            console.error('Error al guardar:', error);
+            showCustomAlert('Error de Conexión', 'Error de conexión al guardar el artículo. Revisa tu red o el log del servidor.');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function eliminarArticulo(id) {
+        showCustomConfirm('Confirmar Eliminación', '¿Estás seguro de que deseas eliminar este artículo? Esta acción es irreversible.', async (confirmed) => {
+            if (!confirmed) return;
+
+            showLoading(true);
+            try {
+                const url = `${API_ARTICULOS}?id_producto=${id}`;
+                const res = await fetch(url, { method: 'DELETE' });
+                const data = await res.json();
+
+                if (data.exito) {
+                    showCustomAlert('Eliminado', 'Artículo eliminado con éxito.');
+                    await listarArticulos();
+                } else {
+                    showCustomAlert('Error', `Error al eliminar: ${data.mensaje}`);
+                }
+            } catch (error) {
+                console.error('Error al eliminar:', error);
+                showCustomAlert('Error de Conexión', 'Error de conexión al eliminar el artículo.');
+            } finally {
+                showLoading(false);
+            }
         });
-
-        const selectMarca = document.getElementById('filtroMarca');
-        const selectCategoria = document.getElementById('filtroCategoria');
-        const selectTipo = document.getElementById('filtroTipo');
-
-        selectMarca.innerHTML = '<option value="">Todas</option>';
-        selectCategoria.innerHTML = '<option value="">Todas</option>';
-        selectTipo.innerHTML = '<option value="">Todos</option>';
-
-        marcas.forEach(m => { let [id, nombre] = m.split('|'); selectMarca.innerHTML += `<option value="${id}">${nombre}</option>`; });
-        categorias.forEach(c => { let [id, nombre] = c.split('|'); selectCategoria.innerHTML += `<option value="${id}">${nombre}</option>`; });
-        tipos.forEach(t => { let [id, nombre] = t.split('|'); selectTipo.innerHTML += `<option value="${id}">${nombre}</option>`; });
     }
 
     function aplicarFiltros() {
-        const marca = document.getElementById('filtroMarca').value;
-        const categoria = document.getElementById('filtroCategoria').value;
-        const tipo = document.getElementById('filtroTipo').value;
+        const marcaId = document.getElementById('filtroMarca').value;
+        const categoriaId = document.getElementById('filtroCategoria').value;
+        const tipoId = document.getElementById('filtroTipo').value;
 
-        const filtrados = productos.filter(p =>
-            (marca === '' || p.idMarca == marca) &&
-            (categoria === '' || p.idCategoria == categoria) &&
-            (tipo === '' || p.idTipoArticulo == tipo)
-        );
+        const filtrados = articulos.filter(p => {
+            const pMarcaId = String(p.marca?.idMarca || p.idMarca || '');
+            const pCategoriaId = String(p.categoria?.idCategoria || p.idCategoria || '');
+            const pTipoId = String(p.tipoArticulo?.id || p.idTipoArticulo || '');
 
+            return (
+                (marcaId === '' || pMarcaId === marcaId) &&
+                (categoriaId === '' || pCategoriaId === categoriaId) &&
+                (tipoId === '' || pTipoId === tipoId)
+            );
+        });
+
+        paginaActual = 1;
         mostrarTabla(filtrados);
     }
 
-    function mostrarTabla(lista) {
+    function mostrarTabla(listaCompleta) {
+        articulosFiltrados = listaCompleta;
         const tbody = document.querySelector('#tabla-articulos tbody');
         tbody.innerHTML = '';
+        const totalPaginas = Math.ceil(articulosFiltrados.length / ARTICULOS_POR_PAGINA);
 
-        lista.forEach(p => {
+        if (paginaActual > totalPaginas) {
+            paginaActual = Math.max(1, totalPaginas);
+        }
+
+        const COLSPAN = 7;
+        const inicio = (paginaActual - 1) * ARTICULOS_POR_PAGINA;
+        const fin = inicio + ARTICULOS_POR_PAGINA;
+        const articulosPagina = articulosFiltrados.slice(inicio, fin);
+
+        if (articulosPagina.length === 0 && articulos.length > 0) {
+            tbody.innerHTML = `<tr><td colspan="${COLSPAN}" class="data-center" style="padding: 20px;">No hay artículos que coincidan con los filtros.</td></tr>`;
+        } else if (articulos.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${COLSPAN}" class="data-center" style="padding: 20px;">No se encontraron artículos en la base de datos.</td></tr>`;
+        }
+
+        articulosPagina.forEach(p => {
+            const unidadDisplay = p.unidad?.nombre || getNombreCatalogoById('unidad', p.unidad?.idUnidad || p.idUnidad, 'idUnidad', 'nombre') || '-';
+            const precioUnitario = (p.precioUnitario !== undefined && p.precioUnitario !== null) ? p.precioUnitario.toFixed(2) : '0.00';
+            const pesoUnitario = (p.pesoUnitario !== undefined && p.pesoUnitario !== null) ? p.pesoUnitario.toFixed(3) : '0.000';
+
             const tr = document.createElement('tr');
+
             tr.innerHTML = `
-                <td>${p.codigo}</td>
-                <td>${p.descripcion}</td>
-                <td>${p.cantidad}</td>
-                <td>${p.precioUnitario}</td>
-                <td>${p.pesoUnitario}</td>
-                <td>${p.densidad}</td>
-                <td>${p.aroma}</td>
-                <td>${p.color}</td>
-                <td>${p.marcaNombre}</td>
-                <td>${p.categoriaNombre}</td>
-                <td>${p.unidadNombre}</td>
-                <td>${p.tipoNombre}</td>
+                <td>${p.codigo || '-'}</td>
+                <td>${p.descripcion || 'Sin descripción'}</td>
+                <td class="data-center">${p.cantidad || 0}</td>
+                <td class="data-center">S/ ${precioUnitario}</td>
+                <td class="data-center">${pesoUnitario}</td>
+                <td class="data-center">${unidadDisplay}</td>
                 <td class="actions">
-                    <button onclick="editarProducto(${p.idProducto})">Editar</button>
-                    <button onclick="eliminarProducto(${p.idProducto})">Eliminar</button>
+                    <button class="btn-info" title="Detalles Secundarios" onclick="mostrarDetalles(${p.idProducto})"><i class="fas fa-info-circle"></i></button>
+                    <button class="btn-edit" title="Editar Artículo" onclick="abrirFormulario(${p.idProducto})"><i class="fas fa-pen"></i></button>
+                    <button class="btn-delete" title="Eliminar Artículo" onclick="eliminarArticulo(${p.idProducto})"><i class="fas fa-trash-alt"></i></button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
+
+        renderPaginacion(totalPaginas);
     }
 
-    function editarProducto(id) {
-        window.location.href = `html/articulo_form.html?id=${id}`;
+    function cambiarPagina(nuevaPagina) {
+        const totalPaginas = Math.ceil(articulosFiltrados.length / ARTICULOS_POR_PAGINA);
+
+        if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas && paginaActual !== nuevaPagina) {
+            paginaActual = nuevaPagina;
+            mostrarTabla(articulosFiltrados);
+        }
     }
 
-    async function eliminarProducto(id) {
-        if(!confirm('¿Deseas eliminar este producto?')) return;
-        await fetch(`articulo?action=eliminar&id=${id}`);
-        listarProductos();
+    function renderPaginacion(totalPaginas) {
+        const paginacionDiv = document.getElementById('paginacion-controles');
+        paginacionDiv.innerHTML = '';
+
+        const totalItems = articulosFiltrados.length;
+
+        if (totalItems === 0) {
+            paginacionDiv.innerHTML = '';
+            return;
+        }
+
+        if (totalPaginas <= 1) {
+            const pageInfo = document.createElement('span');
+            pageInfo.className = 'page-info';
+            pageInfo.textContent = `Total: ${totalItems} artículo${totalItems === 1 ? '' : 's'}`;
+            paginacionDiv.appendChild(pageInfo);
+            return;
+        }
+
+        const btnPrev = document.createElement('button');
+        btnPrev.className = 'btn-page';
+        btnPrev.innerHTML = '<i class="fas fa-chevron-left"></i> Anterior';
+        btnPrev.disabled = paginaActual === 1;
+        btnPrev.onclick = () => cambiarPagina(paginaActual - 1);
+        paginacionDiv.appendChild(btnPrev);
+
+        const pageInfo = document.createElement('span');
+        pageInfo.className = 'page-info';
+        pageInfo.textContent = `Página ${paginaActual} de ${totalPaginas} (${totalItems} artículos)`;
+        paginacionDiv.appendChild(pageInfo);
+
+        const btnNext = document.createElement('button');
+        btnNext.className = 'btn-page';
+        btnNext.innerHTML = 'Siguiente <i class="fas fa-chevron-right"></i>';
+        btnNext.disabled = paginaActual === totalPaginas;
+        btnNext.onclick = () => cambiarPagina(paginaActual + 1);
+        paginacionDiv.appendChild(btnNext);
     }
 
-    listarProductos();
+    document.getElementById('articuloForm').addEventListener('submit', guardarArticulo);
+
+    window.onload = async () => {
+        window.abrirFormulario = abrirFormulario;
+        window.cerrarFormulario = cerrarFormulario;
+        window.mostrarDetalles = mostrarDetalles;
+        window.eliminarArticulo = eliminarArticulo;
+        window.aplicarFiltros = aplicarFiltros;
+        window.listarArticulos = listarArticulos;
+
+        await cargarCatalogos();
+        await listarArticulos();
+    };
+
+    window.onclick = function(event) {
+        const articuloModal = document.getElementById('articuloModal');
+        const detallesModal = document.getElementById('detallesModal');
+
+        if (event.target == articuloModal) {
+            cerrarFormulario();
+        }
+        if (event.target == detallesModal) {
+            detallesModal.style.display = 'none';
+        }
+    }
 </script>
 </body>
 </html>

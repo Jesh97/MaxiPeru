@@ -11,14 +11,14 @@ public class Articulo {
     private double densidad;
     private String aroma;
     private String color;
-    private int idMarca;
-    private int idCategoria;
-    private int idUnidad;
-    private int idTipoArticulo;
+    private Marca marca;
+    private Categoria categoria;
+    private UnidadMedida unidad;
+    private TipoArticulo tipoArticulo;
 
     public Articulo(int idProducto, String codigo, String descripcion, int cantidad, double precioUnitario,
-                    double pesoUnitario, double densidad, String aroma, String color, int idMarca,
-                    int idCategoria, int idUnidad, int idTipoArticulo) {
+                    double pesoUnitario, double densidad, String aroma, String color, Marca marca, Categoria categoria,
+                    UnidadMedida unidad, TipoArticulo tipoArticulo) {
         this.idProducto = idProducto;
         this.codigo = codigo;
         this.descripcion = descripcion;
@@ -28,10 +28,10 @@ public class Articulo {
         this.densidad = densidad;
         this.aroma = aroma;
         this.color = color;
-        this.idMarca = idMarca;
-        this.idCategoria = idCategoria;
-        this.idUnidad = idUnidad;
-        this.idTipoArticulo = idTipoArticulo;
+        this.marca = marca;
+        this.categoria = categoria;
+        this.unidad = unidad;
+        this.tipoArticulo = tipoArticulo;
     }
 
     public Articulo() {
@@ -109,36 +109,36 @@ public class Articulo {
         this.color = color;
     }
 
-    public int getIdMarca() {
-        return idMarca;
+    public Marca getMarca() {
+        return marca;
     }
 
-    public void setIdMarca(int idMarca) {
-        this.idMarca = idMarca;
+    public void setMarca(Marca marca) {
+        this.marca = marca;
     }
 
-    public int getIdCategoria() {
-        return idCategoria;
+    public Categoria getCategoria() {
+        return categoria;
     }
 
-    public void setIdCategoria(int idCategoria) {
-        this.idCategoria = idCategoria;
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
     }
 
-    public int getIdUnidad() {
-        return idUnidad;
+    public UnidadMedida getUnidad() {
+        return unidad;
     }
 
-    public void setIdUnidad(int idUnidad) {
-        this.idUnidad = idUnidad;
+    public void setUnidad(UnidadMedida unidad) {
+        this.unidad = unidad;
     }
 
-    public int getIdTipoArticulo() {
-        return idTipoArticulo;
+    public TipoArticulo getTipoArticulo() {
+        return tipoArticulo;
     }
 
-    public void setIdTipoArticulo(int idTipoArticulo) {
-        this.idTipoArticulo = idTipoArticulo;
+    public void setTipoArticulo(TipoArticulo tipoArticulo) {
+        this.tipoArticulo = tipoArticulo;
     }
 
     @Override
@@ -153,10 +153,10 @@ public class Articulo {
                 ", densidad=" + densidad +
                 ", aroma='" + aroma + '\'' +
                 ", color='" + color + '\'' +
-                ", idMarca=" + idMarca +
-                ", idCategoria=" + idCategoria +
-                ", idUnidad=" + idUnidad +
-                ", idTipoArticulo=" + idTipoArticulo +
+                ", marca=" + marca +
+                ", categoria=" + categoria +
+                ", unidad=" + unidad +
+                ", tipoArticulo=" + tipoArticulo +
                 '}';
     }
 }

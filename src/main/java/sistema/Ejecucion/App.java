@@ -50,10 +50,5 @@ public class App {
         System.out.println("*********************************************************");
         webserver.start();
     }
-
-    public static String getErrorLogFile() {
-        String archivo = new String("src/main/resources/errores.txt");
-        return archivo;
-    }
 }
 

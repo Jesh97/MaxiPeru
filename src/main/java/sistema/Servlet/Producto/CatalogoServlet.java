@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sistema.Controller.Producto.CatalogoController;
 import sistema.Modelo.Articulo.*;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 
