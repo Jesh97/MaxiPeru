@@ -3,10 +3,575 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Artículos (CRUD) con Servlets V8</title>
+    <title>Gestión de Inventario Premium</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="../../CSS/Producto/listarProducto.css">
+
+    <style>
+        :root {
+            /* Colores Primarios: Indigo Oscuro/Azul Sobrio */
+            --primary-color: #3730a3; /* Indigo 700 */
+            --primary-light: #6366f1; /* Indigo 500 */
+            --primary-dark: #1e3a8a; /* Darker Blue/Indigo 900 */
+            --primary-shadow: rgba(49, 46, 129, 0.4); /* Sombra basada en Indigo */
+
+            --secondary-color: #3b82f6;
+            --secondary-dark: #2563eb;
+            --secondary-shadow: rgba(59, 130, 246, 0.4);
+
+            --edit-color: #fbbf24;
+            --delete-color: #ef4444;
+
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --border-color: #e2e8f0;
+            --text-color: #1f2937;
+            --light-text-color: #6b7280;
+
+            --radius-default: 16px;
+            --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            padding: 30px;
+            background-color: var(--background-color);
+            line-height: 1.6;
+            color: var(--text-color);
+            transition: background-color 0.3s;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1800px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        h1 {
+            width: 100%;
+            text-align: center;
+            color: var(--primary-dark);
+            margin-bottom: 40px;
+            font-size: 2.8rem;
+            font-weight: 900;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .controls-and-search, .filters {
+            width: 100%;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: var(--card-background);
+            padding: 25px;
+            border-radius: var(--radius-default);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .search-container {
+            position: relative;
+            min-width: 450px;
+            flex-grow: 1;
+        }
+
+        #busquedaGeneral {
+            padding: 12px 15px 12px 45px; /* Menor padding para hacerlo menos voluminoso */
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 1.05em;
+            transition: all 0.4s ease-in-out;
+            background-color: #f9fafb;
+            box-shadow: inset 0 1px 5px rgba(0,0,0,0.08);
+        }
+
+        #busquedaGeneral:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.3); /* Sombra ajustada a color oscuro */
+            outline: none;
+            background-color: var(--card-background);
+        }
+
+        .search-icon {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: var(--light-text-color);
+            pointer-events: none;
+            font-size: 1.2em;
+        }
+
+        .filters label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.95rem;
+        }
+        .filters select {
+            padding: 8px 15px; /* Menor padding */
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            min-width: 150px;
+            background-color: #f9fafb;
+            transition: border-color 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7280'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z' clip-rule='evenodd' /%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1.5em;
+        }
+
+        button {
+            padding: 10px 25px; /* Menor padding */
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-primary {
+            background: linear-gradient(145deg, var(--primary-light) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 6px 20px var(--primary-shadow);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(145deg, var(--primary-dark) 0%, var(--primary-light) 100%);
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 10px 25px rgba(49, 46, 129, 0.6); /* Sombra ajustada */
+        }
+        .btn-info {
+            background: linear-gradient(145deg, var(--secondary-color) 0%, var(--secondary-dark) 100%);
+            color: white;
+            box-shadow: 0 6px 20px var(--secondary-shadow);
+        }
+        .btn-info:hover {
+            background: linear-gradient(145deg, var(--secondary-dark) 0%, var(--secondary-color) 100%);
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.6);
+        }
+
+        .actions button {
+            padding: 7px 11px; /* Botones de acción más pequeños */
+            border-radius: 10px;
+            font-size: 0.85rem;
+            line-height: 1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            text-transform: none;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+        .btn-edit {
+            background-color: var(--edit-color);
+            color: var(--text-color);
+        }
+        .btn-delete {
+            background-color: var(--delete-color);
+            color: white;
+        }
+        .actions button:hover {
+            opacity: 0.95;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 30px;
+            border-radius: var(--radius-default);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            background-color: var(--card-background);
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 1400px;
+            font-size: 0.9rem;
+        }
+        th, td {
+            border: none;
+            padding: 15px 15px; /* Menor padding en celdas */
+            text-align: left;
+            white-space: nowrap;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        th {
+            background-color: #e0e7ff; /* Fondo claro para encabezado de tabla */
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        th:first-child { border-top-left-radius: var(--radius-default); }
+        th:last-child { border-top-right-radius: var(--radius-default); }
+
+        tr:nth-child(even) {
+            background-color: #fcfcfc;
+        }
+        tr:hover {
+            background-color: #eef2ff; /* Color de hover ajustado a la paleta */
+            transition: background-color 0.3s ease-in-out;
+            cursor: default;
+        }
+        .data-center {
+            text-align: center;
+        }
+        .data-unit {
+             font-weight: 600;
+             color: var(--secondary-dark);
+        }
+
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 25px;
+            gap: 15px;
+            padding: 15px 25px;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-default);
+            box-shadow: var(--shadow-md);
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .btn-page {
+            background-color: #e0e7ff; /* Color de fondo ajustado */
+            color: var(--primary-dark);
+            padding: 8px 18px; /* Menor padding */
+            font-weight: 600;
+            text-transform: none;
+            box-shadow: none;
+            border-radius: 10px;
+        }
+        .btn-page:hover:not([disabled]) {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .btn-page[disabled] {
+            cursor: not-allowed;
+            opacity: 0.5;
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            transform: none;
+            box-shadow: none;
+        }
+        .page-info {
+            color: var(--light-text-color);
+            font-weight: 500;
+            font-size: 0.95rem; /* Fuente más pequeña */
+        }
+
+        /* --- Estilos de Modales (Más Oscuros y Compactos) --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+            transition: opacity 0.3s;
+        }
+        .modal-content {
+            background-color: var(--card-background);
+            padding: 0;
+            border-radius: 20px;
+            box-shadow: 0 35px 70px rgba(0,0,0,0.5);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            width: 90%;
+        }
+
+        .modal-header-gradient {
+            /* Degradado Primario - Indigo */
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 25px 35px; /* Menor padding */
+            margin-bottom: 25px; /* Menor margen */
+            border-radius: 18px 18px 0 0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .modal-header-details {
+            /* Degradado Secundario - Azul Claro */
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-dark) 100%);
+        }
+
+        .modal-header-message {
+            /* Degradado de Mensaje - Indigo */
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-dark) 100%);
+        }
+
+        .modal-content h2 {
+            font-size: 1.8rem; /* Fuente más pequeña */
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+        .modal-content h3 {
+             font-size: 1.6rem; /* Fuente más pequeña */
+             font-weight: 800;
+             margin: 0;
+        }
+
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateY(50px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .close {
+            color: white;
+            font-size: 35px; /* Ícono de cierre un poco más pequeño */
+            font-weight: 300;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            line-height: 1;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        .close:hover, .close:focus {
+            color: var(--edit-color);
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        #articuloModal .modal-content { max-width: 1000px; } /* Ancho reducido */
+        #detallesModal .modal-content { max-width: 600px; } /* Ancho reducido */
+        #messageModal .modal-content { max-width: 450px; }
+
+        .modal-body {
+            padding: 0 35px 35px 35px; /* Menor padding */
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Columnas más compactas */
+            gap: 25px; /* Menor espacio */
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px; /* Menor margen */
+            font-weight: 700;
+            color: var(--primary-dark);
+            font-size: 0.85rem; /* Fuente de etiqueta más pequeña */
+            letter-spacing: 0.5px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px; /* Menor padding en inputs */
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            box-sizing: border-box;
+            background-color: #f9fafb;
+            transition: all 0.3s;
+            font-size: 0.95rem; /* Fuente de input más pequeña */
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3); /* Sombra ajustada */
+            background-color: var(--card-background);
+            outline: none;
+        }
+
+        .form-actions {
+            margin-top: 30px; /* Menor margen */
+            text-align: right;
+            padding-top: 20px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0; /* Menor padding */
+            border-bottom: 1px dashed #e2e8f0;
+            font-size: 0.9rem; /* Fuente de detalle más pequeña */
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: var(--secondary-dark);
+            flex: 1;
+        }
+        .detail-value {
+            color: var(--text-color);
+            font-weight: 700;
+            text-align: right;
+            flex: 1.5;
+        }
+
+        #messageModal .modal-content { text-align: center; }
+        #messageText { margin-bottom: 25px; color: var(--light-text-color); font-size: 1rem; } /* Fuente un poco más pequeña */
+        .message-actions button { margin: 0 10px; }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(240, 244, 248, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+        }
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid var(--primary-light);
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .sugerencias-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            border-radius: 0 0 var(--radius-default) var(--radius-default);
+            max-height: 350px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .sugerencia-item {
+            padding: 10px 15px; /* Menor padding */
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem; /* Fuente más pequeña */
+            line-height: 1.4;
+            color: var(--text-color);
+            transition: background-color 0.2s;
+        }
+
+        .sugerencia-item:hover {
+            background-color: #eef2ff; /* Color de hover ajustado */
+        }
+
+        .highlight {
+            font-weight: 700;
+            color: var(--secondary-dark);
+            background-color: #dbeafe; /* Fondo ajustado */
+            padding: 1px 3px;
+            border-radius: 4px;
+        }
+
+        /* Media Queries (Mantener Responsividad) */
+        @media (max-width: 1200px) {
+            #articuloModal .modal-content { max-width: 90%; }
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                max-width: 100%;
+            }
+            .controls-and-search, .filters {
+                padding: 20px;
+            }
+            .search-container {
+                min-width: 100%;
+                order: 1;
+            }
+            .controls-buttons {
+                width: 100%;
+                order: 2;
+                display: flex;
+                gap: 10px;
+            }
+            .controls-buttons button {
+                width: 50%;
+                padding: 10px 15px; /* Ajustado */
+                font-size: 0.85rem;
+            }
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filters label {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .modal-content {
+                margin: 20px;
+                padding: 0;
+            }
+            .modal-header-gradient {
+                 padding: 20px 25px; /* Ajustado */
+                 margin-bottom: 20px;
+            }
+             .modal-body {
+                padding: 0 25px 25px 25px; /* Ajustado */
+            }
+            .modal-content h2 {
+                font-size: 1.6rem; /* Ajustado para móvil */
+            }
+             .modal-content h3 {
+                font-size: 1.4rem; /* Ajustado para móvil */
+            }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            h1 { font-size: 2rem; margin-bottom: 30px; }
+            table { min-width: 1100px; }
+            .modal-header-gradient { padding: 15px 20px; }
+            .modal-body { padding: 0 15px 15px 15px; }
+            .close { top: 8px; right: 15px; font-size: 30px; }
+        }
+    </style>
 </head>
 <body>
 
@@ -17,9 +582,18 @@
 <div class="container">
     <h1>Gestión de Inventario de Artículos</h1>
 
-    <div class="controls">
-        <button class="btn-primary" onclick="abrirFormulario()">+ Agregar Nuevo Artículo</button>
-        <button class="btn-info" onclick="listarArticulos()">Actualizar Lista</button>
+    <div class="controls-and-search">
+
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="busquedaGeneral" placeholder="Buscar por Código o Descripción..." oninput="renderSugerencias(this.value)">
+            <div id="sugerencias" class="sugerencias-dropdown"></div>
+        </div>
+
+        <div class="controls-buttons">
+            <button class="btn-primary" onclick="abrirFormulario()">+ Agregar Nuevo Artículo</button>
+            <button class="btn-info" onclick="aplicarFiltros()">Actualizar Lista</button>
+        </div>
     </div>
 
     <div class="filters">
@@ -43,7 +617,7 @@
                 <th class="data-center">Stock</th>
                 <th class="data-center">Precio (S/)</th>
                 <th class="data-center">Peso (Kg)</th>
-                <th class="data-center">Unidad</th>
+                <th class="data-unit">Unidad</th>
                 <th>Acciones</th>
             </tr>
             </thead>
@@ -58,75 +632,83 @@
 <div id="articuloModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="cerrarFormulario()">&times;</span>
-        <h2>Formulario de Artículo</h2>
-        <form id="articuloForm">
-            <input type="hidden" id="idProducto" name="id_producto">
+        <div class="modal-header-gradient" id="articuloModalHeader">
+            <h2>Formulario de Artículo</h2>
+        </div>
+        <div class="modal-body">
+            <form id="articuloForm">
+                <input type="hidden" id="idProducto" name="id_producto">
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="codigo">Código:</label>
-                    <input type="text" id="codigo" name="codigo" required>
-                </div>
-                <div class="form-group">
-                    <label for="descripcion">Descripción:</label>
-                    <input type="text" id="descripcion" name="descripcion" required>
-                </div>
-                <div class="form-group">
-                    <label for="cantidad">Stock (Cantidad):</label>
-                    <input type="number" id="cantidad" name="cantidad" required min="0">
-                </div>
-                <div class="form-group">
-                    <label for="precioUnitario">Precio Unitario (S/):</label>
-                    <input type="number" id="precioUnitario" name="precio_unitario" step="0.01" required min="0">
-                </div>
-                <div class="form-group">
-                    <label for="pesoUnitario">Peso Unitario (kg):</label>
-                    <input type="number" id="pesoUnitario" name="peso_unitario" step="0.001" required min="0">
-                </div>
-                <div class="form-group">
-                    <label for="densidad">Densidad:</label>
-                    <input type="number" id="densidad" name="densidad" step="0.001" required min="0">
-                </div>
-                <div class="form-group">
-                    <label for="aroma">Aroma:</label>
-                    <input type="text" id="aroma" name="aroma">
-                </div>
-                <div class="form-group">
-                    <label for="color">Color:</label>
-                    <input type="text" id="color" name="color">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="codigo">Código:</label>
+                        <input type="text" id="codigo" name="codigo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descripcion">Descripción:</label>
+                        <input type="text" id="descripcion" name="descripcion" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cantidad">Stock (Cantidad):</label>
+                        <input type="number" id="cantidad" name="cantidad" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="precioUnitario">Precio Unitario (S/):</label>
+                        <input type="number" id="precioUnitario" name="precio_unitario" step="0.01" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="pesoUnitario">Peso Unitario (kg):</label>
+                        <input type="number" id="pesoUnitario" name="peso_unitario" step="0.001" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="densidad">Densidad:</label>
+                        <input type="number" id="densidad" name="densidad" step="0.001" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="aroma">Aroma:</label>
+                        <input type="text" id="aroma" name="aroma">
+                    </div>
+                    <div class="form-group">
+                        <label for="color">Color:</label>
+                        <input type="text" id="color" name="color">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="idMarca">Marca:</label>
+                        <select id="idMarca" name="id_marca" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="idCategoria">Categoría:</label>
+                        <select id="idCategoria" name="id_categoria" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="idUnidad">Unidad de Medida:</label>
+                        <select id="idUnidad" name="id_unidad" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="idTipoArticulo">Tipo de Artículo:</label>
+                        <select id="idTipoArticulo" name="id_tipo_articulo" required></select>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="idMarca">Marca:</label>
-                    <select id="idMarca" name="id_marca" required></select>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Guardar Artículo</button>
                 </div>
-                <div class="form-group">
-                    <label for="idCategoria">Categoría:</label>
-                    <select id="idCategoria" name="id_categoria" required></select>
-                </div>
-                <div class="form-group">
-                    <label for="idUnidad">Unidad de Medida:</label>
-                    <select id="idUnidad" name="id_unidad" required></select>
-                </div>
-                <div class="form-group">
-                    <label for="idTipoArticulo">Tipo de Artículo:</label>
-                    <select id="idTipoArticulo" name="id_tipo_articulo" required></select>
-                </div>
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" class="btn-primary">Guardar Artículo</button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
 <div id="detallesModal" class="modal">
-    <div class="modal-content" style="max-width: 550px;">
+    <div class="modal-content">
         <span class="close" onclick="document.getElementById('detallesModal').style.display='none';">&times;</span>
-        <h2>Detalles Secundarios del Artículo</h2>
-        <div id="detallesContent">
+        <div class="modal-header-gradient modal-header-details">
+            <h2>Detalles Secundarios</h2>
+        </div>
+        <div class="modal-body">
+            <div id="detallesContent">
 
+            </div>
         </div>
     </div>
 </div>
@@ -134,11 +716,15 @@
 <div id="messageModal" class="modal">
     <div class="modal-content message-content">
         <span class="close" onclick="document.getElementById('messageModal').style.display='none';">&times;</span>
-        <h3 id="messageTitle"></h3>
-        <p id="messageText"></p>
-        <div class="message-actions">
-            <button id="messageOkBtn" class="btn-primary">Aceptar</button>
-            <button id="messageCancelBtn" class="btn-delete" style="display:none;">Cancelar</button>
+        <div class="modal-header-gradient modal-header-message">
+            <h3 id="messageTitle"></h3>
+        </div>
+        <div class="modal-body">
+            <p id="messageText"></p>
+            <div class="message-actions">
+                <button id="messageOkBtn" class="btn-primary"><i class="fas fa-check"></i> Aceptar</button>
+                <button id="messageCancelBtn" class="btn-delete" style="display:none;"><i class="fas fa-times"></i> Cancelar</button>
+            </div>
         </div>
     </div>
 </div>
@@ -165,6 +751,7 @@
         document.getElementById('messageTitle').textContent = title;
         document.getElementById('messageText').textContent = message;
         document.getElementById('messageCancelBtn').style.display = 'none';
+        document.getElementById('messageOkBtn').style.display = 'inline-block';
         document.getElementById('messageOkBtn').onclick = () => { modal.style.display = 'none'; };
         modal.style.display = 'flex';
     }
@@ -174,6 +761,7 @@
         document.getElementById('messageTitle').textContent = title;
         document.getElementById('messageText').textContent = message;
         document.getElementById('messageCancelBtn').style.display = 'inline-block';
+        document.getElementById('messageOkBtn').style.display = 'inline-block';
 
         confirmationCallback = callback;
 
@@ -193,11 +781,44 @@
         document.getElementById('articuloModal').style.display = 'none';
     }
 
-    function getNombreCatalogoById(entidad, id, keyId, keyNombre) {
+    /**
+     * Busca el nombre de un catálogo, aplicando el formato 'Nombre - Abreviatura' si es unidad.
+     * @param {string} entidad - Nombre del catálogo (ej: 'unidad', 'marca').
+     * @param {number|string} id - ID del elemento.
+     * @param {string} keyId - Clave del ID (ej: 'idUnidad').
+     * @param {string} keyNombre - Clave del nombre (ej: 'nombre').
+     * @param {string} [keyAbrev=null] - Clave de la abreviatura (solo para 'unidad').
+     * @returns {string} Nombre formateado o 'Desconocida'.
+     */
+    function getNombreCatalogoById(entidad, id, keyId, keyNombre, keyAbrev = null) {
         if (!catalogos[entidad] || !id) return 'Desconocida';
         const item = catalogos[entidad].find(i => String(i[keyId]) === String(id));
-        return item ? item[keyNombre] : 'Desconocida';
+
+        if (item) {
+            if (keyAbrev && item[keyAbrev]) {
+                return `${item[keyNombre]} - ${item[keyAbrev]}`; // Formato deseado
+            }
+            return item[keyNombre];
+        }
+        return 'Desconocida';
     }
+
+    /**
+     * Obtiene SOLO el texto (Nombre - Abreviatura) para la tabla principal o detalles.
+     * Esto evita buscar el valor dentro del objeto complejo si ya está presente.
+     */
+    function getUnidadDisplay(articulo) {
+        const unidadId = articulo.unidad?.idUnidad || articulo.idUnidad;
+        if (!unidadId) return 'N/A';
+
+        const item = catalogos['unidad'] ? catalogos['unidad'].find(i => String(i.idUnidad) === String(unidadId)) : null;
+
+        if (item) {
+            return `${item.nombre} - ${item.abreviatura || 's/a'}`;
+        }
+        return 'Desconocida';
+    }
+
 
     function mostrarDetalles(id) {
         const articulo = articulos.find(a => a.idProducto === id);
@@ -212,18 +833,19 @@
         const categoriaId = articulo.categoria?.idCategoria || articulo.idCategoria || 0;
         const marcaId = articulo.marca?.idMarca || articulo.idMarca || 0;
         const tipoId = articulo.tipoArticulo?.id || articulo.idTipoArticulo || 0;
-        // La unidad ya está en la tabla, por lo que no necesitamos el ID de la unidad aquí.
 
         const categoriaNombre = articulo.categoria?.nombre || getNombreCatalogoById('categoria', categoriaId, 'idCategoria', 'nombre');
         const marcaNombre = articulo.marca?.nombre || getNombreCatalogoById('marca', marcaId, 'idMarca', 'nombre');
         const tipoNombre = articulo.tipoArticulo?.nombre || getNombreCatalogoById('tipo', tipoId, 'id', 'nombre');
+        // Usar la función para el display de Unidad
+        const unidadNombreDisplay = getUnidadDisplay(articulo);
 
-        // Se incluyen solo los campos que no están visibles en la tabla principal.
-        // ORDENADO para mejor visualización: Marca > Categoría > Tipo > Densidad > Color > Aroma
+
         const details = [
             { label: 'Marca', value: marcaNombre },
             { label: 'Categoría', value: categoriaNombre },
             { label: 'Tipo de Artículo', value: tipoNombre },
+            { label: 'Unidad de Medida', value: unidadNombreDisplay }, // Usando el formato completo
             { label: 'Densidad', value: (articulo.densidad !== undefined && articulo.densidad !== null) ? articulo.densidad.toFixed(3) : 'N/A' },
             { label: 'Color', value: articulo.color || 'N/A' },
             { label: 'Aroma', value: articulo.aroma || 'N/A' }
@@ -244,7 +866,7 @@
         const form = document.getElementById('articuloForm');
         form.reset();
         document.getElementById('idProducto').value = 0;
-        modal.querySelector('h2').textContent = 'Nuevo Artículo';
+        document.getElementById('articuloModalHeader').querySelector('h2').textContent = 'Nuevo Artículo';
 
         if (id > 0) {
             const articulo = articulos.find(a => a.idProducto === id);
@@ -264,7 +886,7 @@
                 document.getElementById('idUnidad').value = String(articulo.unidad?.idUnidad || articulo.idUnidad || '');
                 document.getElementById('idTipoArticulo').value = String(articulo.tipoArticulo?.id || articulo.idTipoArticulo || '');
 
-                modal.querySelector('h2').textContent = 'Editar Artículo';
+                document.getElementById('articuloModalHeader').querySelector('h2').textContent = 'Editar Artículo';
             }
         }
         modal.style.display = 'flex';
@@ -286,7 +908,7 @@
                 if (res.ok) {
                     data = await res.json();
                 } else {
-                    throw new Error(`HTTP error! status: ${res.status}`);
+                    throw new Error(`Error HTTP: ${res.status}`);
                 }
 
                 if (!data) throw new Error(`Fallo al obtener datos de ${end.entidad}.`);
@@ -302,15 +924,23 @@
                 }
 
                 data.forEach(item => {
-                    const optionText = end.keyAbrev
-                        ? `${item[end.keyNombre]} (${item[end.keyAbrev] || 's/a'})`
-                        : item[end.keyNombre];
+                    let optionText;
+
+                    if (end.entidad === 'unidad' && item.abreviatura) {
+                        // APLICANDO EL FORMATO SOLICITADO: nombre - abreviatura
+                        optionText = `${item[end.keyNombre]} - ${item[end.keyAbrev]}`;
+                    } else if (end.keyAbrev) {
+                        optionText = `${item[end.keyNombre]} (${item[end.keyAbrev] || 's/a'})`;
+                    } else {
+                        optionText = item[end.keyNombre];
+                    }
 
                     const optionValue = item[end.keyId];
 
                     const option = `<option value="${optionValue}">${optionText}</option>`;
                     selectForm.innerHTML += option;
 
+                    // Para los filtros, no se usa la abreviatura, solo el nombre.
                     if (end.filtro) {
                         const selectFiltro = document.getElementById(end.filtro);
                         selectFiltro.innerHTML += `<option value="${optionValue}">${item[end.keyNombre]}</option>`;
@@ -318,7 +948,7 @@
                 });
             } catch (error) {
                 console.error(`Error al cargar ${end.entidad}:`, error);
-                showCustomAlert('Error de Catálogo', `No se pudo cargar la lista de ${end.entidad}. Verifica el Servlet.`);
+                showCustomAlert('Error de Catálogo', `No se pudo cargar la lista de ${end.entidad}. Verifica el Servlet: ${error.message}`);
             }
         }
         showLoading(false);
@@ -328,7 +958,7 @@
         showLoading(true);
         try {
             const res = await fetch(`${API_ARTICULOS}?accion=listar`);
-            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
 
             articulos = await res.json();
 
@@ -371,9 +1001,6 @@
                 await listarArticulos();
             } else {
                 let msg = `Error al guardar el artículo: ${data.mensaje}`;
-                if (method === 'PUT') {
-                    msg += ` (Se intentó actualizar el ID: ${idProducto})`;
-                }
                 showCustomAlert('Error', msg);
             }
 
@@ -410,22 +1037,96 @@
         });
     }
 
-    function aplicarFiltros() {
+    function getHighlightedMatch(queryLower, p) {
+        const codigo = p.codigo || '';
+        const descripcion = p.descripcion || 'Sin descripción';
+
+        let index = codigo.toLowerCase().indexOf(queryLower);
+        if (index !== -1) {
+            const highlightedText =
+                `${codigo.substring(0, index)}<span class="highlight">${codigo.substring(index, index + queryLower.length)}</span>${codigo.substring(index + queryLower.length)}`;
+            return [`${highlightedText} - ${descripcion}`, p.idProducto];
+        }
+
+        index = descripcion.toLowerCase().indexOf(queryLower);
+        if (index !== -1) {
+            const highlightedText =
+                `${descripcion.substring(0, index)}<span class="highlight">${descripcion.substring(index, index + queryLower.length)}</span>${descripcion.substring(index + queryLower.length)}`;
+            return [`${codigo} - ${highlightedText}`, p.idProducto];
+        }
+
+        return null;
+    }
+
+
+    function renderSugerencias(query) {
+        const queryLower = query.toLowerCase().trim();
+        const sugerenciasDiv = document.getElementById('sugerencias');
+        sugerenciasDiv.innerHTML = '';
+
+        if (queryLower.length < 2) {
+            sugerenciasDiv.style.display = 'none';
+            return;
+        }
+
+        const matchesWithHtml = articulos
+            .map(p => getHighlightedMatch(queryLower, p))
+            .filter(match => match !== null)
+            .slice(0, 10);
+
+        if (matchesWithHtml.length > 0) {
+            matchesWithHtml.forEach(([htmlContent, idProducto]) => {
+                const item = document.createElement('div');
+                item.className = 'sugerencia-item';
+                item.innerHTML = htmlContent;
+
+                item.onclick = () => {
+                    document.getElementById('busquedaGeneral').value = `${articulos.find(p => p.idProducto === idProducto)?.codigo || ''} - ${articulos.find(p => p.idProducto === idProducto)?.descripcion || ''}`;
+                    sugerenciasDiv.style.display = 'none';
+                    aplicarFiltros(idProducto);
+                };
+                sugerenciasDiv.appendChild(item);
+            });
+            sugerenciasDiv.style.display = 'block';
+        } else {
+            sugerenciasDiv.style.display = 'none';
+        }
+    }
+
+
+    function aplicarFiltros(idArticuloSeleccionado = null) {
         const marcaId = document.getElementById('filtroMarca').value;
         const categoriaId = document.getElementById('filtroCategoria').value;
         const tipoId = document.getElementById('filtroTipo').value;
+        const busquedaQuery = document.getElementById('busquedaGeneral').value.toLowerCase().trim();
 
-        const filtrados = articulos.filter(p => {
-            const pMarcaId = String(p.marca?.idMarca || p.idMarca || '');
-            const pCategoriaId = String(p.categoria?.idCategoria || p.idCategoria || '');
-            const pTipoId = String(p.tipoArticulo?.id || p.idTipoArticulo || '');
+        let filtrados = articulos;
+        document.getElementById('sugerencias').style.display = 'none';
 
-            return (
-                (marcaId === '' || pMarcaId === marcaId) &&
-                (categoriaId === '' || pCategoriaId === categoriaId) &&
-                (tipoId === '' || pTipoId === tipoId)
-            );
-        });
+        if (idArticuloSeleccionado !== null) {
+            filtrados = articulos.filter(p => p.idProducto === idArticuloSeleccionado);
+
+            document.getElementById('filtroMarca').value = '';
+            document.getElementById('filtroCategoria').value = '';
+            document.getElementById('filtroTipo').value = '';
+        } else {
+             filtrados = articulos.filter(p => {
+                 const pMarcaId = String(p.marca?.idMarca || p.idMarca || '');
+                 const pCategoriaId = String(p.categoria?.idCategoria || p.idCategoria || '');
+                 const pTipoId = String(p.tipoArticulo?.id || p.idTipoArticulo || '');
+
+                 const categoryMatches = (marcaId === '' || pMarcaId === marcaId) &&
+                                         (categoriaId === '' || pCategoriaId === categoriaId) &&
+                                         (tipoId === '' || pTipoId === tipoId);
+
+                const textMatches = (busquedaQuery === '' ||
+                    (p.codigo && p.codigo.toLowerCase().includes(busquedaQuery)) ||
+                    (p.descripcion && p.descripcion.toLowerCase().includes(busquedaQuery))
+                );
+
+                return categoryMatches && textMatches;
+            });
+        }
 
         paginaActual = 1;
         mostrarTabla(filtrados);
@@ -447,13 +1148,15 @@
         const articulosPagina = articulosFiltrados.slice(inicio, fin);
 
         if (articulosPagina.length === 0 && articulos.length > 0) {
-            tbody.innerHTML = `<tr><td colspan="${COLSPAN}" class="data-center" style="padding: 20px;">No hay artículos que coincidan con los filtros.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${COLSPAN}" class="data-center" style="padding: 30px; color: var(--light-text-color);">No se encontraron artículos que coincidan con los filtros aplicados.</td></tr>`;
         } else if (articulos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${COLSPAN}" class="data-center" style="padding: 20px;">No se encontraron artículos en la base de datos.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${COLSPAN}" class="data-center" style="padding: 30px; color: var(--light-text-color);">No se encontraron artículos en la base de datos.</td></tr>`;
         }
 
         articulosPagina.forEach(p => {
-            const unidadDisplay = p.unidad?.nombre || getNombreCatalogoById('unidad', p.unidad?.idUnidad || p.idUnidad, 'idUnidad', 'nombre') || '-';
+            // Obtener el formato completo 'Nombre - Abreviatura' para la tabla principal
+            const unidadDisplay = getUnidadDisplay(p);
+
             const precioUnitario = (p.precioUnitario !== undefined && p.precioUnitario !== null) ? p.precioUnitario.toFixed(2) : '0.00';
             const pesoUnitario = (p.pesoUnitario !== undefined && p.pesoUnitario !== null) ? p.pesoUnitario.toFixed(3) : '0.000';
 
@@ -465,9 +1168,9 @@
                 <td class="data-center">${p.cantidad || 0}</td>
                 <td class="data-center">S/ ${precioUnitario}</td>
                 <td class="data-center">${pesoUnitario}</td>
-                <td class="data-center">${unidadDisplay}</td>
+                <td class="data-unit">${unidadDisplay}</td>
                 <td class="actions">
-                    <button class="btn-info" title="Detalles Secundarios" onclick="mostrarDetalles(${p.idProducto})"><i class="fas fa-info-circle"></i></button>
+                    <button class="btn-info" title="Ver Detalles Secundarios" onclick="mostrarDetalles(${p.idProducto})"><i class="fas fa-info-circle"></i></button>
                     <button class="btn-edit" title="Editar Artículo" onclick="abrirFormulario(${p.idProducto})"><i class="fas fa-pen"></i></button>
                     <button class="btn-delete" title="Eliminar Artículo" onclick="eliminarArticulo(${p.idProducto})"><i class="fas fa-trash-alt"></i></button>
                 </td>
@@ -535,6 +1238,7 @@
         window.eliminarArticulo = eliminarArticulo;
         window.aplicarFiltros = aplicarFiltros;
         window.listarArticulos = listarArticulos;
+        window.renderSugerencias = renderSugerencias;
 
         await cargarCatalogos();
         await listarArticulos();
@@ -543,12 +1247,18 @@
     window.onclick = function(event) {
         const articuloModal = document.getElementById('articuloModal');
         const detallesModal = document.getElementById('detallesModal');
+        const sugerenciasDiv = document.getElementById('sugerencias');
+        const busquedaInput = document.getElementById('busquedaGeneral');
 
         if (event.target == articuloModal) {
             cerrarFormulario();
         }
         if (event.target == detallesModal) {
             detallesModal.style.display = 'none';
+        }
+
+        if (sugerenciasDiv.style.display === 'block' && event.target !== busquedaInput && !sugerenciasDiv.contains(event.target)) {
+             sugerenciasDiv.style.display = 'none';
         }
     }
 </script>
