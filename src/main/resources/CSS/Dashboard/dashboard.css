@@ -1,94 +1,182 @@
-body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #f8f9fa;
-    color: #333;
-}
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        :root {
+            --sidebar-color-dark: #0033cc;
+            --sidebar-color-accent: #ff0057;
+            --primary-blue: #0033cc;
+            --primary-fucsia: #ff4081;
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 80px;
+        }
 
-.sidebar {
-    background: linear-gradient(135deg, #f50057, #0033cc); /* Fucsia y azul, inspirados en el logo */
-    min-height: 100vh;
-    color: white;
-    padding-top: 20px;
-}
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            overflow: hidden;
+        }
 
-.sidebar .logo img {
-    border-radius: 10px;
-    margin-bottom: 20px;
-    max-width: 80%;
-    height: auto;
-}
+        /* Contenedor principal para la estructura Flex y el overlay móvil */
+        #app-wrapper {
+            transition: all 0.3s ease-in-out;
+        }
 
-.sidebar .nav-link {
-    color: #f1f1f1;
-    padding: 15px 20px;
-    font-weight: 500;
-    transition: background 0.3s, color 0.3s;
-    border-left: 4px solid transparent;
-}
+        .sidebar {
+            background: linear-gradient(180deg, #001f60 0%, #0033cc 100%);
+            min-height: 100vh;
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 6px 0 20px rgba(0, 0, 0, 0.3), inset -3px 0 10px rgba(255, 255, 255, 0.1); /* Sombra interior para profundidad */
+            z-index: 1030;
+            border-radius: 0 10px 10px 0;
+            overflow-y: auto;
+        }
 
-.sidebar .nav-link:hover,
-.sidebar .nav-link.active {
-    background-color: #ff4081; /* Fucsia */
-    color: #ffffff;
-    border-left: 4px solid #ffffff;
-}
+        .logo .p-3 {
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .logo .p-3:hover {
+            transform: scale(1.05) translateY(-2px); /* Efecto 3D sutil */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+        }
 
-.topbar {
-    background-color: #ffffff;
-    border-bottom: 1px solid #dee2e6;
-    padding: 20px 30px;
-}
+        .sidebar .nav-link {
+            color: #f3f4f6;
+            padding: 1.1rem 1.5rem;
+            font-weight: 500;
+            border-left: 4px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0 50px 50px 0;
+            margin-right: 1rem;
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+        }
 
-.topbar h2 {
-    font-weight: 600;
-    color: #333;
-}
+        .sidebar .nav-link:hover {
+            color: #ffffff;
+            background-color: rgba(255, 64, 129, 0.25);
+        }
 
-.card {
-    border: none;
-    border-radius: 1rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    transition: transform 0.2s;
-}
+        .sidebar .nav-link.active {
+            background-color: var(--primary-fucsia);
+            color: #ffffff;
+            border-left: 6px solid #ffffff;
+            border-right: 2px solid var(--primary-fucsia); /* Borde derecho para cerrar el estilo */
+            font-weight: 700;
+            box-shadow: 0 8px 20px rgba(255, 64, 129, 0.6);
+            transform: translateX(5px);
+        }
 
-.card:hover {
-    transform: translateY(-3px);
-}
+        .topbar {
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 1rem 2.5rem;
+            z-index: 1020;
+            border-radius: 0 0 10px 10px;
+            height: 5rem;
+        }
 
-.card.bg-primary {
-    background-color: #0033cc !important;
-}
+        #main-area {
+            flex-grow: 1;
+            overflow-x: hidden;
+            transition: margin-left 0.3s ease-in-out;
+        }
 
-.card.bg-success {
-    background-color: #28a745 !important;
-}
+        .main-content-area-wrapper {
+            background-color: #f3f4f6;
+            padding: 1.5rem;
+            height: calc(100vh - 5rem);
+        }
 
-.card.bg-warning {
-    background-color: #ffcc00 !important;
-}
+        .content-frame {
+            height: 100%;
+            width: 100%;
+            border: none;
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05); /* Sombra externa más suave */
+            transition: box-shadow 0.3s ease;
+        }
 
-.card-body h3 {
-    font-size: 2.5rem;
-}
+        /* --- Estilos de Colapso (Desktop) --- */
+        @media (min-width: 769px) {
+            .is-collapsed .sidebar {
+                width: var(--sidebar-collapsed-width);
+            }
 
-canvas {
-    background-color: white;
-    border-radius: 1rem;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
+            .is-collapsed .sidebar .nav-link span {
+                opacity: 0;
+                width: 0;
+                transition: opacity 0.1s;
+                pointer-events: none;
+            }
 
-.btn-logout {
-    background-color: #dc3545;
-    color: white;
-    font-weight: 500;
-    border: none;
-    border-radius: 8px;
-    padding: 0.5rem 1.2rem;
-    transition: background-color 0.3s ease;
-}
+            .is-collapsed .sidebar .nav-link {
+                border-radius: 50%;
+                margin: 0.5rem auto;
+                padding: 1rem;
+                width: 60px;
+                justify-content: center;
+                display: flex;
+                align-items: center;
+            }
 
-.btn-logout:hover {
-    background-color: #c82333;
-    color: #fff;
-}
+            .is-collapsed .sidebar .nav-link i {
+                margin: 0 !important;
+            }
+
+            .is-collapsed .logo {
+                padding: 0 0.5rem;
+            }
+            .is-collapsed .logo .p-3 {
+                padding: 0.5rem !important;
+                width: 60px;
+                height: 60px;
+            }
+            .is-collapsed .logo .p-3 span {
+                display: none;
+            }
+            .is-collapsed .logo .p-3::after {
+                content: 'MP';
+                font-size: 1.5rem;
+                color: var(--primary-blue);
+                font-weight: 900;
+            }
+        }
+
+        /* --- Estilos de Colapso (Mobile: Menú Desplegable con Overlay) --- */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: calc(var(--sidebar-width) * -1); /* Oculto por defecto */
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+                border-radius: 0;
+            }
+
+            /* Muestra el sidebar cuando NO tiene la clase is-collapsed */
+            #app-wrapper:not(.is-collapsed) .sidebar {
+                 left: 0;
+            }
+
+            /* Overlay oscuro para enfocar en el menú */
+            #app-wrapper::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1025;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+            }
+
+            /* Muestra el overlay cuando el menú está abierto */
+            #app-wrapper:not(.is-collapsed)::before {
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }

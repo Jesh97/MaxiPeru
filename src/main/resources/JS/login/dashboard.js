@@ -1,90 +1,115 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const links = document.querySelectorAll(".nav-link[data-url]");
-    const contenedor = document.getElementById("contenido-dinamico");
-    const tituloPagina = document.getElementById("titulo-pagina");
+    document.addEventListener("DOMContentLoaded", () => {
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const navLinks = document.getElementById('nav-links');
+        const contentFrame = document.getElementById('contentFrame');
+        const tituloPagina = document.getElementById("titulo-pagina");
+        const appWrapper = document.getElementById('app-wrapper');
+        const mainArea = document.getElementById('main-area');
+        const toggleIcon = sidebarToggle.querySelector('i');
 
-    // Establecer el título siempre en "Bienvenidos"
-    tituloPagina.textContent = "Bienvenidos";
+        const updateTitle = (url) => {
+            const link = document.querySelector(`#nav-links a[href="${url}"]`);
+            if (link) {
+                const title = link.textContent.trim();
+                tituloPagina.textContent = title;
+            } else {
+                tituloPagina.textContent = 'Panel de Control';
+            }
+        };
 
-    links.forEach(link => {
-        link.addEventListener("click", async (e) => {
-            e.preventDefault();
+        const updateActiveLink = (url) => {
+            const links = document.querySelectorAll('#nav-links a');
+            links.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === url) {
+                    link.classList.add('active');
+                }
+            });
+        };
 
-            // Marcar como activo el link clickeado
-            links.forEach(l => l.classList.remove("active"));
-            link.classList.add("active");
+        // Función para actualizar el ícono del botón de alternancia (toggle)
+        const updateToggleIcon = () => {
+            const isCollapsed = appWrapper.classList.contains('is-collapsed');
+            if (window.innerWidth >= 769) {
+                // Desktop: Flecha izquierda (Expandido) o Barras (Colapsado)
+                if (isCollapsed) {
+                    toggleIcon.classList.replace('fa-arrow-left', 'fa-bars');
+                } else {
+                    toggleIcon.classList.replace('fa-bars', 'fa-arrow-left');
+                }
+            } else {
+                // Mobile: Barras (Oculto/Colapsado) o X (Visible/Expandido)
+                if (isCollapsed) {
+                    toggleIcon.classList.replace('fa-times', 'fa-bars');
+                } else {
+                    toggleIcon.classList.replace('fa-bars', 'fa-times');
+                }
+            }
+        };
 
-            const url = link.getAttribute("data-url");
+        // Lógica de alternancia del menú
+        sidebarToggle.addEventListener('click', () => {
+            appWrapper.classList.toggle('is-collapsed');
+            updateToggleIcon();
+        });
 
-            try {
-                const respuesta = await fetch(url);
-                if (!respuesta.ok) throw new Error("No se pudo cargar el contenido");
+        // Cierre automático del menú en móvil al hacer clic en un enlace
+        navLinks.addEventListener('click', (e) => {
+            if (e.target.closest('a')) {
+                const link = e.target.closest('a');
+                const url = link.getAttribute('href');
+                updateActiveLink(url);
+                updateTitle(url);
 
-                const html = await respuesta.text();
-                contenedor.innerHTML = html;
-
-                // Ejecutar scripts dentro del HTML cargado dinámicamente
-                const scripts = contenedor.querySelectorAll("script");
-                scripts.forEach(oldScript => {
-                    const newScript = document.createElement("script");
-                    if (oldScript.src) {
-                        newScript.src = oldScript.src;
-                        newScript.async = false;
-                    } else {
-                        newScript.textContent = oldScript.textContent;
-                    }
-                    document.body.appendChild(newScript);
-                });
-
-                // Re-iniciar eventos para los botones de la tabla
-                initEventosProveedor();
-                initEventosCliente();
-            } catch (error) {
-                contenedor.innerHTML = `<div class="alert alert-danger">Error al cargar el contenido: ${error.message}</div>`;
+                if (window.innerWidth < 769) {
+                    // Cierra el menú en móvil después de hacer clic
+                    appWrapper.classList.add('is-collapsed');
+                    updateToggleIcon();
+                }
             }
         });
-    });
 
-    // Cargar por defecto
-    document.querySelector('.nav-link.active')?.click();
-});
-
-// Cargar dinámicamente el contenido de los clientes
-function initEventosCliente() {
-    const botonesEditar = document.querySelectorAll(".btn-warning");
-    const botonesEliminar = document.querySelectorAll(".btn-danger");
-
-    botonesEditar.forEach(boton => {
-        boton.addEventListener("click", (e) => {
-            const idCliente = e.target.closest("button").getAttribute("onclick").match(/\d+/)[0];
-            editarCliente(idCliente);
+        // Cierre del menú en móvil al hacer clic fuera (en el overlay)
+        mainArea.addEventListener('click', (e) => {
+            // Verifica que estemos en móvil y el menú esté abierto (sin 'is-collapsed')
+            if (window.innerWidth < 769 && !appWrapper.classList.contains('is-collapsed')) {
+                // Asumimos que si se hace clic en 'main-area', es fuera del sidebar
+                // Nota: Usamos e.target para asegurarnos de que el clic no fue dentro de un elemento interactivo
+                appWrapper.classList.add('is-collapsed');
+                updateToggleIcon();
+            }
         });
-    });
 
-    botonesEliminar.forEach(boton => {
-        boton.addEventListener("click", (e) => {
-            const idCliente = e.target.closest("button").getAttribute("onclick").match(/\d+/)[0];
-            eliminarCliente(idCliente);
-        });
-    });
-}
+        contentFrame.onload = () => {
+            try {
+                const currentUrl = contentFrame.contentWindow.location.pathname.split('/').pop();
+                const currentLink = document.querySelector(`#nav-links a[href*="${currentUrl}"]`);
+                if (currentLink) {
+                    updateActiveLink(currentLink.getAttribute('href'));
+                    updateTitle(currentLink.getAttribute('href'));
+                }
+            } catch (e) {
+                console.warn('No se pudo acceder a la URL del iframe (posiblemente debido a restricciones de seguridad de origen cruzado).');
+            }
+        };
 
-function initEventosProveedor() {
-    // Buscar todos los botones de editar y eliminar
-    const botonesEditar = document.querySelectorAll(".btn-warning");
-    const botonesEliminar = document.querySelectorAll(".btn-danger");
+        const initialLink = document.querySelector('#nav-links a.active');
+        if (initialLink) {
+             updateTitle(initialLink.getAttribute('href'));
+        }
 
-    botonesEditar.forEach(boton => {
-        boton.addEventListener("click", (e) => {
-            const idProveedor = e.target.closest("button").getAttribute("onclick").match(/\d+/)[0];
-            editarProveedor(idProveedor);
-        });
-    });
+        // Inicializa el estado del menú basado en el tamaño de la pantalla
+        const initialCollapseState = () => {
+             if (window.innerWidth >= 769) {
+                 // Desktop: Default expandido
+                 appWrapper.classList.remove('is-collapsed');
+             } else {
+                 // Mobile: Default oculto
+                 appWrapper.classList.add('is-collapsed');
+             }
+             updateToggleIcon();
+        };
 
-    botonesEliminar.forEach(boton => {
-        boton.addEventListener("click", (e) => {
-            const idProveedor = e.target.closest("button").getAttribute("onclick").match(/\d+/)[0];
-            eliminarProveedor(idProveedor);
-        });
+        initialCollapseState();
+        window.addEventListener('resize', initialCollapseState);
     });
-}

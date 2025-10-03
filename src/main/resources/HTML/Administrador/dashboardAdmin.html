@@ -7,212 +7,70 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-        :root {
-            --sidebar-color-dark: #0033cc;
-            --sidebar-color-accent: #ff0057;
-            --primary-blue: #0033cc;
-            --primary-fucsia: #ff4081;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            overflow: hidden;
-        }
-
-        .sidebar {
-            background: linear-gradient(180deg, var(--sidebar-color-dark) 0%, #1a1f33 100%);
-            min-height: 100vh;
-            transition: all 0.3s ease-in-out;
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
-            z-index: 1030;
-        }
-
-        .sidebar .nav-link {
-            color: #d1d5db;
-            padding: 1rem 1.5rem;
-            font-weight: 500;
-            border-left: 4px solid transparent;
-            transition: background-color 0.3s, border-left 0.3s, color 0.3s;
-            border-radius: 0 50px 50px 0;
-            margin-right: 1rem;
-        }
-
-        .sidebar .nav-link:hover {
-            background-color: rgba(255, 64, 129, 0.15);
-            color: var(--primary-fucsia);
-        }
-
-        .sidebar .nav-link.active {
-            background-color: var(--primary-fucsia);
-            color: #ffffff;
-            border-left: 4px solid #ffffff;
-            font-weight: 700;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .topbar {
-            background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            padding: 1.5rem 2rem;
-            z-index: 1020;
-        }
-
-        .main-content-area-wrapper {
-            background-color: #f9fafb;
-            padding: 2rem;
-            border-radius: 1rem;
-            height: calc(100vh - 8rem);
-        }
-
-        .content-frame {
-            height: 100%;
-            width: 100%;
-            border: none;
-            background-color: #f9fafb;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                left: -250px;
-                width: 250px;
-            }
-            .sidebar-visible {
-                left: 0;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../../CSS/Dashboard/dashboard.css">
 </head>
 <body>
-<div class="container-fluid min-h-screen p-0">
-    <div class="row g-0">
-        <nav id="sidebar" class="col-md-2 sidebar d-flex flex-column align-items-center text-white">
-            <div class="logo text-center mb-10 mt-6 px-4">
-                <div class="p-3 bg-white rounded-xl shadow-lg">
-                    <span class="text-4xl font-extrabold" style="color: var(--primary-blue);">Maxi</span><span class="text-4xl font-extrabold" style="color: var(--primary-fucsia);">Perú</span>
-                </div>
+<div id="app-wrapper" class="d-flex min-h-screen p-0">
+    <nav id="sidebar" class="sidebar d-flex flex-column align-items-center text-white">
+        <div class="logo text-center mb-10 mt-6 px-4">
+            <div class="p-3 bg-white rounded-xl shadow-lg">
+                <span class="text-4xl font-extrabold" style="color: var(--primary-blue);">Maxi</span><span class="text-4xl font-extrabold" style="color: var(--primary-fucsia);">Perú</span>
             </div>
-            <div class="nav flex-column w-full space-y-2" id="nav-links">
-                <a href="Dashboard/home.html" class="nav-link active" target="contentFrame">
-                    <i class="fas fa-chart-line w-6 text-center"></i><span class="ms-3">Dashboard</span>
-                </a>
-                <a href="../Compras/compra.html" class="nav-link" target="contentFrame">
-                    <i class="fas fa-shopping-cart w-6 text-center"></i><span class="ms-3">Compras</span>
-                </a>
-                <a href="../Ventas/venta.html" class="nav-link" target="contentFrame">
-                    <i class="fas fa-cash-register w-6 text-center"></i><span class="ms-3">Ventas</span>
-                </a>
-                <a href="../Gastos/gastos.html" class="nav-link" target="contentFrame">
-                    <i class="fas fa-dollar-sign w-6 text-center"></i><span class="ms-3">Gastos</span>
-                </a>
-                <a href="../Productos/listarProducto.html" class="nav-link" target="contentFrame">
-                    <i class="fas fa-boxes w-6 text-center"></i><span class="ms-3">Productos</span>
-                </a>
-                <a href="../Proveedor/Proveedor.html" class="nav-link" target="contentFrame">
-                    <i class="fas fa-truck w-6 text-center"></i><span class="ms-3">Proveedores</span>
-                </a>
-                <a href="../Cliente/Clientes.html" class="nav-link" target="contentFrame">
-                    <i class="fas fa-users w-6 text-center"></i><span class="ms-3">Clientes</span>
-                </a>
-                <a href="Produccion/Produccion.html" class="nav-link" target="contentFrame">
-                    <i class="fas fa-industry w-6 text-center"></i><span class="ms-3">Producción</span>
-                </a>
-                <a href="../Usuario/listarUsuario.html" class="nav-link" target="contentFrame">
-                    <i class="fas fa-user-cog w-6 text-center"></i><span class="ms-3">Usuarios</span>
-                </a>
-            </div>
-        </nav>
+        </div>
+        <div class="nav flex-column w-full space-y-2" id="nav-links">
+            <a href="Dashboard/home.html" class="nav-link active" target="contentFrame">
+                <i class="fas fa-chart-line w-6 text-center"></i><span class="ms-3">Dashboard</span>
+            </a>
+            <a href="../Compras/compra.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-shopping-cart w-6 text-center"></i><span class="ms-3">Compras</span>
+            </a>
+            <a href="../Ventas/venta.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-cash-register w-6 text-center"></i><span class="ms-3">Ventas</span>
+            </a>
+            <a href="../Gastos/gastos.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-dollar-sign w-6 text-center"></i><span class="ms-3">Gastos</span>
+            </a>
+            <a href="../Productos/listarProducto.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-boxes w-6 text-center"></i><span class="ms-3">Productos</span>
+            </a>
+            <a href="../Proveedor/Proveedor.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-truck w-6 text-center"></i><span class="ms-3">Proveedores</span>
+            </a>
+            <a href="../Cliente/Clientes.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-users w-6 text-center"></i><span class="ms-3">Clientes</span>
+            </a>
+            <a href="Produccion/Produccion.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-industry w-6 text-center"></i><span class="ms-3">Producción</span>
+            </a>
+            <a href="../Usuario/listarUsuario.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-user-cog w-6 text-center"></i><span class="ms-3">Usuarios</span>
+            </a>
+        </div>
+    </nav>
 
-        <main class="col-md-10 p-0 d-flex flex-column" id="main-content">
-            <button id="sidebarToggle" class="d-md-none btn btn-lg fixed top-4 left-4 p-2 z-50 text-white bg-gray-800 rounded-full shadow-lg" style="background-color: var(--primary-blue);">
-                <i class="fas fa-bars"></i>
-            </button>
-
-            <div class="topbar d-flex justify-content-between items-center sticky top-0">
-                <h2 class="text-2xl font-semibold m-0" id="titulo-pagina">Bienvenidos</h2>
-                <form action="/cerrarSesion" method="post">
-                    <button type="submit" class="btn btn-logout bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300 shadow-md">
-                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
-                    </button>
-                </form>
+    <div id="main-area" class="p-0 d-flex flex-column">
+        <div class="topbar d-flex justify-content-between items-center sticky top-0">
+            <div class="d-flex items-center">
+                <button id="sidebarToggle" class="btn btn-lg p-2 me-4 transition duration-300 transform hover:scale-110" style="color: var(--primary-blue);">
+                    <i class="fas fa-arrow-left"></i> <!-- Icono predeterminado para expandido en desktop -->
+                </button>
+                <h2 class="text-2xl font-extrabold m-0 text-gray-800 transition duration-300 hover:text-blue-700" id="titulo-pagina">Bienvenidos</h2>
             </div>
+            <form action="/cerrarSesion" method="post">
+                <button type="submit" class="btn btn-logout bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-full transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                </button>
+            </form>
+        </div>
 
-            <div class="main-content-area-wrapper flex-grow">
-                <iframe id="contentFrame" name="contentFrame" src="Dashboard/home.html" class="content-frame"></iframe>
-            </div>
+        <main class="main-content-area-wrapper flex-grow">
+            <iframe id="contentFrame" name="contentFrame" src="Dashboard/home.html" class="content-frame"></iframe>
         </main>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const navLinks = document.getElementById('nav-links');
-        const contentFrame = document.getElementById('contentFrame');
-        const tituloPagina = document.getElementById("titulo-pagina");
-
-        const updateTitle = (url) => {
-            const link = document.querySelector(`#nav-links a[href="${url}"]`);
-            if (link) {
-                const title = link.textContent.trim();
-                tituloPagina.textContent = title;
-            } else {
-                tituloPagina.textContent = 'Panel de Control';
-            }
-        };
-
-        const updateActiveLink = (url) => {
-            const links = document.querySelectorAll('#nav-links a');
-            links.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href') === url) {
-                    link.classList.add('active');
-                }
-            });
-        };
-
-        navLinks.addEventListener('click', (e) => {
-            if (e.target.closest('a')) {
-                const link = e.target.closest('a');
-                const url = link.getAttribute('href');
-                updateActiveLink(url);
-                updateTitle(url);
-
-                if (window.innerWidth < 768) {
-                    sidebar.classList.remove('sidebar-visible');
-                }
-            }
-        });
-
-        contentFrame.onload = () => {
-            try {
-                const currentUrl = contentFrame.contentWindow.location.pathname.split('/').pop();
-                const currentLink = document.querySelector(`#nav-links a[href*="${currentUrl}"]`);
-                if (currentLink) {
-                    updateActiveLink(currentLink.getAttribute('href'));
-                    updateTitle(currentLink.getAttribute('href'));
-                }
-            } catch (e) {
-                console.warn('No se pudo acceder a la URL del iframe (posiblemente debido a restricciones de seguridad de origen cruzado).');
-                // Si falla, al menos dejamos el título y activo del link inicial.
-            }
-        };
-
-        const initialLink = document.querySelector('#nav-links a.active');
-        if (initialLink) {
-             updateTitle(initialLink.getAttribute('href'));
-        }
-
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('sidebar-visible');
-        });
-    });
-</script>
+<script src="../../JS/login/dashboard.js"></script>
 </body>
 </html>
