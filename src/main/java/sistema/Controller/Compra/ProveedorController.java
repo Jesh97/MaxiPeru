@@ -19,14 +19,18 @@ public class ProveedorController implements ProveedorRepository {
 
     @Override
     public void insertar(Proveedor proveedor) {
-        String sql = "INSERT INTO proveedor (ruc, razonSocial, ciudad, direccion) VALUES (?, ?, ?,?)";
-        try (Connection conn = Conexion.obtenerConexion();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, proveedor.getRuc());
-            stmt.setString(2, proveedor.getRazonSocial());
-            stmt.setString(3, proveedor.getCiudad());
-            stmt.setString(4, proveedor.getDireccion());
-            stmt.executeUpdate();
+        String sql = "{call sp_agregar_proveedor(?, ?, ?, ?, ?, ?)}";
+        try (Connection conn = getConnection();
+             CallableStatement cs = conn.prepareCall(sql)) {
+
+            cs.setString(1, proveedor.getRuc());
+            cs.setString(2, proveedor.getRazonSocial());
+            cs.setString(3, proveedor.getDireccion());
+            cs.setString(4, proveedor.getTelefono());
+            cs.setString(5, proveedor.getCorreo());
+            cs.setString(6, proveedor.getCiudad());
+
+            cs.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -34,15 +38,19 @@ public class ProveedorController implements ProveedorRepository {
 
     @Override
     public void actualizar(Proveedor proveedor) {
-        String sql = "UPDATE proveedor SET ruc=?, razonSocial=?, ciudad=?, direccion=? WHERE id=?";
-        try (Connection conn = Conexion.obtenerConexion();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, proveedor.getRuc());
-            stmt.setString(2, proveedor.getRazonSocial());
-            stmt.setString(3, proveedor.getCiudad());
-            stmt.setString(4, proveedor.getDireccion());
-            stmt.setInt(5, proveedor.getId());
-            stmt.executeUpdate();
+        String sql = "{call sp_actualizar_proveedor(?, ?, ?, ?, ?, ?, ?)}";
+        try (Connection conn = getConnection();
+             CallableStatement cs = conn.prepareCall(sql)) {
+
+            cs.setInt(1, proveedor.getId());
+            cs.setString(2, proveedor.getRuc());
+            cs.setString(3, proveedor.getRazonSocial());
+            cs.setString(4, proveedor.getDireccion());
+            cs.setString(5, proveedor.getTelefono());
+            cs.setString(6, proveedor.getCorreo());
+            cs.setString(7, proveedor.getCiudad());
+
+            cs.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -50,11 +58,13 @@ public class ProveedorController implements ProveedorRepository {
 
     @Override
     public void eliminar(int id) {
-        String sql = "DELETE FROM proveedor WHERE id=?";
-        try (Connection conn = Conexion.obtenerConexion();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            stmt.executeUpdate();
+        String sql = "{call sp_eliminar_proveedor(?)}";
+        try (Connection conn = getConnection();
+             CallableStatement cs = conn.prepareCall(sql)) {
+
+            cs.setInt(1, id);
+
+            cs.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -62,13 +72,14 @@ public class ProveedorController implements ProveedorRepository {
 
     @Override
     public Proveedor obtenerPorId(int id) {
-        String sql = "SELECT * FROM proveedor WHERE id=?";
-        try (Connection conn = Conexion.obtenerConexion();
+        String sql = "SELECT id, ruc, razonSocial, ciudad, direccion, telefono, correo FROM proveedor WHERE id=?";
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return mapearProveedor(rs);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapearProveedor(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -79,10 +90,10 @@ public class ProveedorController implements ProveedorRepository {
     @Override
     public List<Proveedor> listarTodos() {
         List<Proveedor> lista = new ArrayList<>();
-        String sql = "SELECT * FROM proveedor";
-        try (Connection conn = Conexion.obtenerConexion();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        String sql = "{call sp_listar_proveedores()}";
+        try (Connection conn = getConnection();
+             CallableStatement cs = conn.prepareCall(sql);
+             ResultSet rs = cs.executeQuery()) {
             while (rs.next()) {
                 lista.add(mapearProveedor(rs));
             }
@@ -94,22 +105,12 @@ public class ProveedorController implements ProveedorRepository {
 
     @Override
     public List<Proveedor> buscar(String filtro) {
-        List<Proveedor> lista = new ArrayList<>();
-        String sql = "SELECT * FROM proveedor WHERE razonSocial LIKE ? OR ruc LIKE ? OR ciudad LIKE ?";
-        try (Connection conn = Conexion.obtenerConexion();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            String like = "%" + filtro + "%";
-            stmt.setString(1, like);
-            stmt.setString(2, like);
-            stmt.setString(3, like);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                lista.add(mapearProveedor(rs));
-            }
+        try {
+            return buscarProveedor(filtro);
         } catch (SQLException e) {
             e.printStackTrace();
+            return new ArrayList<>();
         }
-        return lista;
     }
 
     @Override
@@ -124,15 +125,7 @@ public class ProveedorController implements ProveedorRepository {
 
             try (ResultSet rs = cs.executeQuery()) {
                 while (rs.next()) {
-                    Proveedor proveedor = new Proveedor();
-                    proveedor.setId(rs.getInt("id"));
-                    proveedor.setRuc(rs.getString("ruc"));
-                    proveedor.setRazonSocial(rs.getString("razonSocial"));
-                    proveedor.setDireccion(rs.getString("direccion"));
-                    proveedor.setTelefono(rs.getString("telefono"));
-                    proveedor.setCorreo(rs.getString("correo"));
-                    proveedor.setCiudad(rs.getString("ciudad"));
-                    proveedores.add(proveedor);
+                    proveedores.add(mapearProveedor(rs));
                 }
             }
         }
@@ -144,8 +137,10 @@ public class ProveedorController implements ProveedorRepository {
         p.setId(rs.getInt("id"));
         p.setRuc(rs.getString("ruc"));
         p.setRazonSocial(rs.getString("razonSocial"));
-        p.setCiudad(rs.getString("ciudad"));
         p.setDireccion(rs.getString("direccion"));
+        p.setTelefono(rs.getString("telefono"));
+        p.setCorreo(rs.getString("correo"));
+        p.setCiudad(rs.getString("ciudad"));
         return p;
     }
 }
