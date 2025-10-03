@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sistema.Controller.Producto.ArticuloController;
+import sistema.Ejecucion.Auditoria;
 import sistema.Modelo.Articulo.Articulo;
 import sistema.Modelo.Articulo.Categoria;
 import sistema.Modelo.Articulo.Marca;
@@ -45,29 +46,44 @@ public class ProductoServlet extends HttpServlet {
         List<Articulo> resultados = null;
         String busqueda = request.getParameter("busqueda");
 
+        String tipoAccionAuditoria = "PRODUCTO_CONSULTA";
+        String descripcionAuditoria = "";
+
         try {
             switch (accion) {
                 case "listar":
                     resultados = articuloDAO.listarArticulos();
+                    descripcionAuditoria = "Consulta realizada: Acceso al listado completo de todos los Artículos del Catálogo.";
                     break;
                 case "buscar_compra":
                     resultados = articuloDAO.buscarArticulosParaCompra(busqueda);
+                    descripcionAuditoria = "Búsqueda de Artículos para Compra con filtro: '" + (busqueda != null ? busqueda : "N/A") + "'.";
                     break;
                 case "buscar_venta":
                     resultados = articuloDAO.buscarArticulosParaVenta(busqueda);
+                    descripcionAuditoria = "Búsqueda de Artículos para Venta con filtro: '" + (busqueda != null ? busqueda : "N/A") + "'.";
                     break;
                 case "buscar_insumos":
                     resultados = articuloDAO.buscarInsumos(busqueda);
+                    descripcionAuditoria = "Búsqueda de Insumos con filtro: '" + (busqueda != null ? busqueda : "N/A") + "'.";
                     break;
                 default:
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     response.getWriter().write(mapper.writeValueAsString(new Respuesta(false, "Acción no válida.")));
+                    tipoAccionAuditoria = "PRODUCTO_CONSULTA_ERROR";
+                    descripcionAuditoria = "ERROR: Intento de consulta con acción no válida: '" + accion + "'.";
+                    Auditoria.registrar(request, tipoAccionAuditoria, descripcionAuditoria);
                     return;
             }
+
+            Auditoria.registrar(request, tipoAccionAuditoria, descripcionAuditoria);
+
             response.getWriter().write(mapper.writeValueAsString(resultados));
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(mapper.writeValueAsString(new Respuesta(false, "Error al procesar la solicitud: " + e.getMessage())));
+
+            Auditoria.registrar(request, "PRODUCTO_CONSULTA_EXCEPTION", "ERROR INESPERADO: Fallo al consultar artículos. Detalle: " + e.getMessage());
         }
     }
 
@@ -78,9 +94,13 @@ public class ProductoServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
+        String codigo = request.getParameter("codigo");
+        String descripcion = request.getParameter("descripcion");
+        String tipoAccionAuditoria = "PRODUCTO_INSERTAR";
+        String descripcionAuditoria = "Inicio de registro de nuevo artículo: " + codigo + " - " + descripcion;
+        boolean exito = false;
+
         try {
-            String codigo = request.getParameter("codigo");
-            String descripcion = request.getParameter("descripcion");
             int cantidad = Integer.parseInt(request.getParameter("cantidad"));
             double precioUnitario = Double.parseDouble(request.getParameter("precio_unitario"));
             double pesoUnitario = Double.parseDouble(request.getParameter("peso_unitario"));
@@ -101,20 +121,28 @@ public class ProductoServlet extends HttpServlet {
                     pesoUnitario, densidad, aroma, color, marca,
                     categoria, unidad, tipoArticulo);
 
-            boolean exito = articuloDAO.agregarArticulo(nuevoArticulo);
+            exito = articuloDAO.agregarArticulo(nuevoArticulo);
 
             if (exito) {
                 response.setStatus(HttpServletResponse.SC_CREATED);
+                descripcionAuditoria = "Registro exitoso: Artículo '" + descripcion + "' con código '" + codigo + "' ha sido creado.";
                 mapper.writeValue(response.getWriter(), new Respuesta(true, "Artículo agregado con éxito."));
             } else {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                descripcionAuditoria = "FALLO LÓGICO: El artículo '" + descripcion + "' no pudo ser agregado (DAO retornó false).";
                 mapper.writeValue(response.getWriter(), new Respuesta(false, "Error al agregar artículo."));
             }
+            Auditoria.registrar(request, tipoAccionAuditoria + (exito ? "_EXITO" : "_FALLO"), descripcionAuditoria);
+
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            descripcionAuditoria = "ERROR DE DATOS: Valores numéricos de entrada inválidos. Detalle: " + e.getMessage();
+            Auditoria.registrar(request, "PRODUCTO_INSERTAR_ERROR_FORMATO", descripcionAuditoria);
             mapper.writeValue(response.getWriter(), new Respuesta(false, "Datos numéricos inválidos: " + e.getMessage()));
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            descripcionAuditoria = "ERROR INESPERADO: Fallo interno durante el registro. Detalle: " + e.getMessage();
+            Auditoria.registrar(request, "PRODUCTO_INSERTAR_ERROR_INESPERADO", descripcionAuditoria);
             mapper.writeValue(response.getWriter(), new Respuesta(false, "Error interno del servidor: " + e.getMessage()));
         }
     }
@@ -126,10 +154,15 @@ public class ProductoServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
+        String descripcion = request.getParameter("descripcion");
+        String idProductoParam = request.getParameter("id_producto");
+        String tipoAccionAuditoria = "PRODUCTO_ACTUALIZAR";
+        String descripcionAuditoria = "Inicio de actualización para Artículo ID: " + idProductoParam;
+        boolean exito = false;
+
         try {
-            int idProducto = Integer.parseInt(request.getParameter("id_producto"));
+            int idProducto = Integer.parseInt(idProductoParam);
             String codigo = request.getParameter("codigo");
-            String descripcion = request.getParameter("descripcion");
             int cantidad = Integer.parseInt(request.getParameter("cantidad"));
             double precioUnitario = Double.parseDouble(request.getParameter("precio_unitario"));
             double pesoUnitario = Double.parseDouble(request.getParameter("peso_unitario"));
@@ -150,16 +183,27 @@ public class ProductoServlet extends HttpServlet {
                     pesoUnitario, densidad, aroma, color, marca,
                     categoria, unidad, tipoArticulo);
 
-            boolean exito = articuloDAO.actualizarArticulo(articuloActualizado);
+            exito = articuloDAO.actualizarArticulo(articuloActualizado);
 
             if (exito) {
+                descripcionAuditoria = "Actualización exitosa: Artículo ID " + idProducto + " ('" + descripcion + "') fue modificado en el sistema.";
                 mapper.writeValue(response.getWriter(), new Respuesta(true, "Artículo actualizado con éxito."));
             } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                descripcionAuditoria = "FALLO LÓGICO: No se pudo actualizar el Artículo ID " + idProducto + " (Artículo no encontrado o error DAO).";
                 mapper.writeValue(response.getWriter(), new Respuesta(false, "Error al actualizar artículo o ID no encontrado."));
             }
+            Auditoria.registrar(request, tipoAccionAuditoria + (exito ? "_EXITO" : "_FALLO"), descripcionAuditoria);
+
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            descripcionAuditoria = "ERROR DE DATOS: ID o valores numéricos de entrada inválidos para la actualización. Detalle: " + e.getMessage();
+            Auditoria.registrar(request, "PRODUCTO_ACTUALIZAR_ERROR_FORMATO", descripcionAuditoria);
+            mapper.writeValue(response.getWriter(), new Respuesta(false, "Datos numéricos inválidos: " + e.getMessage()));
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            descripcionAuditoria = "ERROR INESPERADO: Fallo interno durante la actualización. Detalle: " + e.getMessage();
+            Auditoria.registrar(request, "PRODUCTO_ACTUALIZAR_ERROR_INESPERADO", descripcionAuditoria);
             mapper.writeValue(response.getWriter(), new Respuesta(false, "Error interno del servidor: " + e.getMessage()));
         }
     }
@@ -171,22 +215,35 @@ public class ProductoServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        try {
-            int idProducto = Integer.parseInt(request.getParameter("id_producto"));
+        String idProductoParam = request.getParameter("id_producto");
+        String tipoAccionAuditoria = "PRODUCTO_ELIMINAR";
+        String descripcionAuditoria = "Inicio de eliminación para Artículo ID: " + idProductoParam;
+        boolean exito = false;
 
-            boolean exito = articuloDAO.eliminarArticulo(idProducto);
+        try {
+            int idProducto = Integer.parseInt(idProductoParam);
+
+            exito = articuloDAO.eliminarArticulo(idProducto);
 
             if (exito) {
+                descripcionAuditoria = "Eliminación exitosa: Se removió el Artículo con ID " + idProducto + " del Catálogo.";
                 mapper.writeValue(response.getWriter(), new Respuesta(true, "Artículo eliminado con éxito."));
             } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                descripcionAuditoria = "FALLO LÓGICO: El Artículo ID " + idProducto + " no pudo ser eliminado (no encontrado o error DAO).";
                 mapper.writeValue(response.getWriter(), new Respuesta(false, "Error al eliminar artículo o ID no encontrado."));
             }
+            Auditoria.registrar(request, tipoAccionAuditoria + (exito ? "_EXITO" : "_FALLO"), descripcionAuditoria);
+
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            descripcionAuditoria = "ERROR DE DATOS: El ID de artículo ('" + idProductoParam + "') proporcionado para la eliminación no es válido.";
+            Auditoria.registrar(request, tipoAccionAuditoria + "_ERROR_FORMATO", descripcionAuditoria);
             mapper.writeValue(response.getWriter(), new Respuesta(false, "ID de artículo inválido."));
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            descripcionAuditoria = "ERROR INESPERADO: Fallo interno durante la eliminación. Detalle: " + e.getMessage();
+            Auditoria.registrar(request, tipoAccionAuditoria + "_ERROR_INESPERADO", descripcionAuditoria);
             mapper.writeValue(response.getWriter(), new Respuesta(false, "Error interno del servidor: " + e.getMessage()));
         }
     }

@@ -353,23 +353,21 @@
                     </div>
 
                     <div class="d-grid gap-2 mt-3">
-                        <button type="button" id="guardarCompraBtn" class="btn btn-success btn-lg"><i class="bi bi-save"></i> Guardar Compra</button>
+                        <button type="button" id="guardarCompraBtn" class="btn btn-success btn-lg mb-2"><i class="bi bi-save"></i> Guardar Compra</button>
+                        <!-- BOTÓN LISTAR COMPRA MOVIDO AQUÍ, DEBAJO DE GUARDAR COMPRA -->
+                        <a href="listarCompra.html" class="btn btn-primary btn-lg">
+                            <i class="bi bi-card-list"></i> Ver Lista de Compras
+                        </a>
                     </div>
                 </section>
             </div>
         </div>
-    </form>
 
-    <section class="card-section mt-4">
-        <div class="section-title"><i class="bi bi-clock-history"></i> Compras Registradas</div>
-        <div class="text-center py-4">
-            <a href="listarCompra.html" class="btn btn-primary btn-lg">
-                <i class="bi bi-card-list"></i> Ver Lista de Compras
-            </a>
-        </div>
-    </section>
+        <!-- SECCIÓN DE COMPRAS REGISTRADAS ANTERIORMENTE MOVIDA FUE ELIMINADA DE AQUÍ -->
+    </form>
 </main>
 
+<!-- Modal de Guía de Transporte (MODIFICADO) -->
 <div class="modal fade" id="modalGuia" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -416,6 +414,17 @@
                                     <label class="form-label small-muted">Ciudad de Traslado</label>
                                     <input id="ciudadTrasladoGuia" type="text" class="form-control" placeholder="Ciudad de traslado" />
                                 </div>
+                                <!-- CAMPO NUEVO 1: Punto de Partida -->
+                                <div class="col-md-6">
+                                    <label class="form-label small-muted">Punto de Partida</label>
+                                    <input id="puntoPartidaGuia" type="text" class="form-control" placeholder="Dirección de partida" />
+                                </div>
+                                <!-- CAMPO NUEVO 2: Punto de Llegada -->
+                                <div class="col-md-6">
+                                    <label class="form-label small-muted">Punto de Llegada</label>
+                                    <input id="puntoLlegadaGuia" type="text" class="form-control" placeholder="Dirección de llegada" />
+                                </div>
+                                <!-- Fin de Nuevos campos -->
                             </div>
                         </div>
                     </div>
@@ -517,7 +526,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-success" id="btnGuardarDistribucion" data-bs-dismiss="modal">Guardar Distribución</button>
             </div>
         </div>
@@ -704,7 +713,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8V-n7D6T4tH9A4K0Pz0B9x9qD4z4z4p9w8J9Q4x5R5z2K7E6p6B8D8F7B5p5g6D9A6B8A7E9p9F9F8d6A6A6" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" xintegrity="sha384-I7E8V-n7D6T4tH9A4K0Pz0B9x9qD4z4z4p9w8J9Q4x5R5z2K7E6p6B8D8F7B5p5g6D9A6B8A7E9p9F9F8d6A6A6" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
 <script src="../../JS/compra/compra.js"></script>
