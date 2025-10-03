@@ -82,7 +82,8 @@ public class ArticuloController implements ArticuloRepository {
         boolean exito = false;
         try {
             conn = Conexion.obtenerConexion();
-            cs = conn.prepareCall("{CALL sp_actualizar_articulo(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
+            // AHORA SÓLO HAY 12 SIGNOS '?'
+            cs = conn.prepareCall("{CALL sp_actualizar_articulo(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
 
             cs.setInt(1, articulo.getIdProducto());
             cs.setString(2, articulo.getDescripcion());
@@ -95,7 +96,7 @@ public class ArticuloController implements ArticuloRepository {
             cs.setInt(9, articulo.getMarca().getIdMarca());
             cs.setInt(10, articulo.getCategoria().getIdCategoria());
             cs.setInt(11, articulo.getUnidad().getIdUnidad());
-            cs.setInt(12, articulo.getTipoArticulo().getId());
+            cs.setInt(12, articulo.getTipoArticulo().getId()); // Este es ahora el Parámetro 12
 
             exito = cs.executeUpdate() > 0;
         } catch (SQLException e) {
