@@ -7,8 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="../../CSS/Producto/listarProducto.css">
-
     <style>
+        /* Estilos base (Mantener la estética) */
         .filter-group {
             display: flex;
             align-items: flex-end;
@@ -56,12 +56,6 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
-        #marcaModal .modal-body,
-        #categoriaModal .modal-body,
-        #tipoModal .modal-body {
-            padding: 20px 30px 30px 30px;
-        }
-
         #marcaModal h2,
         #categoriaModal h2,
         #tipoModal h2 {
@@ -72,6 +66,100 @@
             margin-top: 20px;
             display: flex;
             justify-content: flex-end;
+        }
+
+        /* --- Estilos para la nueva ubicación y botones de exportación --- */
+
+        .pagination-controls {
+            display: flex;
+            /* IMPORTANTE: justify-content: space-between para separar los elementos a los extremos */
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 10px 0;
+            flex-wrap: wrap;
+            gap: 10px; /* Espacio entre los bloques en móvil */
+        }
+
+        .export-controls {
+            display: flex;
+            gap: 10px;
+            /* Ordena los botones de exportación a la derecha */
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+
+        .btn-export-csv, .btn-export-excel {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.1s;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-export-csv {
+            background-color: #3182CE; /* Azul para CSV */
+            color: white;
+        }
+        .btn-export-csv:hover {
+            background-color: #2C5282;
+            transform: translateY(-1px);
+        }
+
+        .btn-export-excel {
+            background-color: #38A169; /* Verde para Excel */
+            color: white;
+        }
+        .btn-export-excel:hover {
+            background-color: #2F855A;
+            transform: translateY(-1px);
+        }
+
+        /* Contenedor de paginación para agrupar Prev/Info/Next */
+        .page-controls-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .controls-and-search {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            .controls-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .controls-buttons button {
+                width: 100%;
+            }
+            /* En móvil, apilar los controles de paginación y exportación */
+            .pagination-controls {
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            .page-controls-container {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .export-controls {
+                margin-left: 0;
+                justify-content: center;
+                width: 100%;
+                margin-top: 10px; /* Separación después de la paginación */
+            }
+            .export-controls button {
+                flex-grow: 1;
+            }
         }
     </style>
 </head>
@@ -139,7 +227,21 @@
         </table>
     </div>
 
-    <div id="paginacion-controles" class="pagination-controls"></div>
+    <!-- CONTROLES DE EXPORTACIÓN Y PAGINACIÓN AL FINAL -->
+    <!-- NOTA: El CSS 'justify-content: space-between' asegura que 'page-controls-container'
+         y 'export-controls' se separen a los extremos. -->
+    <div id="paginacion-controles" class="pagination-controls">
+        <!-- El JS llenará el 'page-controls-container' aquí -->
+        <div class="page-controls-container">
+            <!-- Botones de página e información van aquí -->
+        </div>
+
+        <!-- Botones de Exportación (Van al extremo derecho gracias al CSS) -->
+        <div class="export-controls">
+            <button class="btn-export-csv" onclick="exportarDatos('csv')"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+            <button class="btn-export-excel" onclick="exportarDatos('xlsx')"><i class="fas fa-file-excel"></i> Exportar Excel</button>
+        </div>
+    </div>
 </div>
 
 <div id="articuloModal" class="modal">
@@ -301,612 +403,6 @@
         </div>
     </div>
 </div>
-
-<script>
-    const API_ARTICULOS = '/productos';
-    const API_CATALOGO = '/CatalogoServlet';
-
-    let articulos = [];
-    const catalogos = {};
-    const ARTICULOS_POR_PAGINA = 35;
-    let paginaActual = 1;
-    let articulosFiltrados = [];
-    let confirmationCallback = null;
-
-    const loadingOverlay = document.getElementById('loadingOverlay');
-
-    function showLoading(show) {
-        loadingOverlay.style.display = show ? 'flex' : 'none';
-    }
-
-    function showCustomAlert(title, message, okCallback = null) {
-        const modal = document.getElementById('messageModal');
-        document.getElementById('messageTitle').textContent = title;
-        document.getElementById('messageText').textContent = message;
-        document.getElementById('messageCancelBtn').style.display = 'none';
-        document.getElementById('messageOkBtn').style.display = 'inline-block';
-
-        document.getElementById('messageOkBtn').onclick = () => {
-            modal.style.display = 'none';
-            if (okCallback) okCallback();
-        };
-        modal.style.display = 'flex';
-    }
-
-    function showCustomConfirm(title, message, callback) {
-        const modal = document.getElementById('messageModal');
-        document.getElementById('messageTitle').textContent = title;
-        document.getElementById('messageText').textContent = message;
-        document.getElementById('messageCancelBtn').style.display = 'inline-block';
-        document.getElementById('messageOkBtn').style.display = 'inline-block';
-
-        confirmationCallback = callback;
-
-        document.getElementById('messageOkBtn').onclick = () => {
-            modal.style.display = 'none';
-            if (confirmationCallback) confirmationCallback(true);
-        };
-
-        document.getElementById('messageCancelBtn').onclick = () => {
-            modal.style.display = 'none';
-            if (confirmationCallback) confirmationCallback(false);
-        };
-        modal.style.display = 'flex';
-    }
-
-    function cerrarFormulario() {
-        document.getElementById('articuloModal').style.display = 'none';
-    }
-
-    function getNombreCatalogoById(entidad, id, keyId, keyNombre, keyAbrev = null) {
-        if (!catalogos[entidad] || !id) return 'Desconocida';
-        const item = catalogos[entidad].find(i => String(i[keyId]) === String(id));
-
-        if (item) {
-            if (keyAbrev && item[keyAbrev]) {
-                return `${item[keyNombre]} - ${item[keyAbrev]}`;
-            }
-            return item[keyNombre];
-        }
-        return 'Desconocida';
-    }
-
-    function getUnidadDisplay(articulo) {
-        const unidadId = articulo.unidad?.idUnidad || articulo.idUnidad;
-        if (!unidadId) return 'N/A';
-
-        const item = catalogos['unidad'] ? catalogos['unidad'].find(i => String(i.idUnidad) === String(unidadId)) : null;
-
-        if (item) {
-            return `${item.nombre} - ${item.abreviatura || 's/a'}`;
-        }
-        return 'Desconocida';
-    }
-
-
-    function mostrarDetalles(id) {
-        const articulo = articulos.find(a => a.idProducto === id);
-        const detallesContent = document.getElementById('detallesContent');
-        detallesContent.innerHTML = '';
-
-        if (!articulo) {
-            showCustomAlert('Error', 'Artículo no encontrado.');
-            return;
-        }
-
-        const categoriaId = articulo.categoria?.idCategoria || articulo.idCategoria || 0;
-        const marcaId = articulo.marca?.idMarca || articulo.idMarca || 0;
-        const tipoId = articulo.tipoArticulo?.id || articulo.idTipoArticulo || 0;
-
-        const categoriaNombre = articulo.categoria?.nombre || getNombreCatalogoById('categoria', categoriaId, 'idCategoria', 'nombre');
-        const marcaNombre = articulo.marca?.nombre || getNombreCatalogoById('marca', marcaId, 'idMarca', 'nombre');
-        const tipoNombre = articulo.tipoArticulo?.nombre || getNombreCatalogoById('tipo', tipoId, 'id', 'nombre');
-        const unidadNombreDisplay = getUnidadDisplay(articulo);
-
-
-        const details = [
-            { label: 'Marca', value: marcaNombre },
-            { label: 'Categoría', value: categoriaNombre },
-            { label: 'Tipo de Artículo', value: tipoNombre },
-            { label: 'Unidad de Medida', value: unidadNombreDisplay },
-            { label: 'Densidad', value: (articulo.densidad !== undefined && articulo.densidad !== null) ? articulo.densidad.toFixed(3) : 'N/A' },
-            { label: 'Color', value: articulo.color || 'N/A' },
-            { label: 'Aroma', value: articulo.aroma || 'N/A' }
-        ];
-
-        detallesContent.innerHTML = details.map(item => `
-            <div class="detail-row">
-                <div class="detail-label">${item.label}:</div>
-                <div class="detail-value">${item.value}</div>
-            </div>
-        `).join('');
-
-        document.getElementById('detallesModal').style.display = 'flex';
-    }
-
-    function abrirFormulario(id = 0) {
-        const modal = document.getElementById('articuloModal');
-        const form = document.getElementById('articuloForm');
-        form.reset();
-        document.getElementById('idProducto').value = 0;
-        document.getElementById('articuloModalHeader').querySelector('h2').textContent = 'Nuevo Artículo';
-
-        if (id > 0) {
-            const articulo = articulos.find(a => a.idProducto === id);
-            if (articulo) {
-                document.getElementById('idProducto').value = articulo.idProducto;
-                document.getElementById('codigo').value = articulo.codigo;
-                document.getElementById('descripcion').value = articulo.descripcion;
-                document.getElementById('cantidad').value = articulo.cantidad;
-                document.getElementById('precioUnitario').value = articulo.precioUnitario;
-                document.getElementById('pesoUnitario').value = articulo.pesoUnitario;
-                document.getElementById('densidad').value = articulo.densidad;
-                document.getElementById('aroma').value = articulo.aroma || '';
-                document.getElementById('color').value = articulo.color || '';
-
-                document.getElementById('idMarca').value = String(articulo.marca?.idMarca || articulo.idMarca || '');
-                document.getElementById('idCategoria').value = String(articulo.categoria?.idCategoria || articulo.idCategoria || '');
-                document.getElementById('idUnidad').value = String(articulo.unidad?.idUnidad || articulo.idUnidad || '');
-                document.getElementById('idTipoArticulo').value = String(articulo.tipoArticulo?.id || articulo.idTipoArticulo || '');
-
-                document.getElementById('articuloModalHeader').querySelector('h2').textContent = 'Editar Artículo';
-            }
-        }
-        modal.style.display = 'flex';
-    }
-
-    async function cargarCatalogos() {
-        showLoading(true);
-        const endpoints = [
-            { id: 'idMarca', entidad: 'marca', keyId: 'idMarca', keyNombre: 'nombre', filtro: 'filtroMarca' },
-            { id: 'idCategoria', entidad: 'categoria', keyId: 'idCategoria', keyNombre: 'nombre', filtro: 'filtroCategoria' },
-            { id: 'idUnidad', entidad: 'unidad', keyId: 'idUnidad', keyNombre: 'nombre', keyAbrev: 'abreviatura', filtro: null },
-            { id: 'idTipoArticulo', entidad: 'tipo', keyId: 'id', keyNombre: 'nombre', filtro: 'filtroTipo' }
-        ];
-
-        for (const end of endpoints) {
-            try {
-                let data = null;
-                const res = await fetch(`${API_CATALOGO}?entidad=${end.entidad}`);
-                if (res.ok) {
-                    data = await res.json();
-                } else {
-                    throw new Error(`Error HTTP: ${res.status}`);
-                }
-
-                if (!data) throw new Error(`Fallo al obtener datos de ${end.entidad}.`);
-
-                catalogos[end.entidad] = data;
-
-                const selectForm = document.getElementById(end.id);
-                selectForm.innerHTML = `<option value="">-- Seleccione --</option>`;
-
-                if (end.filtro) {
-                    const selectFiltro = document.getElementById(end.filtro);
-                    selectFiltro.innerHTML = '<option value="">Todas</option>';
-                }
-
-                data.forEach(item => {
-                    let optionText;
-
-                    if (end.entidad === 'unidad' && item.abreviatura) {
-                        optionText = `${item[end.keyNombre]} - ${item[end.keyAbrev]}`;
-                    } else if (end.keyAbrev) {
-                        optionText = `${item[end.keyNombre]} (${item[end.keyAbrev] || 's/a'})`;
-                    } else {
-                        optionText = item[end.keyNombre];
-                    }
-
-                    const optionValue = item[end.keyId];
-
-                    const option = `<option value="${optionValue}">${optionText}</option>`;
-                    selectForm.innerHTML += option;
-
-                    if (end.filtro) {
-                        const selectFiltro = document.getElementById(end.filtro);
-                        selectFiltro.innerHTML += `<option value="${optionValue}">${item[end.keyNombre]}</option>`;
-                    }
-                });
-            } catch (error) {
-                console.error(`Error al cargar ${end.entidad}:`, error);
-                showCustomAlert('Error de Catálogo', `No se pudo cargar la lista de ${end.entidad}. Verifica el Servlet: ${error.message}`);
-            }
-        }
-        showLoading(false);
-    }
-
-    async function listarArticulos() {
-        showLoading(true);
-        try {
-            const res = await fetch(`${API_ARTICULOS}?accion=listar`);
-            if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-
-            articulos = await res.json();
-
-            if (!Array.isArray(articulos)) {
-                articulos = [];
-            }
-
-            paginaActual = 1;
-            aplicarFiltros();
-        } catch (error) {
-            console.error('Error al listar artículos:', error);
-            showCustomAlert('Error de Carga', 'Error al cargar la lista de artículos. Verifica si el Servlet "/productos" está activo.');
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    async function guardarArticulo(event) {
-        event.preventDefault();
-        showLoading(true);
-        const idProducto = document.getElementById('idProducto').value;
-        const formData = new URLSearchParams(new FormData(event.target)).toString();
-
-        let url = API_ARTICULOS;
-        let method = idProducto === "0" ? 'POST' : 'PUT';
-        let statusMensaje = idProducto === "0" ? 'agregado' : 'actualizado';
-
-        try {
-            const res = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: formData
-            });
-
-            const data = await res.json();
-
-            if (data.exito) {
-                showCustomAlert('Éxito', `Artículo ${statusMensaje} con éxito.`, async () => {
-                    cerrarFormulario();
-                    await listarArticulos();
-                });
-
-            } else {
-                let msg = `Error al guardar el artículo: ${data.mensaje}`;
-                showCustomAlert('Error', msg);
-            }
-
-        } catch (error) {
-            console.error('Error al guardar:', error);
-            showCustomAlert('Error de Conexión', 'Error de conexión al guardar el artículo. Revisa tu red o el log del servidor.');
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    async function eliminarArticulo(id) {
-        showCustomConfirm('Confirmar Eliminación', '¿Estás seguro de que deseas eliminar este artículo? Esta acción es irreversible.', async (confirmed) => {
-            if (!confirmed) return;
-
-            showLoading(true);
-            try {
-                const url = `${API_ARTICULOS}?id_producto=${id}`;
-                const res = await fetch(url, { method: 'DELETE' });
-                const data = await res.json();
-
-                if (data.exito) {
-                    showCustomAlert('Eliminado', 'Artículo eliminado con éxito.', async () => {
-                        await listarArticulos();
-                    });
-                } else {
-                    showCustomAlert('Error', `Error al eliminar: ${data.mensaje}`);
-                }
-            } catch (error) {
-                console.error('Error al eliminar:', error);
-                showCustomAlert('Error de Conexión', 'Error de conexión al eliminar el artículo.');
-            } finally {
-                showLoading(false);
-            }
-        });
-    }
-
-    function getHighlightedMatch(queryLower, p) {
-        const codigo = p.codigo || '';
-        const descripcion = p.descripcion || 'Sin descripción';
-
-        let index = codigo.toLowerCase().indexOf(queryLower);
-        if (index !== -1) {
-            const highlightedText =
-                `${codigo.substring(0, index)}<span class="highlight">${codigo.substring(index, index + queryLower.length)}</span>${codigo.substring(index + queryLower.length)}`;
-            return [`${highlightedText} - ${descripcion}`, p.idProducto];
-        }
-
-        index = descripcion.toLowerCase().indexOf(queryLower);
-        if (index !== -1) {
-            const highlightedText =
-                `${descripcion.substring(0, index)}<span class="highlight">${descripcion.substring(index, index + queryLower.length)}</span>${descripcion.substring(index + queryLower.length)}`;
-            return [`${codigo} - ${highlightedText}`, p.idProducto];
-        }
-
-        return null;
-    }
-
-
-    function renderSugerencias(query) {
-        const queryLower = query.toLowerCase().trim();
-        const sugerenciasDiv = document.getElementById('sugerencias');
-        sugerenciasDiv.innerHTML = '';
-
-        if (queryLower.length < 2) {
-            sugerenciasDiv.style.display = 'none';
-            return;
-        }
-
-        const matchesWithHtml = articulos
-            .map(p => getHighlightedMatch(queryLower, p))
-            .filter(match => match !== null)
-            .slice(0, 10);
-
-        if (matchesWithHtml.length > 0) {
-            matchesWithHtml.forEach(([htmlContent, idProducto]) => {
-                const item = document.createElement('div');
-                item.className = 'sugerencia-item';
-                item.innerHTML = htmlContent;
-
-                item.onclick = () => {
-                    document.getElementById('busquedaGeneral').value = `${articulos.find(p => p.idProducto === idProducto)?.codigo || ''} - ${articulos.find(p => p.idProducto === idProducto)?.descripcion || ''}`;
-                    sugerenciasDiv.style.display = 'none';
-                    aplicarFiltros(idProducto);
-                };
-                sugerenciasDiv.appendChild(item);
-            });
-            sugerenciasDiv.style.display = 'block';
-        } else {
-            sugerenciasDiv.style.display = 'none';
-        }
-    }
-
-
-    function aplicarFiltros(idArticuloSeleccionado = null) {
-        const marcaId = document.getElementById('filtroMarca').value;
-        const categoriaId = document.getElementById('filtroCategoria').value;
-        const tipoId = document.getElementById('filtroTipo').value;
-        const busquedaQuery = document.getElementById('busquedaGeneral').value.toLowerCase().trim();
-
-        let filtrados = articulos;
-        document.getElementById('sugerencias').style.display = 'none';
-
-        if (idArticuloSeleccionado !== null) {
-            filtrados = articulos.filter(p => p.idProducto === idArticuloSeleccionado);
-
-            document.getElementById('filtroMarca').value = '';
-            document.getElementById('filtroCategoria').value = '';
-            document.getElementById('filtroTipo').value = '';
-        } else {
-            filtrados = articulos.filter(p => {
-                const pMarcaId = String(p.marca?.idMarca || p.idMarca || '');
-                const pCategoriaId = String(p.categoria?.idCategoria || p.idCategoria || '');
-                const pTipoId = String(p.tipoArticulo?.id || p.idTipoArticulo || '');
-
-                const categoryMatches = (marcaId === '' || pMarcaId === marcaId) &&
-                    (categoriaId === '' || pCategoriaId === categoriaId) &&
-                    (tipoId === '' || pTipoId === tipoId);
-
-                const textMatches = (busquedaQuery === '' ||
-                    (p.codigo && p.codigo.toLowerCase().includes(busquedaQuery)) ||
-                    (p.descripcion && p.descripcion.toLowerCase().includes(busquedaQuery))
-                );
-
-                return categoryMatches && textMatches;
-            });
-        }
-
-        paginaActual = 1;
-        mostrarTabla(filtrados);
-    }
-
-    function mostrarTabla(listaCompleta) {
-        articulosFiltrados = listaCompleta;
-        const tbody = document.querySelector('#tabla-articulos tbody');
-        tbody.innerHTML = '';
-        const totalPaginas = Math.ceil(articulosFiltrados.length / ARTICULOS_POR_PAGINA);
-
-        if (paginaActual > totalPaginas) {
-            paginaActual = Math.max(1, totalPaginas);
-        }
-
-        const COLSPAN = 7;
-        const inicio = (paginaActual - 1) * ARTICULOS_POR_PAGINA;
-        const fin = inicio + ARTICULOS_POR_PAGINA;
-        const articulosPagina = articulosFiltrados.slice(inicio, fin);
-
-        if (articulosPagina.length === 0 && articulos.length > 0) {
-            tbody.innerHTML = `<tr><td colspan="${COLSPAN}" class="data-center" style="padding: 30px; color: var(--light-text-color);">No se encontraron artículos que coincidan con los filtros aplicados.</td></tr>`;
-        } else if (articulos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${COLSPAN}" class="data-center" style="padding: 30px; color: var(--light-text-color);">No se encontraron artículos en la base de datos.</td></tr>`;
-        }
-
-        articulosPagina.forEach(p => {
-            const unidadDisplay = getUnidadDisplay(p);
-
-            const precioUnitario = (p.precioUnitario !== undefined && p.precioUnitario !== null) ? p.precioUnitario.toFixed(2) : '0.00';
-            const pesoUnitario = (p.pesoUnitario !== undefined && p.pesoUnitario !== null) ? p.pesoUnitario.toFixed(3) : '0.000';
-
-            const tr = document.createElement('tr');
-
-            tr.innerHTML = `
-                <td>${p.codigo || '-'}</td>
-                <td>${p.descripcion || 'Sin descripción'}</td>
-                <td class="data-center">${p.cantidad || 0}</td>
-                <td class="data-center">S/ ${precioUnitario}</td>
-                <td class="data-center">${pesoUnitario}</td>
-                <td class="data-unit">${unidadDisplay}</td>
-                <td class="actions">
-                    <button class="btn-info" title="Ver Detalles Secundarios" onclick="mostrarDetalles(${p.idProducto})"><i class="fas fa-info-circle"></i></button>
-                    <button class="btn-edit" title="Editar Artículo" onclick="abrirFormulario(${p.idProducto})"><i class="fas fa-pen"></i></button>
-                    <button class="btn-delete" title="Eliminar Artículo" onclick="eliminarArticulo(${p.idProducto})"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        renderPaginacion(totalPaginas);
-    }
-
-    function cambiarPagina(nuevaPagina) {
-        const totalPaginas = Math.ceil(articulosFiltrados.length / ARTICULOS_POR_PAGINA);
-
-        if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas && paginaActual !== nuevaPagina) {
-            paginaActual = nuevaPagina;
-            mostrarTabla(articulosFiltrados);
-        }
-    }
-
-    function renderPaginacion(totalPaginas) {
-        const paginacionDiv = document.getElementById('paginacion-controles');
-        paginacionDiv.innerHTML = '';
-
-        const totalItems = articulosFiltrados.length;
-
-        if (totalItems === 0) {
-            paginacionDiv.innerHTML = '';
-            return;
-        }
-
-        if (totalPaginas <= 1) {
-            const pageInfo = document.createElement('span');
-            pageInfo.className = 'page-info';
-            pageInfo.textContent = `Total: ${totalItems} artículo${totalItems === 1 ? '' : 's'}`;
-            paginacionDiv.appendChild(pageInfo);
-            return;
-        }
-
-        const btnPrev = document.createElement('button');
-        btnPrev.className = 'btn-page';
-        btnPrev.innerHTML = '<i class="fas fa-chevron-left"></i> Anterior';
-        btnPrev.disabled = paginaActual === 1;
-        btnPrev.onclick = () => cambiarPagina(paginaActual - 1);
-        paginacionDiv.appendChild(btnPrev);
-
-        const pageInfo = document.createElement('span');
-        pageInfo.className = 'page-info';
-        pageInfo.textContent = `Página ${paginaActual} de ${totalPaginas} (${totalItems} artículos)`;
-        paginacionDiv.appendChild(pageInfo);
-
-        const btnNext = document.createElement('button');
-        btnNext.className = 'btn-page';
-        btnNext.innerHTML = 'Siguiente <i class="fas fa-chevron-right"></i>';
-        btnNext.disabled = paginaActual === totalPaginas;
-        btnNext.onclick = () => cambiarPagina(paginaActual + 1);
-        paginacionDiv.appendChild(btnNext);
-    }
-
-    function abrirModalMarca() {
-        document.getElementById('marcaForm').reset();
-        document.getElementById('marcaModal').style.display = 'flex';
-    }
-    function cerrarModalMarca() {
-        document.getElementById('marcaModal').style.display = 'none';
-    }
-    async function guardarMarca(event) {
-        event.preventDefault();
-        showLoading(true);
-        const nombre = document.getElementById('nombreMarca').value;
-
-        console.log("Intentando guardar Marca:", nombre);
-
-        showCustomAlert('Guardar Marca', `Marca: '${nombre}' - Lógica de guardado a /CatalogoServlet?entidad=marca pendiente de implementación.`, () => {
-            cerrarModalMarca();
-            showLoading(false);
-        });
-    }
-
-
-    function abrirModalCategoria() {
-        document.getElementById('categoriaForm').reset();
-        document.getElementById('categoriaModal').style.display = 'flex';
-    }
-    function cerrarModalCategoria() {
-        document.getElementById('categoriaModal').style.display = 'none';
-    }
-    async function guardarCategoria(event) {
-        event.preventDefault();
-        showLoading(true);
-        const nombre = document.getElementById('nombreCategoria').value;
-
-        console.log("Intentando guardar Categoría:", nombre);
-
-        showCustomAlert('Guardar Categoría', `Categoría: '${nombre}' - Lógica de guardado a /CatalogoServlet?entidad=categoria pendiente de implementación.`, () => {
-            cerrarModalCategoria();
-            showLoading(false);
-        });
-    }
-
-
-    function abrirModalTipo() {
-        document.getElementById('tipoForm').reset();
-        document.getElementById('tipoModal').style.display = 'flex';
-    }
-    function cerrarModalTipo() {
-        document.getElementById('tipoModal').style.display = 'none';
-    }
-    async function guardarTipo(event) {
-        event.preventDefault();
-        showLoading(true);
-        const nombre = document.getElementById('nombreTipo').value;
-
-        console.log("Intentando guardar Tipo:", nombre);
-
-        showCustomAlert('Guardar Tipo', `Tipo: '${nombre}' - Lógica de guardado a /CatalogoServlet?entidad=tipo pendiente de implementación.`, () => {
-            cerrarModalTipo();
-            showLoading(false);
-        });
-    }
-
-
-    document.getElementById('articuloForm').addEventListener('submit', guardarArticulo);
-
-    window.onload = async () => {
-        window.abrirFormulario = abrirFormulario;
-        window.cerrarFormulario = cerrarFormulario;
-        window.mostrarDetalles = mostrarDetalles;
-        window.eliminarArticulo = eliminarArticulo;
-        window.aplicarFiltros = aplicarFiltros;
-        window.listarArticulos = listarArticulos;
-        window.renderSugerencias = renderSugerencias;
-
-        window.abrirModalMarca = abrirModalMarca;
-        window.cerrarModalMarca = cerrarModalMarca;
-        window.abrirModalCategoria = abrirModalCategoria;
-        window.cerrarModalCategoria = cerrarModalCategoria;
-        window.abrirModalTipo = abrirModalTipo;
-        window.cerrarModalTipo = cerrarModalTipo;
-
-        await cargarCatalogos();
-        await listarArticulos();
-    };
-
-    window.onclick = function(event) {
-        const articuloModal = document.getElementById('articuloModal');
-        const detallesModal = document.getElementById('detallesModal');
-        const sugerenciasDiv = document.getElementById('sugerencias');
-        const busquedaInput = document.getElementById('busquedaGeneral');
-
-        const marcaModal = document.getElementById('marcaModal');
-        const categoriaModal = document.getElementById('categoriaModal');
-        const tipoModal = document.getElementById('tipoModal');
-
-        if (event.target == articuloModal) {
-            cerrarFormulario();
-        }
-        if (event.target == detallesModal) {
-            detallesModal.style.display = 'none';
-        }
-        if (event.target == marcaModal) {
-            cerrarModalMarca();
-        }
-        if (event.target == categoriaModal) {
-            cerrarModalCategoria();
-        }
-        if (event.target == tipoModal) {
-            cerrarModalTipo();
-        }
-
-        if (sugerenciasDiv.style.display === 'block' && event.target !== busquedaInput && !sugerenciasDiv.contains(event.target)) {
-            sugerenciasDiv.style.display = 'none';
-        }
-    }
-</script>
+<script src="../../JS/Producto/listarProducto.js"></script>
 </body>
 </html>
