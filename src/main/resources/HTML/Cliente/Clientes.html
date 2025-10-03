@@ -2,92 +2,150 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Clientes — Panel Corporativo</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <title>Gestión de Clientes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="../../CSS/Cliente/cliente.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#1e40af',
+                        'deep-blue': '#1d4ed8',
+                        'accent-green': '#059669',
+                        'card-bg': '#ffffff',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="display-6 text-primary">Gestión de Clientes</h1>
-        <button id="btnNuevoCliente" class="btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#clienteModal">
-            <i class="bi bi-person-plus-fill me-2"></i>Nuevo Cliente
+<body class="flex flex-col h-full">
+<div class="flex flex-col flex-grow w-full px-4 py-6 md:px-8 md:py-8">
+
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-3 md:space-y-0">
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">
+            Gestión de Clientes <span class="text-deep-blue text-lg ml-2 hidden sm:inline"></span>
+        </h1>
+
+        <button id="btnNuevoCliente"
+                class="flex items-center justify-center px-6 py-3 bg-deep-blue text-white text-base font-bold rounded-lg shadow-xl shadow-blue-500/30 hover:bg-primary-blue transition duration-300 transform hover:scale-[1.02] active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-blue-300">
+            <i data-lucide="user-plus" class="w-5 h-5 mr-2"></i>
+            Nuevo Cliente
+        </button>
+    </header>
+
+    <div class="flex flex-col md:flex-row gap-4 mb-6">
+        <div class="relative w-full md:max-w-xl">
+            <input type="search" id="buscarInput" class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl shadow-inner text-sm focus:ring-deep-blue focus:border-deep-blue transition duration-150" placeholder="Buscar cliente por nombre o documento...">
+            <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+        </div>
+        <button id="btnBuscar" class="hidden px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-200 transition duration-150 text-sm">
+            Buscar
         </button>
     </div>
 
-    <div class="input-group mb-4 shadow-sm">
-        <input type="search" id="buscarInput" class="form-control" placeholder="Buscar cliente por nombre o documento">
-        <button id="btnBuscar" class="btn btn-outline-secondary">
-            <i class="bi bi-search"></i>
-        </button>
+    <div class="table-container flex-grow overflow-hidden">
+        <div class="table-wrapper">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-primary-blue text-white sticky top-0 shadow-lg">
+                <tr>
+                    <th scope="col" class="text-left text-xs font-bold uppercase tracking-wider rounded-tl-xl min-w-[100px]">N° Documento</th>
+                    <th scope="col" class="text-left text-xs font-bold uppercase tracking-wider min-w-[150px]">Nombre</th>
+                    <th scope="col" class="text-left text-xs font-bold uppercase tracking-wider hidden md:table-cell min-w-[200px]">Dirección</th>
+                    <th scope="col" class="text-left text-xs font-bold uppercase tracking-wider hidden lg:table-cell min-w-[180px]">Correo</th>
+                    <th scope="col" class="text-left text-xs font-bold uppercase tracking-wider hidden sm:table-cell min-w-[100px]">Teléfono</th>
+                    <th scope="col" class="text-center text-xs font-bold uppercase tracking-wider rounded-tr-xl min-w-[90px]">Acciones</th>
+                </tr>
+                </thead>
+                <tbody id="clienteTableBody" class="bg-white divide-y divide-gray-100">
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="table-responsive shadow-sm rounded">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-dark">
-            <tr>
-                <th>N° Documento</th>
-                <th>Nombre</th>
-                <th>Dirección</th>
-                <th>Correo</th>
-                <th>Teléfono</th>
-                <th>Acciones</th>
-            </tr>
-            </thead>
-            <tbody id="clienteTableBody"></tbody>
-        </table>
-    </div>
-
-    <nav class="mt-4" aria-label="Paginación de clientes">
-        <ul class="pagination justify-content-center" id="paginacion"></ul>
+    <nav class="mt-6 flex justify-center" aria-label="Paginación de clientes">
+        <div id="paginacion" class="flex"></div>
     </nav>
 </div>
 
-<div class="modal fade" id="clienteModal" tabindex="-1" aria-labelledby="clienteModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg">
-            <form id="clienteForm" novalidate>
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="clienteModalLabel">Registrar Cliente</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body px-5 py-4">
+<div id="clienteModal" class="custom-modal fixed inset-0 z-50 hidden opacity-0" aria-modal="true" role="dialog">
+    <div class="flex items-center justify-center min-h-screen p-4 modal-overlay" onclick="window.cerrarModalExterno(event)">
+        <div id="modalContent" class="bg-white rounded-xl shadow-2xl w-full max-w-xl transform scale-95 transition-transform duration-300 ease-out z-10">
+            <form id="clienteForm">
+                <header class="px-5 py-4 bg-primary-blue text-white rounded-t-xl flex justify-between items-center shadow-lg">
+                    <h2 class="text-xl font-bold" id="clienteModalLabel">Registrar Cliente</h2>
+                    <button type="button" class="text-white hover:text-gray-200 p-1 rounded-full transition duration-150" onclick="window.cerrarModal()">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </header>
+
+                <div class="p-6 space-y-5">
                     <input type="hidden" id="id">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="documento" class="form-label">N° Documento:</label>
-                            <input type="text" class="form-control" id="documento" required>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <div>
+                            <label for="documento" class="block text-xs font-semibold text-gray-700 mb-1">N° Documento:</label>
+                            <input type="text" id="documento" required class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-deep-blue focus:border-deep-blue transition duration-150 shadow-inner">
                         </div>
-                        <div class="col-md-6">
-                            <label for="nombre" class="form-label">Nombre / Razón Social:</label>
-                            <input type="text" class="form-control" id="nombre" required>
+
+                        <div>
+                            <label for="nombre" class="block text-xs font-semibold text-gray-700 mb-1">Nombre / Razón Social:</label>
+                            <input type="text" id="nombre" required class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-deep-blue focus:border-deep-blue transition duration-150 shadow-inner">
                         </div>
-                        <div class="col-md-6">
-                            <label for="direccion" class="form-label">Dirección:</label>
-                            <input type="text" class="form-control" id="direccion" required>
+
+                        <div>
+                            <label for="direccion" class="block text-xs font-semibold text-gray-700 mb-1">Dirección:</label>
+                            <input type="text" id="direccion" required class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-deep-blue focus:border-deep-blue transition duration-150 shadow-inner">
                         </div>
-                        <div class="col-md-6">
-                            <label for="correo" class="form-label">Correo:</label>
-                            <input type="email" class="form-control" id="correo" required>
+
+                        <div>
+                            <label for="correo" class="block text-xs font-semibold text-gray-700 mb-1">Correo Electrónico:</label>
+                            <input type="email" id="correo" required class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-deep-blue focus:border-deep-blue transition duration-150 shadow-inner">
                         </div>
-                        <div class="col-md-6">
-                            <label for="telefono" class="form-label">Teléfono:</label>
-                            <input type="text" class="form-control" id="telefono" required>
+
+                        <div class="md:col-span-2">
+                            <label for="telefono" class="block text-xs font-semibold text-gray-700 mb-1">Teléfono:</label>
+                            <input type="text" id="telefono" required class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-deep-blue focus:border-deep-blue transition duration-150 shadow-inner">
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer px-5 py-3">
-                    <button type="submit" class="btn btn-success px-4">Guardar</button>
-                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
-                </div>
+
+                <footer class="flex justify-end space-x-3 p-4 bg-gray-50/70 rounded-b-xl border-t border-gray-200">
+                    <button type="button" onclick="window.cerrarModal()" class="px-5 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition duration-150 shadow-sm">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-accent-green text-white text-sm font-semibold rounded-lg shadow-lg shadow-green-500/40 hover:bg-green-700 transition duration-150 transform hover:scale-[1.01]">
+                        Guardar Cliente
+                    </button>
+                </footer>
             </form>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<div id="customConfirmModal" class="custom-modal fixed inset-0 z-50 hidden opacity-0" aria-modal="true" role="dialog">
+    <div class="flex items-center justify-center min-h-screen p-4 modal-overlay">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xs p-5 transform transition-all duration-300 scale-100 z-10">
+            <h3 class="text-xl font-bold text-red-600 mb-3 flex items-center">
+                <i data-lucide="alert-triangle" class="w-5 h-5 mr-2"></i>
+                Confirmar Eliminación
+            </h3>
+            <p id="confirmMessage" class="text-sm text-gray-700 mb-5">¿Estás seguro de que quieres eliminar permanentemente este cliente?</p>
+            <div class="flex justify-end space-x-3">
+                <button id="btnCancelConfirm" class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-100 transition duration-150 shadow-sm">Cancelar</button>
+                <button id="btnExecuteConfirm" class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg shadow-lg shadow-red-500/30 hover:bg-red-700 transition duration-150">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="../../JS/cliente/cliente.js"></script>
 </body>
 </html>
