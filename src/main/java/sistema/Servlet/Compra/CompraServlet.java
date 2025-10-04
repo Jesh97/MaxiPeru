@@ -1,15 +1,20 @@
 package sistema.Servlet.Compra;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sistema.Controller.Compra.CompraController;
+import sistema.Controller.Producto.ArticuloController;
 import sistema.Ejecucion.Auditoria;
+import sistema.Modelo.Articulo.Articulo;
 import sistema.Modelo.Compra.*;
+import sistema.repository.ArticuloRepository;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -19,7 +24,26 @@ import java.util.*;
 public class CompraServlet extends HttpServlet {
 
     private final CompraController compraController = new CompraController();
+    private final ArticuloRepository articuloDAO = new ArticuloController();
     private final ObjectMapper mapper = new ObjectMapper();
+    private final Gson gson = new Gson();
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        PrintWriter out = response.getWriter();
+
+        String busqueda = request.getParameter("buscarArticulo");
+
+        if (busqueda != null && !busqueda.trim().isEmpty()) {
+            List<Articulo> lista = articuloDAO.buscarArticulosParaCompra(busqueda);
+            out.print(gson.toJson(lista));
+        } else {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.print("{\"error\":\"Parámetro 'buscarArticulo' es requerido.\"}");
+        }
+        out.flush();
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -31,7 +55,6 @@ public class CompraServlet extends HttpServlet {
         String tipoAccionAuditoria = "COMPRA_REGISTRO";
         String descripcionAuditoria = "Inicio de procesamiento de datos para el registro de una Compra.";
 
-        // Inicializar Compra fuera del try para que esté disponible en los catch blocks
         Compra compra = new Compra();
 
         try (BufferedReader reader = request.getReader()) {
@@ -49,13 +72,11 @@ public class CompraServlet extends HttpServlet {
         try {
             var root = mapper.readTree(jsonBuffer.toString());
 
-            // ---------- 1. Parsear Compra (Datos principales) ----------
             compra.setIdProveedor(root.path("idProveedor").asInt());
             compra.setTipoComprobante(root.path("tipo_comprobante").asText("").trim());
             compra.setSerie(root.path("serie").asText("").trim());
             compra.setCorrelativo(root.path("correlativo").asText("").trim());
 
-            // AUDITORÍA PASO 1: Inicio del parseo de datos principales
             descripcionAuditoria = "Procesando datos principales | Comprobante: " + compra.getTipoComprobante() + " " + compra.getSerie() + "-" + compra.getCorrelativo() + " | Proveedor ID: " + compra.getIdProveedor();
             Auditoria.registrar(request, tipoAccionAuditoria + "_INICIO_PARSEO", descripcionAuditoria);
 
@@ -83,7 +104,6 @@ public class CompraServlet extends HttpServlet {
             compra.setTotalPeso(root.path("totalPeso").asDouble(0));
             compra.setCosteTransporte(root.path("costeTransporte").asDouble(0));
 
-            // ---------- 2. DocumentoReferencia ----------
             DocumentoReferencia docRef = null;
             if (root.has("referencia")) {
                 docRef = new DocumentoReferencia();
@@ -91,11 +111,9 @@ public class CompraServlet extends HttpServlet {
                 docRef.setNumeroCotizacion(dr.path("numeroCotizacion").asText("").trim());
                 docRef.setNumeroPedido(dr.path("numeroPedido").asText("").trim());
 
-                // AUDITORÍA PASO 2: Documento de Referencia
                 Auditoria.registrar(request, tipoAccionAuditoria + "_REF_COTIZACION", "Procesada Documentación de Referencia | Cotización: " + docRef.getNumeroCotizacion() + ", Pedido: " + docRef.getNumeroPedido());
             }
 
-            // ---------- 3. GuiaTransporte ----------
             GuiaTransporte guia = null;
             if (root.has("guia")) {
                 guia = new GuiaTransporte();
@@ -121,11 +139,9 @@ public class CompraServlet extends HttpServlet {
                     guia.setFechaEntrega(LocalDate.parse(gt.get("fechaEntrega").asText()));
                 }
 
-                // AUDITORÍA PASO 3: Guía de Transporte
                 Auditoria.registrar(request, tipoAccionAuditoria + "_REF_GUIA", "Procesada Guía de Transporte | N° Guía: " + guia.getNumeroGuia() + ", Peso Total: " + guia.getPeso());
             }
 
-            // ---------- 4. Detalles y 5. Descuentos (se procesan juntos para el conteo) ----------
             List<DetalleCompra> detalles = new ArrayList<>();
             List<Descuento> descuentos = new ArrayList<>();
             int itemCount = 0;
@@ -149,7 +165,6 @@ public class CompraServlet extends HttpServlet {
                     detalle.setPesoTotal(d.path("pesoTotal").asDouble(0));
                     detalles.add(detalle);
 
-                    // Descuentos por ítem
                     if (d.has("descuentos")) {
                         for (var desc : d.get("descuentos")) {
                             discountCount++;
@@ -165,7 +180,6 @@ public class CompraServlet extends HttpServlet {
                 }
             }
 
-            // Descuentos Globales
             if (root.has("descuentosGlobales")) {
                 for (var desc : root.get("descuentosGlobales")) {
                     discountCount++;
@@ -176,11 +190,9 @@ public class CompraServlet extends HttpServlet {
                     descuentos.add(descuento);
                 }
             }
-            // AUDITORÍA PASO 4: Detalles y Descuentos
             Auditoria.registrar(request, tipoAccionAuditoria + "_PROCESO_DETALLES", "Detalles y Descuentos procesados | Ítems: " + itemCount + ", Descuentos aplicados: " + discountCount);
 
 
-            // ---------- 6. CajasCompra ----------
             List<Caja> cajasCompra = new ArrayList<>();
             Map<Integer, List<DetalleCaja>> detallesCajaMap = new HashMap<>();
             int cajaCount = 0;
@@ -190,7 +202,7 @@ public class CompraServlet extends HttpServlet {
                 for (var c : root.get("cajasCompra")) {
                     cajaCount++;
                     Caja caja = new Caja();
-                    caja.setIdCajaCompra(tempIdCaja); // ID temporal
+                    caja.setIdCajaCompra(tempIdCaja);
                     caja.setNombreCaja(c.path("nombreCaja").asText("").trim());
                     caja.setCantidad(c.path("cantidad").asInt(0));
                     caja.setCostoCaja(c.path("costoCaja").decimalValue());
@@ -209,26 +221,21 @@ public class CompraServlet extends HttpServlet {
                     detallesCajaMap.put(tempIdCaja, listaDetalles);
                     tempIdCaja++;
                 }
-                // AUDITORÍA PASO 5: Cajas de Compra
                 Auditoria.registrar(request, tipoAccionAuditoria + "_PROCESO_CAJAS", "Procesadas Cajas de Compra | Cantidad de cajas: " + cajaCount);
             }
 
-            // ---------- 7. Llamar Controller ----------
-            // AUDITORÍA PASO 6: Antes de la ejecución final
             Auditoria.registrar(request, tipoAccionAuditoria + "_EJECUCION_CONTROLLER", "Iniciando la transacción en el Controller para la Compra " + compra.getSerie() + "-" + compra.getCorrelativo() + ". (Fase Crítica)");
 
             int idCompra = compraController.registrarCompra(
                     compra, guia, docRef, detalles, descuentos, cajasCompra, detallesCajaMap
             );
 
-            // AUDITORÍA FINAL: ÉXITO
             String descExito = "Registro exitoso: Compra " + compra.getTipoComprobante() + " " + compra.getSerie() + "-" + compra.getCorrelativo() + " ha sido **registrada con ID " + idCompra + "** y Total $" + compra.getTotal() + ".";
             Auditoria.registrar(request, tipoAccionAuditoria + "_EXITO", descExito);
 
             response.getWriter().write("Compra registrada con ID: " + idCompra);
 
         } catch (SQLException e) {
-            // AUDITORÍA FINAL: ERROR SQL
             String descError = "ERROR BASE DE DATOS: Fallo al registrar Compra " + compra.getSerie() + "-" + compra.getCorrelativo() + ". Detalle técnico: " + e.getMessage();
             Auditoria.registrar(request, tipoAccionAuditoria + "_ERROR_SQL", descError);
 
@@ -236,7 +243,6 @@ public class CompraServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("Error SQL: " + e.getMessage());
         } catch (Exception e) {
-            // AUDITORÍA FINAL: ERROR INESPERADO (Parseo, etc.)
             String comprobanteInfo = compra.getSerie() != null && !compra.getSerie().isEmpty() ? compra.getTipoComprobante() + " " + compra.getSerie() + "-" + compra.getCorrelativo() : "sin comprobante definido";
 
             String descError = "ERROR DE PROCESAMIENTO: Fallo al procesar la Compra (" + comprobanteInfo + "). Detalle: " + e.getMessage();

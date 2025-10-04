@@ -394,128 +394,130 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         actualizarTotales();
     }
 
-    async function buscarProducto(q, trFilaGeneral = null) {
-        try {
-            const url = `${PRODUCTO_SERVLET_URL}?busqueda=${encodeURIComponent(q)}`;
-            const resp = await fetch(url);
-            if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
-            const data = await resp.json();
+        async function buscarProducto(q, trFilaGeneral = null) {
+            try {
+                // *** MODIFICACIÓN: Usar COMPRA_SERVLET_URL para buscar solo artículos de compra ***
+                const url = `${COMPRA_SERVLET_URL}?buscarArticulo=${encodeURIComponent(q)}`;
+                // **********************************************************************************
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
+                const data = await resp.json();
 
-            if (!trFilaGeneral) {
-                mostrarSugerenciasProducto(data);
+                if (!trFilaGeneral) {
+                    mostrarSugerenciasProducto(data);
+                    return;
+                }
+
+                if (data && data.length > 0) {
+                    const producto = data[0];
+
+                    trFilaGeneral.querySelector('.codigo').value = producto.codigo || '';
+                    trFilaGeneral.querySelector('.unidadMedida').value = producto.unidadMedida || 'UNIDAD';
+                    trFilaGeneral.querySelector('.descripcion').value = producto.descripcion || '';
+                    trFilaGeneral.querySelector('.idProducto').value = producto.idProducto || 0;
+                    trFilaGeneral.querySelector('.precioUnitario').value = producto.precioUnitario || '0.00';
+
+
+                    const selectorFinanciero = `#tablaProductosFinanciero tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
+                    const trFinanciero = document.querySelector(selectorFinanciero);
+                    if (trFinanciero) {
+                        trFinanciero.dataset.descuentoItemValor = '0';
+                        trFinanciero.dataset.descuentoItemTipo = 'porcentaje';
+                        trFinanciero.dataset.tasaIgvItem = '0.18';
+                        trFinanciero.dataset.descuentoItemMotivo = '';
+                        trFinanciero.querySelector('.descripcion-readonly').textContent = producto.descripcion || '';
+                    }
+
+                    const selectorGuiaTransporte = `#tablaProductosGuiaTransporte tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
+                    const trGuiaTransporte = document.querySelector(selectorGuiaTransporte);
+                    if (trGuiaTransporte) {
+                        trGuiaTransporte.querySelector('.costoUnitTransporte').value = '0.0000';
+                        trGuiaTransporte.querySelector('.descripcion-readonly').textContent = producto.descripcion || '';
+                        trGuiaTransporte.querySelector('.codigo-readonly').textContent = producto.codigo || '';
+                        trGuiaTransporte.querySelector('.cantidad-readonly').textContent = trFilaGeneral.querySelector('.cantidad').value;
+                        const pesoTotal = (parseFloat(producto.pesoUnitario) || 0) * (parseInt(trFilaGeneral.querySelector('.cantidad').value) || 0);
+                        trGuiaTransporte.querySelector('.peso-readonly').textContent = `${pesoTotal.toFixed(3)} kg`;
+                    }
+
+                    const selectorTotales = `#tablaProductosTotales tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
+                    const trTotales = document.querySelector(selectorTotales);
+                    if (trTotales) {
+                        trTotales.querySelector('.descripcion-readonly').textContent = producto.descripcion || '';
+                    }
+
+                    actualizarTotales();
+                }
+            } catch (err) {
+                console.error("Error al buscar producto:", err);
+            }
+        }
+
+        function mostrarSugerenciasProducto(productos) {
+            let container = $('#sugerenciasProducto');
+            if (!container) {
+                console.error("No se encontró el contenedor de sugerencias de productos.");
                 return;
             }
 
-            if (data && data.length > 0) {
-                const producto = data[0];
-
-                trFilaGeneral.querySelector('.codigo').value = producto.codigo || '';
-                trFilaGeneral.querySelector('.unidadMedida').value = producto.unidadMedida || 'UNIDAD';
-                trFilaGeneral.querySelector('.descripcion').value = producto.descripcion || '';
-                trFilaGeneral.querySelector('.idProducto').value = producto.idProducto || 0;
-                trFilaGeneral.querySelector('.precioUnitario').value = producto.precioUnitario || '0.00';
-
-
-                const selectorFinanciero = `#tablaProductosFinanciero tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
-                const trFinanciero = document.querySelector(selectorFinanciero);
-                if (trFinanciero) {
-                    trFinanciero.dataset.descuentoItemValor = '0';
-                    trFinanciero.dataset.descuentoItemTipo = 'porcentaje';
-                    trFinanciero.dataset.tasaIgvItem = '0.18';
-                    trFinanciero.dataset.descuentoItemMotivo = '';
-                    trFinanciero.querySelector('.descripcion-readonly').textContent = producto.descripcion || '';
-                }
-
-                const selectorGuiaTransporte = `#tablaProductosGuiaTransporte tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
-                const trGuiaTransporte = document.querySelector(selectorGuiaTransporte);
-                if (trGuiaTransporte) {
-                    trGuiaTransporte.querySelector('.costoUnitTransporte').value = '0.0000';
-                    trGuiaTransporte.querySelector('.descripcion-readonly').textContent = producto.descripcion || '';
-                    trGuiaTransporte.querySelector('.codigo-readonly').textContent = producto.codigo || '';
-                    trGuiaTransporte.querySelector('.cantidad-readonly').textContent = trFilaGeneral.querySelector('.cantidad').value;
-                    const pesoTotal = (parseFloat(producto.pesoUnitario) || 0) * (parseInt(trFilaGeneral.querySelector('.cantidad').value) || 0);
-                    trGuiaTransporte.querySelector('.peso-readonly').textContent = `${pesoTotal.toFixed(3)} kg`;
-                }
-
-                const selectorTotales = `#tablaProductosTotales tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
-                const trTotales = document.querySelector(selectorTotales);
-                if (trTotales) {
-                    trTotales.querySelector('.descripcion-readonly').textContent = producto.descripcion || '';
-                }
-
-                actualizarTotales();
-            }
-        } catch (err) {
-            console.error("Error al buscar producto:", err);
-        }
-    }
-
-    function mostrarSugerenciasProducto(productos) {
-        let container = $('#sugerenciasProducto');
-        if (!container) {
-            console.error("No se encontró el contenedor de sugerencias de productos.");
-            return;
-        }
-
-        container.innerHTML = '';
-        if (!productos || productos.length === 0) {
-            container.classList.add('d-none');
-            return;
-        }
-
-        productos.slice(0, 6).forEach(p => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'list-group-item list-group-item-action';
-            btn.innerHTML = `<strong>${p.codigo}</strong> - ${p.descripcion}`;
-            btn.addEventListener('click', () => {
-                crearFilaProducto(p);
+            container.innerHTML = '';
+            if (!productos || productos.length === 0) {
                 container.classList.add('d-none');
-                $('#busquedaProductoInput').value = '';
+                return;
+            }
+
+            productos.slice(0, 6).forEach(p => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'list-group-item list-group-item-action';
+                btn.innerHTML = `<strong>${p.codigo}</strong> - ${p.descripcion}`;
+                btn.addEventListener('click', () => {
+                    crearFilaProducto(p);
+                    container.classList.add('d-none');
+                    $('#busquedaProductoInput').value = '';
+                });
+                container.appendChild(btn);
             });
-            container.appendChild(btn);
-        });
-        container.classList.remove('d-none');
-    }
+            container.classList.remove('d-none');
+        }
 
-    function handleProductTypeChange() {
-        btnContainer.innerHTML = '';
-        const wrapper = document.createElement('div');
-        wrapper.className = 'd-flex align-items-center position-relative';
-        wrapper.innerHTML = `
-                <input type="text" id="busquedaProductoInput" class="form-control form-control-sm me-2" placeholder="Buscar producto por código o descripción">
-                <div id="sugerenciasProducto" class="list-group d-none" role="listbox" style="position: absolute; z-index: 1050; width: 300px; right: 0; top: 100%; max-height: 250px; overflow-y: auto;"></div>
-                <button type="button" id="btnAgregarProducto" class="btn btn-primary btn-sm">
-                    <i class="bi bi-plus-lg"></i> Agregar Producto
-                </button>
-            `;
-        btnContainer.appendChild(wrapper);
+        function handleProductTypeChange() {
+            btnContainer.innerHTML = '';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'd-flex align-items-center position-relative';
+            wrapper.innerHTML = `
+                    <input type="text" id="busquedaProductoInput" class="form-control form-control-sm me-2" placeholder="Buscar producto por código o descripción">
+                    <div id="sugerenciasProducto" class="list-group d-none" role="listbox" style="position: absolute; z-index: 1050; width: 300px; right: 0; top: 100%; max-height: 250px; overflow-y: auto;"></div>
+                    <button type="button" id="btnAgregarProducto" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-lg"></i> Agregar Producto
+                    </button>
+                `;
+            btnContainer.appendChild(wrapper);
 
-        const busquedaProductoInput = $('#busquedaProductoInput', wrapper);
-        const btnAgregarProducto = $('#btnAgregarProducto', wrapper);
+            const busquedaProductoInput = $('#busquedaProductoInput', wrapper);
+            const btnAgregarProducto = $('#btnAgregarProducto', wrapper);
 
-        busquedaProductoInput.addEventListener('input', () => {
-            const q = busquedaProductoInput.value.trim();
-            if (q) {
-                buscarProducto(q);
-            }
-        });
+            busquedaProductoInput.addEventListener('input', () => {
+                const q = busquedaProductoInput.value.trim();
+                if (q) {
+                    buscarProducto(q);
+                }
+            });
 
-        btnAgregarProducto.onclick = () => {
-            crearFilaProducto();
-            const sugerencias = $('#sugerenciasProducto');
-            if (sugerencias) sugerencias.classList.add('d-none');
-        };
+            btnAgregarProducto.onclick = () => {
+                crearFilaProducto();
+                const sugerencias = $('#sugerenciasProducto');
+                if (sugerencias) sugerencias.classList.add('d-none');
+            };
 
-        const clickFueraListener = (e) => {
-            if (!wrapper.contains(e.target)) {
-                $('#sugerenciasProducto', wrapper)?.classList.add('d-none');
-            }
-        };
-        document.addEventListener('click', clickFueraListener);
-    }
+            const clickFueraListener = (e) => {
+                if (!wrapper.contains(e.target)) {
+                    $('#sugerenciasProducto', wrapper)?.classList.add('d-none');
+                }
+            };
+            document.addEventListener('click', clickFueraListener);
+        }
 
-    handleProductTypeChange();
+        handleProductTypeChange();
 
     function unidadAbreviatura(unidad) {
         const map = {
