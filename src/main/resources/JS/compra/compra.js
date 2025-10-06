@@ -809,12 +809,13 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                 const filaId = tr.dataset.filaId;
                 const trFinanciero = $(`#tablaProductosFinanciero tr[data-fila-id="${filaId}"]`);
                 const trGuiaTransporte = $(`#tablaProductosGuiaTransporte tr[data-fila-id="${filaId}"]`);
-                const trTotales = $(`#tablaProductosTotales tr[data-fila-id="${filaId}"]`);
-                const idProducto = tr.querySelector('.idProducto')?.value;
+
+                const idArticulo = tr.querySelector('.idProducto')?.value;
                 const cantidad = parseFloat(tr.querySelector('.cantidad')?.value) || 0;
                 const precioUnitario = parseFloat(tr.querySelector('.precioUnitario')?.value) || 0;
                 const costoUnitarioTransporte = parseFloat(trGuiaTransporte.querySelector('.costoUnitTransporte')?.value) || 0;
-                const costeTransporteFila = costoUnitarioTransporte * cantidad;
+                const costeTotalTransporte = costoUnitarioTransporte * cantidad;
+
                 const descuentos = [];
                 const descuentoItemValor = parseFloat(trFinanciero.dataset.descuentoItemValor) || 0;
                 const descuentoItemTipo = trFinanciero.dataset.descuentoItemTipo;
@@ -822,25 +823,27 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
 
                 if (descuentoItemValor > 0 && ($('#descuentoSi')?.checked && $('#tipoDescuento')?.value === 'por_item')) {
                     descuentos.push({
-                        tipo: descuentoItemTipo,
+                        motivo: descuentoItemMotivo || 'Descuento Item',
+                        tipoValor: descuentoItemTipo || 'monto',
                         valor: descuentoItemValor,
-                        motivo: descuentoItemMotivo,
-                        tasaIgv: parseFloat(trFinanciero.dataset.tasaIgvItem)
+                        tasaIgv: parseFloat(trFinanciero.dataset.tasaIgvItem) || 0.18
                     });
                 }
 
+                const bonificacion = parseFloat(trFinanciero.dataset.bonificacionValor) || 0;
+
                 detalles.push({
-                    idProducto: parseInt(idProducto),
+                    idArticulo: parseInt(idArticulo, 10) || 0,
                     cantidad: cantidad,
                     precioUnitario: precioUnitario,
-                    costeTotalTransporte: costeTransporteFila,
+                    bonificacion: bonificacion,
+                    costeUnitarioTransporte: costoUnitarioTransporte,
+                    costeTotalTransporte: costeTotalTransporte,
                     precioConDescuento: parseFloat(tr.dataset.precioConDescuento) || 0,
-                    igvProducto: parseFloat(tr.dataset.igvProducto) || 0,
+                    igvInsumo: parseFloat(tr.dataset.igvProducto) || 0,
                     total: parseFloat(tr.dataset.totalProducto) || 0,
                     pesoTotal: parseFloat(tr.dataset.pesoTotal) || 0,
                     descuentos: descuentos,
-                    bonificacion: trFinanciero.querySelector('.bonificacion')?.checked ?? false,
-                    unidadMedida: tr.querySelector('.unidadMedida')?.value,
                     lotes: lotes[filaId] || []
                 });
             });
@@ -850,42 +853,62 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                 return;
             }
 
-            const data = {
-                idProveedor: $('#proveedorId')?.value,
-                tipo_comprobante: $('#tipoComprobante')?.value,
-                serie: $('#serie')?.value,
-                correlativo: $('#correlativo')?.value,
-                fecha_emision: $('#fechaEmision')?.value,
-                fecha_vencimiento: $('#fechaVencimiento')?.value,
-                tipo_pago: $('#tipoPago')?.value,
-                forma_pago: $('#formaPago')?.value,
-                moneda: $('#moneda')?.value,
-                tipo_cambio: parseFloat($('#tipoCambioInput')?.value) || 1.00,
-                incluyeIgv: igvSi?.checked,
-                hayBonificacion: bonifSi?.checked,
-                hayDescuento: descuentoSi?.checked,
-                hayTraslado: trasladoSi?.checked,
-                observation: $('#observacionesGenerales')?.value,
-                subtotal: subtotalSinIgvCalculado,
-                igv: totalIgvCalculado,
-                total: totalCompraFinalCalculado,
-                totalPeso: totalPesoProductosCalculado,
-                costeTransporte: costeTransporteCalculado,
-            };
+            const proveedorId = parseInt($('#proveedorId')?.value, 10) || 0;
+            const monedaId = parseInt($('#moneda')?.value, 10) || 0;
+            const tipoComprobanteId = parseInt($('#tipoComprobante')?.value, 10) || 0;
+            const tipoPagoId = parseInt($('#tipoPago')?.value, 10) || 0;
+            const formaPagoId = parseInt($('#formaPago')?.value, 10) || 0;
+
+            if (proveedorId <= 0) {
+                alert('Debe seleccionar un proveedor válido.');
+                return;
+            }
+
+            if (monedaId <= 0) {
+                alert('Debe seleccionar una moneda válida.');
+                return;
+            }
 
             const descuentosGlobales = [];
             if (descuentoSi?.checked && tipoDescuentoSelect?.value === 'global') {
                 const tipoValor = tipoValorDescuentoSelect.value;
                 const valorDescuentoInputVal = valorDescuentoInput.value.trim();
                 const valor = parseFloat(valorDescuentoInputVal) || 0;
-                descuentosGlobales.push({ tipo: tipoValor, valor: valor });
+                descuentosGlobales.push({
+                    motivo: 'Descuento Global',
+                    tipoValor: tipoValor,
+                    valor: valor,
+                    tasaIgv: 0.18
+                });
             }
 
-            data.detalles = detalles;
-            data.referencia = referencia;
-            data.guia = guia;
-            data.descuentosGlobales = descuentosGlobales;
-            data.cajas = cajas;
+            const data = {
+                proveedorId: proveedorId,
+                tipoComprobanteId: tipoComprobanteId,
+                serie: $('#serie')?.value,
+                correlativo: $('#correlativo')?.value,
+                fechaEmision: $('#fechaEmision')?.value,
+                fechaVencimiento: $('#fechaVencimiento')?.value,
+                tipoPagoId: tipoPagoId,
+                formaPagoId: formaPagoId,
+                monedaId: monedaId,
+                tipoCambio: parseFloat($('#tipoCambioInput')?.value) || 1.00,
+                incluyeIgv: igvSi?.checked,
+                hayBonificacion: bonifSi?.checked,
+                hayTraslado: trasladoSi?.checked,
+                observation: $('#observacionesGenerales')?.value,
+                subtotalSinIgv: subtotalSinIgvCalculado,
+                totalIgv: totalIgvCalculado,
+                totalAPagar: totalCompraFinalCalculado,
+                totalPeso: totalPesoProductosCalculado,
+                costeTransporte: costeTransporteCalculado,
+                detalles: detalles,
+                referencia: referencia,
+                guiaTransporte: guia,
+                descuentosGlobales: descuentosGlobales,
+                cajasCompra: cajas
+            };
+
 
             try {
                 const response = await fetch(COMPRA_SERVLET_URL, {
@@ -1001,7 +1024,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                     });
                     if (response.ok) {
                         console.log('Nuevo tipo de comprobante guardado');
-                        // 🔄 refrescar lista de comprobantes
                         await cargarTipoComprobantes();
                     }
                 } catch (error) {
@@ -1565,7 +1587,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         myModal.show();
     }
 
-    // Funcionalidad de Lotes
     function iniciarModalLotes() {
         const contenedorLotes = $('#contenedorLotes');
         contenedorLotes.innerHTML = '';

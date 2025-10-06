@@ -576,6 +576,69 @@ BEGIN
     );
 END$$
 
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `sp_agregar_guia_transporte_compra`$$
+CREATE PROCEDURE sp_agregar_guia_transporte_compra (
+    IN p_id_compra INT,
+    IN p_ruc_guia VARCHAR(20),
+    IN p_razon_social_guia VARCHAR(255),
+    IN p_fecha_emision DATE,
+    IN p_tipo_comprobante VARCHAR(50),
+    IN p_serie VARCHAR(10),
+    IN p_correlativo VARCHAR(20),
+    IN p_ciudad_traslado VARCHAR(100),
+    IN p_punto_partida VARCHAR(255),
+    IN p_punto_llegada VARCHAR(255),
+    IN p_serie_guia_transporte VARCHAR(10),
+    IN p_correlativo_guia_transporte VARCHAR(20),
+    IN p_coste_total_transporte DECIMAL(10, 2),
+    IN p_peso DECIMAL(10, 2),
+    IN p_fecha_pedido DATE,
+    IN p_fecha_entrega DATE
+)
+BEGIN
+    INSERT INTO guia_transporte (
+        id_compra,
+        ruc_guia,
+        razon_social_guia,
+        fecha_emision,
+        tipo_comprobante,
+        serie,
+        correlativo,
+        ciudad_traslado,
+        punto_partida,
+        punto_llegada,
+        serie_guia_transporte,
+        correlativo_guia_transporte,
+        coste_total_transporte,
+        peso,
+        fecha_pedido,
+        fecha_entrega
+    ) VALUES (
+        p_id_compra,
+        p_ruc_guia,
+        p_razon_social_guia,
+        p_fecha_emision,
+        p_tipo_comprobante,
+        p_serie,
+        p_correlativo,
+        p_ciudad_traslado,
+        p_punto_partida,
+        p_punto_llegada,
+        p_serie_guia_transporte,
+        p_correlativo_guia_transporte,
+        p_coste_total_transporte,
+        p_peso,
+        p_fecha_pedido,
+        p_fecha_entrega
+    );
+END //
+
+DELIMITER ;
+
+
+
 --- MODIFICADO: sp_agregar_descuento_global (Ahora soporta Venta) ---
 DROP PROCEDURE IF EXISTS `sp_agregar_descuento_global`$$
 CREATE PROCEDURE `sp_agregar_descuento_global`(

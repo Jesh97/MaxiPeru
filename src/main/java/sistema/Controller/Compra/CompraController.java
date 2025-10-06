@@ -30,7 +30,7 @@ public class CompraController implements CompraRepository {
                 idCompra = registrarCompraCabecera(conn, compra);
 
                 if (compra.isHayTraslado() && guia != null) {
-                    registrarGuia(conn, idCompra, 0, "compra", guia);
+                    registrarGuia(conn, idCompra, guia);
                 }
 
                 if (docRef != null &&
@@ -192,35 +192,28 @@ public class CompraController implements CompraRepository {
         }
     }
 
-    private void registrarGuia(Connection conn, int idCompra, int idVenta, String tipoDocumentoRef, GuiaTransporte guia) throws SQLException {
-        String sql = "{call sp_agregar_guia_transporte(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+    private void registrarGuia(Connection conn, int idCompra, GuiaTransporte guia) throws SQLException {
+        String sql = "{call sp_agregar_guia_transporte_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setInt(1, idCompra);
-            cs.setNull(2, Types.INTEGER);
-            cs.setString(3, tipoDocumentoRef);
-            cs.setString(4, guia.getRucGuia());
-            cs.setString(5, guia.getRazonSocialGuia());
-            cs.setDate(6, guia.getFechaEmision() != null ? Date.valueOf(guia.getFechaEmision()) : null);
-            cs.setString(7, guia.getTipoComprobante());
-            cs.setString(8, guia.getSerie());
-            cs.setString(9, guia.getCorrelativo());
-            cs.setString(10, guia.getSerieGuiaTransporte());
-            cs.setString(11, guia.getCorrelativoGuiaTransporte());
-            cs.setString(12, guia.getCiudadTraslado());
-            cs.setString(13, guia.getPuntoPartida());
-            cs.setString(14, guia.getPuntoLlegada());
-            cs.setBigDecimal(15, guia.getCosteTotalTransporte());
-            cs.setBigDecimal(16, guia.getPeso());
-            cs.setDate(17, guia.getFechaPedido() != null ? Date.valueOf(guia.getFechaPedido()) : null);
-            cs.setDate(18, guia.getFechaEntrega() != null ? Date.valueOf(guia.getFechaEntrega()) : null);
-            cs.setDate(19, guia.getFechaTraslado() != null ? Date.valueOf(guia.getFechaTraslado()) : null);
-            cs.setString(20, guia.getObservaciones());
-            cs.setString(21, guia.getModalidadTransporte());
-            cs.setString(22, guia.getRucEmpresa());
-            cs.setString(23, guia.getRazonSocialEmpresa());
-            cs.setString(24, guia.getMarcaVehiculo());
-            cs.setString(25, guia.getDniConductor());
-            cs.setString(26, guia.getNombreConductor());
+            int i = 1;
+            cs.setInt(i++, idCompra);
+
+            cs.setString(i++, guia.getRucGuia());
+            cs.setString(i++, guia.getRazonSocialGuia());
+            cs.setDate(i++, guia.getFechaEmision() != null ? Date.valueOf(guia.getFechaEmision()) : null);
+            cs.setString(i++, guia.getTipoComprobante());
+            cs.setString(i++, guia.getSerie());
+            cs.setString(i++, guia.getCorrelativo());
+            cs.setString(i++, guia.getCiudadTraslado());
+            cs.setString(i++, guia.getPuntoPartida());
+            cs.setString(i++, guia.getPuntoLlegada());
+            cs.setString(i++, guia.getSerieGuiaTransporte());
+            cs.setString(i++, guia.getCorrelativoGuiaTransporte());
+            cs.setBigDecimal(i++, guia.getCosteTotalTransporte());
+            cs.setBigDecimal(i++, guia.getPeso());
+            cs.setDate(i++, guia.getFechaPedido() != null ? Date.valueOf(guia.getFechaPedido()) : null);
+            cs.setDate(i++, guia.getFechaEntrega() != null ? Date.valueOf(guia.getFechaEntrega()) : null);
+
             cs.execute();
         }
     }
