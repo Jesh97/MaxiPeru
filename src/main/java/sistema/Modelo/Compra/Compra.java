@@ -1,54 +1,82 @@
 package sistema.Modelo.Compra;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public class Compra {
 
+    @JsonProperty("id_compra")
     private int idCompra;
+    @JsonProperty("id_proveedor")
     private int idProveedor;
-    private String tipoComprobante;
+    @JsonProperty("id_tipo_comprobante")
+    private int idTipoComprobante;
+    @JsonProperty("id_tipo_pago")
+    private int idTipoPago;
+    @JsonProperty("id_forma_pago")
+    private int idFormaPago;
+    @JsonProperty("id_moneda")
+    private int idMoneda;
+    @JsonProperty("nombre_tipo_comprobante")
+    private String nombreTipoComprobante;
+    @JsonProperty("nombre_tipo_pago")
+    private String nombreTipoPago;
+    @JsonProperty("nombre_forma_pago")
+    private String nombreFormaPago;
+    @JsonProperty("nombre_moneda")
+    private String nombreMoneda;
+    @JsonProperty("serie")
     private String serie;
+    @JsonProperty("correlativo")
     private String correlativo;
+    @JsonProperty("fecha_emision")
     private LocalDate fechaEmision;
+    @JsonProperty("fecha_vencimiento")
     private LocalDate fechaVencimiento;
-    private String tipoPago;
-    private String formaPago;
-    private String moneda;
-    private double tipoCambio;
+    @JsonProperty("tipo_cambio")
+    private BigDecimal tipoCambio;
+    @JsonProperty("incluye_igv")
     private boolean incluyeIgv;
+    @JsonProperty("hay_bonificacion")
     private boolean hayBonificacion;
-    private boolean hayDescuento;
+    @JsonProperty("hay_traslado")
     private boolean hayTraslado;
-    private String observation;
-    private double subtotal;
-    private double igv;
-    private double total;
-    private double totalPeso;
-    private double costeTransporte;
+    @JsonProperty("observacion")
+    private String observacion;
+    @JsonProperty("subtotal")
+    private BigDecimal subtotal;
+    @JsonProperty("igv")
+    private BigDecimal igv;
+    @JsonProperty("total")
+    private BigDecimal total;
+    @JsonProperty("total_peso")
+    private BigDecimal totalPeso;
+    @JsonProperty("coste_transporte")
+    private BigDecimal costeTransporte;
 
-    public Compra(int idCompra, int idProveedor, String tipoComprobante, String serie, String correlativo,
-                  LocalDate fechaEmision, LocalDate fechaVencimiento, String tipoPago, String formaPago,
-                  String moneda, double tipoCambio, boolean incluyeIgv, boolean hayBonificacion,
-                  boolean hayDescuento, boolean hayTraslado, String observation, double subtotal, double igv,
-                  double total, double totalPeso, double costeTransporte) {
+    // Constructor completo actualizado
+    public Compra(int idCompra, int idProveedor, int idTipoComprobante, String serie, String correlativo,
+                  LocalDate fechaEmision, LocalDate fechaVencimiento, int idTipoPago, int idFormaPago,
+                  int idMoneda, BigDecimal tipoCambio, boolean incluyeIgv, boolean hayBonificacion,
+                  boolean hayTraslado, String observacion, BigDecimal subtotal, BigDecimal igv,
+                  BigDecimal total, BigDecimal totalPeso, BigDecimal costeTransporte) {
         this.idCompra = idCompra;
         this.idProveedor = idProveedor;
-        this.tipoComprobante = tipoComprobante;
+        this.idTipoComprobante = idTipoComprobante;
         this.serie = serie;
         this.correlativo = correlativo;
         this.fechaEmision = fechaEmision;
         this.fechaVencimiento = fechaVencimiento;
-        this.tipoPago = tipoPago;
-        this.formaPago = formaPago;
-        this.moneda = moneda;
+        this.idTipoPago = idTipoPago;
+        this.idFormaPago = idFormaPago;
+        this.idMoneda = idMoneda;
         this.tipoCambio = tipoCambio;
         this.incluyeIgv = incluyeIgv;
         this.hayBonificacion = hayBonificacion;
-        this.hayDescuento = hayDescuento;
         this.hayTraslado = hayTraslado;
-        this.observation = observation;
+        this.observacion = observacion;
         this.subtotal = subtotal;
         this.igv = igv;
         this.total = total;
@@ -59,193 +87,66 @@ public class Compra {
     public Compra() {
     }
 
-    public int getIdCompra() {
-        return idCompra;
-    }
-
-    public void setIdCompra(int idCompra) {
-        this.idCompra = idCompra;
-    }
-
-    public int getIdProveedor() {
-        return idProveedor;
-    }
-
-    public void setIdProveedor(int idProveedor) {
-        this.idProveedor = idProveedor;
-    }
-
-    public String getTipoComprobante() {
-        return tipoComprobante;
-    }
-
-    public void setTipoComprobante(String tipoComprobante) {
-        this.tipoComprobante = tipoComprobante;
-    }
-
-    public String getSerie() {
-        return serie;
-    }
-
-    public void setSerie(String serie) {
-        this.serie = serie;
-    }
-
-    public String getCorrelativo() {
-        return correlativo;
-    }
-
-    public void setCorrelativo(String correlativo) {
-        this.correlativo = correlativo;
-    }
-
-    public LocalDate getFechaEmision() {
-        return fechaEmision;
-    }
-
-    public void setFechaEmision(LocalDate fechaEmision) {
-        this.fechaEmision = fechaEmision;
-    }
-
-    public LocalDate getFechaVencimiento() {
-        return fechaVencimiento;
-    }
-
-    public void setFechaVencimiento(LocalDate fechaVencimiento) {
-        this.fechaVencimiento = fechaVencimiento;
-    }
-
-    public String getTipoPago() {
-        return tipoPago;
-    }
-
-    public void setTipoPago(String tipoPago) {
-        this.tipoPago = tipoPago;
-    }
-
-    public String getFormaPago() {
-        return formaPago;
-    }
-
-    public void setFormaPago(String formaPago) {
-        this.formaPago = formaPago;
-    }
-
-    public String getMoneda() {
-        return moneda;
-    }
-
-    public void setMoneda(String moneda) {
-        this.moneda = moneda;
-    }
-
-    public double getTipoCambio() {
-        return tipoCambio;
-    }
-
-    public void setTipoCambio(double tipoCambio) {
-        this.tipoCambio = tipoCambio;
-    }
-
-    public boolean isIncluyeIgv() {
-        return incluyeIgv;
-    }
-
-    public void setIncluyeIgv(boolean incluyeIgv) {
-        this.incluyeIgv = incluyeIgv;
-    }
-
-    public boolean isHayBonificacion() {
-        return hayBonificacion;
-    }
-
-    public void setHayBonificacion(boolean hayBonificacion) {
-        this.hayBonificacion = hayBonificacion;
-    }
-
-    public boolean isHayDescuento() {
-        return hayDescuento;
-    }
-
-    public void setHayDescuento(boolean hayDescuento) {
-        this.hayDescuento = hayDescuento;
-    }
-
-    public boolean isHayTraslado() {
-        return hayTraslado;
-    }
-
-    public void setHayTraslado(boolean hayTraslado) {
-        this.hayTraslado = hayTraslado;
-    }
-
-    public String getObservation() {
-        return observation;
-    }
-
-    public void setObservation(String observation) {
-        this.observation = observation;
-    }
-
-    public double getSubtotal() {
-        return subtotal;
-    }
-
-    public void setSubtotal(double subtotal) {
-        this.subtotal = subtotal;
-    }
-
-    public double getIgv() {
-        return igv;
-    }
-
-    public void setIgv(double igv) {
-        this.igv = igv;
-    }
-
-    public double getTotal() {
-        return total;
-    }
-
-    public void setTotal(double total) {
-        this.total = total;
-    }
-
-    public double getTotalPeso() {
-        return totalPeso;
-    }
-
-    public void setTotalPeso(double totalPeso) {
-        this.totalPeso = totalPeso;
-    }
-
-    public double getCosteTransporte() {
-        return costeTransporte;
-    }
-
-    public void setCosteTransporte(double costeTransporte) {
-        this.costeTransporte = costeTransporte;
-    }
+    // Getters y Setters
+    public int getIdCompra() { return idCompra; }
+    public void setIdCompra(int idCompra) { this.idCompra = idCompra; }
+    public int getIdProveedor() { return idProveedor; }
+    public void setIdProveedor(int idProveedor) { this.idProveedor = idProveedor; }
+    public int getIdTipoComprobante() { return idTipoComprobante; }
+    public void setIdTipoComprobante(int idTipoComprobante) { this.idTipoComprobante = idTipoComprobante; }
+    public String getSerie() { return serie; }
+    public void setSerie(String serie) { this.serie = serie; }
+    public String getCorrelativo() { return correlativo; }
+    public void setCorrelativo(String correlativo) { this.correlativo = correlativo; }
+    public LocalDate getFechaEmision() { return fechaEmision; }
+    public void setFechaEmision(LocalDate fechaEmision) { this.fechaEmision = fechaEmision; }
+    public LocalDate getFechaVencimiento() { return fechaVencimiento; }
+    public void setFechaVencimiento(LocalDate fechaVencimiento) { this.fechaVencimiento = fechaVencimiento; }
+    public int getIdTipoPago() { return idTipoPago; }
+    public void setIdTipoPago(int idTipoPago) { this.idTipoPago = idTipoPago; }
+    public int getIdFormaPago() { return idFormaPago; }
+    public void setIdFormaPago(int idFormaPago) { this.idFormaPago = idFormaPago; }
+    public int getIdMoneda() { return idMoneda; }
+    public void setIdMoneda(int idMoneda) { this.idMoneda = idMoneda; }
+    public BigDecimal getTipoCambio() { return tipoCambio; }
+    public void setTipoCambio(BigDecimal tipoCambio) { this.tipoCambio = tipoCambio; }
+    public boolean isIncluyeIgv() { return incluyeIgv; }
+    public void setIncluyeIgv(boolean incluyeIgv) { this.incluyeIgv = incluyeIgv; }
+    public boolean isHayBonificacion() { return hayBonificacion; }
+    public void setHayBonificacion(boolean hayBonificacion) { this.hayBonificacion = hayBonificacion; }
+    public boolean isHayTraslado() { return hayTraslado; }
+    public void setHayTraslado(boolean hayTraslado) { this.hayTraslado = hayTraslado; }
+    public String getObservacion() { return observacion; }
+    public void setObservacion(String observacion) { this.observacion = observacion; }
+    public BigDecimal getSubtotal() { return subtotal; }
+    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
+    public BigDecimal getIgv() { return igv; }
+    public void setIgv(BigDecimal igv) { this.igv = igv; }
+    public BigDecimal getTotal() { return total; }
+    public void setTotal(BigDecimal total) { this.total = total; }
+    public BigDecimal getTotalPeso() { return totalPeso; }
+    public void setTotalPeso(BigDecimal totalPeso) { this.totalPeso = totalPeso; }
+    public BigDecimal getCosteTransporte() { return costeTransporte; }
+    public void setCosteTransporte(BigDecimal costeTransporte) { this.costeTransporte = costeTransporte; }
 
     @Override
     public String toString() {
         return "Compra{" +
                 "idCompra=" + idCompra +
                 ", idProveedor=" + idProveedor +
-                ", tipoComprobante='" + tipoComprobante + '\'' +
+                ", idTipoComprobante=" + idTipoComprobante +
+                ", idTipoPago=" + idTipoPago +
+                ", idFormaPago=" + idFormaPago +
+                ", idMoneda=" + idMoneda +
                 ", serie='" + serie + '\'' +
                 ", correlativo='" + correlativo + '\'' +
                 ", fechaEmision=" + fechaEmision +
                 ", fechaVencimiento=" + fechaVencimiento +
-                ", tipoPago='" + tipoPago + '\'' +
-                ", formaPago='" + formaPago + '\'' +
-                ", moneda='" + moneda + '\'' +
                 ", tipoCambio=" + tipoCambio +
                 ", incluyeIgv=" + incluyeIgv +
                 ", hayBonificacion=" + hayBonificacion +
-                ", hayDescuento=" + hayDescuento +
                 ", hayTraslado=" + hayTraslado +
-                ", observation='" + observation + '\'' +
+                ", observacion='" + observacion + '\'' +
                 ", subtotal=" + subtotal +
                 ", igv=" + igv +
                 ", total=" + total +

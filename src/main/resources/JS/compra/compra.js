@@ -8,7 +8,6 @@ const formatCurrency = (value, currency = 'PEN') => {
 };
 
 const PROVEEDOR_SERVLET_URL = '/buscarProveedor';
-const PRODUCTO_SERVLET_URL = '/buscarProducto';
 const COMPRA_SERVLET_URL = '/CompraServlet';
 const TIPO_COMPROBANTE_SERVLET_URL = '/guardarTipoComprobante';
 const FORMA_PAGO_SERVLET_URL = '/guardarFormaPago';

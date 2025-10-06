@@ -1,20 +1,29 @@
 package sistema.Modelo.Compra;
 
+import java.math.BigDecimal;
+
 public class Descuento {
     private int idDescuento;
     private int idCompra;
-    private int idDetalle;     // se usa cuando el descuento es por ítem
-    private String nivel;      // "global" o "item"
-    private String tipo;       // tipo de descuento
-    private double valor;
+    private int idDetalle;
+    private String nivel;
 
-    public Descuento(int idDescuento, int idCompra, int idDetalle, String nivel, String tipo, double valor) {
+    // Campos nuevos y modificados
+    private String motivo; // Nuevo campo
+    private String tipoValor; // Renombrado de tipo (ej: monto, porcentaje)
+    private BigDecimal valor; // BigDecimal
+    private BigDecimal tasaIgv; // Nuevo campo
+
+    public Descuento(int idDescuento, int idCompra, int idDetalle, String nivel, String motivo,
+                     String tipoValor, BigDecimal valor, BigDecimal tasaIgv) {
         this.idDescuento = idDescuento;
         this.idCompra = idCompra;
         this.idDetalle = idDetalle;
         this.nivel = nivel;
-        this.tipo = tipo;
+        this.motivo = motivo;
+        this.tipoValor = tipoValor;
         this.valor = valor;
+        this.tasaIgv = tasaIgv;
     }
 
     public Descuento() {
@@ -52,20 +61,36 @@ public class Descuento {
         this.nivel = nivel;
     }
 
-    public String getTipo() {
-        return tipo;
+    public String getMotivo() {
+        return motivo;
     }
 
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
+    public void setMotivo(String motivo) {
+        this.motivo = motivo;
     }
 
-    public double getValor() {
+    public String getTipoValor() {
+        return tipoValor;
+    }
+
+    public void setTipoValor(String tipoValor) {
+        this.tipoValor = tipoValor;
+    }
+
+    public BigDecimal getValor() {
         return valor;
     }
 
-    public void setValor(double valor) {
+    public void setValor(BigDecimal valor) {
         this.valor = valor;
+    }
+
+    public BigDecimal getTasaIgv() {
+        return tasaIgv;
+    }
+
+    public void setTasaIgv(BigDecimal tasaIgv) {
+        this.tasaIgv = tasaIgv;
     }
 
     @Override
@@ -75,8 +100,10 @@ public class Descuento {
                 ", idCompra=" + idCompra +
                 ", idDetalle=" + idDetalle +
                 ", nivel='" + nivel + '\'' +
-                ", tipo='" + tipo + '\'' +
+                ", motivo='" + motivo + '\'' +
+                ", tipoValor='" + tipoValor + '\'' +
                 ", valor=" + valor +
+                ", tasaIgv=" + tasaIgv +
                 '}';
     }
 }
