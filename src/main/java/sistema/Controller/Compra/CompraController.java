@@ -6,9 +6,12 @@ import sistema.repository.CompraRepository;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
-import java.text.SimpleDateFormat; // Necesario para formatear fechas
+import java.text.SimpleDateFormat;
+import java.math.BigDecimal;
 
 public class CompraController implements CompraRepository {
+
+    private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd-MM-yyyy");
 
     private Connection getConnection() throws SQLException {
         Connection conn = Conexion.obtenerConexion();
@@ -17,9 +20,6 @@ public class CompraController implements CompraRepository {
         }
         return conn;
     }
-
-    // Formateador de fecha para dd-MM-yyyy
-    private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("dd-MM-yyyy");
 
     @Override
     public int registrarCompra(Compra compra, GuiaTransporte guia, DocumentoReferencia docRef,
@@ -32,6 +32,9 @@ public class CompraController implements CompraRepository {
                 conn.setAutoCommit(false);
 
                 idCompra = registrarCompraCabecera(conn, compra);
+                if (idCompra <= 0) {
+                    throw new SQLException("El registro de la cabecera de compra falló, se obtuvo un ID inválido: " + idCompra);
+                }
 
                 if (compra.isHayTraslado() && guia != null) {
                     registrarGuia(conn, idCompra, guia);
@@ -47,7 +50,11 @@ public class CompraController implements CompraRepository {
                     for (DetalleCompra detalle : detalles) {
                         int tempDetalleId = detalle.getIdDetalle();
                         detalle.setIdCompra(idCompra);
+
                         int idDetalleReal = registrarDetalleCompra(conn, detalle);
+                        if (idDetalleReal <= 0) {
+                            throw new SQLException("No se pudo registrar el detalle de compra y obtener su ID.");
+                        }
                         tempIdToRealIdMap.put(tempDetalleId, idDetalleReal);
                     }
                 }
@@ -57,10 +64,10 @@ public class CompraController implements CompraRepository {
                         if ("item".equalsIgnoreCase(d.getNivel())) {
                             int realIdDetalle = tempIdToRealIdMap.getOrDefault(d.getIdDetalle(), -1);
                             if (realIdDetalle != -1) {
-                                registrarDescuentoItem(conn, realIdDetalle, 0, d);
+                                registrarDescuentoItem(conn, realIdDetalle, d);
                             }
                         } else if ("global".equalsIgnoreCase(d.getNivel())) {
-                            registrarDescuentoGlobal(conn, idCompra, 0, d);
+                            registrarDescuentoGlobal(conn, idCompra, d);
                         }
                     }
                 }
@@ -71,7 +78,7 @@ public class CompraController implements CompraRepository {
                         caja.setIdCompra(idCompra);
                         int idCajaReal = registrarCajaCompra(conn, caja);
 
-                        if (detallesCaja != null && detallesCaja.containsKey(tempIdCaja)) {
+                        if (idCajaReal > 0 && detallesCaja != null && detallesCaja.containsKey(tempIdCaja)) {
                             for (DetalleCaja detCaja : detallesCaja.get(tempIdCaja)) {
                                 detCaja.setIdCajaCompra(idCajaReal);
                                 registrarDetalleCajaCompra(conn, detCaja);
@@ -83,12 +90,11 @@ public class CompraController implements CompraRepository {
                 conn.commit();
             } catch (SQLException e) {
                 conn.rollback();
-                throw e;
+                throw new SQLException("Error al registrar la compra. Transacción revertida.", e);
             } finally {
                 conn.setAutoCommit(true);
             }
         }
-
         return idCompra;
     }
 
@@ -96,7 +102,6 @@ public class CompraController implements CompraRepository {
     public List<Map<String, Object>> listarComprasConDetalles() throws SQLException {
         List<Map<String, Object>> compras = new ArrayList<>();
 
-        // ¡LLAMADA AL NUEVO SP!
         String sql = "{CALL sp_listar_compras_final()}";
 
         try (Connection conn = getConnection();
@@ -113,13 +118,11 @@ public class CompraController implements CompraRepository {
                     compra = new LinkedHashMap<>();
                     compra.put("id_compra", idCompra);
 
-                    // --- CONVERSIÓN DE FECHAS A STRING EN EL FORMATO DESEADO EN CABECERA ---
                     java.sql.Date fechaEmision = rs.getDate("fecha_emision");
                     compra.put("fecha_emision", fechaEmision != null ? DATE_FORMATTER.format(fechaEmision) : null);
 
                     java.sql.Date fechaVencimiento = rs.getDate("fecha_vencimiento");
                     compra.put("fecha_vencimiento", fechaVencimiento != null ? DATE_FORMATTER.format(fechaVencimiento) : null);
-                    // ----------------------------------------------------------------------
 
                     compra.put("tipo_comprobante", rs.getString("tipo_comprobante"));
                     compra.put("serie", rs.getString("serie"));
@@ -132,7 +135,6 @@ public class CompraController implements CompraRepository {
                     compra.put("total_peso", rs.getBigDecimal("total_peso"));
                     compra.put("observacion", rs.getString("observacion"));
 
-                    // --- Mapeo Definitivo: LECTURA POR ALIAS RAZON_FINAL ---
                     Map<String, Object> proveedor = new HashMap<>();
                     proveedor.put("id", rs.getInt("id_proveedor"));
                     proveedor.put("ruc", rs.getString("ruc"));
@@ -142,7 +144,6 @@ public class CompraController implements CompraRepository {
                     proveedor.put("correo", rs.getString("correo"));
                     proveedor.put("ciudad", rs.getString("ciudad"));
                     compra.put("proveedor", proveedor);
-                    // ------------------------------------
 
                     compra.put("detalles", new ArrayList<>());
                     compra.put("guia", null);
@@ -150,23 +151,16 @@ public class CompraController implements CompraRepository {
                     compraMap.put(idCompra, compra);
                 }
 
-                // Mapeo de Detalles
                 if (rs.getInt("id_detalle") > 0) {
                     List<Map<String, Object>> detalles = (List<Map<String, Object>>) compra.get("detalles");
+                    int currentDetalleId = rs.getInt("id_detalle");
 
-                    // Evitar duplicados si el resultado del SP es un JOIN
                     boolean detalleExiste = detalles.stream()
-                            .anyMatch(d -> {
-                                try {
-                                    return d.get("id_detalle").equals(rs.getInt("id_detalle"));
-                                } catch (SQLException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            });
+                            .anyMatch(d -> d.get("id_detalle").equals(currentDetalleId));
 
                     if (!detalleExiste) {
                         Map<String, Object> detalle = new HashMap<>();
-                        detalle.put("id_detalle", rs.getInt("id_detalle"));
+                        detalle.put("id_detalle", currentDetalleId);
                         detalle.put("codigo_articulo", rs.getString("codigo_articulo"));
                         detalle.put("descripcion_articulo", rs.getString("descripcion_articulo"));
                         detalle.put("cantidad", rs.getBigDecimal("cantidad"));
@@ -181,14 +175,12 @@ public class CompraController implements CompraRepository {
                     }
                 }
 
-                // Mapeo de Guía
                 if (rs.getInt("id_guia") > 0 && compra.get("guia") == null) {
                     Map<String, Object> guia = new HashMap<>();
                     guia.put("id_guia", rs.getInt("id_guia"));
                     guia.put("ruc_guia", rs.getString("ruc_guia"));
                     guia.put("razon_social_guia", rs.getString("razon_social_guia"));
 
-                    // --- CONVERSIÓN DE FECHAS A STRING EN EL FORMATO DESEADO EN GUÍA ---
                     java.sql.Date fechaEmisionGuia = rs.getDate("fecha_emision_guia");
                     guia.put("fecha_emision_guia", fechaEmisionGuia != null ? DATE_FORMATTER.format(fechaEmisionGuia) : null);
 
@@ -197,7 +189,6 @@ public class CompraController implements CompraRepository {
 
                     java.sql.Date fechaEntrega = rs.getDate("fecha_entrega");
                     guia.put("fecha_entrega", fechaEntrega != null ? DATE_FORMATTER.format(fechaEntrega) : null);
-                    // -------------------------------------------------------------------
 
                     guia.put("tipo_comprobante_guia", rs.getString("tipo_comprobante_guia"));
                     guia.put("serie_guia", rs.getString("serie_guia"));
@@ -210,7 +201,6 @@ public class CompraController implements CompraRepository {
                     compra.put("guia", guia);
                 }
 
-                // Mapeo de Referencia
                 if (rs.getInt("id_referencia") > 0 && compra.get("referencia") == null) {
                     Map<String, Object> referencia = new HashMap<>();
                     referencia.put("id_referencia", rs.getInt("id_referencia"));
@@ -228,73 +218,82 @@ public class CompraController implements CompraRepository {
         int idCompra = -1;
         String sql = "{call sp_registrar_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setInt(1, compra.getIdProveedor());
-            cs.setInt(2, compra.getIdTipoComprobante());
-            cs.setString(3, compra.getSerie());
-            cs.setString(4, compra.getCorrelativo());
-            cs.setDate(5, compra.getFechaEmision() != null ? Date.valueOf(compra.getFechaEmision()) : null);
-            cs.setDate(6, compra.getFechaVencimiento() != null ? Date.valueOf(compra.getFechaVencimiento()) : null);
-            cs.setInt(7, compra.getIdTipoPago());
-            cs.setInt(8, compra.getIdFormaPago());
-            cs.setInt(9, compra.getIdMoneda());
-            cs.setBigDecimal(10, compra.getTipoCambio());
-            cs.setBoolean(11, compra.isIncluyeIgv());
-            cs.setBoolean(12, compra.isHayBonificacion());
-            cs.setBoolean(13, compra.isHayTraslado());
-            cs.setString(14, compra.getObservacion());
-            cs.setBigDecimal(15, compra.getSubtotal());
-            cs.setBigDecimal(16, compra.getIgv());
-            cs.setBigDecimal(17, compra.getTotal());
-            cs.setBigDecimal(18, compra.getTotalPeso());
-            cs.setBigDecimal(19, compra.getCosteTransporte());
-            cs.registerOutParameter(20, Types.INTEGER);
+            int i = 1;
+            cs.setInt(i++, compra.getIdProveedor());
+            cs.setInt(i++, compra.getIdTipoComprobante());
+            cs.setString(i++, compra.getSerie());
+            cs.setString(i++, compra.getCorrelativo());
+            cs.setDate(i++, compra.getFechaEmision() != null ? Date.valueOf(compra.getFechaEmision()) : null);
+            cs.setDate(i++, compra.getFechaVencimiento() != null ? Date.valueOf(compra.getFechaVencimiento()) : null);
+            cs.setInt(i++, compra.getIdTipoPago());
+            cs.setInt(i++, compra.getIdFormaPago());
+            cs.setInt(i++, compra.getIdMoneda());
+            cs.setBigDecimal(i++, compra.getTipoCambio());
+            cs.setBoolean(i++, compra.isIncluyeIgv());
+            cs.setBoolean(i++, compra.isHayBonificacion());
+            cs.setBoolean(i++, compra.isHayTraslado());
+            cs.setString(i++, compra.getObservacion());
+            cs.setBigDecimal(i++, compra.getSubtotal());
+            cs.setBigDecimal(i++, compra.getIgv());
+            cs.setBigDecimal(i++, compra.getTotal());
+            cs.setBigDecimal(i++, compra.getTotalPeso());
+            cs.setBigDecimal(i++, compra.getCosteTransporte());
+
+            cs.registerOutParameter(i, Types.INTEGER);
+
             cs.execute();
-            idCompra = cs.getInt(20);
+            idCompra = cs.getInt(i);
         }
         return idCompra;
     }
 
     private int registrarDetalleCompra(Connection conn, DetalleCompra detalle) throws SQLException {
-        String sql = "{call sp_agregar_detalle_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        int idDetalleReal = -1;
+        String sql = "{call sp_agregar_detalle_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setInt(1, detalle.getIdCompra());
-            cs.setInt(2, detalle.getIdArticulo());
-            cs.setBigDecimal(3, detalle.getCantidad());
-            cs.setBigDecimal(4, detalle.getPrecioUnitario());
-            cs.setBigDecimal(5, detalle.getBonificacion());
-            cs.setBigDecimal(6, detalle.getCosteUnitarioTransporte());
-            cs.setBigDecimal(7, detalle.getCosteTotalTransporte());
-            cs.setBigDecimal(8, detalle.getPrecioConDescuento());
-            cs.setBigDecimal(9, detalle.getIgvInsumo());
-            cs.setBigDecimal(10, detalle.getTotal());
-            cs.setBigDecimal(11, detalle.getPesoTotal());
+            int i = 1;
+            cs.setInt(i++, detalle.getIdCompra());
+            cs.setInt(i++, detalle.getIdArticulo());
+            cs.setBigDecimal(i++, detalle.getCantidad());
+            cs.setBigDecimal(i++, detalle.getPrecioUnitario());
+            cs.setBigDecimal(i++, detalle.getBonificacion());
+            cs.setBigDecimal(i++, detalle.getCosteUnitarioTransporte());
+            cs.setBigDecimal(i++, detalle.getCosteTotalTransporte());
+            cs.setBigDecimal(i++, detalle.getPrecioConDescuento());
+            cs.setBigDecimal(i++, detalle.getIgvInsumo());
+            cs.setBigDecimal(i++, detalle.getTotal());
+            cs.setBigDecimal(i++, detalle.getPesoTotal());
+
+            cs.registerOutParameter(i, Types.INTEGER);
+
             cs.execute();
+            idDetalleReal = cs.getInt(i);
         }
-        return detalle.getIdDetalle();
+        return idDetalleReal;
     }
 
-    private void registrarDescuentoGlobal(Connection conn, int idCompra, int idVenta, Descuento descuento) throws SQLException {
-        String sql = "{call sp_agregar_descuento_global(?, ?, ?, ?, ?, ?)}";
+    private void registrarDescuentoGlobal(Connection conn, int idCompra, Descuento descuento) throws SQLException {
+        String sql = "{call sp_agregar_descuento_global(?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setInt(1, idCompra);
-            cs.setNull(2, Types.INTEGER);
-            cs.setString(3, descuento.getMotivo());
-            cs.setString(4, descuento.getTipoValor());
-            cs.setBigDecimal(5, descuento.getValor());
-            cs.setBigDecimal(6, descuento.getTasaIgv());
+            int i = 1;
+            cs.setInt(i++, idCompra);
+            cs.setNull(i++, Types.INTEGER);
+            cs.setString(i++, descuento.getMotivo());
+            cs.setString(i++, descuento.getTipoValor());
+            cs.setBigDecimal(i++, descuento.getValor());
             cs.execute();
         }
     }
 
-    private void registrarDescuentoItem(Connection conn, int idDetalleCompra, int idDetalleVenta, Descuento descuento) throws SQLException {
-        String sql = "{call sp_agregar_descuento_item(?, ?, ?, ?, ?, ?)}";
+    private void registrarDescuentoItem(Connection conn, int idDetalleCompra, Descuento descuento) throws SQLException {
+        String sql = "{call sp_agregar_descuento_item(?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setInt(1, idDetalleCompra);
-            cs.setNull(2, Types.INTEGER);
-            cs.setString(3, descuento.getMotivo());
-            cs.setString(4, descuento.getTipoValor());
-            cs.setBigDecimal(5, descuento.getValor());
-            cs.setBigDecimal(6, descuento.getTasaIgv());
+            int i = 1;
+            cs.setInt(i++, idDetalleCompra);
+            cs.setNull(i++, Types.INTEGER);
+            cs.setString(i++, descuento.getMotivo());
+            cs.setString(i++, descuento.getTipoValor());
+            cs.setBigDecimal(i++, descuento.getValor());
             cs.execute();
         }
     }
@@ -339,13 +338,16 @@ public class CompraController implements CompraRepository {
         int idCajaCompra;
         String sql = "{call sp_agregar_caja_compra(?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setInt(1, caja.getIdCompra());
-            cs.setString(2, caja.getNombreCaja());
-            cs.setInt(3, caja.getCantidad());
-            cs.setBigDecimal(4, caja.getCostoCaja());
-            cs.registerOutParameter(5, Types.INTEGER);
+            int i = 1;
+            cs.setInt(i++, caja.getIdCompra());
+            cs.setString(i++, caja.getNombreCaja());
+            cs.setInt(i++, caja.getCantidad());
+            cs.setBigDecimal(i++, caja.getCostoCaja());
+
+            cs.registerOutParameter(i, Types.INTEGER);
+
             cs.execute();
-            idCajaCompra = cs.getInt(5);
+            idCajaCompra = cs.getInt(i);
         }
         return idCajaCompra;
     }

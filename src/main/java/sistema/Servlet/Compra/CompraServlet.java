@@ -46,6 +46,19 @@ public class CompraServlet extends HttpServlet {
         out.flush();
     }
 
+    private LocalDate parseDate(JsonNode node, String fieldName) {
+        if (node.hasNonNull(fieldName)) {
+            String dateStr = node.get(fieldName).asText();
+            if (!dateStr.isBlank()) {
+                try {
+                    return LocalDate.parse(dateStr);
+                } catch (Exception e) {
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -70,41 +83,25 @@ public class CompraServlet extends HttpServlet {
             JsonNode root = mapper.readTree(jsonBuffer.toString());
 
             int proveedorId = root.path("proveedorId").asInt(0);
-
             if (proveedorId <= 0) {
-                String mensajeError = "Error: El ID de Proveedor es inválido o no se ha seleccionado un proveedor (ID recibido: " + proveedorId + ").";
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().write(gson.toJson(Map.of("success", false, "message", mensajeError)));
-                return;
+                throw new IllegalArgumentException("El ID de Proveedor es inválido o no se ha seleccionado un proveedor.");
             }
-
             compra.setIdProveedor(proveedorId);
 
-            int monedaId = root.path("monedaId").asInt(0);
-
-            if (monedaId <= 0) {
-                String mensajeError = "Error: El ID de Moneda es inválido o no se ha seleccionado una moneda (ID recibido: " + monedaId + ").";
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().write(gson.toJson(Map.of("success", false, "message", mensajeError)));
-                return;
+            compra.setIdMoneda(root.path("monedaId").asInt(0));
+            if (compra.getIdMoneda() <= 0) {
+                throw new IllegalArgumentException("El ID de Moneda es inválido.");
             }
-            compra.setIdMoneda(monedaId);
 
             compra.setIdTipoComprobante(root.path("tipoComprobanteId").asInt());
             compra.setSerie(root.path("serie").asText("").trim());
             compra.setCorrelativo(root.path("correlativo").asText("").trim());
 
-            String fechaEmisionStr = root.path("fechaEmision").asText();
-            if (!fechaEmisionStr.isBlank()) {
-                compra.setFechaEmision(LocalDate.parse(fechaEmisionStr));
-            } else {
+            compra.setFechaEmision(parseDate(root, "fechaEmision"));
+            if (compra.getFechaEmision() == null) {
                 compra.setFechaEmision(LocalDate.now());
             }
-
-            String fechaVencimientoStr = root.path("fechaVencimiento").asText();
-            if (!fechaVencimientoStr.isBlank()) {
-                compra.setFechaVencimiento(LocalDate.parse(fechaVencimientoStr));
-            }
+            compra.setFechaVencimiento(parseDate(root, "fechaVencimiento"));
 
             compra.setIdTipoPago(root.path("tipoPagoId").asInt());
             compra.setIdFormaPago(root.path("formaPagoId").asInt());
@@ -112,7 +109,10 @@ public class CompraServlet extends HttpServlet {
             compra.setTipoCambio(BigDecimal.valueOf(root.path("tipoCambio").asDouble(1.0)));
             compra.setIncluyeIgv(root.path("incluyeIgv").asBoolean(true));
             compra.setHayBonificacion(root.path("hayBonificacion").asBoolean(false));
-            compra.setHayTraslado(root.path("hayTraslado").asBoolean(false));
+
+            boolean hayTraslado = root.path("hayTraslado").asBoolean(false);
+            compra.setHayTraslado(hayTraslado);
+
             compra.setObservacion(root.path("observation").asText("").trim());
 
             compra.setSubtotal(BigDecimal.valueOf(root.path("subtotalSinIgv").asDouble(0)));
@@ -123,23 +123,22 @@ public class CompraServlet extends HttpServlet {
 
 
             DocumentoReferencia docRef = null;
-            if (root.has("referencia")) {
-                docRef = new DocumentoReferencia();
+            if (root.has("referencia") && root.get("referencia").isObject()) {
                 var dr = root.get("referencia");
+                docRef = new DocumentoReferencia();
                 docRef.setNumeroCotizacion(dr.path("numeroCotizacion").asText("").trim());
                 docRef.setNumeroPedido(dr.path("numeroPedido").asText("").trim());
             }
 
             GuiaTransporte guia = null;
-            if (root.has("guiaTransporte")) {
+            if (root.has("guiaTransporte") && root.get("guiaTransporte").isObject()) {
                 guia = new GuiaTransporte();
                 var gt = root.get("guiaTransporte");
 
                 String rucOrRazonSocial = gt.path("rucGuia").asText("").trim();
 
-                // Lógica de duplicación de valor
                 guia.setRucGuia(rucOrRazonSocial);
-                guia.setRazonSocialGuia(rucOrRazonSocial);
+                guia.setRazonSocialGuia(gt.path("razonSocialGuia").asText(rucOrRazonSocial).trim());
 
                 guia.setTipoComprobante(gt.path("tipoComprobante").asText("").trim());
                 guia.setSerie(gt.path("serie").asText("").trim());
@@ -153,10 +152,9 @@ public class CompraServlet extends HttpServlet {
                 guia.setCosteTotalTransporte(BigDecimal.valueOf(gt.path("costeTotalTransporte").asDouble(0)));
                 guia.setPeso(BigDecimal.valueOf(gt.path("peso").asDouble(0)));
 
-
-                guia.setFechaEmision(gt.hasNonNull("fechaEmision") && !gt.get("fechaEmision").asText().isBlank() ? LocalDate.parse(gt.get("fechaEmision").asText()) : null);
-                guia.setFechaPedido(gt.hasNonNull("fechaPedido") && !gt.get("fechaPedido").asText().isBlank() ? LocalDate.parse(gt.get("fechaPedido").asText()) : null);
-                guia.setFechaEntrega(gt.hasNonNull("fechaEntrega") && !gt.get("fechaEntrega").asText().isBlank() ? LocalDate.parse(gt.get("fechaEntrega").asText()) : null);
+                guia.setFechaEmision(parseDate(gt, "fechaEmision"));
+                guia.setFechaPedido(parseDate(gt, "fechaPedido"));
+                guia.setFechaEntrega(parseDate(gt, "fechaEntrega"));
             }
 
 
@@ -248,10 +246,13 @@ public class CompraServlet extends HttpServlet {
 
             response.getWriter().write(gson.toJson(Map.of("success", true, "idCompra", idCompra, "message", "Compra registrada con ID: " + idCompra)));
 
+        } catch (IllegalArgumentException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de validación: " + e.getMessage())));
         } catch (SQLIntegrityConstraintViolationException e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_CONFLICT);
-            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de Integridad de Datos: El proveedor, moneda, o cualquier otra clave foránea es inválida. Detalle: " + e.getMessage())));
+            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de Integridad: " + e.getMessage())));
         }
         catch (SQLException e) {
             e.printStackTrace();
@@ -259,7 +260,7 @@ public class CompraServlet extends HttpServlet {
             response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error SQL: " + e.getMessage())));
         } catch (Exception e) {
             e.printStackTrace();
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error Inesperado: " + e.getMessage())));
         }
     }
