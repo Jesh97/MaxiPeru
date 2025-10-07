@@ -6,9 +6,13 @@ import java.util.List;
 import java.util.Map;
 
 public interface CompraRepository {
+
     int registrarCompra(Compra compra, GuiaTransporte guia, DocumentoReferencia docRef,
                         List<DetalleCompra> detalles, List<Descuento> descuentos,
                         List<Caja> cajas, Map<Integer, List<DetalleCaja>> detallesCaja) throws SQLException;
 
     List<Map<String, Object>> listarComprasConDetalles() throws SQLException;
+
+    boolean editarCompra(Compra compra, GuiaTransporte guia, List<DetalleCompra> detallesEditados,
+                         Map<Integer, Lote> lotesEditados) throws SQLException;
 }

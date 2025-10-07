@@ -2,6 +2,7 @@ package sistema.Modelo.Compra;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
+import java.util.List;
 
 public class DetalleCompra {
 
@@ -29,10 +30,13 @@ public class DetalleCompra {
     private BigDecimal total;
     @JsonProperty("peso_total")
     private BigDecimal pesoTotal;
+    @JsonProperty("lotes")
+    private List<Lote> lotes;
 
     public DetalleCompra(int idDetalle, int idCompra, int idArticulo, BigDecimal cantidad, BigDecimal precioUnitario,
                          BigDecimal bonificacion, BigDecimal costeUnitarioTransporte, BigDecimal costeTotalTransporte,
-                         BigDecimal precioConDescuento, BigDecimal igvInsumo, BigDecimal total, BigDecimal pesoTotal) {
+                         BigDecimal precioConDescuento, BigDecimal igvInsumo, BigDecimal total, BigDecimal pesoTotal,
+                         List<Lote> lotes) {
         this.idDetalle = idDetalle;
         this.idCompra = idCompra;
         this.idArticulo = idArticulo;
@@ -45,6 +49,7 @@ public class DetalleCompra {
         this.igvInsumo = igvInsumo;
         this.total = total;
         this.pesoTotal = pesoTotal;
+        this.lotes = lotes;
     }
 
     public DetalleCompra() {
@@ -146,6 +151,14 @@ public class DetalleCompra {
         this.pesoTotal = pesoTotal;
     }
 
+    public List<Lote> getLotes() {
+        return lotes;
+    }
+
+    public void setLotes(List<Lote> lotes) {
+        this.lotes = lotes;
+    }
+
     @Override
     public String toString() {
         return "DetalleCompra{" +
@@ -161,6 +174,7 @@ public class DetalleCompra {
                 ", igvInsumo=" + igvInsumo +
                 ", total=" + total +
                 ", pesoTotal=" + pesoTotal +
+                ", lotes=" + lotes +
                 '}';
     }
 }

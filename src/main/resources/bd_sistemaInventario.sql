@@ -1,14 +1,8 @@
--- Creación de la base de datos
 CREATE DATABASE IF NOT EXISTS bd_maxiperu
 DEFAULT CHARACTER SET utf8mb4
 COLLATE utf8mb4_general_ci;
 
 USE bd_maxiperu;
-
--- ====================================================================
--- 1. TABLAS MAESTRAS/DE REFERENCIA
--- (Deben crearse primero para que las FK las referencien)
--- ====================================================================
 
 CREATE TABLE proveedor (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -64,6 +58,12 @@ CREATE TABLE forma_pago (
     nombre VARCHAR(50) NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE moneda (
+    id_moneda INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    simbolo VARCHAR(5) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE unidad_medida (
     id_unidad INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL UNIQUE,
@@ -85,53 +85,35 @@ CREATE TABLE tipo_articulo (
     nombre VARCHAR(50) NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE moneda (
-    id_moneda INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL,
-    simbolo VARCHAR(5) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 CREATE TABLE tipo_gasto (
     id_tipo_gasto INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- ====================================================================
--- 2. TABLAS DE ARTÍCULOS
--- ====================================================================
+-- 2. TABLAS DE ARTÍCULOS E INVENTARIO (Solo Artículo, el Lote se mueve abajo)
+CREATE TABLE articulo (
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    codigo VARCHAR(50) NOT NULL,
+    descripcion VARCHAR(255) NOT NULL UNIQUE,
+    cantidad INT(11) DEFAULT 0,
+    precio_unitario DECIMAL(12,2) DEFAULT 0.00,
+    peso_unitario DECIMAL(10,3) DEFAULT 0.000,
+    densidad DECIMAL(10,3) DEFAULT 0.000,
+    aroma VARCHAR(50) DEFAULT NULL,
+    color VARCHAR(50) DEFAULT NULL,
+    id_marca INT(11) DEFAULT NULL,
+    id_categoria INT(11) DEFAULT NULL,
+    id_unidad INT(11) DEFAULT NULL,
+    id_tipo_articulo INT(11) DEFAULT NULL,
+    FOREIGN KEY (id_marca) REFERENCES marca (id_marca) ON DELETE CASCADE,
+    FOREIGN KEY (id_categoria) REFERENCES categoria (id_categoria) ON DELETE CASCADE,
+    FOREIGN KEY (id_unidad) REFERENCES unidad_medida (id_unidad) ON DELETE CASCADE,
+    FOREIGN KEY (id_tipo_articulo) REFERENCES tipo_articulo (id) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `articulo` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `codigo` varchar(50) NOT NULL,
-  `descripcion` varchar(255) NOT NULL,
-  `cantidad` int(11) DEFAULT 0,
-  `precio_unitario` decimal(12,2) DEFAULT 0.00,
-  `peso_unitario` decimal(10,3) DEFAULT 0.000,
-  `densidad` decimal(10,3) DEFAULT 0.000,
-  `aroma` varchar(50) DEFAULT NULL,
-  `color` varchar(50) DEFAULT NULL,
-  `id_marca` int(11) DEFAULT NULL,
-  `id_categoria` int(11) DEFAULT NULL,
-  `id_unidad` int(11) DEFAULT NULL,
-  `id_tipo_articulo` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `descripcion_UNIQUE` (`descripcion`),
-  KEY `articulo_ibfk_1` (`id_marca`),
-  KEY `articulo_ibfk_2` (`id_categoria`),
-  KEY `articulo_ibfk_3` (`id_unidad`),
-  KEY `articulo_ibfk_4_idx` (`id_tipo_articulo`),
-  CONSTRAINT `articulo_ibfk_1` FOREIGN KEY (`id_marca`) REFERENCES `marca` (`id_marca`) ON DELETE CASCADE,
-  CONSTRAINT `articulo_ibfk_2` FOREIGN KEY (`id_categoria`) REFERENCES `categoria` (`id_categoria`) ON DELETE CASCADE,
-  CONSTRAINT `articulo_ibfk_3` FOREIGN KEY (`id_unidad`) REFERENCES `unidad_medida` (`id_unidad`) ON DELETE CASCADE,
-  CONSTRAINT `articulo_ibfk_4` FOREIGN KEY (`id_tipo_articulo`) REFERENCES `tipo_articulo` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=607 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ====================================================================
--- 3. TABLAS DE COMPRA
--- ====================================================================
-
+-- 3. TABLAS TRANSACCIONALES DE COMPRA (Se crean las tablas madre-hija antes del Lote)
 CREATE TABLE compra (
-    id_compra INT NOT NULL AUTO_INCREMENT,
+    id_compra INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     serie VARCHAR(20) DEFAULT NULL,
     correlativo VARCHAR(50) DEFAULT NULL,
     fecha_emision DATE NOT NULL,
@@ -152,21 +134,11 @@ CREATE TABLE compra (
     id_tipo_comprobante INT NOT NULL,
     id_tipo_pago INT DEFAULT NULL,
     id_forma_pago INT DEFAULT NULL,
-    PRIMARY KEY (id_compra),
     FOREIGN KEY (id_proveedor) REFERENCES proveedor(id) ON DELETE CASCADE,
     FOREIGN KEY (id_tipo_comprobante) REFERENCES tipo_comprobante(id) ON DELETE CASCADE,
     FOREIGN KEY (id_tipo_pago) REFERENCES tipo_pago(id) ON DELETE CASCADE,
     FOREIGN KEY (id_forma_pago) REFERENCES forma_pago(id) ON DELETE CASCADE,
     FOREIGN KEY (id_moneda) REFERENCES moneda(id_moneda)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE caja_compra (
-    id_caja_compra INT AUTO_INCREMENT PRIMARY KEY,
-    id_compra INT NOT NULL,
-    nombre_caja VARCHAR(100),
-    cantidad INT NOT NULL,
-    costo_caja DECIMAL(12,2) DEFAULT 0,
-    FOREIGN KEY (id_compra) REFERENCES compra(id_compra) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE detalle_compra (
@@ -186,6 +158,29 @@ CREATE TABLE detalle_compra (
     FOREIGN KEY (id_articulo) REFERENCES articulo(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- MOVIDA: Se crea inventario_lote aquí, después de detalle_compra
+CREATE TABLE inventario_lote (
+    id_lote INT AUTO_INCREMENT PRIMARY KEY,
+    id_articulo INT NOT NULL,
+    id_detalle_compra INT NULL,
+    numero_lote VARCHAR(50) NULL,
+    fecha_vencimiento DATE NULL,
+    cantidad_ingreso DECIMAL(12,2) NOT NULL,
+    cantidad_disponible DECIMAL(12,2) NOT NULL,
+    fecha_ingreso DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    FOREIGN KEY (id_articulo) REFERENCES articulo(id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_detalle_compra) REFERENCES detalle_compra(id_detalle) ON DELETE CASCADE -- ¡Ahora sí funciona!
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE caja_compra (
+    id_caja_compra INT AUTO_INCREMENT PRIMARY KEY,
+    id_compra INT NOT NULL,
+    nombre_caja VARCHAR(100),
+    cantidad INT NOT NULL,
+    costo_caja DECIMAL(12,2) DEFAULT 0,
+    FOREIGN KEY (id_compra) REFERENCES compra(id_compra) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE detalle_caja_compra (
     id_detalle_caja INT AUTO_INCREMENT PRIMARY KEY,
     id_caja_compra INT NOT NULL,
@@ -202,10 +197,6 @@ CREATE TABLE referencia_compra (
     numero_pedido VARCHAR(50),
     FOREIGN KEY (id_compra) REFERENCES compra(id_compra) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ====================================================================
--- 4. TABLAS DE VENTA
--- ====================================================================
 
 CREATE TABLE venta (
     id_venta INT AUTO_INCREMENT PRIMARY KEY,
@@ -250,10 +241,10 @@ CREATE TABLE detalle_venta (
 CREATE TABLE lote_venta (
     id_lote_venta INT AUTO_INCREMENT PRIMARY KEY,
     id_detalle_venta INT NOT NULL,
-    numero_lote VARCHAR(50),
+    id_lote INT NOT NULL,
     cantidad DECIMAL(12,2) NOT NULL,
-    fecha_vencimiento DATE,
-    FOREIGN KEY (id_detalle_venta) REFERENCES detalle_venta(id_detalle) ON DELETE CASCADE
+    FOREIGN KEY (id_detalle_venta) REFERENCES detalle_venta(id_detalle) ON DELETE CASCADE,
+    FOREIGN KEY (id_lote) REFERENCES inventario_lote(id_lote) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE conformidad_cliente (
@@ -266,23 +257,20 @@ CREATE TABLE conformidad_cliente (
     FOREIGN KEY (id_venta) REFERENCES venta(id_venta) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- ====================================================================
--- 5. TABLAS DE GASTOS (ACTUALIZADAS con Placa, Motivo y Peso)
--- ====================================================================
-
+-- 5. TABLAS DE GASTOS (Sin cambios)
 CREATE TABLE gasto (
     id_gasto INT AUTO_INCREMENT PRIMARY KEY,
     id_proveedor INT NOT NULL,
     id_tipo_gasto INT NOT NULL,
-    motivo VARCHAR(100) NULL, -- NUEVO: Campo Motivo del gasto (Ej: Material de Oficina)
-    placa VARCHAR(50) NULL, -- NUEVO: Campo Marca de placa
+    motivo VARCHAR(100) NULL,
+    placa VARCHAR(50) NULL,
     fecha DATE NOT NULL,
     id_moneda INT NOT NULL DEFAULT 1,
     subtotal DECIMAL(12,2) DEFAULT 0.00,
     igv DECIMAL(12,2) DEFAULT 0.00,
     total DECIMAL(12,2) NOT NULL,
     observacion TEXT,
-    total_peso DECIMAL(12,3) DEFAULT 0.000, -- NUEVO: Total Peso (Kg)
+    total_peso DECIMAL(12,3) DEFAULT 0.000,
     fecha_registro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
     FOREIGN KEY (id_proveedor) REFERENCES proveedor(id) ON DELETE CASCADE,
     FOREIGN KEY (id_tipo_gasto) REFERENCES tipo_gasto(id_tipo_gasto) ON DELETE CASCADE,
@@ -305,8 +293,8 @@ CREATE TABLE detalle_gasto (
     id_gasto INT NOT NULL,
     descripcion VARCHAR(255) NOT NULL,
     cantidad DECIMAL(12,2) DEFAULT 1,
-    id_unidad INT NOT NULL, -- NUEVO: Unidad de medida del ítem de gasto
-    peso_unitario DECIMAL(10,3) DEFAULT 0.000, -- NUEVO: Peso unitario del ítem de gasto
+    id_unidad INT NOT NULL,
+    peso_unitario DECIMAL(10,3) DEFAULT 0.000,
     precio_unitario DECIMAL(12,2) DEFAULT 0.00,
     subtotal DECIMAL(12,2) DEFAULT 0.00,
     igv DECIMAL(12,2) DEFAULT 0.00,
@@ -315,10 +303,7 @@ CREATE TABLE detalle_gasto (
     FOREIGN KEY (id_unidad) REFERENCES unidad_medida(id_unidad) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- ====================================================================
--- 6. TABLAS REDEFINIDAS DE RELACIÓN (Descuento y Transporte)
--- ====================================================================
-
+-- 6. TABLAS REDEFINIDAS DE RELACIÓN (Sin cambios)
 CREATE TABLE guia_transporte (
     id_guia INT AUTO_INCREMENT PRIMARY KEY,
     id_compra INT NULL,

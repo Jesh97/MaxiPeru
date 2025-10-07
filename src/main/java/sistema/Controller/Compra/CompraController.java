@@ -7,7 +7,6 @@ import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 import java.text.SimpleDateFormat;
-import java.math.BigDecimal;
 
 public class CompraController implements CompraRepository {
 
@@ -56,6 +55,14 @@ public class CompraController implements CompraRepository {
                             throw new SQLException("No se pudo registrar el detalle de compra y obtener su ID.");
                         }
                         tempIdToRealIdMap.put(tempDetalleId, idDetalleReal);
+
+                        if (detalle.getLotes() != null && !detalle.getLotes().isEmpty()) {
+                            for (Lote lote : detalle.getLotes()) {
+                                registrarLoteCompra(conn, idDetalleReal, detalle.getIdArticulo(), lote);
+                            }
+                        } else {
+                            registrarLoteCompra(conn, idDetalleReal, detalle.getIdArticulo(), crearLoteVirtual(detalle));
+                        }
                     }
                 }
 
@@ -101,7 +108,6 @@ public class CompraController implements CompraRepository {
     @Override
     public List<Map<String, Object>> listarComprasConDetalles() throws SQLException {
         List<Map<String, Object>> compras = new ArrayList<>();
-
         String sql = "{CALL sp_listar_compras_final()}";
 
         try (Connection conn = getConnection();
@@ -117,13 +123,10 @@ public class CompraController implements CompraRepository {
                 if (compra == null) {
                     compra = new LinkedHashMap<>();
                     compra.put("id_compra", idCompra);
-
                     java.sql.Date fechaEmision = rs.getDate("fecha_emision");
                     compra.put("fecha_emision", fechaEmision != null ? DATE_FORMATTER.format(fechaEmision) : null);
-
                     java.sql.Date fechaVencimiento = rs.getDate("fecha_vencimiento");
                     compra.put("fecha_vencimiento", fechaVencimiento != null ? DATE_FORMATTER.format(fechaVencimiento) : null);
-
                     compra.put("tipo_comprobante", rs.getString("tipo_comprobante"));
                     compra.put("serie", rs.getString("serie"));
                     compra.put("correlativo", rs.getString("correlativo"));
@@ -176,29 +179,25 @@ public class CompraController implements CompraRepository {
                 }
 
                 if (rs.getInt("id_guia") > 0 && compra.get("guia") == null) {
-                    Map<String, Object> guia = new HashMap<>();
-                    guia.put("id_guia", rs.getInt("id_guia"));
-                    guia.put("ruc_guia", rs.getString("ruc_guia"));
-                    guia.put("razon_social_guia", rs.getString("razon_social_guia"));
-
+                    Map<String, Object> guiaMap = new HashMap<>();
+                    guiaMap.put("id_guia", rs.getInt("id_guia"));
+                    guiaMap.put("ruc_guia", rs.getString("ruc_guia"));
+                    guiaMap.put("razon_social_guia", rs.getString("razon_social_guia"));
                     java.sql.Date fechaEmisionGuia = rs.getDate("fecha_emision_guia");
-                    guia.put("fecha_emision_guia", fechaEmisionGuia != null ? DATE_FORMATTER.format(fechaEmisionGuia) : null);
-
+                    guiaMap.put("fecha_emision_guia", fechaEmisionGuia != null ? DATE_FORMATTER.format(fechaEmisionGuia) : null);
                     java.sql.Date fechaPedido = rs.getDate("fecha_pedido");
-                    guia.put("fecha_pedido", fechaPedido != null ? DATE_FORMATTER.format(fechaPedido) : null);
-
+                    guiaMap.put("fecha_pedido", fechaPedido != null ? DATE_FORMATTER.format(fechaPedido) : null);
                     java.sql.Date fechaEntrega = rs.getDate("fecha_entrega");
-                    guia.put("fecha_entrega", fechaEntrega != null ? DATE_FORMATTER.format(fechaEntrega) : null);
-
-                    guia.put("tipo_comprobante_guia", rs.getString("tipo_comprobante_guia"));
-                    guia.put("serie_guia", rs.getString("serie_guia"));
-                    guia.put("correlativo_guia", rs.getString("correlativo_guia"));
-                    guia.put("serie_guia_transporte", rs.getString("serie_guia_transporte"));
-                    guia.put("correlativo_guia_transporte", rs.getString("correlativo_guia_transporte"));
-                    guia.put("ciudad_traslado", rs.getString("ciudad_traslado"));
-                    guia.put("coste_transporte_guia", rs.getBigDecimal("coste_transporte_guia"));
-                    guia.put("peso_guia", rs.getBigDecimal("peso_guia"));
-                    compra.put("guia", guia);
+                    guiaMap.put("fecha_entrega", fechaEntrega != null ? DATE_FORMATTER.format(fechaEntrega) : null);
+                    guiaMap.put("tipo_comprobante_guia", rs.getString("tipo_comprobante_guia"));
+                    guiaMap.put("serie_guia", rs.getString("serie_guia"));
+                    guiaMap.put("correlativo_guia", rs.getString("correlativo_guia"));
+                    guiaMap.put("serie_guia_transporte", rs.getString("serie_guia_transporte"));
+                    guiaMap.put("correlativo_guia_transporte", rs.getString("correlativo_guia_transporte"));
+                    guiaMap.put("ciudad_traslado", rs.getString("ciudad_traslado"));
+                    guiaMap.put("coste_transporte_guia", rs.getBigDecimal("coste_transporte_guia"));
+                    guiaMap.put("peso_guia", rs.getBigDecimal("peso_guia"));
+                    compra.put("guia", guiaMap);
                 }
 
                 if (rs.getInt("id_referencia") > 0 && compra.get("referencia") == null) {
@@ -212,6 +211,127 @@ public class CompraController implements CompraRepository {
             compras.addAll(compraMap.values());
         }
         return compras;
+    }
+
+    @Override
+    public boolean editarCompra(Compra compra, GuiaTransporte guia, List<DetalleCompra> detallesEditados,
+                                Map<Integer, Lote> lotesEditados) throws SQLException {
+
+        if (compra.getIdCompra() <= 0) {
+            throw new IllegalArgumentException("ID de compra inválido para la edición.");
+        }
+
+        try (Connection conn = getConnection()) {
+            try {
+                conn.setAutoCommit(false);
+
+                if (detallesEditados != null) {
+                    for (DetalleCompra detalle : detallesEditados) {
+                        editarDetalleCompra(conn, detalle);
+
+                        if (lotesEditados != null && lotesEditados.containsKey(detalle.getIdDetalle())) {
+                            Lote lote = lotesEditados.get(detalle.getIdDetalle());
+                            actualizarLote(conn, detalle.getIdDetalle(), lote);
+                        }
+                    }
+                }
+
+                editarCompraCabecera(conn, compra);
+
+                if (compra.isHayTraslado() && guia != null) {
+                    editarGuiaTransporte(conn, compra.getIdCompra(), guia);
+                }
+
+                conn.commit();
+                return true;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                throw new SQLException("Error al editar la compra. Transacción revertida.", e);
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
+    }
+
+    private void editarCompraCabecera(Connection conn, Compra compra) throws SQLException {
+        String sql = "{call sp_editar_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        try (CallableStatement cs = conn.prepareCall(sql)) {
+            int i = 1;
+            cs.setInt(i++, compra.getIdCompra());
+            cs.setInt(i++, compra.getIdProveedor());
+            cs.setInt(i++, compra.getIdTipoComprobante());
+            cs.setString(i++, compra.getSerie());
+            cs.setString(i++, compra.getCorrelativo());
+            cs.setDate(i++, compra.getFechaEmision() != null ? Date.valueOf(compra.getFechaEmision()) : null);
+            cs.setDate(i++, compra.getFechaVencimiento() != null ? Date.valueOf(compra.getFechaVencimiento()) : null);
+            cs.setInt(i++, compra.getIdTipoPago());
+            cs.setInt(i++, compra.getIdFormaPago());
+            cs.setInt(i++, compra.getIdMoneda());
+            cs.setBigDecimal(i++, compra.getTipoCambio());
+            cs.setBoolean(i++, compra.isIncluyeIgv());
+            cs.setBoolean(i++, compra.isHayBonificacion());
+            cs.setBoolean(i++, compra.isHayTraslado());
+            cs.setString(i++, compra.getObservacion());
+            cs.setBigDecimal(i++, compra.getSubtotal());
+            cs.setBigDecimal(i++, compra.getIgv());
+            cs.setBigDecimal(i++, compra.getTotal());
+            cs.setBigDecimal(i++, compra.getTotalPeso());
+            cs.setBigDecimal(i++, compra.getCosteTransporte());
+            cs.execute();
+        }
+    }
+
+    private void editarDetalleCompra(Connection conn, DetalleCompra detalle) throws SQLException {
+        String sql = "{call sp_editar_articulo_detalle(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        try (CallableStatement cs = conn.prepareCall(sql)) {
+            int i = 1;
+            cs.setInt(i++, detalle.getIdDetalle());
+            cs.setBigDecimal(i++, detalle.getCantidad());
+            cs.setBigDecimal(i++, detalle.getPrecioUnitario());
+            cs.setBigDecimal(i++, detalle.getBonificacion());
+            cs.setBigDecimal(i++, detalle.getCosteUnitarioTransporte());
+            cs.setBigDecimal(i++, detalle.getCosteTotalTransporte());
+            cs.setBigDecimal(i++, detalle.getPrecioConDescuento());
+            cs.setBigDecimal(i++, detalle.getIgvInsumo());
+            cs.setBigDecimal(i++, detalle.getTotal());
+            cs.setBigDecimal(i++, detalle.getPesoTotal());
+            cs.execute();
+        }
+    }
+
+    private void actualizarLote(Connection conn, int idDetalleCompra, Lote lote) throws SQLException {
+        String sql = "{call sp_actualizar_lote(?, ?, ?)}";
+        try (CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, idDetalleCompra);
+            cs.setString(2, lote.getNumeroLote());
+            cs.setDate(3, lote.getFechaVencimiento() != null ? Date.valueOf(lote.getFechaVencimiento()) : null);
+            cs.execute();
+        }
+    }
+
+    private void editarGuiaTransporte(Connection conn, int idCompra, GuiaTransporte guia) throws SQLException {
+        String sql = "{call sp_editar_guia_transporte(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        try (CallableStatement cs = conn.prepareCall(sql)) {
+            int i = 1;
+            cs.setInt(i++, idCompra);
+            cs.setString(i++, guia.getRucGuia());
+            cs.setString(i++, guia.getRazonSocialGuia());
+            cs.setDate(i++, guia.getFechaEmision() != null ? Date.valueOf(guia.getFechaEmision()) : null);
+            cs.setString(i++, guia.getTipoComprobante());
+            cs.setString(i++, guia.getSerie());
+            cs.setString(i++, guia.getCorrelativo());
+            cs.setString(i++, guia.getCiudadTraslado());
+            cs.setString(i++, guia.getPuntoPartida());
+            cs.setString(i++, guia.getPuntoLlegada());
+            cs.setString(i++, guia.getSerieGuiaTransporte());
+            cs.setString(i++, guia.getCorrelativoGuiaTransporte());
+            cs.setBigDecimal(i++, guia.getCosteTotalTransporte());
+            cs.setBigDecimal(i++, guia.getPeso());
+            cs.setDate(i++, guia.getFechaPedido() != null ? Date.valueOf(guia.getFechaPedido()) : null);
+            cs.setDate(i++, guia.getFechaEntrega() != null ? Date.valueOf(guia.getFechaEntrega()) : null);
+            cs.execute();
+        }
     }
 
     private int registrarCompraCabecera(Connection conn, Compra compra) throws SQLException {
@@ -238,9 +358,7 @@ public class CompraController implements CompraRepository {
             cs.setBigDecimal(i++, compra.getTotal());
             cs.setBigDecimal(i++, compra.getTotalPeso());
             cs.setBigDecimal(i++, compra.getCosteTransporte());
-
             cs.registerOutParameter(i, Types.INTEGER);
-
             cs.execute();
             idCompra = cs.getInt(i);
         }
@@ -263,17 +381,37 @@ public class CompraController implements CompraRepository {
             cs.setBigDecimal(i++, detalle.getIgvInsumo());
             cs.setBigDecimal(i++, detalle.getTotal());
             cs.setBigDecimal(i++, detalle.getPesoTotal());
-
             cs.registerOutParameter(i, Types.INTEGER);
-
             cs.execute();
             idDetalleReal = cs.getInt(i);
         }
         return idDetalleReal;
     }
 
+    private void registrarLoteCompra(Connection conn, int idDetalleCompra, int idArticulo, Lote lote) throws SQLException {
+        String sql = "{call sp_registrar_lote_compra(?, ?, ?, ?, ?)}";
+        try (CallableStatement cs = conn.prepareCall(sql)) {
+            int i = 1;
+            cs.setInt(i++, idDetalleCompra);
+            cs.setInt(i++, idArticulo);
+            cs.setString(i++, lote.getNumeroLote());
+            cs.setDate(i++, lote.getFechaVencimiento() != null ? Date.valueOf(lote.getFechaVencimiento()) : null);
+            cs.setBigDecimal(i++, lote.getCantidadLote());
+            cs.execute();
+        }
+    }
+
+    private Lote crearLoteVirtual(DetalleCompra detalle) {
+        Lote loteVirtual = new Lote();
+        loteVirtual.setNumeroLote(null);
+        loteVirtual.setFechaVencimiento(null);
+        loteVirtual.setCantidadLote(detalle.getCantidad());
+        loteVirtual.setIdArticulo(detalle.getIdArticulo());
+        return loteVirtual;
+    }
+
     private void registrarDescuentoGlobal(Connection conn, int idCompra, Descuento descuento) throws SQLException {
-        String sql = "{call sp_agregar_descuento_global(?, ?, ?, ?, ?)}";
+        String sql = "{call sp_agregar_descuento_global(?, ?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
             int i = 1;
             cs.setInt(i++, idCompra);
@@ -281,12 +419,13 @@ public class CompraController implements CompraRepository {
             cs.setString(i++, descuento.getMotivo());
             cs.setString(i++, descuento.getTipoValor());
             cs.setBigDecimal(i++, descuento.getValor());
+            cs.setBigDecimal(i++, descuento.getTasaIgv());
             cs.execute();
         }
     }
 
     private void registrarDescuentoItem(Connection conn, int idDetalleCompra, Descuento descuento) throws SQLException {
-        String sql = "{call sp_agregar_descuento_item(?, ?, ?, ?, ?)}";
+        String sql = "{call sp_agregar_descuento_item(?, ?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
             int i = 1;
             cs.setInt(i++, idDetalleCompra);
@@ -294,6 +433,7 @@ public class CompraController implements CompraRepository {
             cs.setString(i++, descuento.getMotivo());
             cs.setString(i++, descuento.getTipoValor());
             cs.setBigDecimal(i++, descuento.getValor());
+            cs.setBigDecimal(i++, descuento.getTasaIgv());
             cs.execute();
         }
     }
@@ -303,7 +443,6 @@ public class CompraController implements CompraRepository {
         try (CallableStatement cs = conn.prepareCall(sql)) {
             int i = 1;
             cs.setInt(i++, idCompra);
-
             cs.setString(i++, guia.getRucGuia());
             cs.setString(i++, guia.getRazonSocialGuia());
             cs.setDate(i++, guia.getFechaEmision() != null ? Date.valueOf(guia.getFechaEmision()) : null);
@@ -319,7 +458,6 @@ public class CompraController implements CompraRepository {
             cs.setBigDecimal(i++, guia.getPeso());
             cs.setDate(i++, guia.getFechaPedido() != null ? Date.valueOf(guia.getFechaPedido()) : null);
             cs.setDate(i++, guia.getFechaEntrega() != null ? Date.valueOf(guia.getFechaEntrega()) : null);
-
             cs.execute();
         }
     }
@@ -343,9 +481,7 @@ public class CompraController implements CompraRepository {
             cs.setString(i++, caja.getNombreCaja());
             cs.setInt(i++, caja.getCantidad());
             cs.setBigDecimal(i++, caja.getCostoCaja());
-
             cs.registerOutParameter(i, Types.INTEGER);
-
             cs.execute();
             idCajaCompra = cs.getInt(i);
         }
