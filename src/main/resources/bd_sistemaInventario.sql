@@ -7,7 +7,7 @@ USE bd_maxiperu;
 CREATE TABLE proveedor (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ruc VARCHAR(20) NOT NULL UNIQUE,
-    razon_social VARCHAR(255) NOT NULL,
+    razonSocial VARCHAR(255) NOT NULL,
     direccion VARCHAR(255),
     telefono VARCHAR(50),
     correo VARCHAR(100),
@@ -16,9 +16,9 @@ CREATE TABLE proveedor (
 
 CREATE TABLE cliente (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    tipo_documento VARCHAR(20),
-    numero_documento VARCHAR(20),
-    razon_social VARCHAR(150),
+    tipoDocumento VARCHAR(20),
+    n_documento VARCHAR(20),
+    razonSocial VARCHAR(150),
     direccion TEXT,
     telefono VARCHAR(20),
     correo VARCHAR(100)

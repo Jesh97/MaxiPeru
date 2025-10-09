@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Compra | Sistema de Gestión</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+        }
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .header-section {
+            background: linear-gradient(90deg, #ffffff, #f4f6f9);
+            border-bottom: 2px solid var(--primary-color);
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+            color: white;
+            background-color: var(--primary-color);
+        }
+        .card-header.bg-primary { background: linear-gradient(45deg, #007bff, #0056b3); }
+        .card-header.bg-secondary { background: linear-gradient(45deg, #6c757d, #495057); }
+        .card-header.bg-warning { background: linear-gradient(45deg, #ffc107, #d39e00); }
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            font-weight: 600;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        .tab-content {
+            border: 1px solid #dee2e6;
+            border-top: none;
+            padding: 25px;
+            background-color: #ffffff;
+            border-radius: 0 0 10px 10px;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #343a40;
+            font-size: 0.9rem;
+        }
+        .table-professional th {
+            background-color: #e9ecef;
+            color: #495057;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid pt-0">
+
+    <div class="header-section text-center">
+        <h1 class="text-primary fw-bolder mb-0"><i class="bi bi-pencil-square me-2"></i>Edición de Compra</h1>
+        <p class="lead text-muted mt-1">Modificando Compra N° <strong class="text-info" id="compra-id-display">...</strong></p>
+    </div>
+
+    <form id="form-edicion-compra" class="mx-auto" style="max-width: 1400px;">
+        <input type="hidden" id="idCompra" name="idCompra">
+        <input type="hidden" id="guiaTipoComprobante" name="guiaTipoComprobante">
+        <input type="hidden" id="guiaSerie" name="guiaSerie">
+        <input type="hidden" id="guiaCorrelativo" name="guiaCorrelativo">
+        <input type="hidden" id="guiaSerieGuiaTransporte" name="guiaSerieGuiaTransporte">
+        <input type="hidden" id="guiaCorrelativoGuiaTransporte" name="guiaCorrelativoGuiaTransporte">
+
+        <ul class="nav nav-tabs" id="editTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="cabecera-tab" data-bs-toggle="tab" data-bs-target="#cabecera" type="button" role="tab" aria-selected="true"><i class="bi bi-info-circle me-1"></i> Cabecera y Totales</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="detalles-tab" data-bs-toggle="tab" data-bs-target="#detalles" type="button" role="tab" aria-selected="false"><i class="bi bi-box-seam me-1"></i> Artículos y Lotes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="guia-tab" data-bs-toggle="tab" data-bs-target="#guia" type="button" role="tab" aria-selected="false"><i class="bi bi-truck-flatbed me-1"></i> Guía de Transporte</button>
+            </li>
+        </ul>
+
+        <div class="tab-content mb-4" id="editTabsContent">
+
+            <div class="tab-pane fade show active" id="cabecera" role="tabpanel" aria-labelledby="cabecera-tab">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary">Datos del Comprobante y Financieros</div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3"><label for="proveedorId" class="form-label">ID Proveedor</label><input type="number" class="form-control" id="proveedorId" name="proveedorId" required></div>
+                                    <div class="col-md-6 mb-3"><label for="tipoComprobanteId" class="form-label">ID Tipo Comp.</label><input type="number" class="form-control" id="tipoComprobanteId" name="tipoComprobanteId" required></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3"><label for="serie" class="form-label">Serie</label><input type="text" class="form-control" id="serie" name="serie" required></div>
+                                    <div class="col-md-6 mb-3"><label for="correlativo" class="form-label">Correlativo</label><input type="text" class="form-control" id="correlativo" name="correlativo" required></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3"><label for="fechaEmision" class="form-label">Fecha Emisión</label><input type="date" class="form-control" id="fechaEmision" name="fechaEmision" required></div>
+                                    <div class="col-md-6 mb-3"><label for="fechaVencimiento" class="form-label">Fecha Vencimiento</label><input type="date" class="form-control" id="fechaVencimiento" name="fechaVencimiento"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3"><label for="monedaId" class="form-label">ID Moneda</label><input type="number" class="form-control" id="monedaId" name="monedaId" required></div>
+                                    <div class="col-md-6 mb-3"><label for="tipoCambio" class="form-label">Tipo Cambio</label><input type="number" class="form-control" id="tipoCambio" name="tipoCambio" step="0.0001" required></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3"><label for="tipoPagoId" class="form-label">ID Tipo Pago</label><input type="number" class="form-control" id="tipoPagoId" name="tipoPagoId" required></div>
+                                    <div class="col-md-6 mb-3"><label for="formaPagoId" class="form-label">ID Forma Pago</label><input type="number" class="form-control" id="formaPagoId" name="formaPagoId" required></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-success">Totales y Opciones de Carga</div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3"><label for="totalAPagar" class="form-label">Total a Pagar (S/)</label><input type="number" class="form-control bg-light" id="totalAPagar" name="totalAPagar" step="0.01" required></div>
+                                    <div class="col-md-4 mb-3"><label for="totalIgv" class="form-label">Total IGV (S/)</label><input type="number" class="form-control bg-light" id="totalIgv" name="totalIgv" step="0.01" required></div>
+                                    <div class="col-md-4 mb-3"><label for="subtotalSinIgv" class="form-label">Subtotal (S/IGV)</label><input type="number" class="form-control bg-light" id="subtotalSinIgv" name="subtotalSinIgv" step="0.01" required></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3"><label for="totalPeso" class="form-label">Total Peso (kg)</label><input type="number" class="form-control" id="totalPeso" name="totalPeso" step="0.001" required></div>
+                                    <div class="col-md-6 mb-3"><label for="costeTransporte" class="form-label">Costo Transp. Global</label><input type="number" class="form-control" id="costeTransporte" name="costeTransporte" step="0.01" required></div>
+                                </div>
+                                <div class="mb-3"><label for="observation" class="form-label">Observación</label><textarea class="form-control" id="observation" name="observation" rows="2"></textarea></div>
+                                <div class="d-flex justify-content-between">
+                                    <div class="form-check"><input class="form-check-input" type="checkbox" id="incluyeIgv" name="incluyeIgv"><label class="form-check-label" for="incluyeIgv">Incluye IGV</label></div>
+                                    <div class="form-check"><input class="form-check-input" type="checkbox" id="hayBonificacion" name="hayBonificacion"><label class="form-check-label" for="hayBonificacion">Hay Bonificación</label></div>
+                                    <div class="form-check"><input class="form-check-input" type="checkbox" id="hayTraslado" name="hayTraslado" onchange="toggleGuiaTab()"><label class="form-check-label" for="hayTraslado">Hay Traslado (Guía)</label></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="detalles" role="tabpanel" aria-labelledby="detalles-tab">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary">Edición de Artículos y Lotes</div>
+                    <div class="card-body">
+                        <div class="alert alert-warning border-left-warning" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> **Precaución**: Al modificar **Cantidad**, **Precios** o **Lotes**, el sistema actualizará el stock y la información del lote asociado (usando `sp_editar_articulo_detalle` y `sp_actualizar_lote`).
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm table-hover table-professional" id="tabla-detalles-edicion">
+                                <thead class="text-center">
+                                <tr>
+                                    <th>ID Detalle</th>
+                                    <th>Artículo</th>
+                                    <th>Cantidad</th>
+                                    <th>P. Unitario</th>
+                                    <th>Bonificación</th>
+                                    <th>Total Detalle</th>
+                                    <th>Lote Nuevo</th>
+                                    <th>F. Vencimiento Nueva</th>
+                                </tr>
+                                </thead>
+                                <tbody id="detalles-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="guia" role="tabpanel" aria-labelledby="guia-tab">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning">Información de la Guía de Transporte</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label for="rucGuia" class="form-label">RUC del Emisor de la Guía</label><input type="text" class="form-control" id="rucGuia" name="rucGuia"></div>
+                            <div class="col-md-6 mb-3"><label for="razonSocialGuia" class="form-label">Razón Social del Emisor</label><input type="text" class="form-control" id="razonSocialGuia" name="razonSocialGuia"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3"><label for="fechaEmisionGuia" class="form-label">F. Emisión Guía</label><input type="date" class="form-control" id="fechaEmisionGuia" name="fechaEmisionGuia"></div>
+                            <div class="col-md-4 mb-3"><label for="ciudadTraslado" class="form-label">Ciudad de Traslado</label><input type="text" class="form-control" id="ciudadTraslado" name="ciudadTraslado"></div>
+                            <div class="col-md-4 mb-3"><label for="pesoGuia" class="form-label">Peso Total de la Guía (kg)</label><input type="number" class="form-control" id="pesoGuia" name="pesoGuia" step="0.001"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label for="puntoPartida" class="form-label">Punto de Partida</label><input type="text" class="form-control" id="puntoPartida" name="puntoPartida"></div>
+                            <div class="col-md-6 mb-3"><label for="puntoLlegada" class="form-label">Punto de Llegada</label><input type="text" class="form-control" id="puntoLlegada" name="puntoLlegada"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3"><label for="fechaPedido" class="form-label">Fecha Pedido (Límite Inferior)</label><input type="date" class="form-control" id="fechaPedido" name="fechaPedido"></div>
+                            <div class="col-md-4 mb-3"><label for="fechaEntrega" class="form-label">Fecha Entrega (Límite Superior)</label><input type="date" class="form-control" id="fechaEntrega" name="fechaEntrega"></div>
+                            <div class="col-md-4 mb-3"><label for="costeTotalTransporteGuia" class="form-label">Costo Total Transp.</label><input type="number" class="form-control" id="costeTotalTransporteGuia" name="costeTotalTransporteGuia" step="0.01"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 my-5 mx-auto" style="max-width: 1400px;">
+            <a href="index.html" class="btn btn-outline-secondary btn-lg fw-bold px-4"><i class="bi bi-x-circle me-2"></i> Cancelar</a>
+            <button type="submit" class="btn btn-success btn-lg fw-bold px-5"><i class="bi bi-save-fill me-2"></i> Guardar Cambios</button>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const COMPRA_ID = new URLSearchParams(window.location.search).get('id');
+    const COMPRA_ENDPOINT = "/CompraServlet";
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('compra-id-display').textContent = COMPRA_ID || 'N/A';
+        document.getElementById('idCompra').value = COMPRA_ID;
+
+        if (COMPRA_ID) {
+            cargarDatosCompra(COMPRA_ID);
+        } else {
+            document.getElementById('editTabsContent').innerHTML = '<div class="alert alert-danger text-center">Error: ID de compra no especificado.</div>';
+        }
+    });
+
+    function toggleGuiaTab() {
+        const hayTraslado = document.getElementById('hayTraslado').checked;
+        const guiaTab = document.getElementById('guia-tab');
+
+        if (!hayTraslado) {
+            guiaTab.classList.add('d-none');
+            if (guiaTab.classList.contains('active')) {
+                new bootstrap.Tab(document.getElementById('cabecera-tab')).show();
+            }
+        } else {
+            guiaTab.classList.remove('d-none');
+        }
+    }
+
+    async function cargarDatosCompra(id) {
+        try {
+            const response = await fetch(`${COMPRA_ENDPOINT}?idCompra=${id}`);
+
+            if (response.status === 400) {
+                 console.error("Endpoint GET no soporta carga de compra por ID. Verificar el método del Servlet.");
+                 return;
+            }
+
+            const compra = await response.json();
+
+            if (compra && compra.id_compra) {
+                poblarFormulario(compra);
+                toggleGuiaTab();
+            } else {
+                alert("No se pudo cargar la compra ID " + id + ". Verifique la respuesta del Servlet.");
+            }
+        } catch (error) {
+            console.error("Error al cargar los datos de la compra:", error);
+            alert("Error de conexión al intentar cargar los datos.");
+        }
+    }
+
+    function poblarFormulario(compra) {
+        document.getElementById('proveedorId').value = compra.idProveedor || '';
+        document.getElementById('monedaId').value = compra.idMoneda || '';
+        document.getElementById('tipoComprobanteId').value = compra.idTipoComprobante || '';
+        document.getElementById('tipoCambio').value = compra.tipoCambio || 1.0;
+        document.getElementById('serie').value = compra.serie || '';
+        document.getElementById('correlativo').value = compra.correlativo || '';
+        document.getElementById('fechaEmision').value = compra.fechaEmision || '';
+        document.getElementById('fechaVencimiento').value = compra.fechaVencimiento || '';
+        document.getElementById('tipoPagoId').value = compra.idTipoPago || '';
+        document.getElementById('formaPagoId').value = compra.idFormaPago || '';
+        document.getElementById('observation').value = compra.observacion || '';
+        document.getElementById('incluyeIgv').checked = compra.incluyeIgv || false;
+        document.getElementById('hayBonificacion').checked = compra.hayBonificacion || false;
+        document.getElementById('hayTraslado').checked = compra.hayTraslado || false;
+
+        document.getElementById('subtotalSinIgv').value = compra.subtotal || 0;
+        document.getElementById('totalIgv').value = compra.igv || 0;
+        document.getElementById('totalAPagar').value = compra.total || 0;
+        document.getElementById('totalPeso').value = compra.totalPeso || 0;
+        document.getElementById('costeTransporte').value = compra.costeTransporte || 0;
+
+        const tbody = document.getElementById('detalles-body');
+        tbody.innerHTML = '';
+        if (compra.detalles) {
+            compra.detalles.forEach(d => {
+                const lote = d.lotes && d.lotes.length > 0 ? d.lotes[0] : {};
+                const tr = document.createElement('tr');
+                tr.className = 'detalle-row text-center';
+                tr.innerHTML = `
+                    <td>${d.idDetalle}<input type="hidden" name="idDetalle" value="${d.idDetalle}"></td>
+                    <td class="text-start">${d.descripcionArticulo || d.idArticulo}</td>
+                    <td><input type="number" class="form-control form-control-sm text-center" name="cantidad" value="${d.cantidad}" step="0.01" required></td>
+                    <td><input type="number" class="form-control form-control-sm text-end" name="precioUnitario" value="${d.precioUnitario}" step="0.001" required></td>
+                    <td><input type="number" class="form-control form-control-sm text-end" name="bonificacion" value="${d.bonificacion}" step="0.01"></td>
+                    <td><input type="number" class="form-control form-control-sm text-end bg-light" name="total" value="${d.total}" step="0.01" required></td>
+
+                    <td><input type="text" class="form-control form-control-sm" name="numeroLoteNuevo" value="${lote.numeroLote || ''}"></td>
+                    <td><input type="date" class="form-control form-control-sm" name="fechaVencimientoNueva" value="${lote.fechaVencimiento || ''}"></td>
+
+                    <input type="hidden" name="costeUnitarioTransporte" value="${d.costeUnitarioTransporte || 0}">
+                    <input type="hidden" name="costeTotalTransporte" value="${d.costeTotalTransporte || 0}">
+                    <input type="hidden" name="precioConDescuento" value="${d.precioConDescuento || 0}">
+                    <input type="hidden" name="igvInsumo" value="${d.igvInsumo || 0}">
+                    <input type="hidden" name="pesoTotal" value="${d.pesoTotal || 0}">
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        const guia = compra.guiaTransporte || {};
+        document.getElementById('rucGuia').value = guia.rucGuia || '';
+        document.getElementById('razonSocialGuia').value = guia.razonSocialGuia || '';
+        document.getElementById('ciudadTraslado').value = guia.ciudadTraslado || '';
+        document.getElementById('puntoPartida').value = guia.puntoPartida || '';
+        document.getElementById('puntoLlegada').value = guia.puntoLlegada || '';
+        document.getElementById('fechaEmisionGuia').value = guia.fechaEmision || '';
+        document.getElementById('fechaPedido').value = guia.fechaPedido || '';
+        document.getElementById('fechaEntrega').value = guia.fechaEntrega || '';
+        document.getElementById('costeTotalTransporteGuia').value = guia.costeTotalTransporte || 0;
+        document.getElementById('pesoGuia').value = guia.peso || 0;
+
+        document.getElementById('guiaTipoComprobante').value = guia.tipoComprobante || '';
+        document.getElementById('guiaSerie').value = guia.serie || '';
+        document.getElementById('guiaCorrelativo').value = guia.correlativo || '';
+        document.getElementById('guiaSerieGuiaTransporte').value = guia.serieGuiaTransporte || '';
+        document.getElementById('guiaCorrelativoGuiaTransporte').value = guia.correlativoGuiaTransporte || '';
+    }
+
+    document.getElementById('form-edicion-compra').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const data = {};
+
+        data.idCompra = parseInt(form.idCompra.value);
+        data.proveedorId = parseInt(form.proveedorId.value);
+        data.monedaId = parseInt(form.monedaId.value);
+        data.tipoComprobanteId = parseInt(form.tipoComprobanteId.value);
+        data.serie = form.serie.value.trim();
+        data.correlativo = form.correlativo.value.trim();
+        data.fechaEmision = form.fechaEmision.value;
+        data.fechaVencimiento = form.fechaVencimiento.value;
+        data.tipoPagoId = parseInt(form.tipoPagoId.value);
+        data.formaPagoId = parseInt(form.formaPagoId.value);
+        data.tipoCambio = parseFloat(form.tipoCambio.value);
+        data.incluyeIgv = form.incluyeIgv.checked;
+        data.hayBonificacion = form.hayBonificacion.checked;
+        data.hayTraslado = form.hayTraslado.checked;
+        data.observation = form.observation.value.trim();
+        data.subtotalSinIgv = parseFloat(form.subtotalSinIgv.value);
+        data.totalIgv = parseFloat(form.totalIgv.value);
+        data.totalAPagar = parseFloat(form.totalAPagar.value);
+        data.totalPeso = parseFloat(form.totalPeso.value);
+        data.costeTransporte = parseFloat(form.costeTransporte.value);
+
+
+        if (data.hayTraslado) {
+            data.guiaTransporte = {
+                rucGuia: form.rucGuia.value.trim(),
+                razonSocialGuia: form.razonSocialGuia.value.trim(),
+                ciudadTraslado: form.ciudadTraslado.value.trim(),
+                puntoPartida: form.puntoPartida.value.trim(),
+                puntoLlegada: form.puntoLlegada.value.trim(),
+                fechaEmision: form.fechaEmisionGuia.value,
+                fechaPedido: form.fechaPedido.value,
+                fechaEntrega: form.fechaEntrega.value,
+                costeTotalTransporte: parseFloat(form.costeTotalTransporteGuia.value),
+                peso: parseFloat(form.pesoGuia.value),
+
+                tipoComprobante: form.guiaTipoComprobante.value,
+                serie: form.guiaSerie.value,
+                correlativo: form.guiaCorrelativo.value,
+                serieGuiaTransporte: form.guiaSerieGuiaTransporte.value,
+                correlativoGuiaTransporte: form.guiaCorrelativoGuiaTransporte.value
+            };
+        }
+
+        data.detalles = [];
+        const detalleRows = document.querySelectorAll('#detalles-body .detalle-row');
+        detalleRows.forEach(row => {
+            const d = {};
+            d.idDetalle = parseInt(row.querySelector('input[name="idDetalle"]').value);
+            d.cantidad = parseFloat(row.querySelector('input[name="cantidad"]').value);
+            d.precioUnitario = parseFloat(row.querySelector('input[name="precioUnitario"]').value);
+            d.bonificacion = parseFloat(row.querySelector('input[name="bonificacion"]').value);
+            d.total = parseFloat(row.querySelector('input[name="total"]').value);
+
+            d.costeUnitarioTransporte = parseFloat(row.querySelector('input[name="costeUnitarioTransporte"]').value);
+            d.costeTotalTransporte = parseFloat(row.querySelector('input[name="costeTotalTransporte"]').value);
+            d.precioConDescuento = parseFloat(row.querySelector('input[name="precioConDescuento"]').value);
+            d.igvInsumo = parseFloat(row.querySelector('input[name="igvInsumo"]').value);
+            d.pesoTotal = parseFloat(row.querySelector('input[name="pesoTotal"]').value);
+
+            const numLote = row.querySelector('input[name="numeroLoteNuevo"]').value.trim();
+            const fvenc = row.querySelector('input[name="fechaVencimientoNueva"]').value;
+
+            if (numLote || fvenc) {
+                d.loteEditado = {
+                    numeroLote: numLote,
+                    fechaVencimiento: fvenc
+                };
+            }
+
+            data.detalles.push(d);
+        });
+
+        try {
+            const response = await fetch(COMPRA_ENDPOINT, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert("✅ Compra ID " + data.idCompra + " actualizada exitosamente!");
+                window.location.href = 'index.html';
+            } else {
+                alert("❌ Error al actualizar: " + (result.message || response.statusText));
+                console.error("Respuesta del servidor:", result);
+            }
+        } catch (error) {
+            alert("❌ Error de red o inesperado al enviar los datos.");
+            console.error(error);
+        }
+    });
+</script>
+</body>
+</html>

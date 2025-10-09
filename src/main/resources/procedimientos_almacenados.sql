@@ -99,7 +99,6 @@ BEGIN
       AND a.id_tipo_articulo = 2;
 END$$
 
----
 -- ******************************************************
 -- 2. GESTIÓN DE CLIENTES
 -- ******************************************************
@@ -110,7 +109,7 @@ CREATE PROCEDURE `sp_agregar_cliente`(
     IN p_direccion TEXT, IN p_telefono VARCHAR(20), IN p_correo VARCHAR(100)
 )
 BEGIN
-    INSERT INTO cliente(tipo_documento, numero_documento, razon_social, direccion, telefono, correo)
+    INSERT INTO cliente(tipoDocumento, n_documento, razonSocial, direccion, telefono, correo)
     VALUES (p_tipo_documento, p_numero_documento, p_razon_social, p_direccion, p_telefono, p_correo);
 END$$
 
@@ -123,7 +122,7 @@ CREATE PROCEDURE `sp_actualizar_cliente`(
 BEGIN
     UPDATE cliente
     SET
-        tipo_documento = p_tipo_documento, numero_documento = p_numero_documento, razon_social = p_razon_social,
+        tipoDocumento = p_tipo_documento, n_documento = p_numero_documento, razonSocial = p_razon_social,
         direccion = p_direccion, telefono = p_telefono, correo = p_correo
     WHERE id = p_id;
 END$$
@@ -141,9 +140,9 @@ DROP PROCEDURE IF EXISTS `sp_listar_clientes`$$
 CREATE PROCEDURE `sp_listar_clientes`()
 BEGIN
     SELECT
-        id, tipo_documento, numero_documento, razon_social, direccion, telefono, correo
+        id, tipoDocumento, n_documento, razonSocial, direccion, telefono, correo
     FROM cliente
-    ORDER BY razon_social ASC;
+    ORDER BY razonSocial ASC;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_cliente`$$
@@ -152,13 +151,12 @@ CREATE PROCEDURE `sp_buscar_cliente`(
 )
 BEGIN
     SELECT
-        id, tipo_documento, numero_documento, razon_social, direccion, telefono, correo
+        id, tipoDocumento, n_documento, razonSocial, direccion, telefono, correo
     FROM cliente
-    WHERE numero_documento LIKE CONCAT('%', p_busqueda, '%')
-        OR razon_social LIKE CONCAT('%', p_busqueda, '%');
+    WHERE n_documento LIKE CONCAT('%', p_busqueda, '%')
+        OR razonSocial LIKE CONCAT('%', p_busqueda, '%');
 END$$
 
----
 -- ******************************************************
 -- 3. GESTIÓN DE PROVEEDORES
 -- ******************************************************
@@ -169,7 +167,7 @@ CREATE PROCEDURE `sp_agregar_proveedor`(
     IN p_telefono VARCHAR(50), IN p_correo VARCHAR(100), IN p_ciudad VARCHAR(50)
 )
 BEGIN
-    INSERT INTO proveedor(ruc, razon_social, direccion, telefono, correo, ciudad)
+    INSERT INTO proveedor(ruc, razonSocial, direccion, telefono, correo, ciudad)
     VALUES (p_ruc, p_razon_social, p_direccion, p_telefono, p_correo, p_ciudad);
 END$$
 
@@ -181,7 +179,7 @@ CREATE PROCEDURE `sp_actualizar_proveedor`(
 BEGIN
     UPDATE proveedor
     SET
-        ruc = p_ruc, razon_social = p_razon_social, direccion = p_direccion,
+        ruc = p_ruc, razonSocial = p_razon_social, direccion = p_direccion,
         telefono = p_telefono, correo = p_correo, ciudad = p_ciudad
     WHERE id = p_id;
 END$$
@@ -199,9 +197,9 @@ DROP PROCEDURE IF EXISTS `sp_listar_proveedores`$$
 CREATE PROCEDURE `sp_listar_proveedores`()
 BEGIN
     SELECT
-        id, ruc, razon_social, direccion, telefono, correo, ciudad
+        id, ruc, razonSocial, direccion, telefono, correo, ciudad
     FROM proveedor
-    ORDER BY razon_social ASC;
+    ORDER BY razonSocial ASC;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_proveedor`$$
@@ -210,13 +208,12 @@ CREATE PROCEDURE `sp_buscar_proveedor`(
 )
 BEGIN
     SELECT
-        id, ruc, razon_social, direccion, telefono, correo, ciudad
+        id, ruc, razonSocial, direccion, telefono, correo, ciudad
     FROM proveedor
     WHERE ruc LIKE CONCAT('%', p_busqueda, '%')
-        OR razon_social LIKE CONCAT('%', p_busqueda, '%');
+        OR razonSocial LIKE CONCAT('%', p_busqueda, '%');
 END$$
 
----
 -- ******************************************************
 -- 4. GESTIÓN DE COMPRAS
 -- ******************************************************
@@ -347,7 +344,7 @@ BEGIN
     SELECT
         c.id_compra, c.fecha_emision, c.fecha_vencimiento, tc.nombre AS tipo_comprobante, c.serie, c.correlativo,
         mo.nombre AS moneda, c.tipo_cambio, c.subtotal, c.igv, c.total, c.total_peso, c.coste_transporte,
-        c.observacion, p.id AS id_proveedor, p.ruc, p.razon_social AS RAZON_FINAL, p.direccion, p.telefono,
+        c.observacion, p.id AS id_proveedor, p.ruc, p.razonSocial AS RAZON_FINAL, p.direccion, p.telefono, -- <--- CAMBIO AQUÍ
         p.correo, p.ciudad, dc.id_detalle, dc.id_articulo, a.codigo AS codigo_articulo,
         a.descripcion AS descripcion_articulo, dc.cantidad, dc.precio_unitario, dc.coste_unitario_transporte,
         dc.coste_total_transporte, dc.precio_con_descuento, dc.igv_insumo, dc.total AS total_detalle,
@@ -369,73 +366,39 @@ END$$
 
 -- 1. PROCEDIMIENTO PARA EDITAR LA COMPRA PRINCIPAL
 DROP PROCEDURE IF EXISTS `sp_editar_compra`$$
-CREATE PROCEDURE `sp_editar_compra`(
-    IN p_id_compra INT, IN p_id_proveedor INT, IN p_id_comprobante INT, IN p_serie VARCHAR(20), IN p_correlativo VARCHAR(50),
-    IN p_fecha_emision DATE, IN p_fecha_vencimiento DATE, IN p_id_pago INT, IN p_id_forma_pago INT, IN p_id_moneda INT,
-    IN p_tipo_cambio DECIMAL(10,4), IN p_con_igv BOOLEAN, IN p_con_bonificacion BOOLEAN, IN p_con_traslado BOOLEAN,
-    IN p_observacion TEXT, IN p_subtotal DECIMAL(12,2), IN p_igv DECIMAL(12,2), IN p_total DECIMAL(12,2),
-    IN p_peso_total DECIMAL(12,3), IN p_costo_transporte DECIMAL(12,2)
-)
+CREATE PROCEDURE `sp_editar_compra`(IN p_id_compra INT, IN p_id_proveedor INT, IN p_id_comprobante INT, IN p_serie VARCHAR(20), IN p_correlativo VARCHAR(50), IN p_fecha_emision DATE, IN p_fecha_vencimiento DATE, IN p_id_pago INT, IN p_id_forma_pago INT, IN p_id_moneda INT, IN p_tipo_cambio DECIMAL(10,4), IN p_con_igv BOOLEAN, IN p_con_bonificacion BOOLEAN, IN p_con_traslado BOOLEAN, IN p_observacion TEXT, IN p_subtotal DECIMAL(12,2), IN p_igv DECIMAL(12,2), IN p_total DECIMAL(12,2), IN p_peso_total DECIMAL(12,3), IN p_costo_transporte DECIMAL(12,2))
 BEGIN
     DECLARE v_fecha_pedido DATE; DECLARE v_fecha_entrega DATE; DECLARE v_hoy DATE;
     SET v_hoy = CURDATE();
-
-    SELECT gt.fecha_pedido, gt.fecha_entrega INTO v_fecha_pedido, v_fecha_entrega
-    FROM compra c INNER JOIN guia_transporte gt ON c.id_compra = gt.id_compra WHERE c.id_compra = p_id_compra;
-
+    SELECT gt.fecha_pedido, gt.fecha_entrega INTO v_fecha_pedido, v_fecha_entrega FROM compra c INNER JOIN guia_transporte gt ON c.id_compra = gt.id_compra WHERE c.id_compra = p_id_compra;
     IF v_hoy NOT BETWEEN v_fecha_pedido AND v_fecha_entrega THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Edición fuera de rango de fechas.';
     ELSE
-        UPDATE compra SET
-            id_proveedor = p_id_proveedor, id_tipo_comprobante = p_id_comprobante, serie = p_serie, correlativo = p_correlativo,
-            fecha_emision = p_fecha_emision, fecha_vencimiento = p_fecha_vencimiento, id_tipo_pago = p_id_pago,
-            id_forma_pago = p_id_forma_pago, id_moneda = p_id_moneda, tipo_cambio = p_tipo_cambio,
-            incluye_igv = p_con_igv, hay_bonificacion = p_con_bonificacion, hay_traslado = p_con_traslado,
-            subtotal = p_subtotal, igv = p_igv, total = p_total, total_peso = p_peso_total,
-            coste_transporte = p_costo_transporte, observacion = p_observacion
-        WHERE id_compra = p_id_compra;
+        UPDATE compra SET id_proveedor = p_id_proveedor, id_tipo_comprobante = p_id_comprobante, serie = p_serie, correlativo = p_correlativo, fecha_emision = p_fecha_emision, fecha_vencimiento = p_fecha_vencimiento, id_tipo_pago = p_id_pago, id_forma_pago = p_id_forma_pago, id_moneda = p_id_moneda, tipo_cambio = p_tipo_cambio, incluye_igv = p_con_igv, hay_bonificacion = p_con_bonificacion, hay_traslado = p_con_traslado, subtotal = p_subtotal, igv = p_igv, total = p_total, total_peso = p_peso_total, coste_transporte = p_costo_transporte, observacion = p_observacion WHERE id_compra = p_id_compra;
     END IF;
 END$$
 
--- 2. PROCEDIMIENTO PARA EDITAR ARTÍCULO (DETALLE Y STOCK)
 DROP PROCEDURE IF EXISTS `sp_editar_articulo_detalle`$$
-CREATE PROCEDURE `sp_editar_articulo_detalle`(
-    IN p_id_detalle INT, IN p_cantidad_nueva DECIMAL(12,2), IN p_precio_unitario DECIMAL(12,2),
-    IN p_bonificacion DECIMAL(12,2), IN p_costo_unitario_transporte DECIMAL(12,2), IN p_costo_total_transporte DECIMAL(12,2),
-    IN p_precio_descuento DECIMAL(12,2), IN p_igv_insumo DECIMAL(12,2), IN p_total DECIMAL(12,2), IN p_peso_total DECIMAL(12,3)
-)
+CREATE PROCEDURE `sp_editar_articulo_detalle`(IN p_id_detalle INT, IN p_cantidad_nueva DECIMAL(12,2), IN p_precio_unitario DECIMAL(12,2), IN p_bonificacion DECIMAL(12,2), IN p_costo_unitario_transporte DECIMAL(12,2), IN p_costo_total_transporte DECIMAL(12,2), IN p_precio_descuento DECIMAL(12,2), IN p_igv_insumo DECIMAL(12,2), IN p_total DECIMAL(12,2), IN p_peso_total DECIMAL(12,3))
 BEGIN
-    DECLARE v_id_articulo INT; DECLARE v_cantidad_antigua DECIMAL(12,2); DECLARE v_diferencia_stock DECIMAL(12,2);
-    DECLARE v_id_lote INT;
-
+    DECLARE v_id_articulo INT; DECLARE v_cantidad_antigua DECIMAL(12,2); DECLARE v_diferencia_stock DECIMAL(12,2); DECLARE v_id_lote INT;
     START TRANSACTION;
-
-    SELECT dc.id_articulo, dc.cantidad INTO v_id_articulo, v_cantidad_antigua
-    FROM detalle_compra dc WHERE dc.id_detalle = p_id_detalle FOR UPDATE;
-
+    SELECT dc.id_articulo, dc.cantidad INTO v_id_articulo, v_cantidad_antigua FROM detalle_compra dc WHERE dc.id_detalle = p_id_detalle FOR UPDATE;
     IF v_id_articulo IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Detalle no encontrado.';
         ROLLBACK;
     ELSE
         IF v_cantidad_antigua != p_cantidad_nueva THEN
             SELECT id_lote INTO v_id_lote FROM inventario_lote WHERE id_detalle_compra = p_id_detalle;
-
             IF v_id_lote IS NULL THEN
                 SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Lote no encontrado.';
                 ROLLBACK;
             END IF;
-
             SET v_diferencia_stock = p_cantidad_nueva - v_cantidad_antigua;
             UPDATE articulo SET cantidad = cantidad + v_diferencia_stock WHERE id = v_id_articulo;
             UPDATE inventario_lote SET cantidad_ingreso = p_cantidad_nueva, cantidad_disponible = cantidad_disponible + v_diferencia_stock WHERE id_lote = v_id_lote;
         END IF;
-
-        UPDATE detalle_compra SET
-            cantidad = p_cantidad_nueva, precio_unitario = p_precio_unitario, bonificacion = p_bonificacion,
-            coste_unitario_transporte = p_costo_unitario_transporte, coste_total_transporte = p_costo_total_transporte,
-            precio_con_descuento = p_precio_descuento, igv_insumo = p_igv_insumo, total = p_total, peso_total = p_peso_total
-        WHERE id_detalle = p_id_detalle;
-
+        UPDATE detalle_compra SET cantidad = p_cantidad_nueva, precio_unitario = p_precio_unitario, bonificacion = p_bonificacion, coste_unitario_transporte = p_costo_unitario_transporte, coste_total_transporte = p_costo_total_transporte, precio_con_descuento = p_precio_descuento, igv_insumo = p_igv_insumo, total = p_total, peso_total = p_peso_total WHERE id_detalle = p_id_detalle;
         COMMIT;
     END IF;
 END$$
@@ -464,17 +427,11 @@ END$$
 
 -- 5. PROCEDIMIENTO PARA EDITAR ARTÍCULO EN DETALLE DE CAJA Y STOCK
 DROP PROCEDURE IF EXISTS `sp_editar_articulo_en_caja`$$
-CREATE PROCEDURE `sp_editar_articulo_en_caja`(
-    IN p_id_detalle_caja_compra INT, IN p_cantidad_nueva DECIMAL(12,2)
-)
+CREATE PROCEDURE `sp_editar_articulo_en_caja`(IN p_id_detalle_caja_compra INT, IN p_cantidad_nueva DECIMAL(12,2))
 BEGIN
     DECLARE v_id_articulo INT; DECLARE v_cantidad_antigua DECIMAL(12,2); DECLARE v_diferencia_stock DECIMAL(12,2);
-
     START TRANSACTION;
-
-    SELECT dcc.id_articulo, dcc.cantidad INTO v_id_articulo, v_cantidad_antigua
-    FROM detalle_caja_compra dcc WHERE dcc.id_detalle_caja_compra = p_id_detalle_caja_compra FOR UPDATE;
-
+    SELECT dcc.id_articulo, dcc.cantidad INTO v_id_articulo, v_cantidad_antigua FROM detalle_caja_compra dcc WHERE dcc.id_detalle_caja_compra = p_id_detalle_caja_compra FOR UPDATE;
     IF v_id_articulo IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Detalle de caja no encontrado.';
         ROLLBACK;
@@ -483,10 +440,7 @@ BEGIN
             SET v_diferencia_stock = p_cantidad_nueva - v_cantidad_antigua;
             UPDATE articulo SET cantidad = cantidad + v_diferencia_stock WHERE id = v_id_articulo;
         END IF;
-
-        UPDATE detalle_caja_compra SET cantidad = p_cantidad_nueva
-        WHERE id_detalle_caja_compra = p_id_detalle_caja_compra;
-
+        UPDATE detalle_caja_compra SET cantidad = p_cantidad_nueva WHERE id_detalle_caja_compra = p_id_detalle_caja_compra;
         COMMIT;
     END IF;
 END$$
@@ -516,114 +470,50 @@ END$$
 -- ******************************************************
 
 DROP PROCEDURE IF EXISTS `sp_registrar_venta`$$
-CREATE PROCEDURE `sp_registrar_venta`(
-    IN p_id_cliente INT, IN p_id_tipo_comprobante INT, IN p_id_moneda INT, IN p_fecha_emision DATE,
-    IN p_fecha_vencimiento DATE, IN p_id_tipo_pago INT, IN p_estado_venta VARCHAR(50),
-    IN p_tipo_descuento ENUM('global', 'item'), IN p_aplica_igv BOOLEAN, IN p_observaciones TEXT,
-    IN p_subtotal DECIMAL(12,2), IN p_igv DECIMAL(12,2), IN p_descuento_total DECIMAL(12,2),
-    IN p_total_final DECIMAL(12,2), IN p_total_peso DECIMAL(12,3), IN p_hay_traslado BOOLEAN,
-    OUT p_id_venta INT
-)
+CREATE PROCEDURE `sp_registrar_venta`(IN p_id_cliente INT, IN p_id_tipo_comprobante INT, IN p_id_moneda INT, IN p_fecha_emision DATE, IN p_fecha_vencimiento DATE, IN p_id_tipo_pago INT, IN p_estado_venta VARCHAR(50), IN p_tipo_descuento ENUM('global', 'item'), IN p_aplica_igv BOOLEAN, IN p_observaciones TEXT, IN p_subtotal DECIMAL(12,2), IN p_igv DECIMAL(12,2), IN p_descuento_total DECIMAL(12,2), IN p_total_final DECIMAL(12,2), IN p_total_peso DECIMAL(12,3), IN p_hay_traslado BOOLEAN, OUT p_id_venta INT)
 BEGIN
-    INSERT INTO venta(
-        id_cliente, id_tipo_comprobante, id_moneda, fecha_emision, fecha_vencimiento,
-        id_tipo_pago, estado_venta, tipo_descuento, aplica_igv, observaciones,
-        subtotal, igv, descuento_total, total_final, total_peso, hay_traslado
-    ) VALUES (
-        p_id_cliente, p_id_tipo_comprobante, p_id_moneda, p_fecha_emision, p_fecha_vencimiento,
-        p_id_tipo_pago, p_estado_venta, p_tipo_descuento, p_aplica_igv, p_observaciones,
-        p_subtotal, p_igv, p_descuento_total, p_total_final, p_total_peso, p_hay_traslado
-    );
+    INSERT INTO venta(id_cliente, id_tipo_comprobante, id_moneda, fecha_emision, fecha_vencimiento, id_tipo_pago, estado_venta, tipo_descuento, aplica_igv, observaciones, subtotal, igv, descuento_total, total_final, total_peso, hay_traslado) VALUES (p_id_cliente, p_id_tipo_comprobante, p_id_moneda, p_fecha_emision, p_fecha_vencimiento, p_id_tipo_pago, p_estado_venta, p_tipo_descuento, p_aplica_igv, p_observaciones, p_subtotal, p_igv, p_descuento_total, p_total_final, p_total_peso, p_hay_traslado);
     SET p_id_venta = LAST_INSERT_ID();
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_detalle_venta`$$
-CREATE PROCEDURE `sp_agregar_detalle_venta`(
-    IN p_id_venta INT, IN p_id_articulo INT, IN p_descripcion VARCHAR(255), IN p_cantidad DECIMAL(12,2),
-    IN p_peso_unitario DECIMAL(10,3), IN p_precio_unitario DECIMAL(12,2), IN p_descuento_monto DECIMAL(12,2),
-    IN p_subtotal DECIMAL(12,2), IN p_total DECIMAL(12,2), OUT p_id_detalle_venta INT
-)
+CREATE PROCEDURE `sp_agregar_detalle_venta`(IN p_id_venta INT, IN p_id_articulo INT, IN p_descripcion VARCHAR(255), IN p_cantidad DECIMAL(12,2), IN p_peso_unitario DECIMAL(10,3), IN p_precio_unitario DECIMAL(12,2), IN p_descuento_monto DECIMAL(12,2), IN p_subtotal DECIMAL(12,2), IN p_total DECIMAL(12,2), OUT p_id_detalle_venta INT)
 BEGIN
-    INSERT INTO detalle_venta(
-        id_venta, id_articulo, descripcion, cantidad, peso_unitario,
-        precio_unitario, descuento_monto, subtotal, total
-    ) VALUES (
-        p_id_venta, p_id_articulo, p_descripcion, p_cantidad, p_peso_unitario,
-        p_precio_unitario, p_descuento_monto, p_subtotal, p_total
-    );
+    INSERT INTO detalle_venta(id_venta, id_articulo, descripcion, cantidad, peso_unitario, precio_unitario, descuento_monto, subtotal, total) VALUES (p_id_venta, p_id_articulo, p_descripcion, p_cantidad, p_peso_unitario, p_precio_unitario, p_descuento_monto, p_subtotal, p_total);
     SET p_id_detalle_venta = LAST_INSERT_ID();
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_consumir_stock_lote_venta`$$
-CREATE PROCEDURE `sp_consumir_stock_lote_venta`(
-    IN p_id_detalle_venta INT,
-    IN p_id_articulo INT,
-    IN p_cantidad_a_consumir DECIMAL(12,2)
-)
+CREATE PROCEDURE `sp_consumir_stock_lote_venta`(IN p_id_detalle_venta INT, IN p_id_articulo INT, IN p_cantidad_a_consumir DECIMAL(12,2))
 BEGIN
-    DECLARE v_cantidad_restante DECIMAL(12,2);
-    DECLARE v_id_lote_actual INT;
-    DECLARE v_disponible_lote DECIMAL(12,2);
-    DECLARE v_cantidad_consumida DECIMAL(12,2);
-    DECLARE finished BOOLEAN DEFAULT FALSE;
-
-    DECLARE cur_lotes CURSOR FOR
-        SELECT
-            id_lote, cantidad_disponible
-        FROM inventario_lote
-        WHERE id_articulo = p_id_articulo
-          AND cantidad_disponible > 0
-        ORDER BY
-            fecha_vencimiento IS NULL ASC,
-            fecha_vencimiento ASC,
-            fecha_ingreso ASC;
-
+    DECLARE v_cantidad_restante DECIMAL(12,2); DECLARE v_id_lote_actual INT; DECLARE v_disponible_lote DECIMAL(12,2); DECLARE v_cantidad_consumida DECIMAL(12,2); DECLARE finished BOOLEAN DEFAULT FALSE;
+    DECLARE cur_lotes CURSOR FOR SELECT id_lote, cantidad_disponible FROM inventario_lote WHERE id_articulo = p_id_articulo AND cantidad_disponible > 0 ORDER BY fecha_vencimiento IS NULL ASC, fecha_vencimiento ASC, fecha_ingreso ASC;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = TRUE;
-
     SET v_cantidad_restante = p_cantidad_a_consumir;
-
     OPEN cur_lotes;
-
     lote_loop: LOOP
         FETCH cur_lotes INTO v_id_lote_actual, v_disponible_lote;
-
         IF finished OR v_cantidad_restante <= 0 THEN
             LEAVE lote_loop;
         END IF;
-
         SET v_cantidad_consumida = LEAST(v_cantidad_restante, v_disponible_lote);
-
-        UPDATE inventario_lote
-        SET cantidad_disponible = cantidad_disponible - v_cantidad_consumida
-        WHERE id_lote = v_id_lote_actual;
-
-        INSERT INTO lote_venta (id_detalle_venta, id_lote, cantidad)
-        VALUES (p_id_detalle_venta, v_id_lote_actual, v_cantidad_consumida);
-
+        UPDATE inventario_lote SET cantidad_disponible = cantidad_disponible - v_cantidad_consumida WHERE id_lote = v_id_lote_actual;
+        INSERT INTO lote_venta (id_detalle_venta, id_lote, cantidad) VALUES (p_id_detalle_venta, v_id_lote_actual, v_cantidad_consumida);
         SET v_cantidad_restante = v_cantidad_restante - v_cantidad_consumida;
-
         UPDATE articulo SET cantidad = cantidad - v_cantidad_consumida WHERE id = p_id_articulo;
-
     END LOOP;
-
     CLOSE cur_lotes;
-
     IF v_cantidad_restante > 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Stock insuficiente en lotes disponibles.';
     END IF;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_conformidad_cliente`$$
-CREATE PROCEDURE `sp_agregar_conformidad_cliente`(
-    IN p_id_venta INT, IN p_nombre_cliente_confirma VARCHAR(255),
-    IN p_dni_cliente_confirma VARCHAR(20), IN p_tipo_entrega ENUM('tienda', 'remision')
-)
+CREATE PROCEDURE `sp_agregar_conformidad_cliente`(IN p_id_venta INT, IN p_nombre_cliente_confirma VARCHAR(255), IN p_dni_cliente_confirma VARCHAR(20), IN p_tipo_entrega ENUM('tienda', 'remision'))
 BEGIN
-    INSERT INTO conformidad_cliente (id_venta, nombre_cliente_confirma, dni_cliente_confirma, tipo_entrega)
-    VALUES (p_id_venta, p_nombre_cliente_confirma, p_dni_cliente_confirma, p_tipo_entrega);
+    INSERT INTO conformidad_cliente (id_venta, nombre_cliente_confirma, dni_cliente_confirma, tipo_entrega) VALUES (p_id_venta, p_nombre_cliente_confirma, p_dni_cliente_confirma, p_tipo_entrega);
 END$$
 
----
 -- ******************************************************
 -- 6. GESTIÓN DE GASTOS
 -- ******************************************************
@@ -671,7 +561,6 @@ BEGIN
     );
 END$$
 
----
 -- ******************************************************
 -- 7. PROCEDIMIENTOS TRANSACCIONALES VARIOS
 -- ******************************************************
@@ -724,4 +613,4 @@ BEGIN
     );
 END$$
 
-DELIMITER ;s
+DELIMITER ;

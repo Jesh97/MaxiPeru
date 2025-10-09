@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Listado de Compras</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        /* Estilos Premium y Reducidos */
         body { font-size: 0.85rem; }
         h2 { font-size: 1.5rem; }
         .table th, .table td { padding: 0.35rem; font-size: 0.8rem; }
@@ -14,6 +14,17 @@
         .modal-body strong { font-size: 0.85rem; }
         .modal-header.bg-gradient-primary { background: linear-gradient(45deg, #007bff, #0056b3); }
         .nav-link { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
+
+        .btn-warning-custom {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #343a40;
+        }
+        .btn-warning-custom:hover {
+            background-color: #e0a800;
+            border-color: #d39e00;
+            color: #343a40;
+        }
     </style>
 </head>
 <body>
@@ -49,10 +60,8 @@
             </div>
             <div class="modal-body">
 
-                <!-- INFO PRINCIPAL DE LA COMPRA -->
                 <div id="info-compra" class="mb-3 p-3 bg-light rounded shadow-sm border-left border-4 border-info"></div>
 
-                <!-- INFO PROVEEDOR -->
                 <div id="info-proveedor" class="mb-3 p-3 bg-light rounded shadow-sm border-left border-4 border-primary"></div>
 
                 <ul class="nav nav-pills mb-3" id="detallesTab" role="tablist">
@@ -69,7 +78,6 @@
 
                 <div class="tab-content">
 
-                    <!-- PESTAÑA PRODUCTOS Y COSTOS -->
                     <div class="tab-pane fade show active" id="productos">
                         <h6 class="mb-2 text-secondary">Detalles de Artículos</h6>
                         <div class="table-responsive">
@@ -104,12 +112,10 @@
                         </div>
                     </div>
 
-                    <!-- PESTAÑA GUÍA TRANSPORTE -->
                     <div class="tab-pane fade" id="guia">
                         <div id="info-guia" class="p-3 bg-light rounded shadow-sm border-left border-4 border-success"></div>
                     </div>
 
-                    <!-- PESTAÑA REFERENCIAS -->
                     <div class="tab-pane fade" id="referencia">
                         <div id="info-referencia" class="p-3 bg-light rounded shadow-sm border-left border-4 border-warning"></div>
                     </div>
@@ -129,46 +135,31 @@
 <script>
     let compraActual = null;
 
-    /**
-     * Función auxiliar para formatear y mostrar valores.
-     * Mantiene la corrección para Fechas (que incluyen '-') y para números (que no son fechas/moneda/peso).
-     */
     function mostrarValor(valor, prefijo = '', sufijo = '') {
         if (valor === null || valor === undefined || valor === 0 || valor === '0.00' || valor === '' || valor === '0') {
             return '-';
         }
 
-        // Si el valor es una cadena y contiene un guion (asumiendo formato de fecha dd-MM-yyyy)
-        // se devuelve directamente sin intentar parsear como número.
         if (typeof valor === 'string' && valor.includes('-')) {
             return valor;
         }
 
-        // Intenta convertir a número si es string o number
         const num = parseFloat(valor);
 
         if (!isNaN(num)) {
-            // Caso 1: Es Moneda (S/) o Peso (kg). Aplicar formato de decimales fijos.
             if (prefijo.includes('S/') || sufijo.includes('kg')) {
                 const isCurrency = prefijo.includes('S/');
                 const decimalPlaces = isCurrency ? 2 : 3;
-
-                // Devuelve el número con decimales y sus prefijos/sufijos
                 return `${prefijo}${num.toFixed(decimalPlaces)}${sufijo}`;
             }
 
-            // Caso 2: Es un número, pero NO es moneda ni peso (ej: ID, Serie, Correlativo).
-            // Devolverlo como un entero sin decimales forzados.
             return String(Math.round(num));
         }
 
-        // Caso 3: Es una cadena de texto (ej: tipo comprobante, etc.)
         return valor;
     }
 
-    // Función para cargar los datos en la tabla principal
     async function cargarCompras() {
-        // Asegúrate que el endpoint sea el correcto:
         const res = await fetch("/listarCompra");
         const compras = await res.json();
         const tbody = document.getElementById("tabla-compras");
@@ -186,6 +177,7 @@
                 <td>${mostrarValor(compra.moneda)}</td>
                 <td><span class="badge bg-success">${mostrarValor(compra.total, 'S/ ')}</span></td>
                 <td>
+                    <button class="btn btn-sm btn-warning-custom fw-bold me-1" onclick='editarCompra(${compra.id_compra})'><i class="bi bi-pencil-square"></i> Editar</button>
                     <button class="btn btn-sm btn-primary fw-bold" onclick='verDetalles(${JSON.stringify(compra)})'>Detalles</button>
                 </td>
             `;
@@ -193,11 +185,9 @@
         });
     }
 
-    // Función para mostrar los detalles en el modal
     function verDetalles(compra) {
         compraActual = compra;
 
-        // 1. Info Compra
         document.getElementById("info-compra").innerHTML = `
             <div class="row">
                 <div class="col-md-3"><strong>Subtotal:</strong> ${mostrarValor(compra.subtotal, 'S/ ')}</div>
@@ -212,7 +202,6 @@
             </div>
         `;
 
-        // 2. Info Proveedor
         const proveedor = compra.proveedor;
         document.getElementById("info-proveedor").innerHTML = `
             <div class="row">
@@ -225,7 +214,6 @@
             </div>
         `;
 
-        // 3. Productos y Costos de Transporte por Detalle
         const tbodyProducto = document.getElementById("tabla-producto");
         tbodyProducto.innerHTML = "";
         const tbodyTransporte = document.getElementById("tabla-transporte");
@@ -233,7 +221,6 @@
 
         if (compra.detalles && compra.detalles.length > 0) {
             compra.detalles.forEach(d => {
-                // Tabla de Productos
                 tbodyProducto.innerHTML += `
                     <tr>
                         <td>${mostrarValor(d.codigo_articulo)}</td>
@@ -246,7 +233,6 @@
                         <td>${mostrarValor(d.peso_total, '', ' kg')}</td>
                     </tr>`;
 
-                // Tabla de Costos de Transporte por Ítem
                 tbodyTransporte.innerHTML += `
                     <tr>
                         <td>${mostrarValor(d.coste_unitario_transporte, 'S/ ')}</td>
@@ -259,10 +245,7 @@
         }
 
 
-        // 4. Guía Transporte
         const gt = compra.guia || {};
-
-        // --- INICIO DE REESTRUCTURACIÓN DE GUÍA TRANSPORTE CON CAMPOS SOLICITADOS ---
         const infoGuiaHTML = gt.id_guia ? `
             <div class="mb-3 p-3 border rounded" style="background-color: #f0fff0;">
                 <h6 class="text-success mb-3">Datos de la Guía de Remisión (Emisor)</h6>
@@ -282,7 +265,6 @@
             <div class="p-3 border rounded" style="background-color: #fff8e1;">
                 <h6 class="text-warning mb-3">Datos del Traslado</h6>
                 <div class="row">
-                    <!-- Nuevos campos: Partida y Llegada -->
                     <div class="col-md-6"><strong>Punto de Partida:</strong> ${mostrarValor(gt.direccion_partida)}</div>
                     <div class="col-md-6"><strong>Punto de Llegada:</strong> ${mostrarValor(gt.direccion_llegada)}</div>
                 </div>
@@ -305,12 +287,9 @@
                 </div>
             </div>
         ` : `<p class="text-muted">No hay guía de transporte asociada a esta compra.</p>`;
-        // --- FIN DE REESTRUCTURACIÓN DE GUÍA TRANSPORTE CON CAMPOS SOLICITADOS ---
 
         document.getElementById("info-guia").innerHTML = infoGuiaHTML;
 
-
-        // 5. Referencia Compra
         const rc = compra.referencia || {};
         const infoReferenciaHTML = rc.id_referencia ? `
             <div><strong>Número Cotización:</strong> ${mostrarValor(rc.numero_cotizacion)}</div>
@@ -318,30 +297,27 @@
         ` : `<p class="text-muted">No hay referencias (cotización/pedido) asociadas a esta compra.</p>`;
         document.getElementById("info-referencia").innerHTML = infoReferenciaHTML;
 
-        // 6. Mostrar el Modal
         new bootstrap.Modal(document.getElementById("detallesModal")).show();
     }
 
     function descargarFactura() {
         if (compraActual) {
             const id = compraActual.id_compra;
-            // Reemplazar alert()
-            console.log(`Simulando la descarga de la factura/boleta #${id}.`);
-        } else {
-            // Reemplazar alert()
-            console.log("No se ha seleccionado ninguna compra.");
+            alert(`Descargando factura #${id}...`);
         }
     }
 
     function descargarGuiaTransporte() {
         if (compraActual && compraActual.guia && compraActual.guia.id_guia) {
             const id = compraActual.guia.id_guia;
-            // Reemplazar alert()
-            console.log(`Simulando la descarga de la guía de transporte #${id}.`);
+            alert(`Descargando guía de transporte #${id}...`);
         } else {
-            // Reemplazar alert()
-            console.log("No hay información de guía de transporte para esta compra.");
+            alert("No hay información de guía de transporte para esta compra.");
         }
+    }
+
+    function editarCompra(idCompra) {
+        window.location.href = `editarCompra.html?id=${idCompra}`;
     }
 
     document.addEventListener("DOMContentLoaded", cargarCompras);
