@@ -41,7 +41,7 @@ public class CompraServlet extends HttpServlet {
             out.print(gson.toJson(lista));
         } else {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("{\"error\":\"Parámetro 'buscarArticulo' es requerido.\"}");
+            out.print(gson.toJson(Map.of("error","Parámetro 'buscarArticulo' es requerido.")));
         }
         out.flush();
     }
@@ -269,14 +269,14 @@ public class CompraServlet extends HttpServlet {
 
         } catch (IllegalArgumentException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de validación: " + e.getMessage())));
+            response.getWriter().write(gson.toJson(Map.of("success", false, "message", e.getMessage())));
         } catch (SQLIntegrityConstraintViolationException e) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
-            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de Integridad SQL (Verifique RUC/Correlativo): " + e.getMessage())));
+            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de Integridad SQL: Verifique que no exista un comprobante duplicado (Serie/Correlativo).")));
         }
         catch (SQLException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error SQL: " + e.getMessage())));
+            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de Base de Datos: " + e.getMessage())));
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error Inesperado: " + e.getMessage())));
@@ -402,14 +402,14 @@ public class CompraServlet extends HttpServlet {
 
         } catch (IllegalArgumentException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de validación: " + e.getMessage())));
+            response.getWriter().write(gson.toJson(Map.of("success", false, "message", e.getMessage())));
         } catch (SQLIntegrityConstraintViolationException e) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
-            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de Integridad SQL (Verifique RUC/Correlativo): " + e.getMessage())));
+            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de Integridad SQL: Verifique RUC/Correlativo.")));
         }
         catch (SQLException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error SQL: " + e.getMessage())));
+            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de Base de Datos: " + e.getMessage())));
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error Inesperado: " + e.getMessage())));

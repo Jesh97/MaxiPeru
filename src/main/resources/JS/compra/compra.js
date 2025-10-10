@@ -15,9 +15,8 @@ const TIPO_PAGO_SERVLET_URL = '/guardarTipoPago';
 
 let referencia = { numeroCotizacion: '', numeroPedido: '' };
 let guia = {
-    ruc: '', fechaEmision: '', tipoComprobante: '', serie: '', correlativo: '',
-    puntoPartida: '',puntoLlegada: '',
-    costeTotalTransporte: 0.00, ciudadTraslado: '', numeroGuia: '', serieGuiaTransporte: '',
+    rucGuia: '', razonSocialGuia: '', fechaEmision: '', tipoComprobante: '', serie: '', correlativo: '',
+    puntoPartida: '', puntoLlegada: '', costeTotalTransporte: 0.00, ciudadTraslado: '', numeroGuia: '', serieGuiaTransporte: '',
     correlativoGuiaTransporte: '', peso: '', fechaPedido: '', fechaEntrega: ''
 };
 
@@ -124,25 +123,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
-    const precioUnitario = $('#th-precio-totales');
-    const pesoUnitario = $('#th-peso-totales');
-    const costoUnitarioTransporte = $('#th-costo-transporte-totales');
-    const totalUnitario = $('#th-total-totales');
+    function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
+        const precioUnitario = $('#th-precio-totales');
+        const pesoUnitario = $('#th-peso-totales');
+        const costoUnitarioTransporte = $('#th-costo-transporte-totales');
+        const totalUnitario = $('#th-total-totales');
 
-    if (precioUnitario) {
-        precioUnitario.textContent = esTotalPorCantidad ? 'Precio Total' : 'Precio Unitario';
+        if (precioUnitario) precioUnitario.textContent = esTotalPorCantidad ? 'Precio Total' : 'Precio Unitario';
+        if (pesoUnitario) pesoUnitario.textContent = esTotalPorCantidad ? 'Peso Total' : 'Peso Unitario';
+        if (costoUnitarioTransporte) costoUnitarioTransporte.textContent = esTotalPorCantidad ? 'Costo Total de Transporte' : 'Costo Unitario de Transporte';
+        if (totalUnitario) totalUnitario.textContent = esTotalPorCantidad ? 'Total por Cantidad' : 'Total Unitario';
     }
-    if (pesoUnitario) {
-        pesoUnitario.textContent = esTotalPorCantidad ? 'Peso Total' : 'Peso Unitario';
-    }
-    if (costoUnitarioTransporte) {
-        costoUnitarioTransporte.textContent = esTotalPorCantidad ? 'Costo Total de Transporte' : 'Costo Unitario de Transporte';
-    }
-    if (totalUnitario) {
-        totalUnitario.textContent = esTotalPorCantidad ? 'Total por Cantidad' : 'Total Unitario';
-    }
-}
 
     function renderProveedorSuggestions(items) {
         sugerencias.innerHTML = '';
@@ -187,9 +178,9 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
 
     function crearFilaProducto(producto = {}) {
         const filaId = 'fila-' + Date.now();
-
         const trGeneral = document.createElement('tr');
         trGeneral.dataset.filaId = filaId;
+        trGeneral.dataset.pesoUnitario = producto.pesoUnitario || '0.000';
         trGeneral.innerHTML = `
             <td><input type="text" class="form-control form-control-sm codigo" placeholder="Código" value="${producto.codigo || ''}"></td>
             <td><input type="number" min="0" step="1" value="${producto.cantidad || 1}" class="form-control form-control-sm cantidad"></td>
@@ -229,7 +220,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         trFinanciero.dataset.descuentoItemTipo = 'porcentaje';
         trFinanciero.dataset.descuentoItemMotivo = '';
         trFinanciero.dataset.tasaIgvItem = '0.18';
-
         trFinanciero.innerHTML = `
             <td class="descripcion-readonly">${producto.descripcion || ''}</td>
             <td class="col-bonif text-center align-middle"><input class="form-check-input bonificacion" type="checkbox" /></td>
@@ -326,9 +316,7 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             }
         });
 
-        const inputFieldsOtros = [
-            trFinanciero.querySelector('.bonificacion')
-        ];
+        const inputFieldsOtros = [trFinanciero.querySelector('.bonificacion')];
         inputFieldsOtros.forEach(input => {
             if (input) {
                 input.addEventListener('input', actualizarTotales);
@@ -345,7 +333,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                 const filaId = btnDescuentoItem.dataset.itemId;
                 itemEnEdicion = filaId;
                 const trFinanciero = $(`#tablaProductosFinanciero tr[data-fila-id="${filaId}"]`);
-
                 tasaIgvDescuentoSelect.value = (parseFloat(trFinanciero.dataset.tasaIgvItem) * 100).toString();
                 tipoValorDescuentoItemSelect.value = trFinanciero.dataset.descuentoItemTipo;
                 valorDescuentoItemInput.value = trFinanciero.dataset.descuentoItemValor;
@@ -361,7 +348,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                 modalLotes.show();
             });
         }
-
 
         const cantidadInput = trGeneral.querySelector('.cantidad');
         if (cantidadInput) {
@@ -384,7 +370,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                  if (cantidadLotes > nuevaCantidad) {
                     alert(`La cantidad total asignada en los lotes (${cantidadLotes}) no puede ser mayor que la cantidad general del producto (${nuevaCantidad}).`);
                     cantidadInput.value = nuevaCantidad;
-                    // Opcionalmente, podrías limpiar los lotes si la cantidad general disminuye
                     lotes[filaId] = [];
                     actualizarResumenLotesEnModal();
                 }
@@ -393,136 +378,123 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         actualizarTotales();
     }
 
-        async function buscarProducto(q, trFilaGeneral = null) {
-            try {
-                // *** MODIFICACIÓN: Usar COMPRA_SERVLET_URL para buscar solo artículos de compra ***
-                const url = `${COMPRA_SERVLET_URL}?buscarArticulo=${encodeURIComponent(q)}`;
-                // **********************************************************************************
-                const resp = await fetch(url);
-                if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
-                const data = await resp.json();
+    async function buscarProducto(q, trFilaGeneral = null) {
+        try {
+            const url = `${COMPRA_SERVLET_URL}?buscarArticulo=${encodeURIComponent(q)}`;
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
+            const data = await resp.json();
 
-                if (!trFilaGeneral) {
-                    mostrarSugerenciasProducto(data);
-                    return;
-                }
-
-                if (data && data.length > 0) {
-                    const producto = data[0];
-
-                    trFilaGeneral.querySelector('.codigo').value = producto.codigo || '';
-                    trFilaGeneral.querySelector('.unidadMedida').value = producto.unidadMedida || 'UNIDAD';
-                    trFilaGeneral.querySelector('.descripcion').value = producto.descripcion || '';
-                    trFilaGeneral.querySelector('.idProducto').value = producto.idProducto || 0;
-                    trFilaGeneral.querySelector('.precioUnitario').value = producto.precioUnitario || '0.00';
-
-
-                    const selectorFinanciero = `#tablaProductosFinanciero tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
-                    const trFinanciero = document.querySelector(selectorFinanciero);
-                    if (trFinanciero) {
-                        trFinanciero.dataset.descuentoItemValor = '0';
-                        trFinanciero.dataset.descuentoItemTipo = 'porcentaje';
-                        trFinanciero.dataset.tasaIgvItem = '0.18';
-                        trFinanciero.dataset.descuentoItemMotivo = '';
-                        trFinanciero.querySelector('.descripcion-readonly').textContent = producto.descripcion || '';
-                    }
-
-                    const selectorGuiaTransporte = `#tablaProductosGuiaTransporte tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
-                    const trGuiaTransporte = document.querySelector(selectorGuiaTransporte);
-                    if (trGuiaTransporte) {
-                        trGuiaTransporte.querySelector('.costoUnitTransporte').value = '0.0000';
-                        trGuiaTransporte.querySelector('.descripcion-readonly').textContent = producto.descripcion || '';
-                        trGuiaTransporte.querySelector('.codigo-readonly').textContent = producto.codigo || '';
-                        trGuiaTransporte.querySelector('.cantidad-readonly').textContent = trFilaGeneral.querySelector('.cantidad').value;
-                        const pesoTotal = (parseFloat(producto.pesoUnitario) || 0) * (parseInt(trFilaGeneral.querySelector('.cantidad').value) || 0);
-                        trGuiaTransporte.querySelector('.peso-readonly').textContent = `${pesoTotal.toFixed(3)} kg`;
-                    }
-
-                    const selectorTotales = `#tablaProductosTotales tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
-                    const trTotales = document.querySelector(selectorTotales);
-                    if (trTotales) {
-                        trTotales.querySelector('.descripcion-readonly').textContent = producto.descripcion || '';
-                    }
-
-                    actualizarTotales();
-                }
-            } catch (err) {
-                console.error("Error al buscar producto:", err);
-            }
-        }
-
-        function mostrarSugerenciasProducto(productos) {
-            let container = $('#sugerenciasProducto');
-            if (!container) {
-                console.error("No se encontró el contenedor de sugerencias de productos.");
+            if (!trFilaGeneral) {
+                mostrarSugerenciasProducto(data);
                 return;
             }
 
-            container.innerHTML = '';
-            if (!productos || productos.length === 0) {
+            if (data && data.length > 0) {
+                const producto = data[0];
+                trFilaGeneral.dataset.pesoUnitario = producto.pesoUnitario || '0.000';
+                trFilaGeneral.querySelector('.codigo').value = producto.codigo || '';
+                trFilaGeneral.querySelector('.unidadMedida').value = producto.unidadMedida || 'UNIDAD';
+                trFilaGeneral.querySelector('.descripcion').value = producto.descripcion || '';
+                trFilaGeneral.querySelector('.idProducto').value = producto.idProducto || 0;
+                trFilaGeneral.querySelector('.precioUnitario').value = producto.precioUnitario || '0.00';
+
+                const selectorFinanciero = `#tablaProductosFinanciero tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
+                const trFinanciero = document.querySelector(selectorFinanciero);
+                if (trFinanciero) {
+                    trFinanciero.dataset.descuentoItemValor = '0';
+                    trFinanciero.dataset.descuentoItemTipo = 'porcentaje';
+                    trFinanciero.dataset.tasaIgvItem = '0.18';
+                    trFinanciero.dataset.descuentoItemMotivo = '';
+                    trFinanciero.querySelector('.descripcion-readonly').textContent = producto.descripcion || '';
+                }
+
+                const selectorGuiaTransporte = `#tablaProductosGuiaTransporte tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
+                const trGuiaTransporte = document.querySelector(selectorGuiaTransporte);
+                if (trGuiaTransporte) {
+                    trGuiaTransporte.querySelector('.costoUnitTransporte').value = '0.0000';
+                    trGuiaTransporte.querySelector('.descripcion-readonly').textContent = producto.descripcion || '';
+                    trGuiaTransporte.querySelector('.codigo-readonly').textContent = producto.codigo || '';
+                    trGuiaTransporte.querySelector('.cantidad-readonly').textContent = trFilaGeneral.querySelector('.cantidad').value;
+                }
+
+                const selectorTotales = `#tablaProductosTotales tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
+                const trTotales = document.querySelector(selectorTotales);
+                if (trTotales) {
+                    trTotales.querySelector('.descripcion-readonly').textContent = producto.descripcion || '';
+                }
+
+                actualizarTotales();
+            }
+        } catch (err) {
+            console.error("Error al buscar producto:", err);
+        }
+    }
+
+    function mostrarSugerenciasProducto(productos) {
+        let container = $('#sugerenciasProducto');
+        if (!container) return;
+
+        container.innerHTML = '';
+        if (!productos || productos.length === 0) {
+            container.classList.add('d-none');
+            return;
+        }
+
+        productos.slice(0, 6).forEach(p => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'list-group-item list-group-item-action';
+            btn.innerHTML = `<strong>${p.codigo}</strong> - ${p.descripcion}`;
+            btn.addEventListener('click', () => {
+                crearFilaProducto(p);
                 container.classList.add('d-none');
-                return;
+                $('#busquedaProductoInput').value = '';
+            });
+            container.appendChild(btn);
+        });
+        container.classList.remove('d-none');
+    }
+
+    function handleProductTypeChange() {
+        btnContainer.innerHTML = '';
+        const wrapper = document.createElement('div');
+        wrapper.className = 'd-flex align-items-center position-relative';
+        wrapper.innerHTML = `
+                <input type="text" id="busquedaProductoInput" class="form-control form-control-sm me-2" placeholder="Buscar producto por código o descripción">
+                <div id="sugerenciasProducto" class="list-group d-none" role="listbox" style="position: absolute; z-index: 1050; width: 300px; right: 0; top: 100%; max-height: 250px; overflow-y: auto;"></div>
+                <button type="button" id="btnAgregarProducto" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg"></i> Agregar Producto
+                </button>
+            `;
+        btnContainer.appendChild(wrapper);
+
+        const busquedaProductoInput = $('#busquedaProductoInput', wrapper);
+        const btnAgregarProducto = $('#btnAgregarProducto', wrapper);
+
+        busquedaProductoInput.addEventListener('input', () => {
+            const q = busquedaProductoInput.value.trim();
+            if (q) buscarProducto(q);
+        });
+
+        btnAgregarProducto.onclick = () => {
+            crearFilaProducto();
+            const sugerencias = $('#sugerenciasProducto');
+            if (sugerencias) sugerencias.classList.add('d-none');
+        };
+
+        const clickFueraListener = (e) => {
+            if (!wrapper.contains(e.target)) {
+                $('#sugerenciasProducto', wrapper)?.classList.add('d-none');
             }
+        };
+        document.addEventListener('click', clickFueraListener);
+    }
 
-            productos.slice(0, 6).forEach(p => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'list-group-item list-group-item-action';
-                btn.innerHTML = `<strong>${p.codigo}</strong> - ${p.descripcion}`;
-                btn.addEventListener('click', () => {
-                    crearFilaProducto(p);
-                    container.classList.add('d-none');
-                    $('#busquedaProductoInput').value = '';
-                });
-                container.appendChild(btn);
-            });
-            container.classList.remove('d-none');
-        }
-
-        function handleProductTypeChange() {
-            btnContainer.innerHTML = '';
-            const wrapper = document.createElement('div');
-            wrapper.className = 'd-flex align-items-center position-relative';
-            wrapper.innerHTML = `
-                    <input type="text" id="busquedaProductoInput" class="form-control form-control-sm me-2" placeholder="Buscar producto por código o descripción">
-                    <div id="sugerenciasProducto" class="list-group d-none" role="listbox" style="position: absolute; z-index: 1050; width: 300px; right: 0; top: 100%; max-height: 250px; overflow-y: auto;"></div>
-                    <button type="button" id="btnAgregarProducto" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus-lg"></i> Agregar Producto
-                    </button>
-                `;
-            btnContainer.appendChild(wrapper);
-
-            const busquedaProductoInput = $('#busquedaProductoInput', wrapper);
-            const btnAgregarProducto = $('#btnAgregarProducto', wrapper);
-
-            busquedaProductoInput.addEventListener('input', () => {
-                const q = busquedaProductoInput.value.trim();
-                if (q) {
-                    buscarProducto(q);
-                }
-            });
-
-            btnAgregarProducto.onclick = () => {
-                crearFilaProducto();
-                const sugerencias = $('#sugerenciasProducto');
-                if (sugerencias) sugerencias.classList.add('d-none');
-            };
-
-            const clickFueraListener = (e) => {
-                if (!wrapper.contains(e.target)) {
-                    $('#sugerenciasProducto', wrapper)?.classList.add('d-none');
-                }
-            };
-            document.addEventListener('click', clickFueraListener);
-        }
-
-        handleProductTypeChange();
+    handleProductTypeChange();
 
     function unidadAbreviatura(unidad) {
-        const map = {
-            'LITRO': 'L', 'GALÓN': 'GL', 'BIDÓN': 'BD', 'UNIDAD': 'U', 'KILOGRAMO': 'KG', 'CIENTO': 'C',
-            'PAQUETE': 'PQ', 'MILLAR': 'MLL', 'ROLLO': 'RL', 'SACO': 'S'
-        };
+        const map = {'LITRO': 'L', 'GALÓN': 'GL', 'BIDÓN': 'BD', 'UNIDAD': 'U', 'KILOGRAMO': 'KG', 'CIENTO': 'C', 'PAQUETE': 'PQ', 'MILLAR': 'MLL', 'ROLLO': 'RL', 'SACO': 'S'};
         return map[unidad] || unidad;
     }
 
@@ -544,8 +516,8 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         let descuentoTotalGlobal = 0;
         let costeTransporteProductos = 0;
         let totalIgvPorItem = 0;
-
         let tipoCambioValor = 1;
+
         if (moneda !== 'Soles' && inputTipoCambio) {
             tipoCambioValor = parseFloat(inputTipoCambio.value);
             if (isNaN(tipoCambioValor) || tipoCambioValor <= 0) tipoCambioValor = 1;
@@ -570,9 +542,10 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             const trFinanciero = $(`#tablaProductosFinanciero tr[data-fila-id="${filaId}"]`);
             const trGuiaTransporte = $(`#tablaProductosGuiaTransporte tr[data-fila-id="${filaId}"]`);
             const trTotales = $(`#tablaProductosTotales tr[data-fila-id="${filaId}"]`);
-            const idProducto = trGeneral.querySelector('.idProducto')?.value;
             const cantidad = parseFloat(trGeneral.querySelector('.cantidad')?.value) || 0;
             const precioUnitario = parseFloat(trGeneral.querySelector('.precioUnitario')?.value) || 0;
+            const pesoUnitario = parseFloat(trGeneral.dataset.pesoUnitario) || 0;
+            const pesoTotalFila = pesoUnitario * cantidad;
             const costoUnitarioTransporteGlobal = costosTransporteGlobales[filaId] ? (costosTransporteGlobales[filaId].costoAcumulado / costosTransporteGlobales[filaId].cantidadAcumulada) : 0;
             const costeTransporteFila = cantidad * costoUnitarioTransporteGlobal;
             const codigoProducto = trGeneral.querySelector('.codigo').value;
@@ -590,7 +563,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                 descuentoValor = parseFloat(trFinanciero.dataset.descuentoItemValor) || 0;
                 descuentoTipo = trFinanciero.dataset.descuentoItemTipo;
                 igvTasa = parseFloat(trFinanciero.dataset.tasaIgvItem) || IGV_RATE;
-
                 if (descuentoTipo === 'porcentaje') {
                     descuentoValor = precioVentaTotal * (descuentoValor / 100);
                 } else if (incluyeIgv) {
@@ -600,17 +572,11 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
 
             const precioVentaConDescuento = Math.max(0, precioVentaTotal - descuentoValor);
             const precioConDescuentoItemEl = trFinanciero.querySelector('.precio-con-descuento-item');
-            if (precioConDescuentoItemEl) {
-                precioConDescuentoItemEl.textContent = formatCurrency(precioVentaConDescuento, 'PEN');
-            }
+            if (precioConDescuentoItemEl) precioConDescuentoItemEl.textContent = formatCurrency(precioVentaConDescuento, 'PEN');
 
-            let subtotalProducto = incluyeIgv
-                ? precioVentaConDescuento / (1 + igvTasa)
-                : precioVentaConDescuento;
-
+            let subtotalProducto = incluyeIgv ? precioVentaConDescuento / (1 + igvTasa) : precioVentaConDescuento;
             let igvProducto = subtotalProducto * igvTasa;
             totalIgvPorItem += igvProducto;
-
             const unidad = trGeneral.querySelector('.unidadMedida')?.value;
             const unidadShort = unidadAbreviatura(unidad);
 
@@ -618,35 +584,26 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             if (trGuiaTransporte.querySelector('.descripcion-readonly')) trGuiaTransporte.querySelector('.descripcion-readonly').textContent = descripcionProducto;
             if (trFinanciero.querySelector('.descripcion-readonly')) trFinanciero.querySelector('.descripcion-readonly').textContent = descripcionProducto;
             if (trTotales.querySelector('.descripcion-readonly')) trTotales.querySelector('.descripcion-readonly').textContent = descripcionProducto;
-
             if (trGuiaTransporte.querySelector('.codigo-readonly')) trGuiaTransporte.querySelector('.codigo-readonly').textContent = codigoProducto;
             if (trGuiaTransporte.querySelector('.cantidad-readonly')) trGuiaTransporte.querySelector('.cantidad-readonly').textContent = cantidad;
-
-            if (trGuiaTransporte.querySelector('.costoUnitTransporte')) {
-                trGuiaTransporte.querySelector('.costoUnitTransporte').value = costoUnitarioTransporteGlobal.toFixed(4);
-            }
+            if (trGuiaTransporte.querySelector('.costoUnitTransporte')) trGuiaTransporte.querySelector('.costoUnitTransporte').value = costoUnitarioTransporteGlobal.toFixed(4);
+            if (trGuiaTransporte.querySelector('.peso-readonly')) trGuiaTransporte.querySelector('.peso-readonly').textContent = `${pesoTotalFila.toFixed(3)} kg`;
 
             const precioConvertidoCell = trFinanciero.querySelector('.precio-convertido-cell');
-            if (precioConvertidoCell) {
-                precioConvertidoCell.textContent = moneda !== 'Soles' ? formatCurrency(precioBaseUnitarioSoles, 'PEN') : '';
-            }
+            if (precioConvertidoCell) precioConvertidoCell.textContent = moneda !== 'Soles' ? formatCurrency(precioBaseUnitarioSoles, 'PEN') : '';
+            if (trGuiaTransporte.querySelector('.costeTransporte')) trGuiaTransporte.querySelector('.costeTransporte').textContent = formatCurrency(costeTransporteFila, 'PEN');
 
-            if (trGuiaTransporte.querySelector('.costeTransporte')) {
-                trGuiaTransporte.querySelector('.costeTransporte').textContent = formatCurrency(costeTransporteFila, 'PEN');
-            }
-
-            const precioUnitarioVenta = subtotalProducto / cantidad;
+            const precioUnitarioVenta = cantidad > 0 ? subtotalProducto / cantidad : 0;
             const igvUnitario = precioUnitarioVenta * igvTasa;
-
-            // MODIFICACIÓN: solo en la pestaña de Totales se muestra la suma
-            const totalUnitario = precioUnitario + costoUnitarioTransporteGlobal;
-
+            const totalUnitario = precioUnitarioVenta + igvUnitario + costoUnitarioTransporteGlobal;
             const totalFila = subtotalProducto + igvProducto + costeTransporteFila;
 
             if (trTotales.querySelector('.precioUnitario-total')) trTotales.querySelector('.precioUnitario-total').textContent = formatCurrency(precioUnitarioVenta, 'PEN');
             if (trTotales.querySelector('.precioTotal-total')) trTotales.querySelector('.precioTotal-total').textContent = formatCurrency(subtotalProducto, 'PEN');
             if (trTotales.querySelector('.igvUnitario-total')) trTotales.querySelector('.igvUnitario-total').textContent = formatCurrency(igvUnitario, 'PEN');
             if (trTotales.querySelector('.igvTotal-total')) trTotales.querySelector('.igvTotal-total').textContent = formatCurrency(igvProducto, 'PEN');
+            if (trTotales.querySelector('.pesoUnitario-total')) trTotales.querySelector('.pesoUnitario-total').textContent = `${pesoUnitario.toFixed(3)} kg`;
+            if (trTotales.querySelector('.pesoTotal-total')) trTotales.querySelector('.pesoTotal-total').textContent = `${pesoTotalFila.toFixed(3)} kg`;
             if (trTotales.querySelector('.costoUnitarioTransporte-total')) trTotales.querySelector('.costoUnitarioTransporte-total').textContent = formatCurrency(costoUnitarioTransporteGlobal, 'PEN');
             if (trTotales.querySelector('.costeTransporte-total')) trTotales.querySelector('.costeTransporte-total').textContent = formatCurrency(costeTransporteFila, 'PEN');
             if (trTotales.querySelector('.totalUnitario-total')) trTotales.querySelector('.totalUnitario-total').textContent = formatCurrency(totalUnitario, 'PEN');
@@ -655,15 +612,14 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             trGeneral.dataset.precioConDescuento = precioVentaConDescuento.toFixed(2);
             trGeneral.dataset.igvProducto = igvProducto.toFixed(2);
             trGeneral.dataset.totalProducto = totalFila.toFixed(2);
+            trGeneral.dataset.pesoTotal = pesoTotalFila.toFixed(3);
             trGeneral.dataset.costeUnitarioTransporte = costoUnitarioTransporteGlobal.toFixed(4);
             trGeneral.dataset.costeTotalTransporte = costeTransporteFila.toFixed(2);
 
-            // Restablecido: El total de la pestaña General sigue multiplicando por la cantidad
-            if (trGeneral.querySelector('.totalProducto')) {
-                trGeneral.querySelector('.totalProducto').textContent = formatCurrency(precioUnitario * cantidad, 'PEN');
-            }
+            if (trGeneral.querySelector('.totalProducto')) trGeneral.querySelector('.totalProducto').textContent = formatCurrency(precioUnitario * cantidad, 'PEN');
 
             subtotal += subtotalProducto;
+            pesoTotalProductos += pesoTotalFila;
             costeTransporteProductos += costeTransporteFila;
         });
 
@@ -710,18 +666,9 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         if (totalPesoProductosEl) totalPesoProductosEl.textContent = `${totalPesoProductosCalculado.toFixed(3)} kg`;
     }
 
-    function toggleBonificacionColumn(show) {
-        $$('.col-bonif').forEach(el => el.classList.toggle('d-none', !show));
-    }
-
-    function toggleDescuentoItemColumn(show) {
-        $$('.col-descuento-item').forEach(el => el.classList.toggle('d-none', !show));
-        $$('.btn-descuento-item').forEach(btn => btn.style.display = show ? 'block' : 'none');
-    }
-
-    function togglePrecioConvertidoColumn(show) {
-        $$('.col-precio-convertido').forEach(el => el.classList.toggle('d-none', !show));
-    }
+    function toggleBonificacionColumn(show) { $$('.col-bonif').forEach(el => el.classList.toggle('d-none', !show)); }
+    function toggleDescuentoItemColumn(show) { $$('.col-descuento-item').forEach(el => el.classList.toggle('d-none', !show)); $$('.btn-descuento-item').forEach(btn => btn.style.display = show ? 'block' : 'none'); }
+    function togglePrecioConvertidoColumn(show) { $$('.col-precio-convertido').forEach(el => el.classList.toggle('d-none', !show)); }
 
     function actualizarVisibilidadBonificacion() {
         if (bonifSi) {
@@ -764,13 +711,8 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         const guiaTabItem = $('#guia-transporte-tab').closest('.nav-item');
         const guiaContent = $('#guia-transporte-pane');
 
-        if (guiaTabItem) {
-            guiaTabItem.classList.toggle('d-none', !hayTraslado);
-        }
-        if (guiaContent) {
-            guiaContent.classList.toggle('d-none', !hayTraslado);
-        }
-
+        if (guiaTabItem) guiaTabItem.classList.toggle('d-none', !hayTraslado);
+        if (guiaContent) guiaContent.classList.toggle('d-none', !hayTraslado);
         if (!hayTraslado && guiaTabItem?.querySelector('.nav-link.active')) {
             const generalTabButton = $('#general-tab');
             const generalTab = new bootstrap.Tab(generalTabButton);
@@ -779,14 +721,11 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
 
         if (contenedorBtnGuia) {
             contenedorBtnGuia.style.display = hayTraslado ? 'flex' : 'none';
-            if (!hayTraslado && mensajeAlertaTransporte) {
-                mensajeAlertaTransporte.classList.add('d-none');
-            }
+            if (!hayTraslado && mensajeAlertaTransporte) mensajeAlertaTransporte.classList.add('d-none');
         }
 
         const costeTransporteSpan = $('#costeTransporteLabel')?.closest('div');
         if (costeTransporteSpan) costeTransporteSpan.style.display = hayTraslado ? '' : 'none';
-
         actualizarTotales();
     }
 
@@ -859,27 +798,15 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             const tipoPagoId = parseInt($('#tipoPago')?.value, 10) || 0;
             const formaPagoId = parseInt($('#formaPago')?.value, 10) || 0;
 
-            if (proveedorId <= 0) {
-                alert('Debe seleccionar un proveedor válido.');
-                return;
-            }
-
-            if (monedaId <= 0) {
-                alert('Debe seleccionar una moneda válida.');
-                return;
-            }
+            if (proveedorId <= 0) { alert('Debe seleccionar un proveedor válido.'); return; }
+            if (monedaId <= 0) { alert('Debe seleccionar una moneda válida.'); return; }
 
             const descuentosGlobales = [];
             if (descuentoSi?.checked && tipoDescuentoSelect?.value === 'global') {
                 const tipoValor = tipoValorDescuentoSelect.value;
                 const valorDescuentoInputVal = valorDescuentoInput.value.trim();
                 const valor = parseFloat(valorDescuentoInputVal) || 0;
-                descuentosGlobales.push({
-                    motivo: 'Descuento Global',
-                    tipoValor: tipoValor,
-                    valor: valor,
-                    tasaIgv: 0.18
-                });
+                descuentosGlobales.push({ motivo: 'Descuento Global', tipoValor: tipoValor, valor: valor, tasaIgv: 0.18 });
             }
 
             const data = {
@@ -909,7 +836,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                 cajasCompra: cajas
             };
 
-
             try {
                 const response = await fetch(COMPRA_SERVLET_URL, {
                     method: 'POST',
@@ -917,8 +843,10 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                     body: JSON.stringify(data),
                 });
 
-                const result = await response.text();
-                $('#confirmMessage').textContent = response.ok ? result : `Error: ${result}`;
+                const resultData = await response.json();
+                const messageToShow = resultData.message || 'Error de comunicación con el servidor (Mensaje no recibido).';
+
+                $('#confirmMessage').textContent = messageToShow;
                 modalConfirm.show();
 
                 if (response.ok) {
@@ -930,9 +858,8 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                     lotes = {};
                     actualizarResumenCajasEnGuia();
                 }
-
             } catch (error) {
-                $('#confirmMessage').textContent = `Error de conexión: ${error.message}`;
+                $('#confirmMessage').textContent = `Error de conexión o datos: ${error.message}`;
                 modalConfirm.show();
             }
         });
@@ -957,19 +884,15 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             const response = await fetch(TIPO_COMPROBANTE_SERVLET_URL);
             if (!response.ok) throw new Error("Error al obtener comprobantes");
             const lista = await response.json();
-
             const select = document.getElementById("tipoComprobante");
             select.innerHTML = '<option value="">Seleccione</option>';
-
             lista.forEach(item => {
                 const option = document.createElement("option");
                 option.value = item.id;
                 option.textContent = item.nombre;
                 select.appendChild(option);
             });
-        } catch (error) {
-            console.error("Error cargando comprobantes:", error);
-        }
+        } catch (error) { console.error("Error cargando comprobantes:", error); }
     }
 
     async function cargarFormaPago() {
@@ -977,19 +900,15 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             const response = await fetch(FORMA_PAGO_SERVLET_URL);
             if (!response.ok) throw new Error("Error al obtener formas de pago");
             const lista = await response.json();
-
             const select = document.getElementById("formaPago");
             select.innerHTML = '<option value="">Seleccione</option>';
-
             lista.forEach(item => {
                 const option = document.createElement("option");
                 option.value = item.id;
                 option.textContent = item.nombre;
                 select.appendChild(option);
             });
-        } catch (error) {
-            console.error("Error cargando formas de pago:", error);
-        }
+        } catch (error) { console.error("Error cargando formas de pago:", error); }
     }
 
     async function cargarTipoPago() {
@@ -997,19 +916,15 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             const response = await fetch(TIPO_PAGO_SERVLET_URL);
             if (!response.ok) throw new Error("Error al obtener tipos de pago");
             const lista = await response.json();
-
             const select = document.getElementById("tipoPago");
             select.innerHTML = '<option value="">Seleccione</option>';
-
             lista.forEach(item => {
                 const option = document.createElement("option");
                 option.value = item.id;
                 option.textContent = item.nombre;
                 select.appendChild(option);
             });
-        } catch (error) {
-            console.error("Error cargando tipos de pago:", error);
-        }
+        } catch (error) { console.error("Error cargando tipos de pago:", error); }
     }
 
     if ($('#btnGuardarComprobante')) {
@@ -1022,13 +937,8 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ nombre: nuevoComprobante }),
                     });
-                    if (response.ok) {
-                        console.log('Nuevo tipo de comprobante guardado');
-                        await cargarTipoComprobantes();
-                    }
-                } catch (error) {
-                    console.error("Error al guardar tipo de comprobante:", error);
-                }
+                    if (response.ok) await cargarTipoComprobantes();
+                } catch (error) { console.error("Error al guardar tipo de comprobante:", error); }
                 modalNuevoComprobante.hide();
             }
         });
@@ -1044,14 +954,8 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ nombre: nuevaFormaPago }),
                     });
-                    if (response.ok) {
-                        console.log('Nueva forma de pago guardada');
-                        // 🔄 refrescar lista de formas de pago
-                        await cargarFormaPago();
-                    }
-                } catch (error) {
-                    console.error("Error al guardar forma de pago:", error);
-                }
+                    if (response.ok) await cargarFormaPago();
+                } catch (error) { console.error("Error al guardar forma de pago:", error); }
                 modalNuevaFormaPago.hide();
             }
         });
@@ -1067,21 +971,15 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ nombre: nuevoTipoPago }),
                     });
-                    if (response.ok) {
-                        console.log('Nuevo tipo de pago guardado');
-                        // 🔄 refrescar lista de tipos de pago
-                        await cargarTipoPago();
-                    }
-                } catch (error) {
-                    console.error("Error al guardar tipo de pago:", error);
-                }
+                    if (response.ok) await cargarTipoPago();
+                } catch (error) { console.error("Error al guardar tipo de pago:", error); }
                 modalNuevoTipoPago.hide();
             }
         });
     }
-        cargarTipoComprobantes();
-        cargarFormaPago();
-        cargarTipoPago();
+    cargarTipoComprobantes();
+    cargarFormaPago();
+    cargarTipoPago();
 
     if (bonifSi && bonifNo) {
         bonifSi.addEventListener('change', actualizarVisibilidadBonificacion);
@@ -1122,6 +1020,8 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             guia.correlativo = $('#correlativoGuia')?.value;
             guia.costeTotalTransporte = parseFloat($('#costeTransporteGuia')?.value) || 0;
             guia.ciudadTraslado = $('#ciudadTrasladoGuia')?.value;
+            guia.puntoPartida = $('#puntoPartida')?.value;
+            guia.puntoLlegada = $('#puntoLlegada')?.value;
             guia.numeroGuia = $('#numeroGuia')?.value;
             guia.serieGuiaTransporte = $('#serieGuiaTransporte')?.value;
             guia.correlativoGuiaTransporte = $('#correlativoGuiaTransporte')?.value;
@@ -1172,6 +1072,24 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         });
     }
 
+    function obtenerCajasCompraParaEnvio() {
+        const cajasCompraParaEnvio = [];
+        cajas.forEach(caja => {
+            const detallesArticulos = caja.productos.map(p => ({
+                idArticulo: parseInt(p.idArticulo, 10),
+                cantidad: p.cantidad
+            }));
+
+            cajasCompraParaEnvio.push({
+                nombreCaja: caja.nombre,
+                cantidad: 1,
+                costoCaja: caja.fleteTotal,
+                detalles: detallesArticulos
+            });
+        });
+        return cajasCompraParaEnvio;
+    }
+
     function iniciarModalCajas() {
         const productosDisponiblesEl = $('#productosDisponibles');
         const contenedorCajasModal = $('#contenedorCajasModal');
@@ -1180,22 +1098,19 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
 
         const tempCajas = JSON.parse(JSON.stringify(cajas));
 
-        const todosLosProductos = $$('#tablaProductosGeneral tr[data-fila-id]').map(tr => {
-            return {
-                filaId: tr.dataset.filaId,
-                descripcion: tr.querySelector('.descripcion').value,
-                codigo: tr.querySelector('.codigo').value,
-                cantidadTotal: parseInt(tr.querySelector('.cantidad').value, 10),
-                cantidadAsignada: 0
-            };
-        });
+        const todosLosProductos = $$('#tablaProductosGeneral tr[data-fila-id]').map(tr => ({
+            filaId: tr.dataset.filaId,
+            idArticulo: tr.dataset.idArticulo, // Agregado: se asume que existe este campo en el TR
+            descripcion: tr.querySelector('.descripcion').value,
+            codigo: tr.querySelector('.codigo').value,
+            cantidadTotal: parseInt(tr.querySelector('.cantidad').value, 10),
+            cantidadAsignada: 0
+        }));
 
         tempCajas.forEach(caja => {
             caja.productos.forEach(pCaja => {
                 const producto = todosLosProductos.find(p => p.filaId === pCaja.filaId);
-                if (producto) {
-                    producto.cantidadAsignada += pCaja.cantidad;
-                }
+                if (producto) producto.cantidadAsignada += pCaja.cantidad;
             });
         });
 
@@ -1208,7 +1123,7 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         });
 
         tempCajas.forEach(caja => {
-            const nuevaCajaEl = crearCajaEnModal(caja.id, caja.fleteTotal);
+            const nuevaCajaEl = crearCajaEnModal(caja.id, caja.fleteTotal, caja.nombre || `CAJA #${caja.id}`);
             caja.productos.forEach(prod => {
                 const item = crearItemProductoCaja(prod.filaId, prod.cantidad, prod.descripcion);
                 nuevaCajaEl.querySelector('.productos-en-caja').appendChild(item);
@@ -1228,7 +1143,7 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         }
     }
 
-    function crearCajaEnModal(id = proximoIdCaja++, fleteTotal = 0) {
+    function crearCajaEnModal(id = proximoIdCaja++, fleteTotal = 0, nombre = `CAJA #${id}`) {
         const contenedorCajasModal = $('#contenedorCajasModal');
         const nuevaCajaEl = document.createElement('div');
         nuevaCajaEl.className = 'border p-3 mb-3';
@@ -1236,14 +1151,14 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         nuevaCajaEl.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="mb-0">Caja #${id}</h6>
+                <input type="text" placeholder="Nombre Caja" class="form-control form-control-sm nombre-caja me-2" style="width: 120px;" value="${nombre}">
                 <div class="d-flex align-items-center">
-                    <label for="flete-caja-${id}" class="form-label mb-0 me-2 small">Flete:</label>
+                    <label for="flete-caja-${id}" class="form-label mb-0 me-2 small">Costo:</label>
                     <input type="number" id="flete-caja-${id}" class="form-control form-control-sm flete-caja text-end" value="${fleteTotal.toFixed(2)}" step="0.01" style="width: 80px;">
                     <button type="button" class="btn-close btn-sm ms-2" aria-label="Eliminar caja"></button>
                 </div>
             </div>
-            <div class="list-group productos-en-caja">
-                </div>
+            <div class="list-group productos-en-caja"></div>
         `;
         contenedorCajasModal.appendChild(nuevaCajaEl);
 
@@ -1262,9 +1177,13 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         nuevaCajaEl.querySelector('.flete-caja').addEventListener('input', () => {
             const fleteIngresado = parseFloat(nuevaCajaEl.querySelector('.flete-caja').value) || 0;
             const caja = cajas.find(c => c.id === id);
-            if (caja) {
-                caja.fleteTotal = fleteIngresado;
-            }
+            if (caja) caja.fleteTotal = fleteIngresado;
+        });
+
+        nuevaCajaEl.querySelector('.nombre-caja').addEventListener('input', () => {
+            const nombreIngresado = nuevaCajaEl.querySelector('.nombre-caja').value.trim();
+            const caja = cajas.find(c => c.id === id);
+            if (caja) caja.nombre = nombreIngresado;
         });
         return nuevaCajaEl;
     }
@@ -1288,7 +1207,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         item.querySelector('.btn-asignar-caja').addEventListener('click', () => {
             abrirModalAsignacion(filaId);
         });
-
         return item;
     }
 
@@ -1325,8 +1243,7 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             </div>
             <div class="mb-3">
                 <label for="cajaAsignar" class="form-label">Seleccionar Caja:</label>
-                <select class="form-select" id="cajaAsignar">
-                    </select>
+                <select class="form-select" id="cajaAsignar"></select>
             </div>
             <button type="submit" class="btn btn-primary">Asignar</button>
         `;
@@ -1351,7 +1268,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                 alert('La cantidad a asignar debe ser mayor a 0.');
                 return;
             }
-
             if (cantidadAsignar > cantidadRestante) {
                  alert(`La cantidad a asignar (${cantidadAsignar}) no puede ser mayor que la cantidad restante (${cantidadRestante}).`);
                 return;
@@ -1381,7 +1297,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             if (parseInt(cantidadRestanteEl.textContent) <= 0) {
                 cantidadRestanteEl.closest('.list-group-item').remove();
             }
-
             modalAsignar.hide();
         });
         modalBody.appendChild(form);
@@ -1414,7 +1329,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         const item = input.closest('.list-group-item');
         const filaId = item.dataset.filaId;
         const cantidadTotalGeneral = parseInt($(`#tablaProductosGeneral tr[data-fila-id="${filaId}"] .cantidad`).value, 10) || 0;
-
         let cantidadAsignadaActual = 0;
         $$(`.modal-body .list-group-item[data-fila-id="${filaId}"] .cantidad-caja`).forEach(el => {
             cantidadAsignadaActual += parseInt(el.value, 10) || 0;
@@ -1451,6 +1365,7 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
 
         $$('#contenedorCajasModal .border').forEach(cajaEl => {
             const idCaja = parseInt(cajaEl.dataset.idCaja);
+            const nombreCaja = cajaEl.querySelector('.nombre-caja').value.trim(); // Nombre agregado
             const fleteCajaTotal = parseFloat(cajaEl.querySelector('.flete-caja').value) || 0;
             const productosEnCaja = [];
             let cantidadTotalEnCaja = 0;
@@ -1461,24 +1376,22 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             });
 
             const costoUnitarioDistribucion = cantidadTotalEnCaja > 0 ? fleteCajaTotal / cantidadTotalEnCaja : 0;
-
             $$('.productos-en-caja .list-group-item', cajaEl).forEach(productoEl => {
                 const filaId = productoEl.dataset.filaId;
+                const trGeneral = $(`#tablaProductosGeneral tr[data-fila-id="${filaId}"]`);
+                const idArticulo = trGeneral ? trGeneral.dataset.idArticulo : filaId; // Usa idArticulo
+
                 const cantidad = parseInt(productoEl.querySelector('.cantidad-caja').value, 10) || 0;
                 const descripcion = productoEl.querySelector('.nombre-producto-caja').textContent;
                 const costoTransporteProducto = costoUnitarioDistribucion * cantidad;
 
-                productosEnCaja.push({
-                    filaId,
-                    cantidad,
-                    descripcion,
-                    costoUnitarioDistribucion: costoUnitarioDistribucion,
-                    costoTransporte: costoTransporteProducto,
-                });
+                // Se usa idArticulo en lugar de filaId para la estructura final
+                productosEnCaja.push({ idArticulo, filaId, cantidad, descripcion, costoUnitarioDistribucion, costoTransporte: costoTransporteProducto });
             });
 
             if (productosEnCaja.length > 0) {
-                cajas.push({ id: idCaja, fleteTotal: fleteCajaTotal, productos: productosEnCaja });
+                // Se agrega el nombre de la caja
+                cajas.push({ id: idCaja, nombre: nombreCaja, fleteTotal: fleteCajaTotal, productos: productosEnCaja });
                 costeTotalTransporteCalculado += fleteCajaTotal;
             }
         });
@@ -1491,8 +1404,8 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             cajaResumenEl.className = 'mb-4';
             cajaResumenEl.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <strong>Caja ${caja.id}</strong>
-                    <span>Flete: ${formatCurrency(caja.fleteTotal, 'PEN')}</span>
+                    <strong>${caja.nombre} (Caja ${caja.id})</strong>
+                    <span>Costo de Transporte: ${formatCurrency(caja.fleteTotal, 'PEN')}</span>
                 </div>
                 <table class="table table-striped table-sm">
                     <thead>
@@ -1523,16 +1436,11 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
     if (btnToggleTotales) {
         btnToggleTotales.addEventListener('click', () => {
             const esUnitario = btnToggleTotales.textContent.includes('Mostrar Totales por Cantidad');
-
             if (esUnitario) {
                 mostrarModalTotales();
             } else {
-                document.querySelectorAll('.precioUnitario-total, .igvUnitario-total, .pesoUnitario-total, .costoUnitarioTransporte-total, .totalUnitario-total').forEach(el => {
-                    el.classList.remove('d-none');
-                });
-                document.querySelectorAll('.precioTotal-total, .igvTotal-total, .pesoTotal-total, .costeTransporte-total, .totalTotal-total').forEach(el => {
-                    el.classList.add('d-none');
-                });
+                document.querySelectorAll('.precioUnitario-total, .igvUnitario-total, .pesoUnitario-total, .costoUnitarioTransporte-total, .totalUnitario-total').forEach(el => el.classList.remove('d-none'));
+                document.querySelectorAll('.precioTotal-total, .igvTotal-total, .pesoTotal-total, .costeTransporte-total, .totalTotal-total').forEach(el => el.classList.add('d-none'));
                 btnToggleTotales.textContent = 'Mostrar Totales por Cantidad';
             }
         });
@@ -1559,7 +1467,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         modalBody.appendChild(table);
 
         const tbodyModal = document.querySelector('#bodyModalTotales');
-
         document.querySelectorAll('#tablaProductosGeneral tr[data-fila-id]').forEach(trGeneral => {
             const filaId = trGeneral.dataset.filaId;
             const trTotales = document.querySelector(`#tablaProductosTotales tr[data-fila-id="${filaId}"]`);
@@ -1570,7 +1477,6 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                 const pesoTotal = trTotales.querySelector('.pesoTotal-total').textContent;
                 const costeTransporte = trTotales.querySelector('.costeTransporte-total').textContent;
                 const totalTotal = trTotales.querySelector('.totalTotal-total').textContent;
-
                 const newRow = document.createElement('tr');
                 newRow.innerHTML = `
                     <td>${descripcion}</td>
@@ -1592,22 +1498,26 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         contenedorLotes.innerHTML = '';
         const cantidadTotalProducto = parseInt($(`#tablaProductosGeneral tr[data-fila-id="${filaIdLoteActual}"] .cantidad`).value, 10) || 0;
         const lotesProducto = lotes[filaIdLoteActual] || [];
-
         let cantidadAsignada = 0;
+
         lotesProducto.forEach(lote => {
-            cantidadAsignada += lote.cantidad;
-            crearFilaLote(lote.id, lote.cantidad, lote.fechaVencimiento);
+            cantidadAsignada += lote.cantidadLote;
+            crearFilaLote(lote.id, lote.numeroLote, lote.cantidadLote, lote.fechaVencimiento);
         });
 
         actualizarResumenLotesEnModal(cantidadTotalProducto, cantidadAsignada);
     }
 
-    function crearFilaLote(idLote, cantidad, fechaVencimiento) {
+    function crearFilaLote(idLote, numeroLote, cantidad, fechaVencimiento) {
         const contenedorLotes = $('#contenedorLotes');
         const filaLote = document.createElement('div');
-        filaLote.className = 'd-flex align-items-center mb-2';
+        filaLote.className = 'd-flex align-items-center mb-2 lote-row';
         filaLote.dataset.idLote = idLote;
         filaLote.innerHTML = `
+            <div class="input-group input-group-sm me-2 flex-grow-1">
+                <span class="input-group-text">Lote N°</span>
+                <input type="text" class="form-control lote-numero-lote" value="${numeroLote || ''}">
+            </div>
             <div class="input-group input-group-sm me-2">
                 <span class="input-group-text">Cantidad</span>
                 <input type="number" class="form-control lote-cantidad" value="${cantidad}" min="1">
@@ -1616,12 +1526,9 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
                 <span class="input-group-text">F. Venc.</span>
                 <input type="date" class="form-control lote-fecha-vencimiento" value="${fechaVencimiento}">
             </div>
-            <button type="button" class="btn btn-danger btn-sm btn-eliminar-lote">
-                <i class="bi bi-trash"></i>
-            </button>
+            <button type="button" class="btn btn-danger btn-sm btn-eliminar-lote"><i class="bi bi-trash"></i></button>
         `;
         contenedorLotes.appendChild(filaLote);
-
         filaLote.querySelector('.lote-cantidad').addEventListener('input', validarCantidadesLotes);
         filaLote.querySelector('.btn-eliminar-lote').addEventListener('click', () => {
             filaLote.remove();
@@ -1639,20 +1546,17 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
         if (cantidadAsignada > cantidadTotalProducto) {
             alert(`La cantidad total de lotes (${cantidadAsignada}) no puede ser mayor que la cantidad general del producto (${cantidadTotalProducto}).`);
         }
-
         actualizarResumenLotesEnModal(cantidadTotalProducto, cantidadAsignada);
     }
 
     function actualizarResumenLotesEnModal(cantidadTotal, cantidadAsignada) {
         const resumenEl = $('#resumenLotes');
-        resumenEl.innerHTML = `
-            Total del Producto: <strong>${cantidadTotal}</strong> | Cantidad Asignada: <strong>${cantidadAsignada}</strong> | Restante: <strong>${cantidadTotal - cantidadAsignada}</strong>
-        `;
+        resumenEl.innerHTML = `Total del Producto: <strong>${cantidadTotal}</strong> | Cantidad Asignada: <strong>${cantidadAsignada}</strong> | Restante: <strong>${cantidadTotal - cantidadAsignada}</strong>`;
     }
 
     if(btnAgregarLote) {
         btnAgregarLote.addEventListener('click', () => {
-            crearFilaLote(proximoIdLote++, 1, '');
+            crearFilaLote(proximoIdLote++, '', 1, '');
             validarCantidadesLotes();
         });
     }
@@ -1664,43 +1568,41 @@ function actualizarNombresEncabezadosTotales(esTotalPorCantidad) {
             let esValido = true;
 
             $$('#contenedorLotes .d-flex').forEach(filaLote => {
+                const numeroLoteInput = filaLote.querySelector('.lote-numero-lote'); // 🛠️ Nuevo input
                 const cantidadInput = filaLote.querySelector('.lote-cantidad');
                 const fechaInput = filaLote.querySelector('.lote-fecha-vencimiento');
+
+                const numeroLote = numeroLoteInput.value.trim(); // 🛠️ Obtener número de lote
                 const cantidad = parseInt(cantidadInput.value, 10) || 0;
                 const fechaVencimiento = fechaInput.value;
 
-                if (cantidad <= 0 || !fechaVencimiento) {
+                if (cantidad <= 0 || !fechaVencimiento || numeroLote === '') { // 🛠️ Se valida numeroLote
                     esValido = false;
                     return;
                 }
-
                 cantidadAsignada += cantidad;
                 lotesGuardar.push({
                     id: filaLote.dataset.idLote,
-                    cantidad,
-                    fechaVencimiento
+                    numeroLote: numeroLote,
+                    cantidadLote: cantidad,
+                    fechaVencimiento: fechaVencimiento
                 });
             });
 
             const cantidadTotalProducto = parseInt($(`#tablaProductosGeneral tr[data-fila-id="${filaIdLoteActual}"] .cantidad`).value, 10) || 0;
-
             if (!esValido) {
-                alert('Todos los lotes deben tener una cantidad mayor a 0 y una fecha de vencimiento.');
+                alert('Todos los lotes deben tener un número de lote, una cantidad mayor a 0 y una fecha de vencimiento.');
                 return;
             }
-
             if (cantidadAsignada > cantidadTotalProducto) {
                 alert(`La cantidad total de lotes (${cantidadAsignada}) excede la cantidad general del producto (${cantidadTotalProducto}).`);
                 return;
             }
-
             if (cantidadAsignada < cantidadTotalProducto) {
-                alert(`La cantidad total de lotes (${cantidadAsignada}) es menor que la cantidad general del producto (${cantidadTotalProducto}).`);
-                if (!confirm('¿Desea continuar de todos modos? La cantidad restante no se asignará a un lote.')) {
+                if (!confirm(`La cantidad total de lotes (${cantidadAsignada}) es menor que la cantidad general del producto (${cantidadTotalProducto}). ¿Desea continuar de todos modos?`)) {
                     return;
                 }
             }
-
             lotes[filaIdLoteActual] = lotesGuardar;
             modalLotes.hide();
         });
