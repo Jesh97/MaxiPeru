@@ -15,7 +15,7 @@ const TIPO_PAGO_SERVLET_URL = '/guardarTipoPago';
 
 let referencia = { numeroCotizacion: '', numeroPedido: '' };
 let guia = {
-    rucGuia: '', razonSocialGuia: '', fechaEmision: '', tipoComprobante: '', serie: '', correlativo: '',
+    rucGuia: '', fechaEmision: '', tipoComprobante: '', serie: '', correlativo: '',
     puntoPartida: '', puntoLlegada: '', costeTotalTransporte: 0.00, ciudadTraslado: '', numeroGuia: '', serieGuiaTransporte: '',
     correlativoGuiaTransporte: '', peso: '', fechaPedido: '', fechaEntrega: ''
 };
@@ -1011,18 +1011,18 @@ document.addEventListener('DOMContentLoaded', () => {
             modalGuia.show();
         });
     }
+
     if ($('#guardarGuia')) {
         $('#guardarGuia').addEventListener('click', () => {
-            guia.ruc = $('#rucGuia')?.value;
+            guia.rucGuia = $('#rucGuia')?.value;
             guia.fechaEmision = $('#fechaEmisionGuia')?.value;
             guia.tipoComprobante = $('#tipoComprobanteGuia')?.value;
             guia.serie = $('#serieGuia')?.value;
             guia.correlativo = $('#correlativoGuia')?.value;
             guia.costeTotalTransporte = parseFloat($('#costeTransporteGuia')?.value) || 0;
             guia.ciudadTraslado = $('#ciudadTrasladoGuia')?.value;
-            guia.puntoPartida = $('#puntoPartida')?.value;
-            guia.puntoLlegada = $('#puntoLlegada')?.value;
-            guia.numeroGuia = $('#numeroGuia')?.value;
+            guia.puntoPartida = $('#puntoPartidaGuia')?.value;
+            guia.puntoLlegada = $('#puntoLlegadaGuia')?.value;
             guia.serieGuiaTransporte = $('#serieGuiaTransporte')?.value;
             guia.correlativoGuiaTransporte = $('#correlativoGuiaTransporte')?.value;
             guia.peso = parseFloat($('#pesoGuia')?.value) || 0;
@@ -1032,6 +1032,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modalGuia.hide();
         });
     }
+
     if ($('#btnReferencia')) {
         $('#btnReferencia').addEventListener('click', () => {
             modalReferencia.show();

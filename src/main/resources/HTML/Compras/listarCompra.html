@@ -251,38 +251,36 @@
                 <h6 class="text-success mb-3">Datos de la Guía de Remisión (Emisor)</h6>
                 <div class="row">
                     <div class="col-md-4"><strong>ID Guía:</strong> ${mostrarValor(gt.id_guia)}</div>
-                    <div class="col-md-4"><strong>RUC Emisor:</strong> ${mostrarValor(gt.ruc_guia)}</div>
-                    <div class="col-md-4"><strong>Razón Social Emisor:</strong> ${mostrarValor(gt.razon_social_guia)}</div>
+                    <div class="col-md-4"><strong>RUC/Razón Social:</strong> ${mostrarValor(gt.ruc_guia)}</div>
+                    <div class="col-md-4"><strong>F. Emisión:</strong> ${mostrarValor(gt.fecha_emision_guia)}</div>
                 </div>
                 <div class="row mt-2">
-                    <div class="col-md-4"><strong>F. Emisión:</strong> ${mostrarValor(gt.fecha_emision_guia)}</div>
                     <div class="col-md-4"><strong>Tipo Comp.:</strong> ${mostrarValor(gt.tipo_comprobante_guia)}</div>
-                    <div class="col-md-2"><strong>Serie:</strong> ${mostrarValor(gt.serie_guia)}</div>
-                    <div class="col-md-2"><strong>Correlativo:</strong> ${mostrarValor(gt.correlativo_guia)}</div>
+                    <div class="col-md-4"><strong>Serie:</strong> ${mostrarValor(gt.serie_guia)}</div>
+                    <div class="col-md-4"><strong>Correlativo:</strong> ${mostrarValor(gt.correlativo_guia)}</div>
                 </div>
             </div>
 
             <div class="p-3 border rounded" style="background-color: #fff8e1;">
                 <h6 class="text-warning mb-3">Datos del Traslado</h6>
                 <div class="row">
-                    <div class="col-md-6"><strong>Punto de Partida:</strong> ${mostrarValor(gt.direccion_partida)}</div>
-                    <div class="col-md-6"><strong>Punto de Llegada:</strong> ${mostrarValor(gt.direccion_llegada)}</div>
+                    <div class="col-md-6"><strong>Punto de Partida:</strong> ${mostrarValor(gt.puntoPartida)}</div>
+                    <div class="col-md-6"><strong>Punto de Llegada:</strong> ${mostrarValor(gt.puntoLlegada)}</div>
                 </div>
 
                 <div class="row mt-2">
                     <div class="col-md-4"><strong>Guía Transp. Serie:</strong> ${mostrarValor(gt.serie_guia_transporte)}</div>
                     <div class="col-md-4"><strong>Guía Transp. Correlativo:</strong> ${mostrarValor(gt.correlativo_guia_transporte)}</div>
-                    <div class="col-md-4"><strong>N° Bultos:</strong> ${mostrarValor(gt.num_bultos)}</div>
+                    <div class="col-md-4"><strong>Ciudad Traslado:</strong> ${mostrarValor(gt.ciudad_traslado)}</div>
                 </div>
 
                 <div class="row mt-2">
                     <div class="col-md-4"><strong>Costo Total:</strong> ${mostrarValor(gt.coste_transporte_guia, 'S/ ')}</div>
                     <div class="col-md-4"><strong>Peso Total:</strong> ${mostrarValor(gt.peso_guia, '', ' kg')}</div>
-                    <div class="col-md-4"><strong>Ciudad Traslado:</strong> ${mostrarValor(gt.ciudad_traslado)}</div>
+                    <div class="col-md-4"><strong>F. Pedido:</strong> ${mostrarValor(gt.fecha_pedido)}</div>
                 </div>
 
                 <div class="row mt-2">
-                    <div class="col-md-4"><strong>F. Pedido:</strong> ${mostrarValor(gt.fecha_pedido)}</div>
                     <div class="col-md-4"><strong>F. Entrega:</strong> ${mostrarValor(gt.fecha_entrega)}</div>
                 </div>
             </div>

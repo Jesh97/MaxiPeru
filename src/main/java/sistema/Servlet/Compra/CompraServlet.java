@@ -343,8 +343,13 @@ public class CompraServlet extends HttpServlet {
                 guia = new GuiaTransporte();
                 var gt = root.get("guiaTransporte");
 
-                guia.setRucGuia(gt.path("rucGuia").asText("").trim());
-                guia.setRazonSocialGuia(gt.path("razonSocialGuia").asText("").trim());
+                String rucOrRazonSocial = gt.path("rucGuia").asText("").trim();
+
+                guia.setRucGuia(rucOrRazonSocial);
+                // Aquí usamos el mismo valor para RazonSocial, ya que el SP ahora espera el mismo dato
+                // para p_ruc_o_razon_social.
+                guia.setRazonSocialGuia(gt.path("razonSocialGuia").asText(rucOrRazonSocial).trim());
+
                 guia.setTipoComprobante(gt.path("tipoComprobante").asText("").trim());
                 guia.setSerie(gt.path("serie").asText("").trim());
                 guia.setCorrelativo(gt.path("correlativo").asText("").trim());

@@ -182,7 +182,6 @@ public class CompraController implements CompraRepository {
                     Map<String, Object> guiaMap = new HashMap<>();
                     guiaMap.put("id_guia", rs.getInt("id_guia"));
                     guiaMap.put("ruc_guia", rs.getString("ruc_guia"));
-                    guiaMap.put("razon_social_guia", rs.getString("razon_social_guia"));
                     java.sql.Date fechaEmisionGuia = rs.getDate("fecha_emision_guia");
                     guiaMap.put("fecha_emision_guia", fechaEmisionGuia != null ? DATE_FORMATTER.format(fechaEmisionGuia) : null);
                     java.sql.Date fechaPedido = rs.getDate("fecha_pedido");
@@ -311,12 +310,11 @@ public class CompraController implements CompraRepository {
     }
 
     private void editarGuiaTransporte(Connection conn, int idCompra, GuiaTransporte guia) throws SQLException {
-        String sql = "{call sp_editar_guia_transporte(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        String sql = "{call sp_editar_guia_transporte(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
             int i = 1;
             cs.setInt(i++, idCompra);
             cs.setString(i++, guia.getRucGuia());
-            cs.setString(i++, guia.getRazonSocialGuia());
             cs.setDate(i++, guia.getFechaEmision() != null ? Date.valueOf(guia.getFechaEmision()) : null);
             cs.setString(i++, guia.getTipoComprobante());
             cs.setString(i++, guia.getSerie());
@@ -439,12 +437,11 @@ public class CompraController implements CompraRepository {
     }
 
     private void registrarGuia(Connection conn, int idCompra, GuiaTransporte guia) throws SQLException {
-        String sql = "{call sp_agregar_guia_transporte_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        String sql = "{call sp_agregar_guia_transporte_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
             int i = 1;
             cs.setInt(i++, idCompra);
             cs.setString(i++, guia.getRucGuia());
-            cs.setString(i++, guia.getRazonSocialGuia());
             cs.setDate(i++, guia.getFechaEmision() != null ? Date.valueOf(guia.getFechaEmision()) : null);
             cs.setString(i++, guia.getTipoComprobante());
             cs.setString(i++, guia.getSerie());
