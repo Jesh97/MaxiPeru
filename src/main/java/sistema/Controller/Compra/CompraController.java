@@ -196,6 +196,8 @@ public class CompraController implements CompraRepository {
                     guiaMap.put("ciudad_traslado", rs.getString("ciudad_traslado"));
                     guiaMap.put("coste_transporte_guia", rs.getBigDecimal("coste_transporte_guia"));
                     guiaMap.put("peso_guia", rs.getBigDecimal("peso_guia"));
+                    guiaMap.put("puntoPartida", rs.getString("punto_partida"));
+                    guiaMap.put("puntoLlegada", rs.getString("punto_llegada"));
                     compra.put("guia", guiaMap);
                 }
 
