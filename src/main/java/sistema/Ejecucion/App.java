@@ -5,6 +5,7 @@ import sistema.Servlet.Adicional.TipoComprobanteServlet;
 import sistema.Servlet.Adicional.TipoPagoServlet;
 import sistema.Servlet.Cliente.ClienteServlet;
 import sistema.Servlet.Compra.CompraServlet;
+import sistema.Servlet.Compra.EditarCompra;
 import sistema.Servlet.Compra.ListarCompra;
 import sistema.Servlet.Login.CerrarSesion;
 import sistema.Servlet.Login.LoginServlet;
@@ -36,6 +37,7 @@ public class App {
         webserver.addServlet(ClienteServlet.class,"/clientes");
         webserver.addServlet(ProveedorServlet.class,"/proveedores");
         webserver.addServlet(CompraServlet.class,"/CompraServlet");
+        webserver.addServlet(EditarCompra.class,"/editarCompra");
         webserver.addServlet(BuscarProveedorServlet.class,"/buscarProveedor");
         webserver.addServlet(ListarCompra.class,"/listarCompra");
         webserver.addServlet(TipoComprobanteServlet.class,"/guardarTipoComprobante");

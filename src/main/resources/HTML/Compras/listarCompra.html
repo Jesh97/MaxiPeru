@@ -4,128 +4,121 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Listado de Compras</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        body { font-size: 0.85rem; }
-        h2 { font-size: 1.5rem; }
-        .table th, .table td { padding: 0.35rem; font-size: 0.8rem; }
-        .modal-title { font-size: 1.2rem; }
-        .modal-body strong { font-size: 0.85rem; }
-        .modal-header.bg-gradient-primary { background: linear-gradient(45deg, #007bff, #0056b3); }
-        .nav-link { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
-
-        .btn-warning-custom {
-            background-color: #ffc107;
-            border-color: #ffc107;
-            color: #343a40;
-        }
-        .btn-warning-custom:hover {
-            background-color: #e0a800;
-            border-color: #d39e00;
-            color: #343a40;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        :root { font-family: 'Inter', sans-serif; }
+        .shadow-3xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 10px rgba(0, 0, 0, 0.05); }
     </style>
 </head>
-<body>
-<div class="container-fluid mt-4">
-    <h2 class="mb-4 text-center text-primary fw-bold">📦 Compras Registradas</h2>
+<body class="font-sans antialiased bg-gray-100 text-gray-800">
 
-    <div class="table-responsive shadow rounded">
-        <table class="table table-hover align-middle table-sm" id="compras-table">
-            <thead class="table-dark text-center">
-            <tr>
-                <th>#Compra</th>
-                <th>Fecha Emisión</th>
-                <th>Fecha Vencimiento</th>
-                <th>Comprobante</th>
-                <th>Serie-Correlativo</th>
-                <th>Proveedor</th>
-                <th>Moneda</th>
-                <th>Total</th>
-                <th>Acciones</th>
-            </tr>
-            </thead>
-            <tbody id="tabla-compras"></tbody>
-        </table>
+<div id="customMessageBox" class="fixed top-4 right-4 z-50 transition-opacity duration-300 opacity-0"></div>
+
+<div class="px-4 sm:px-6 py-6">
+    <h2 class="text-4xl font-extrabold text-center text-indigo-700 mb-6 pb-4 border-b-4 border-indigo-100/50">
+        📦 REGISTRO DE COMPRAS CENTRALIZADO
+    </h2>
+
+    <div class="shadow-3xl rounded-2xl overflow-hidden bg-white border border-gray-200">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" id="compras-table">
+                <thead class="bg-indigo-700 text-white uppercase tracking-wider text-xs">
+                <tr>
+                    <th class="px-4 py-3 font-semibold">Fecha Emisión</th>
+                    <th class="px-4 py-3 font-semibold">Fecha Vencimiento</th>
+                    <th class="px-4 py-3 font-semibold">Comprobante</th>
+                    <th class="px-4 py-3 font-semibold">Serie-Correlativo</th>
+                    <th class="px-4 py-3 font-semibold">Proveedor</th>
+                    <th class="px-4 py-3 font-semibold">Moneda</th>
+                    <th class="px-4 py-3 font-semibold">Total</th>
+                    <th class="px-4 py-3 font-semibold">Acciones</th>
+                </tr>
+                </thead>
+                <tbody id="tabla-compras" class="bg-white divide-y divide-gray-100 text-sm"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<div class="modal fade" id="detallesModal" tabindex="-1" aria-labelledby="detallesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content shadow-lg rounded-3">
-            <div class="modal-header bg-gradient-primary text-white">
-                <h5 class="modal-title" id="detallesModalLabel">Detalles de la Compra</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
+<div id="detallesModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="detallesModalLabel">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-3xl w-full max-w-7xl my-8 transform transition-all">
+            <div class="modal-content">
+                <div class="flex justify-between items-center p-6 bg-gradient-to-r from-indigo-700 to-indigo-900 text-white rounded-t-xl border-b-4 border-indigo-900/50">
+                    <h5 class="text-2xl font-bold" id="detallesModalLabel">Detalles de la Compra</h5>
+                    <button type="button" class="text-white hover:text-gray-200 focus:outline-none" onclick="document.getElementById('detallesModal').classList.add('hidden')" aria-label="Cerrar">
+                        <i class="bi bi-x-lg text-2xl"></i>
+                    </button>
+                </div>
 
-                <div id="info-compra" class="mb-3 p-3 bg-light rounded shadow-sm border-left border-4 border-info"></div>
+                <div class="p-6">
+                    <div id="info-compra" class="mb-4 p-5 bg-indigo-50/70 rounded-xl shadow-inner border-l-4 border-indigo-500 text-sm"></div>
+                    <div id="info-proveedor" class="mb-4 p-5 bg-gray-100/70 rounded-xl shadow-inner border-l-4 border-gray-400 text-sm"></div>
 
-                <div id="info-proveedor" class="mb-3 p-3 bg-light rounded shadow-sm border-left border-4 border-primary"></div>
-
-                <ul class="nav nav-pills mb-3" id="detallesTab" role="tablist">
-                    <li class="nav-item me-2">
-                        <button class="nav-link active" id="productos-tab" data-bs-toggle="tab" data-bs-target="#productos" type="button">Productos y Costos</button>
-                    </li>
-                    <li class="nav-item me-2">
-                        <button class="nav-link" id="guia-tab" data-bs-toggle="tab" data-bs-target="#guia" type="button">Guía Transporte</button>
-                    </li>
-                    <li class="nav-item me-2">
-                        <button class="nav-link" id="referencia-tab" data-bs-toggle="tab" data-bs-target="#referencia" type="button">Referencias</button>
-                    </li>
-                </ul>
-
-                <div class="tab-content">
-
-                    <div class="tab-pane fade show active" id="productos">
-                        <h6 class="mb-2 text-secondary">Detalles de Artículos</h6>
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover table-bordered table-sm shadow-sm mb-4">
-                                <thead class="table-secondary text-center">
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Descripción</th>
-                                    <th>Cant.</th>
-                                    <th>P. Unitario</th>
-                                    <th>P. con Desc.</th>
-                                    <th>IGV Ins.</th>
-                                    <th>Total Detalle</th>
-                                    <th>Peso Total</th>
-                                </tr>
-                                </thead>
-                                <tbody id="tabla-producto" class="text-center"></tbody>
-                            </table>
-                        </div>
-
-                        <h6 class="mb-2 text-secondary">Costos de Flete por Ítem</h6>
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover table-bordered table-sm shadow-sm">
-                                <thead class="table-light text-center">
-                                <tr>
-                                    <th>Coste Unit. Transp.</th>
-                                    <th>Coste Total Transp.</th>
-                                </tr>
-                                </thead>
-                                <tbody id="tabla-transporte" class="text-center"></tbody>
-                            </table>
-                        </div>
+                    <div class="flex space-x-3 p-1 bg-gray-100 rounded-xl shadow-inner mb-6" id="detallesTab" role="tablist">
+                        <button class="tab-button active px-5 py-2.5 font-semibold text-sm text-white bg-indigo-700 shadow-xl rounded-lg transition-all duration-300 transform hover:scale-[1.02]" data-target="productos" type="button"><i class="bi bi-box-seam"></i> Productos y Costos</button>
+                        <button class="tab-button px-5 py-2.5 font-semibold text-sm text-gray-700 rounded-lg hover:bg-white/90 hover:shadow-lg transition-all duration-300" data-target="guia" type="button"><i class="bi bi-truck"></i> Guía Transporte</button>
+                        <button class="tab-button px-5 py-2.5 font-semibold text-sm text-gray-700 rounded-lg hover:bg-white/90 hover:shadow-lg transition-all duration-300" data-target="referencia" type="button"><i class="bi bi-file-earmark-text"></i> Referencias</button>
                     </div>
 
-                    <div class="tab-pane fade" id="guia">
-                        <div id="info-guia" class="p-3 bg-light rounded shadow-sm border-left border-4 border-success"></div>
-                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="productos">
+                            <h6 class="text-xl font-semibold text-indigo-700 mb-3 border-b-2 pb-1 border-indigo-100">Detalles de Artículos</h6>
+                            <div class="overflow-x-auto mb-6">
+                                <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg shadow-sm">
+                                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                                    <tr>
+                                        <th class="px-4 py-2 font-semibold border-r">Código</th>
+                                        <th class="px-4 py-2 font-semibold border-r">Descripción</th>
+                                        <th class="px-4 py-2 font-semibold border-r">Cant.</th>
+                                        <th class="px-4 py-2 font-semibold border-r">P. Unitario</th>
+                                        <th class="px-4 py-2 font-semibold border-r">P. con Desc.</th>
+                                        <th class="px-4 py-2 font-semibold border-r">IGV Ins.</th>
+                                        <th class="px-4 py-2 font-semibold border-r">Total Detalle</th>
+                                        <th class="px-4 py-2 font-semibold">Peso Total</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tabla-producto" class="bg-white divide-y divide-gray-100 text-center text-sm"></tbody>
+                                </table>
+                            </div>
 
-                    <div class="tab-pane fade" id="referencia">
-                        <div id="info-referencia" class="p-3 bg-light rounded shadow-sm border-left border-4 border-warning"></div>
+                            <h6 class="text-xl font-semibold text-indigo-700 mb-3 border-b-2 pb-1 border-indigo-100">Costos de Flete por Ítem</h6>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg shadow-sm">
+                                    <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                                    <tr>
+                                        <th class="px-4 py-2 font-semibold border-r">Coste Unit. Transp.</th>
+                                        <th class="px-4 py-2 font-semibold">Coste Total Transp.</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tabla-transporte" class="bg-white divide-y divide-gray-100 text-center text-sm"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane hidden" id="guia">
+                            <div id="info-guia" class="p-5 bg-emerald-50/70 rounded-xl shadow-inner border-l-4 border-emerald-500 text-sm"></div>
+                        </div>
+
+                        <div class="tab-pane hidden" id="referencia">
+                            <div id="info-referencia" class="p-5 bg-orange-50/70 rounded-xl shadow-inner border-l-4 border-orange-500 text-sm"></div>
+                        </div>
                     </div>
                 </div>
 
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-success btn-sm fw-bold" onclick="descargarFactura()">Descargar Factura</button>
-                <button type="button" class="btn btn-outline-info btn-sm fw-bold" onclick="descargarGuiaTransporte()">Descargar Guía Transporte</button>
-                <button type="button" class="btn btn-outline-primary btn-sm fw-bold" data-bs-dismiss="modal">Cerrar</button>
+                <div class="flex justify-end space-x-3 p-4 bg-gray-100 border-t rounded-b-xl">
+                    <button type="button" class="px-5 py-2.5 text-sm font-extrabold rounded-xl transition-all border-2 border-green-600 text-green-700 hover:bg-green-50/70 hover:shadow-lg" onclick="descargarFactura()">
+                        <i class="bi bi-file-earmark-arrow-down"></i> Descargar Factura
+                    </button>
+                    <button type="button" class="px-5 py-2.5 text-sm font-extrabold rounded-xl transition-all border-2 border-cyan-600 text-cyan-700 hover:bg-cyan-50/70 hover:shadow-lg" onclick="descargarGuiaTransporte()">
+                        <i class="bi bi-file-earmark-arrow-down"></i> Descargar Guía Transporte
+                    </button>
+                    <button type="button" class="px-5 py-2.5 text-sm font-extrabold rounded-xl transition-all bg-indigo-700 text-white hover:bg-indigo-800 shadow-xl" onclick="document.getElementById('detallesModal').classList.add('hidden')">
+                        <i class="bi bi-x-lg"></i> Cerrar
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -134,6 +127,18 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let compraActual = null;
+
+    function showMessage(message, type = 'info') {
+        const box = document.getElementById('customMessageBox');
+        const color = type === 'success' ? 'bg-emerald-100 text-emerald-800 border-emerald-500' : 'bg-indigo-100 text-indigo-800 border-indigo-500';
+        box.innerHTML = `<div class="p-3 rounded-lg shadow-xl text-sm font-medium ${color} border">${message}</div>`;
+        box.classList.remove('hidden');
+        box.classList.remove('opacity-0');
+        setTimeout(() => {
+            box.classList.add('opacity-0');
+            setTimeout(() => box.classList.add('hidden'), 300);
+        }, 3000);
+    }
 
     function mostrarValor(valor, prefijo = '', sufijo = '') {
         if (valor === null || valor === undefined || valor === 0 || valor === '0.00' || valor === '' || valor === '0') {
@@ -165,20 +170,20 @@
         const tbody = document.getElementById("tabla-compras");
         tbody.innerHTML = "";
 
-        compras.forEach(compra => {
+        compras.forEach((compra, index) => {
             const tr = document.createElement("tr");
+            tr.classList.add('text-center', index % 2 === 0 ? 'bg-white' : 'bg-gray-50', 'hover:bg-indigo-50/50', 'transition', 'duration-150');
             tr.innerHTML = `
-                <td><strong>#${mostrarValor(compra.id_compra)}</strong></td>
-                <td>${mostrarValor(compra.fecha_emision)}</td>
-                <td>${mostrarValor(compra.fecha_vencimiento)}</td>
-                <td>${mostrarValor(compra.tipo_comprobante)}</td>
-                <td>${mostrarValor(compra.serie)}-${mostrarValor(compra.correlativo)}</td>
-                <td>${mostrarValor(compra.proveedor.razon_social)}</td>
-                <td>${mostrarValor(compra.moneda)}</td>
-                <td><span class="badge bg-success">${mostrarValor(compra.total, 'S/ ')}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-warning-custom fw-bold me-1" onclick='editarCompra(${compra.id_compra})'><i class="bi bi-pencil-square"></i> Editar</button>
-                    <button class="btn btn-sm btn-primary fw-bold" onclick='verDetalles(${JSON.stringify(compra)})'>Detalles</button>
+                <td class="px-4 py-3 whitespace-nowrap">${mostrarValor(compra.fecha_emision)}</td>
+                <td class="px-4 py-3 whitespace-nowrap">${mostrarValor(compra.fecha_vencimiento)}</td>
+                <td class="px-4 py-3 whitespace-nowrap">${mostrarValor(compra.tipo_comprobante)}</td>
+                <td class="px-4 py-3 whitespace-nowrap">${mostrarValor(compra.serie)}-${mostrarValor(compra.correlativo)}</td>
+                <td class="px-4 py-3 text-left font-medium text-gray-700">${mostrarValor(compra.proveedor.razon_social)}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-gray-500">${mostrarValor(compra.moneda)}</td>
+                <td class="px-4 py-3 whitespace-nowrap"><span class="inline-flex items-center px-3 py-1 text-sm font-extrabold bg-green-600 text-white rounded-full shadow-lg">${mostrarValor(compra.total, 'S/ ')}</span></td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                    <button class="bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold py-1.5 px-3 rounded-xl shadow-md transition duration-200 text-xs mr-2" onclick='editarCompra(${compra.id_compra})'><i class="bi bi-pencil-square"></i> Editar</button>
+                    <button class="bg-indigo-700 hover:bg-indigo-800 text-white font-semibold py-1.5 px-3 rounded-xl shadow-md transition duration-200 text-xs" onclick='verDetalles(${JSON.stringify(compra)})'><i class="bi bi-eye"></i> Detalles</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -189,28 +194,29 @@
         compraActual = compra;
 
         document.getElementById("info-compra").innerHTML = `
-            <div class="row">
-                <div class="col-md-3"><strong>Subtotal:</strong> ${mostrarValor(compra.subtotal, 'S/ ')}</div>
-                <div class="col-md-3"><strong>IGV:</strong> ${mostrarValor(compra.igv, 'S/ ')}</div>
-                <div class="col-md-3"><strong>Total Final:</strong> <span class="badge bg-success">${mostrarValor(compra.total, 'S/ ')}</span></div>
-                <div class="col-md-3"><strong>Tipo Cambio:</strong> ${mostrarValor(compra.tipo_cambio)}</div>
+            <div class="font-semibold text-indigo-700 mb-3 border-b pb-2 border-indigo-200">Información General de la Compra</div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div><strong class="text-gray-600">Subtotal:</strong> ${mostrarValor(compra.subtotal, 'S/ ')}</div>
+                <div><strong class="text-gray-600">IGV:</strong> ${mostrarValor(compra.igv, 'S/ ')}</div>
+                <div><strong class="text-gray-600">Total Final:</strong> <span class="text-green-600 font-bold">${mostrarValor(compra.total, 'S/ ')}</span></div>
+                <div><strong class="text-gray-600">Tipo Cambio:</strong> ${mostrarValor(compra.tipo_cambio)}</div>
             </div>
-            <div class="row mt-2">
-                <div class="col-md-4"><strong>Coste Transporte:</strong> ${mostrarValor(compra.coste_transporte, 'S/ ')}</div>
-                <div class="col-md-4"><strong>Total Peso:</strong> ${mostrarValor(compra.total_peso, '', ' kg')}</div>
-                <div class="col-md-4"><strong>Observación:</strong> ${mostrarValor(compra.observacion)}</div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 pt-3 border-t border-indigo-100">
+                <div><strong class="text-gray-600">Coste Transporte:</strong> ${mostrarValor(compra.coste_transporte, 'S/ ')}</div>
+                <div><strong class="text-gray-600">Total Peso:</strong> ${mostrarValor(compra.total_peso, '', ' kg')}</div>
+                <div><strong class="text-gray-600">Observación:</strong> ${mostrarValor(compra.observacion)}</div>
             </div>
         `;
 
         const proveedor = compra.proveedor;
         document.getElementById("info-proveedor").innerHTML = `
-            <div class="row">
-                <div class="col-md-6"><strong>Proveedor:</strong> ${mostrarValor(proveedor.razon_social)}</div>
-                <div class="col-md-6"><strong>RUC:</strong> ${mostrarValor(proveedor.ruc)}</div>
+            <div class="font-semibold text-gray-700 mb-3 border-b pb-2 border-gray-300">Datos del Proveedor</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div><strong class="text-gray-600">Proveedor:</strong> ${mostrarValor(proveedor.razon_social)}</div>
+                <div><strong class="text-gray-600">RUC:</strong> ${mostrarValor(proveedor.ruc)}</div>
             </div>
-            <div class="row mt-2">
-                <div class="col-md-6"><strong>Dirección:</strong> ${mostrarValor(proveedor.direccion)} (${mostrarValor(proveedor.ciudad)})</div>
-                <div class="col-md-6"><strong>Contacto:</strong> ${mostrarValor(proveedor.telefono)} / ${mostrarValor(proveedor.correo)}</div>
+            <div class="mt-3">
+                <div><strong class="text-gray-600">Dirección:</strong> ${mostrarValor(proveedor.direccion)} (${mostrarValor(proveedor.ciudad)})</div>
             </div>
         `;
 
@@ -220,97 +226,94 @@
         tbodyTransporte.innerHTML = "";
 
         if (compra.detalles && compra.detalles.length > 0) {
-            compra.detalles.forEach(d => {
+            compra.detalles.forEach((d, index) => {
+                const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
                 tbodyProducto.innerHTML += `
-                    <tr>
-                        <td>${mostrarValor(d.codigo_articulo)}</td>
-                        <td>${mostrarValor(d.descripcion_articulo)}</td>
-                        <td>${mostrarValor(d.cantidad)}</td>
-                        <td>${mostrarValor(d.precio_unitario, 'S/ ')}</td>
-                        <td>${mostrarValor(d.precio_con_descuento, 'S/ ')}</td>
-                        <td>${mostrarValor(d.igv_insumo, 'S/ ')}</td>
-                        <td>${mostrarValor(d.total_detalle, 'S/ ')}</td>
-                        <td>${mostrarValor(d.peso_total, '', ' kg')}</td>
+                    <tr class="${rowClass}">
+                        <td class="px-4 py-2 border-r">${mostrarValor(d.codigo_articulo)}</td>
+                        <td class="px-4 py-2 text-left border-r">${mostrarValor(d.descripcion_articulo)}</td>
+                        <td class="px-4 py-2 border-r">${mostrarValor(d.cantidad)}</td>
+                        <td class="px-4 py-2 border-r">${mostrarValor(d.precio_unitario, 'S/ ')}</td>
+                        <td class="px-4 py-2 border-r">${mostrarValor(d.precio_con_descuento, 'S/ ')}</td>
+                        <td class="px-4 py-2 border-r">${mostrarValor(d.igv_insumo, 'S/ ')}</td>
+                        <td class="px-4 py-2 border-r font-bold text-indigo-700">${mostrarValor(d.total_detalle, 'S/ ')}</td>
+                        <td class="px-4 py-2">${mostrarValor(d.peso_total, '', ' kg')}</td>
                     </tr>`;
 
                 tbodyTransporte.innerHTML += `
-                    <tr>
-                        <td>${mostrarValor(d.coste_unitario_transporte, 'S/ ')}</td>
-                        <td>${mostrarValor(d.coste_total_transporte, 'S/ ')}</td>
+                    <tr class="${rowClass}">
+                        <td class="px-4 py-2 border-r">${mostrarValor(d.coste_unitario_transporte, 'S/ ')}</td>
+                        <td class="px-4 py-2">${mostrarValor(d.coste_total_transporte, 'S/ ')}</td>
                     </tr>`;
             });
         } else {
-            tbodyProducto.innerHTML = '<tr><td colspan="8" class="text-muted">No hay detalles de productos registrados.</td></tr>';
-            tbodyTransporte.innerHTML = '<tr><td colspan="2" class="text-muted">No hay costos de transporte por detalle.</td></tr>';
+            tbodyProducto.innerHTML = '<tr><td colspan="8" class="text-gray-500 italic p-4">No hay detalles de productos registrados.</td></tr>';
+            tbodyTransporte.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic p-4">No hay costos de transporte por detalle.</td></tr>';
         }
-
 
         const gt = compra.guia || {};
         const infoGuiaHTML = gt.id_guia ? `
-            <div class="mb-3 p-3 border rounded" style="background-color: #f0fff0;">
-                <h6 class="text-success mb-3">Datos de la Guía de Remisión (Emisor)</h6>
-                <div class="row">
-                    <div class="col-md-4"><strong>ID Guía:</strong> ${mostrarValor(gt.id_guia)}</div>
-                    <div class="col-md-4"><strong>RUC/Razón Social:</strong> ${mostrarValor(gt.ruc_guia)}</div>
-                    <div class="col-md-4"><strong>F. Emisión:</strong> ${mostrarValor(gt.fecha_emision_guia)}</div>
-                </div>
-                <div class="row mt-2">
-                    <div class="col-md-4"><strong>Tipo Comp.:</strong> ${mostrarValor(gt.tipo_comprobante_guia)}</div>
-                    <div class="col-md-4"><strong>Serie:</strong> ${mostrarValor(gt.serie_guia)}</div>
-                    <div class="col-md-4"><strong>Correlativo:</strong> ${mostrarValor(gt.correlativo_guia)}</div>
+            <div class="mb-5 p-4 border border-emerald-300 rounded-xl bg-emerald-50">
+                <div class="font-semibold text-emerald-700 mb-3 border-b pb-2 border-emerald-200">Datos de la Guía de Remisión (Emisor)</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div><strong class="text-gray-600">ID Guía:</strong> ${mostrarValor(gt.id_guia)}</div>
+                    <div><strong class="text-gray-600">RUC/Razón Social:</strong> ${mostrarValor(gt.ruc_guia)}</div>
+                    <div><strong class="text-gray-600">F. Emisión:</strong> ${mostrarValor(gt.fecha_emision_guia)}</div>
+                    <div><strong class="text-gray-600">Tipo Comp.:</strong> ${mostrarValor(gt.tipo_comprobante_guia)}</div>
+                    <div><strong class="text-gray-600">Serie:</strong> ${mostrarValor(gt.serie_guia)}</div>
+                    <div><strong class="text-gray-600">Correlativo:</strong> ${mostrarValor(gt.correlativo_guia)}</div>
                 </div>
             </div>
 
-            <div class="p-3 border rounded" style="background-color: #fff8e1;">
-                <h6 class="text-warning mb-3">Datos del Traslado</h6>
-                <div class="row">
-                    <div class="col-md-6"><strong>Punto de Partida:</strong> ${mostrarValor(gt.puntoPartida)}</div>
-                    <div class="col-md-6"><strong>Punto de Llegada:</strong> ${mostrarValor(gt.puntoLlegada)}</div>
+            <div class="p-4 border border-orange-300 rounded-xl bg-orange-50">
+                <div class="font-semibold text-orange-600 mb-3 border-b pb-2 border-orange-200">Datos del Traslado</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div><strong class="text-gray-600">Punto de Partida:</strong> ${mostrarValor(gt.puntoPartida)}</div>
+                    <div><strong class="text-gray-600">Punto de Llegada:</strong> ${mostrarValor(gt.puntoLlegada)}</div>
                 </div>
 
-                <div class="row mt-2">
-                    <div class="col-md-4"><strong>Guía Transp. Serie:</strong> ${mostrarValor(gt.serie_guia_transporte)}</div>
-                    <div class="col-md-4"><strong>Guía Transp. Correlativo:</strong> ${mostrarValor(gt.correlativo_guia_transporte)}</div>
-                    <div class="col-md-4"><strong>Ciudad Traslado:</strong> ${mostrarValor(gt.ciudad_traslado)}</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                    <div><strong class="text-gray-600">Guía Transp. Serie:</strong> ${mostrarValor(gt.serie_guia_transporte)}</div>
+                    <div><strong class="text-gray-600">Guía Transp. Correlativo:</strong> ${mostrarValor(gt.correlativo_guia_transporte)}</div>
+                    <div><strong class="text-gray-600">Ciudad Traslado:</strong> ${mostrarValor(gt.ciudad_traslado)}</div>
                 </div>
 
-                <div class="row mt-2">
-                    <div class="col-md-4"><strong>Costo Total:</strong> ${mostrarValor(gt.coste_transporte_guia, 'S/ ')}</div>
-                    <div class="col-md-4"><strong>Peso Total:</strong> ${mostrarValor(gt.peso_guia, '', ' kg')}</div>
-                    <div class="col-md-4"><strong>F. Pedido:</strong> ${mostrarValor(gt.fecha_pedido)}</div>
-                </div>
-
-                <div class="row mt-2">
-                    <div class="col-md-4"><strong>F. Entrega:</strong> ${mostrarValor(gt.fecha_entrega)}</div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
+                    <div><strong class="text-gray-600">Costo Total:</strong> ${mostrarValor(gt.coste_transporte_guia, 'S/ ')}</div>
+                    <div><strong class="text-gray-600">Peso Total:</strong> ${mostrarValor(gt.peso_guia, '', ' kg')}</div>
+                    <div><strong class="text-gray-600">F. Pedido:</strong> ${mostrarValor(gt.fecha_pedido)}</div>
+                    <div><strong class="text-gray-600">F. Entrega:</strong> ${mostrarValor(gt.fecha_entrega)}</div>
                 </div>
             </div>
-        ` : `<p class="text-muted">No hay guía de transporte asociada a esta compra.</p>`;
+        ` : `<p class="text-gray-500 italic p-4">No hay guía de transporte asociada a esta compra.</p>`;
 
         document.getElementById("info-guia").innerHTML = infoGuiaHTML;
 
         const rc = compra.referencia || {};
         const infoReferenciaHTML = rc.id_referencia ? `
-            <div><strong>Número Cotización:</strong> ${mostrarValor(rc.numero_cotizacion)}</div>
-            <div><strong>Número Pedido:</strong> ${mostrarValor(rc.numero_pedido)}</div>
-        ` : `<p class="text-muted">No hay referencias (cotización/pedido) asociadas a esta compra.</p>`;
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border border-amber-300 rounded-xl bg-amber-50">
+                <div><strong class="text-gray-600">Número Cotización:</strong> ${mostrarValor(rc.numero_cotizacion)}</div>
+                <div><strong class="text-gray-600">Número Pedido:</strong> ${mostrarValor(rc.numero_pedido)}</div>
+            </div>
+        ` : `<p class="text-gray-500 italic p-4">No hay referencias (cotización/pedido) asociadas a esta compra.</p>`;
         document.getElementById("info-referencia").innerHTML = infoReferenciaHTML;
 
-        new bootstrap.Modal(document.getElementById("detallesModal")).show();
+        document.getElementById('detallesModal').classList.remove('hidden');
     }
 
     function descargarFactura() {
         if (compraActual) {
             const id = compraActual.id_compra;
-            alert(`Descargando factura #${id}...`);
+            showMessage(`Iniciando descarga de factura #${id}...`, 'success');
         }
     }
 
     function descargarGuiaTransporte() {
         if (compraActual && compraActual.guia && compraActual.guia.id_guia) {
-            const id = compraActual.guia.id_guia;
-            alert(`Descargando guía de transporte #${id}...`);
+            const id = compraActual.guia.id_compra;
+            showMessage(`Iniciando descarga de guía de transporte #${id}...`, 'success');
         } else {
-            alert("No hay información de guía de transporte para esta compra.");
+            showMessage("No hay información de guía de transporte para esta compra.", 'info');
         }
     }
 
@@ -318,7 +321,27 @@
         window.location.href = `editarCompra.html?id=${idCompra}`;
     }
 
-    document.addEventListener("DOMContentLoaded", cargarCompras);
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarCompras();
+
+        document.querySelectorAll('#detallesTab .tab-button').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('#detallesTab .tab-button').forEach(btn => {
+                    btn.classList.remove('active', 'bg-indigo-700', 'text-white', 'shadow-xl', 'transform', 'hover:scale-[1.02]');
+                    btn.classList.add('text-gray-700', 'hover:bg-white/90', 'hover:shadow-lg');
+                });
+
+                this.classList.add('active', 'bg-indigo-700', 'text-white', 'shadow-xl', 'transform', 'hover:scale-[1.02]');
+                this.classList.remove('text-gray-700', 'hover:bg-white/90', 'hover:shadow-lg');
+
+                document.querySelectorAll('.tab-pane').forEach(pane => {
+                    pane.classList.add('hidden');
+                });
+
+                document.getElementById(this.dataset.target).classList.remove('hidden');
+            });
+        });
+    });
 </script>
 </body>
 </html>
