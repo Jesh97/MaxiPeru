@@ -72,6 +72,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fechaEmisionInput = $('#fechaEmision');
     const tipoPagoSelect = $('#tipoPago');
     const fechaVencimientoInput = $('#fechaVencimiento');
+    const inputFechaPedido = $('#fechaPedido');
+    const inputFechaEntrega = $('#fechaEntrega');
     const formCompra = $('#formCompra');
     const guardarCompraBtn = $('#guardarCompraBtn');
     const mensajeAlertaTransporte = $('#mensajeAlertaTransporte');
@@ -154,6 +156,37 @@ document.addEventListener('DOMContentLoaded', () => {
             sugerencias.appendChild(btn);
         });
         sugerencias.classList.remove('d-none');
+    }
+
+    function validarFechasGuia() {
+        if (!inputFechaPedido || !inputFechaEntrega) return true;
+
+        const fechaPedidoVal = inputFechaPedido.value;
+        const fechaEntregaVal = inputFechaEntrega.value;
+
+        if (!fechaPedidoVal || !fechaEntregaVal) {
+            return true;
+        }
+
+        const pedido = new Date(fechaPedidoVal);
+        const entrega = new Date(fechaEntregaVal);
+
+        // Se ajusta la hora para una comparación solo de día
+        pedido.setHours(0, 0, 0, 0);
+        entrega.setHours(0, 0, 0, 0);
+
+        // La fecha de entrega debe ser estrictamente posterior a la fecha de pedido
+        if (entrega <= pedido) {
+            alert('La Fecha de Entrega debe ser estrictamente posterior a la Fecha de Pedido.');
+            inputFechaEntrega.focus();
+            return false;
+        }
+        return true;
+    }
+
+    if (inputFechaPedido && inputFechaEntrega) {
+        inputFechaPedido.addEventListener('change', validarFechasGuia);
+        inputFechaEntrega.addEventListener('change', validarFechasGuia);
     }
 
     if (fechaEmisionInput && tipoPagoSelect && fechaVencimientoInput) {
@@ -742,6 +775,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (guardarCompraBtn) {
         guardarCompraBtn.addEventListener('click', async (e) => {
             e.preventDefault();
+
+            if (!validarFechasGuia()) {
+                return;
+            }
 
             const detalles = [];
             $$('#tablaProductosGeneral tr[data-fila-id]').forEach(tr => {
