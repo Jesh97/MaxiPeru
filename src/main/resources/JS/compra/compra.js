@@ -161,8 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function validarFechasGuia() {
         if (!inputFechaPedido || !inputFechaEntrega) return true;
 
-        const fechaPedidoVal = inputFechaPedido.value;
-        const fechaEntregaVal = inputFechaEntrega.value;
+        const fechaPedidoVal = guia.fechaPedido || inputFechaPedido.value;
+        const fechaEntregaVal = guia.fechaEntrega || inputFechaEntrega.value;
 
         if (!fechaPedidoVal || !fechaEntregaVal) {
             return true;
@@ -171,16 +171,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const pedido = new Date(fechaPedidoVal);
         const entrega = new Date(fechaEntregaVal);
 
-        // Se ajusta la hora para una comparación solo de día
         pedido.setHours(0, 0, 0, 0);
         entrega.setHours(0, 0, 0, 0);
 
-        // La fecha de entrega debe ser estrictamente posterior a la fecha de pedido
         if (entrega <= pedido) {
-            alert('La Fecha de Entrega debe ser estrictamente posterior a la Fecha de Pedido.');
-            inputFechaEntrega.focus();
+            const modalDialog = $('#confirmModalDialog');
+            if (modalDialog) {
+                modalDialog.classList.add('error');
+            }
+
+            $('#confirmMessage').textContent = 'ERROR: La Fecha de Entrega debe ser estrictamente posterior a la Fecha de Pedido.';
+            modalConfirm.show();
+
+            inputFechaPedido.value = '';
+            inputFechaEntrega.value = '';
+
+            if (inputFechaEntrega) inputFechaEntrega.focus();
             return false;
         }
+
+        const modalDialog = $('#confirmModalDialog');
+        if (modalDialog) {
+            modalDialog.classList.remove('error');
+        }
+
         return true;
     }
 
