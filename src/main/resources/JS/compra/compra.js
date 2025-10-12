@@ -170,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const pedido = new Date(fechaPedidoVal);
         const entrega = new Date(fechaEntregaVal);
-
         pedido.setHours(0, 0, 0, 0);
         entrega.setHours(0, 0, 0, 0);
 
