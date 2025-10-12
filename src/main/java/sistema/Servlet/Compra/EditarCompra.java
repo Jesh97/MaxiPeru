@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sistema.Controller.Compra.CompraController;
+import sistema.Ejecucion.Auditoria;
 import sistema.Modelo.Compra.*;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -165,6 +166,11 @@ public class EditarCompra extends HttpServlet {
             boolean success = compraController.editarCompra(compra, guia, detallesEditados, lotesEditados);
 
             if (success) {
+
+                String descripcion = String.format("Edición de COMPRA exitosa. ID: %d",
+                        idCompra, compra.getSerie(), compra.getCorrelativo(), compra.getIdProveedor(), compra.getTotal().doubleValue());
+                Auditoria.registrar(request, "ACTUALIZACION", descripcion);
+
                 response.getWriter().write(gson.toJson(Map.of("success", true, "idCompra", idCompra, "message", "Compra ID " + idCompra + " editada exitosamente.")));
             } else {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sistema.Controller.Compra.CompraController;
 import sistema.Controller.Producto.ArticuloController;
+import sistema.Ejecucion.Auditoria;
 import sistema.Modelo.Articulo.Articulo;
 import sistema.Modelo.Compra.*;
 import sistema.repository.ArticuloRepository;
@@ -38,6 +39,10 @@ public class CompraServlet extends HttpServlet {
 
         if (busqueda != null && !busqueda.trim().isEmpty()) {
             List<Articulo> lista = articuloDAO.buscarArticulosParaCompra(busqueda);
+
+            String descripcion = "Búsqueda de artículos para compra: '" + busqueda + "'. Resultados: " + lista.size();
+            Auditoria.registrar(request, "LECTURA", descripcion);
+
             out.print(gson.toJson(lista));
         } else {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -264,6 +269,13 @@ public class CompraServlet extends HttpServlet {
             int idCompra = compraController.registrarCompra(
                     compra, guia, docRef, detalles, descuentos, cajasCompra, detallesCajaMap
             );
+
+            String tipoComprobante = root.path("tipoComprobanteId").asText();
+            String serie = compra.getSerie();
+            String correlativo = compra.getCorrelativo();
+            String descripcion = String.format("Registro de nueva COMPRA exitoso. ID: %d. Comprobante: %s-%s (TipoID: %s). ProveedorID: %d. Total: %.2f",
+                    idCompra, serie, correlativo, tipoComprobante, compra.getIdProveedor(), compra.getTotal().doubleValue());
+            Auditoria.registrar(request, "CREACION", descripcion);
 
             response.getWriter().write(gson.toJson(Map.of("success", true, "idCompra", idCompra, "message", "Compra registrada con ID: " + idCompra)));
 

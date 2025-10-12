@@ -34,22 +34,18 @@ public class CatalogoServlet extends HttpServlet {
         switch (entidad) {
             case "categoria":
                 resultado = controller.listarCategorias();
-                // Texto de auditoría mejorado:
                 descripcionAuditoria = "Consulta realizada: Se accedió al listado completo de Categorías del Catálogo.";
                 break;
             case "marca":
                 resultado = controller.listarMarcas();
-                // Texto de auditoría mejorado:
                 descripcionAuditoria = "Consulta realizada: Se accedió al listado completo de Marcas disponibles en el Catálogo.";
                 break;
             case "unidad":
                 resultado = controller.listarUnidades();
-                // Texto de auditoría mejorado:
                 descripcionAuditoria = "Consulta realizada: Se accedió al listado completo de Unidades de Medida.";
                 break;
             case "tipo":
                 resultado = controller.listarTipos();
-                // Texto de auditoría mejorado:
                 descripcionAuditoria = "Consulta realizada: Se accedió al listado completo de Tipos de Artículo.";
                 break;
             default:
@@ -60,9 +56,9 @@ public class CatalogoServlet extends HttpServlet {
                 break;
         }
 
-        // --- Lógica de Auditoría para GET ---
-        Auditoria.registrar(request, tipoAccionAuditoria, descripcionAuditoria);
-        // --- Fin Lógica de Auditoría ---
+        if (valido) {
+            Auditoria.registrar(request, tipoAccionAuditoria, descripcionAuditoria);
+        }
 
         enviarJSON(response, resultado);
     }
@@ -74,7 +70,7 @@ public class CatalogoServlet extends HttpServlet {
         String accion = request.getParameter("accion");
         boolean exito = false;
         String tipoAccionAuditoria = "MODIFICACION_CATALOGO";
-        String descripcionAuditoria = "Inicio de operación " + accion + " sobre " + entidad;
+        String descripcionAuditoria = "Operación no definida";
 
         try {
             switch (entidad) {
@@ -84,19 +80,16 @@ public class CatalogoServlet extends HttpServlet {
                     if ("insertar".equals(accion)) {
                         c.setNombreCategoria(request.getParameter("nombre"));
                         exito = controller.insertarCategoria(c);
-                        // Texto de auditoría mejorado:
-                        descripcionAuditoria = "Registro exitoso: Nueva Categoría '" + c.getNombreCategoria() + "' fue añadida al Catálogo.";
+                        if (exito) descripcionAuditoria = "Registro exitoso: Nueva Categoría '" + c.getNombreCategoria() + "' fue añadida al Catálogo.";
                     } else if ("actualizar".equals(accion)) {
                         c.setIdCategoria(Integer.parseInt(request.getParameter("id")));
                         c.setNombreCategoria(request.getParameter("nombre"));
                         exito = controller.actualizarCategoria(c);
-                        // Texto de auditoría mejorado:
-                        descripcionAuditoria = "Actualización exitosa: Categoría con ID " + c.getIdCategoria() + " modificada a '" + c.getNombreCategoria() + "'.";
+                        if (exito) descripcionAuditoria = "Actualización exitosa: Categoría con ID " + c.getIdCategoria() + " modificada a '" + c.getNombreCategoria() + "'.";
                     } else if ("eliminar".equals(accion)) {
                         int id = Integer.parseInt(request.getParameter("id"));
                         exito = controller.eliminarCategoria(id);
-                        // Texto de auditoría mejorado:
-                        descripcionAuditoria = "Eliminación exitosa: Se removió la Categoría con ID " + id + " del Catálogo.";
+                        if (exito) descripcionAuditoria = "Eliminación exitosa: Se removió la Categoría con ID " + id + " del Catálogo.";
                     }
                     break;
 
@@ -106,19 +99,16 @@ public class CatalogoServlet extends HttpServlet {
                     if ("insertar".equals(accion)) {
                         m.setNombre(request.getParameter("nombre"));
                         exito = controller.insertarMarca(m);
-                        // Texto de auditoría mejorado:
-                        descripcionAuditoria = "Registro exitoso: Nueva Marca '" + m.getNombre() + "' fue creada.";
+                        if (exito) descripcionAuditoria = "Registro exitoso: Nueva Marca '" + m.getNombre() + "' fue creada.";
                     } else if ("actualizar".equals(accion)) {
                         m.setIdMarca(Integer.parseInt(request.getParameter("id")));
                         m.setNombre(request.getParameter("nombre"));
                         exito = controller.actualizarMarca(m);
-                        // Texto de auditoría mejorado:
-                        descripcionAuditoria = "Actualización exitosa: Marca con ID " + m.getIdMarca() + " modificada a '" + m.getNombre() + "'.";
+                        if (exito) descripcionAuditoria = "Actualización exitosa: Marca con ID " + m.getIdMarca() + " modificada a '" + m.getNombre() + "'.";
                     } else if ("eliminar".equals(accion)) {
                         int id = Integer.parseInt(request.getParameter("id"));
                         exito = controller.eliminarMarca(id);
-                        // Texto de auditoría mejorado:
-                        descripcionAuditoria = "Eliminación exitosa: Se removió la Marca con ID " + id + ".";
+                        if (exito) descripcionAuditoria = "Eliminación exitosa: Se removió la Marca con ID " + id + ".";
                     }
                     break;
 
@@ -129,20 +119,17 @@ public class CatalogoServlet extends HttpServlet {
                         u.setNombre(request.getParameter("nombre"));
                         u.setAbreviatura(request.getParameter("abreviatura"));
                         exito = controller.insertarUnidad(u);
-                        // Texto de auditoría mejorado:
-                        descripcionAuditoria = "Registro exitoso: Nueva Unidad de Medida '" + u.getNombre() + "' (" + u.getAbreviatura() + ") fue añadida.";
+                        if (exito) descripcionAuditoria = "Registro exitoso: Nueva Unidad de Medida '" + u.getNombre() + "' (" + u.getAbreviatura() + ") fue añadida.";
                     } else if ("actualizar".equals(accion)) {
                         u.setIdUnidad(Integer.parseInt(request.getParameter("id")));
                         u.setNombre(request.getParameter("nombre"));
                         u.setAbreviatura(request.getParameter("abreviatura"));
                         exito = controller.actualizarUnidad(u);
-                        // Texto de auditoría mejorado:
-                        descripcionAuditoria = "Actualización exitosa: Unidad ID " + u.getIdUnidad() + " modificada a '" + u.getNombre() + "' (" + u.getAbreviatura() + ").";
+                        if (exito) descripcionAuditoria = "Actualización exitosa: Unidad ID " + u.getIdUnidad() + " modificada a '" + u.getNombre() + "' (" + u.getAbreviatura() + ").";
                     } else if ("eliminar".equals(accion)) {
                         int id = Integer.parseInt(request.getParameter("id"));
                         exito = controller.eliminarUnidad(id);
-                        // Texto de auditoría mejorado:
-                        descripcionAuditoria = "Eliminación exitosa: Se removió la Unidad de Medida con ID " + id + ".";
+                        if (exito) descripcionAuditoria = "Eliminación exitosa: Se removió la Unidad de Medida con ID " + id + ".";
                     }
                     break;
 
@@ -152,52 +139,33 @@ public class CatalogoServlet extends HttpServlet {
                     if ("insertar".equals(accion)) {
                         t.setNombre(request.getParameter("nombre"));
                         exito = controller.insertarTipo(t);
-                        // Texto de auditoría mejorado:
-                        descripcionAuditoria = "Registro exitoso: Nuevo Tipo de Artículo '" + t.getNombre() + "' fue creado.";
+                        if (exito) descripcionAuditoria = "Registro exitoso: Nuevo Tipo de Artículo '" + t.getNombre() + "' fue creado.";
                     } else if ("actualizar".equals(accion)) {
                         t.setId(Integer.parseInt(request.getParameter("id")));
                         t.setNombre(request.getParameter("nombre"));
                         exito = controller.actualizarTipo(t);
-                        // Texto de auditoría mejorado:
-                        descripcionAuditoria = "Actualización exitosa: Tipo de Artículo ID " + t.getId() + " modificado a '" + t.getNombre() + "'.";
+                        if (exito) descripcionAuditoria = "Actualización exitosa: Tipo de Artículo ID " + t.getId() + " modificado a '" + t.getNombre() + "'.";
                     } else if ("eliminar".equals(accion)) {
                         int id = Integer.parseInt(request.getParameter("id"));
                         exito = controller.eliminarTipo(id);
-                        // Texto de auditoría mejorado:
-                        descripcionAuditoria = "Eliminación exitosa: Se removió el Tipo de Artículo con ID " + id + ".";
+                        if (exito) descripcionAuditoria = "Eliminación exitosa: Se removió el Tipo de Artículo con ID " + id + ".";
                     }
                     break;
 
                 default:
-                    // Auditoría de entidad no válida
-                    tipoAccionAuditoria = "ERROR_POST";
-                    descripcionAuditoria = "ERROR CRÍTICO: Intento de operación no permitida sobre entidad '" + entidad + "'.";
                     exito = false;
                     break;
             }
 
-            // --- Lógica de Auditoría para POST ---
             if (exito) {
-                // Si fue exitoso, usamos la descripción ya "bonita"
                 Auditoria.registrar(request, tipoAccionAuditoria + "_EXITO", descripcionAuditoria);
-            } else {
-                // Si hubo fallo en la lógica de negocio (por ejemplo, el DAO retornó false)
-                String descripcionFallo = "FALLO en la operación: La acción '" + accion + "' sobre " + entidad + " no pudo completarse con éxito.";
-                Auditoria.registrar(request, tipoAccionAuditoria + "_FALLO", descripcionFallo);
+            } else if (!"ERROR_CONSULTA".equals(tipoAccionAuditoria)) {
+
             }
-            // --- Fin Lógica de Auditoría ---
 
         } catch (NumberFormatException e) {
-            // Manejar y auditar errores de formato
-            tipoAccionAuditoria = "ERROR_FORMATO";
-            descripcionAuditoria = "ERROR DE DATOS: Se detectó un valor no numérico en un campo requerido (ID). Detalle técnico: " + e.getMessage();
-            Auditoria.registrar(request, tipoAccionAuditoria, descripcionAuditoria);
             exito = false;
         } catch (Exception e) {
-            // Manejar y auditar otras excepciones
-            tipoAccionAuditoria = "ERROR_INESPERADO";
-            descripcionAuditoria = "ERROR INESPERADO: Ocurrió un fallo desconocido durante la operación. Detalle técnico: " + e.toString();
-            Auditoria.registrar(request, tipoAccionAuditoria, descripcionAuditoria);
             exito = false;
         }
 

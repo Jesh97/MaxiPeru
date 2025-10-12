@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sistema.Controller.Compra.CompraController;
+import sistema.Ejecucion.Auditoria;
 import sistema.repository.CompraRepository;
 import java.io.IOException;
 import java.util.List;
@@ -26,6 +27,9 @@ public class ListarCompra extends HttpServlet {
         try {
             List<Map<String, Object>> compras = compraDAO.listarComprasConDetalles();
             ObjectMapper mapper = new ObjectMapper();
+
+            String descripcion = "Listado de Compras realizado. Cantidad de registros: " + compras.size();
+            Auditoria.registrar(request, "LECTURA", descripcion);
 
             String json = mapper.writeValueAsString(compras);
             response.getWriter().write(json);
