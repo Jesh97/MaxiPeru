@@ -15,6 +15,27 @@
             color: #ffffff;
             box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
         }
+        #factura-pdf-template {
+            font-size: 11px;
+        }
+        #guia-pdf-template {
+            font-size: 10px;
+            color: #333;
+            border-width: 2px !important;
+        }
+        .guia-box {
+            border: 1px solid #4a4a4a;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+        .guia-header-title {
+            font-size: 12px;
+            font-weight: bold;
+            background-color: #f3f4f6;
+            padding: 3px 5px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #ccc;
+        }
     </style>
 </head>
 <body class="font-sans antialiased bg-gray-100 text-gray-800">
@@ -113,6 +134,7 @@
                                     <tr>
                                         <th class="px-4 py-3 font-semibold border-r">Código</th>
                                         <th class="px-4 py-3 font-semibold border-r">Descripción</th>
+                                        <th class="px-4 py-3 font-semibold border-r">Unidad</th>
                                         <th class="px-4 py-3 font-semibold border-r">Cant.</th>
                                         <th class="px-4 py-3 font-semibold border-r">P. Unitario</th>
                                         <th class="px-4 py-3 font-semibold border-r">P. con Desc.</th>
@@ -165,9 +187,186 @@
     </div>
 </div>
 
+<div id="factura-pdf-template" class="p-8 bg-white hidden" style="width: 800px; margin: 0 auto; font-size: 11px;">
+
+    <div class="flex justify-between items-start mb-6 border-b-2 border-indigo-700 pb-4">
+        <div id="emisor-datos" class="w-3/5">
+            <h1 class="text-2xl font-extrabold text-indigo-800 mb-2" id="nombre-proveedor-doc"></h1>
+        </div>
+
+        <div class="border border-indigo-700 bg-indigo-50 p-3 text-center rounded-lg shadow-md" style="width: 250px;">
+            <h2 class="text-base font-extrabold text-indigo-800 py-1" id="ruc-cuadro-doc">R.U.C.: </h2>
+            <h2 class="text-xl font-extrabold text-indigo-700 mt-1 mb-2">FACTURA ELECTRÓNICA</h2>
+            <p class="text-2xl font-bold text-red-700" id="numero-factura-doc"></p>
+        </div>
+    </div>
+
+    <div class="mb-6 border border-gray-400 p-4 rounded-lg bg-gray-50/50">
+        <h3 class="text-sm font-bold text-indigo-700 mb-2 border-b border-indigo-200 pb-1">DATOS DEL ADQUIRIENTE (MAXINEGOCIOS)</h3>
+        <div class="grid grid-cols-5 gap-y-2 gap-x-4 text-gray-700">
+            <div>
+                <p class="font-bold text-gray-500">RUC DEL PROVEEDOR:</p>
+                <p class="pl-2 font-semibold text-gray-800"><span id="ruc-doc-repetido"></span></p>
+            </div>
+            <div class="col-span-2">
+                <p class="font-bold text-gray-500">NOMBRE DE LA EMPRESA:</p>
+                <p class="pl-2 font-semibold text-gray-800">MAXINEGOCIOS PERUVIAN S.A.C</p>
+            </div>
+            <div>
+                <p class="font-bold text-gray-500">FECHA DE EMISIÓN:</p>
+                <p class="pl-2 font-semibold text-gray-800"><span id="fecha-emision-doc"></span></p>
+            </div>
+            <div>
+                <p class="font-bold text-gray-500">MONEDA:</p>
+                <p class="pl-2 font-semibold text-gray-800"><span id="moneda-doc"></span></p>
+            </div>
+            <div class="col-span-5 mt-2">
+                <p class="font-bold text-gray-500">DIRECCIÓN:</p>
+                <p class="pl-2 font-semibold text-gray-800">MZA. D1 LOTE. 02 URB. LA MOLINA ALTA LAMBAYEQUE - CHICLAYO - PIMENTEL</p>
+            </div>
+        </div>
+    </div>
+
+    <table class="w-full border-collapse border border-gray-900 text-xs mb-6">
+        <thead class="bg-indigo-700 text-white">
+        <tr>
+            <th class="border border-indigo-500 px-2 py-2 w-16 text-center">CANT.</th>
+            <th class="border border-indigo-500 px-2 py-2">DESCRIPCIÓN</th>
+            <th class="border border-indigo-500 px-2 py-2 w-28 text-center">VALOR U.</th>
+            <th class="border border-indigo-500 px-2 py-2 w-28 text-center">PRECIO U.</th>
+            <th class="border border-indigo-500 px-2 py-2 w-28 text-center bg-indigo-800">IMPORTE TOTAL</th>
+        </tr>
+        </thead>
+        <tbody id="tabla-producto-doc">
+        </tbody>
+    </table>
+
+    <div class="flex justify-between items-start">
+        <div class="w-2/3 pr-6">
+            <p class="font-bold border-t border-b border-gray-400 py-2 mb-4 text-base">SON: <span id="letras-doc" class="font-normal italic text-gray-700"></span></p>
+
+            <div class="border border-gray-400 p-3 mb-4 bg-yellow-50/50 rounded-lg">
+                <p class="font-bold text-gray-500 text-xs mb-1">OBSERVACIÓN:</p>
+                <p id="observacion-doc" class="pl-2 text-gray-800"></p>
+            </div>
+        </div>
+
+        <div class="w-1/3 border border-gray-900 shadow-xl rounded-lg overflow-hidden">
+            <div class="flex justify-between px-3 py-1.5 border-b border-gray-400">
+                <span class="font-semibold text-gray-600">OP. GRAVADAS:</span>
+                <span id="op-gravadas-doc" class="font-bold text-right"></span>
+            </div>
+            <div class="flex justify-between px-3 py-1.5 border-b border-gray-400">
+                <span class="font-semibold text-gray-600">IGV (18%):</span>
+                <span id="igv-doc" class="font-bold text-right"></span>
+            </div>
+            <div class="flex justify-between px-3 py-2 text-lg bg-indigo-700 text-white">
+                <span class="font-extrabold">TOTAL:</span>
+                <span class="font-extrabold" id="total-doc"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="guia-pdf-template" class="p-4 bg-white hidden" style="width: 800px; margin: 0 auto; border: 2px solid #333; font-family: sans-serif;">
+
+    <div class="flex justify-between items-start mb-2">
+        <div id="guia-emisor-datos" class="w-2/3 pr-4 border-r border-gray-400">
+            <h1 class="text-xl font-bold mb-0 leading-tight text-indigo-800" id="guia-emisor-razon-social"></h1>
+            <p class="text-xs">RUC: <span id="guia-emisor-ruc"></span></p>
+            <p class="text-xs" id="guia-emisor-direccion"></p>
+        </div>
+
+        <div class="border border-red-700 p-2 text-center" style="width: 250px;">
+            <h2 class="text-base font-extrabold text-red-700 py-1 border-b border-red-700">R.U.C.: <span id="guia-cuadro-ruc"></span></h2>
+            <h2 class="text-lg font-extrabold mt-1">GUÍA DE REMISIÓN</h2>
+            <h2 class="text-lg font-extrabold mb-0">ELECTRÓNICA</h2>
+            <h2 class="text-lg font-extrabold text-red-700 mb-1">TRANSPORTISTA</h2>
+            <p class="text-xl font-bold mt-1" id="guia-numero-doc"></p>
+        </div>
+    </div>
+
+    <div class="w-full text-sm mb-4 border border-gray-700 bg-gray-50/70 p-1">
+        <p class="font-semibold text-center">FECHA DE TRASLADO: <span id="guia-fecha-traslado" class="font-bold"></span></p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+        <div class="guia-box">
+            <p class="guia-header-title text-indigo-700">DEL REMITENTE</p>
+            <div class="pl-2">
+                <p><span class="font-semibold text-gray-700">RUC:</span> <span id="guia-remitente-ruc" class="font-bold">-</span></p>
+                <p><span class="font-semibold text-gray-700">Razón Social:</span> <span id="guia-remitente-rs" class="font-bold">-</span></p>
+            </div>
+        </div>
+        <div class="guia-box">
+            <p class="guia-header-title text-indigo-700">DEL DESTINATARIO</p>
+            <div class="pl-2">
+                <p><span class="font-semibold text-gray-700">RUC:</span> <span id="guia-destinatario-ruc" class="font-bold">-</span></p>
+                <p><span class="font-semibold text-gray-700">Razón Social:</span> <span id="guia-destinatario-rs" class="font-bold">-</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+        <div class="guia-box">
+            <p class="guia-header-title text-emerald-700">DEL TRASLADO</p>
+            <div class="pl-2">
+                <p><span class="font-semibold text-gray-700">PUNTO DE PARTIDA:</span> <span id="guia-punto-partida"></span></p>
+                <p><span class="font-semibold text-gray-700">PUNTO DE LLEGADA:</span> <span id="guia-punto-llegada"></span></p>
+                <p><span class="font-semibold text-gray-700">FECHA DE ENTREGA:</span> <span id="guia-fecha-entrega"></span></p>
+            </div>
+        </div>
+        <div class="guia-box">
+            <p class="guia-header-title text-amber-700">DOCUMENTOS RELACIONADOS</p>
+            <div class="pl-2">
+                <p><span class="font-semibold text-gray-700">COTIZACIÓN N°:</span> <span id="guia-num-cotizacion">-</span></p>
+                <p><span class="font-semibold text-gray-700">ORDEN DE COMPRA N°:</span> <span id="guia-num-pedido">-</span></p>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="guia-header-title mt-2 mb-0 border-t border-gray-300 bg-indigo-50/50 text-indigo-800">DETALLE DE BIENES A TRANSPORTAR</h3>
+    <table class="w-full border-collapse border border-gray-700 text-xs mb-4">
+        <thead class="bg-indigo-700 text-white">
+        <tr>
+            <th class="border border-indigo-500 px-2 py-1 w-12 text-center">ITEM</th>
+            <th class="border border-indigo-500 px-2 py-1">DESCRIPCIÓN</th>
+            <th class="border border-indigo-500 px-2 py-1 w-24 text-center">UNIDAD</th>
+            <th class="border border-indigo-500 px-2 py-1 w-24 text-center font-bold">CANTIDAD</th>
+        </tr>
+        </thead>
+        <tbody id="tabla-guia-producto-doc">
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="4" class="px-2 py-1 text-right font-extrabold bg-gray-200 border-t border-gray-700">
+                CANTIDAD TOTAL: <span id="guia-peso-total" class="ml-2 text-base text-red-700"></span>
+            </td>
+        </tr>
+        </tfoot>
+    </table>
+
+</div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
     let compraActual = null;
+
+    /**
+     * Mapea la unidad de medida completa a su abreviatura,
+     * la lógica se toma de la función unidadAbreviatura de compra.js.
+     * @param {string} unidad - La unidad de medida completa (ej: 'KILOGRAMO').
+     * @returns {string} La abreviatura (ej: 'KG') o la unidad original si no se encuentra.
+     */
+    function unidadAbreviatura(unidad) {
+        const map = {'LITRO': 'L', 'GALÓN': 'GL', 'BIDÓN': 'BD', 'UNIDAD': 'U', 'KILOGRAMO': 'KG', 'CIENTO': 'C', 'PAQUETE': 'PQ', 'MILLAR': 'MLL', 'ROLLO': 'RL', 'SACO': 'S'};
+        if (!unidad) return '-';
+        return map[unidad.toUpperCase()] || unidad;
+    }
 
     function showMessage(message, type = 'info') {
         const box = document.getElementById('customMessageBox');
@@ -205,49 +404,65 @@
         return valor;
     }
 
-    async function cargarCompras() {
-        const res = await fetch("/listarCompra");
-        const compras = await res.json();
-        const tbody = document.getElementById("tabla-compras");
-        tbody.innerHTML = "";
+    function numeroALetras(total) {
+        return `TOTAL DE ${mostrarValor(total, 'S/ ')} EN LETRAS`;
+    }
 
-        compras.forEach((compra, index) => {
-            const tr = document.createElement("tr");
-            tr.classList.add('text-center', index % 2 === 0 ? 'bg-white' : 'bg-gray-50', 'hover:bg-indigo-50/50', 'transition', 'duration-150');
-            tr.innerHTML = `
-                <td class="px-4 py-3 whitespace-nowrap">${mostrarValor(compra.fecha_emision)}</td>
-                <td class="px-4 py-3 whitespace-nowrap">${mostrarValor(compra.fecha_vencimiento)}</td>
-                <td class="px-4 py-3 whitespace-nowrap">${mostrarValor(compra.tipo_comprobante)}</td>
-                <td class="px-4 py-3 whitespace-nowrap">${mostrarValor(compra.serie)}-${mostrarValor(compra.correlativo)}</td>
-                <td class="px-4 py-3 text-left font-medium text-gray-700">${mostrarValor(compra.proveedor.razon_social)}</td>
-                <td class="px-4 py-3 whitespace-nowrap text-gray-500">${mostrarValor(compra.moneda)}</td>
-                <td class="px-4 py-3 whitespace-nowrap"><span class="inline-flex items-center px-3 py-1 text-sm font-extrabold bg-green-600 text-white rounded-full shadow-lg">${mostrarValor(compra.total, 'S/ ')}</span></td>
-                <td class="px-4 py-3 whitespace-nowrap">
-                    <button class="bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold py-1.5 px-3 rounded-xl shadow-md transition duration-200 text-xs mr-2" onclick='editarCompra(${compra.id_compra})'><i class="bi bi-pencil-square"></i> Editar</button>
-                    <button class="bg-indigo-700 hover:bg-indigo-800 text-white font-semibold py-1.5 px-3 rounded-xl shadow-md transition duration-200 text-xs" onclick='verDetalles(${JSON.stringify(compra)})'><i class="bi bi-eye"></i> Detalles</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
+    async function cargarCompras() {
+        const tbody = document.getElementById("tabla-compras");
+        try {
+            // ASUME que /listarCompra devuelve un JSON con la estructura de compra
+            const res = await fetch("/listarCompra");
+            if (!res.ok) throw new Error("Error al cargar las compras.");
+            const compras = await res.json();
+
+            tbody.innerHTML = "";
+
+            if (compras.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-gray-500 italic">No se encontraron registros de compras.</td></tr>';
+                return;
+            }
+
+            compras.forEach((compra, index) => {
+                const tr = document.createElement("tr");
+                tr.classList.add('text-center', index % 2 === 0 ? 'bg-white' : 'bg-gray-50', 'hover:bg-indigo-50/50', 'transition', 'duration-150');
+                const compraDataString = JSON.stringify(compra).replace(/'/g, "\\'");
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap">${mostrarValor(compra.fecha_emision)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${mostrarValor(compra.fecha_vencimiento)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${mostrarValor(compra.tipo_comprobante)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${mostrarValor(compra.serie)}-${mostrarValor(compra.correlativo)}</td>
+                    <td class="px-4 py-3 text-left font-medium text-gray-700">${mostrarValor(compra.proveedor.razon_social)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-gray-500">${mostrarValor(compra.moneda)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap"><span class="inline-flex items-center px-3 py-1 text-sm font-extrabold bg-green-600 text-white rounded-full shadow-lg">${mostrarValor(compra.total, 'S/ ')}</span></td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <button class="bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold py-1.5 px-3 rounded-xl shadow-md transition duration-200 text-xs mr-2" onclick='editarCompra(${compra.id_compra})'><i class="bi bi-pencil-square"></i> Editar</button>
+                        <button class="bg-indigo-700 hover:bg-indigo-800 text-white font-semibold py-1.5 px-3 rounded-xl shadow-md transition duration-200 text-xs" onclick='verDetalles(${compraDataString})'><i class="bi bi-eye"></i> Detalles</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+        } catch (error) {
+            console.error(error);
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-red-500 italic font-bold">❌ Error al conectar con el servidor para obtener las compras.</td></tr>';
+        }
     }
 
     function verDetalles(compra) {
         compraActual = compra;
-
         const proveedor = compra.proveedor;
-
         document.getElementById('total-final-display').textContent = mostrarValor(compra.total, 'S/ ');
         document.getElementById('comprobante-display').textContent = `${mostrarValor(compra.tipo_comprobante)} ${mostrarValor(compra.serie)}-${mostrarValor(compra.correlativo)}`;
         document.getElementById('proveedor-display').textContent = `${mostrarValor(proveedor.razon_social)} (${mostrarValor(proveedor.ruc)})`;
         document.getElementById('dates-display').textContent = `${mostrarValor(compra.fecha_emision)} / ${mostrarValor(compra.fecha_vencimiento)}`;
-
         document.getElementById('subtotal-display').textContent = mostrarValor(compra.subtotal, 'S/ ');
         document.getElementById('igv-display').textContent = mostrarValor(compra.igv, 'S/ ');
         document.getElementById('tipo-cambio-display').textContent = mostrarValor(compra.tipo_cambio);
         document.getElementById('coste-transporte-display').textContent = mostrarValor(compra.coste_transporte, 'S/ ');
         document.getElementById('total-peso-display').textContent = mostrarValor(compra.total_peso, '', ' kg');
         document.getElementById('observacion-display').textContent = mostrarValor(compra.observacion) || 'N/A';
-
         const tbodyProducto = document.getElementById("tabla-producto");
         tbodyProducto.innerHTML = "";
         const tbodyTransporte = document.getElementById("tabla-transporte");
@@ -256,10 +471,15 @@
         if (compra.detalles && compra.detalles.length > 0) {
             compra.detalles.forEach((d, index) => {
                 const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+
+                // >>> IMPLEMENTACIÓN EN EL MODAL (Nodal) <<<
+                const unidad = unidadAbreviatura(d.unidad_medida);
+
                 tbodyProducto.innerHTML += `
                     <tr class="${rowClass} hover:bg-indigo-50 transition duration-100">
                         <td class="px-4 py-2 border-r">${mostrarValor(d.codigo_articulo)}</td>
                         <td class="px-4 py-2 text-left border-r">${mostrarValor(d.descripcion_articulo)}</td>
+                        <td class="px-4 py-2 border-r font-medium">${unidad}</td>
                         <td class="px-4 py-2 border-r font-medium">${mostrarValor(d.cantidad)}</td>
                         <td class="px-4 py-2 border-r">${mostrarValor(d.precio_unitario, 'S/ ')}</td>
                         <td class="px-4 py-2 border-r">${mostrarValor(d.precio_con_descuento, 'S/ ')}</td>
@@ -275,7 +495,7 @@
                     </tr>`;
             });
         } else {
-            tbodyProducto.innerHTML = '<tr><td colspan="8" class="text-gray-500 italic p-6">No hay detalles de productos registrados.</td></tr>';
+            tbodyProducto.innerHTML = '<tr><td colspan="9" class="text-gray-500 italic p-6">No hay detalles de productos registrados.</td></tr>';
             tbodyTransporte.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic p-6">No hay costos de transporte por detalle.</td></tr>';
         }
 
@@ -330,19 +550,196 @@
     }
 
     function descargarFactura() {
-        if (compraActual) {
-            const id = compraActual.id_compra;
-            showMessage(`Iniciando descarga de factura #${id}...`, 'success');
+        if (!compraActual) {
+            showMessage("Por favor, selecciona una compra para ver sus detalles primero.", 'info');
+            return;
         }
+
+        const template = document.getElementById('factura-pdf-template');
+        const proveedor = compraActual.proveedor;
+
+        document.getElementById('nombre-proveedor-doc').textContent = mostrarValor(proveedor.razon_social);
+        document.getElementById('ruc-cuadro-doc').textContent = `R.U.C.: ${mostrarValor(proveedor.ruc)}`;
+
+        document.getElementById('ruc-doc-repetido').textContent = mostrarValor(proveedor.ruc);
+        document.getElementById('fecha-emision-doc').textContent = mostrarValor(compraActual.fecha_emision);
+        document.getElementById('moneda-doc').textContent = mostrarValor(compraActual.moneda);
+
+        document.getElementById('numero-factura-doc').textContent = `${mostrarValor(compraActual.serie)}-${mostrarValor(compraActual.correlativo)}`;
+
+        const tbodyDoc = document.getElementById("tabla-producto-doc");
+        tbodyDoc.innerHTML = "";
+
+        if (compraActual.detalles && compraActual.detalles.length > 0) {
+            compraActual.detalles.forEach((d) => {
+                const valorUnitario = parseFloat(d.precio_unitario) / 1.18;
+                const precioUnitario = d.precio_con_descuento || d.precio_unitario;
+                const subTotal = d.total_detalle;
+
+                tbodyDoc.innerHTML += `
+                    <tr class="h-8">
+                        <td class="border border-gray-400 px-2 py-1 text-center">${mostrarValor(d.cantidad)}</td>
+                        <td class="border border-gray-400 px-2 py-1">${mostrarValor(d.descripcion_articulo)}</td>
+                        <td class="border border-gray-400 px-2 py-1 text-right">${mostrarValor(valorUnitario.toFixed(2), 'S/ ')}</td>
+                        <td class="border border-gray-400 px-2 py-1 text-right">${mostrarValor(precioUnitario, 'S/ ')}</td>
+                        <td class="border border-gray-400 px-2 py-1 text-right font-bold">${mostrarValor(subTotal, 'S/ ')}</td>
+                    </tr>`;
+            });
+        } else {
+            tbodyDoc.innerHTML = '<tr><td colspan="5" class="text-gray-500 italic p-4 text-center">Sin detalles de productos registrados.</td></tr>';
+        }
+
+        document.getElementById('letras-doc').textContent = numeroALetras(compraActual.total);
+        document.getElementById('observacion-doc').textContent = mostrarValor(compraActual.observacion) || 'N/A';
+        document.getElementById('op-gravadas-doc').textContent = mostrarValor(compraActual.subtotal, 'S/ ');
+        document.getElementById('igv-doc').textContent = mostrarValor(compraActual.igv, 'S/ ');
+        document.getElementById('total-doc').textContent = mostrarValor(compraActual.total, 'S/ ');
+
+
+        template.classList.remove('hidden');
+        showMessage(`Generando PDF de factura ${compraActual.serie}-${compraActual.correlativo}...`, 'info');
+
+        html2canvas(template, {
+            scale: 2,
+            useCORS: true
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const pageHeight = 295;
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            template.classList.add('hidden');
+
+            pdf.save(`Factura_${compraActual.serie}-${compraActual.correlativo}.pdf`);
+            showMessage(`✅ PDF de factura descargado.`, 'success');
+        }).catch(error => {
+            console.error(error);
+            template.classList.add('hidden');
+            showMessage("❌ Error al generar el PDF.", 'info');
+        });
     }
 
     function descargarGuiaTransporte() {
-        if (compraActual && compraActual.guia && compraActual.guia.id_guia) {
-            const id = compraActual.guia.id_compra;
-            showMessage(`Iniciando descarga de guía de transporte #${id}...`, 'success');
-        } else {
+        if (!compraActual || !compraActual.guia || !compraActual.guia.id_guia) {
             showMessage("No hay información de guía de transporte para esta compra.", 'info');
+            return;
         }
+
+        const template = document.getElementById('guia-pdf-template');
+        const guia = compraActual.guia;
+        const proveedor = compraActual.proveedor;
+        const referencia = compraActual.referencia || {};
+
+        document.getElementById('guia-emisor-razon-social').textContent = mostrarValor(proveedor.razon_social);
+        document.getElementById('guia-emisor-ruc').textContent = mostrarValor(proveedor.ruc);
+        document.getElementById('guia-cuadro-ruc').textContent = mostrarValor(proveedor.ruc);
+        document.getElementById('guia-emisor-direccion').textContent = mostrarValor(proveedor.direccion) || 'Dirección no especificada';
+
+        document.getElementById('guia-numero-doc').textContent = `${mostrarValor(guia.serie_guia)}-${mostrarValor(guia.correlativo_guia)}`;
+        document.getElementById('guia-fecha-traslado').textContent = mostrarValor(guia.fecha_emision_guia);
+        document.getElementById('guia-fecha-entrega').textContent = mostrarValor(guia.fecha_entrega);
+
+        document.getElementById('guia-destinatario-ruc').textContent = mostrarValor(proveedor.ruc);
+        document.getElementById('guia-destinatario-rs').textContent = mostrarValor(proveedor.razon_social);
+
+        const remitenteRucFull = mostrarValor(guia.ruc_guia);
+        let remitenteRuc = '-';
+        let remitenteRs = '-';
+
+        if (remitenteRucFull.includes(' - ')) {
+            const parts = remitenteRucFull.split(' - ', 2);
+            remitenteRuc = parts[0].trim();
+            remitenteRs = parts[1].trim();
+        } else if (remitenteRucFull !== '-') {
+            remitenteRuc = remitenteRucFull;
+            remitenteRs = mostrarValor(guia.razon_social_guia) || '-';
+        } else {
+             remitenteRs = mostrarValor(guia.razon_social_guia) || '-';
+        }
+
+        document.getElementById('guia-remitente-ruc').textContent = remitenteRuc;
+        document.getElementById('guia-remitente-rs').textContent = remitenteRs;
+
+        document.getElementById('guia-punto-partida').textContent = mostrarValor(guia.puntoPartida);
+        document.getElementById('guia-punto-llegada').textContent = mostrarValor(guia.puntoLlegada);
+
+        document.getElementById('guia-num-cotizacion').textContent = mostrarValor(referencia.numero_cotizacion);
+        document.getElementById('guia-num-pedido').textContent = mostrarValor(referencia.numero_pedido);
+
+        const tbodyDoc = document.getElementById("tabla-guia-producto-doc");
+        tbodyDoc.innerHTML = "";
+        let cantidadTotal = 0;
+        if (compraActual.detalles && compraActual.detalles.length > 0) {
+            compraActual.detalles.forEach((d, index) => {
+                const cantidad = parseFloat(d.cantidad) || 0;
+                cantidadTotal += cantidad;
+                // >>> IMPLEMENTACIÓN EN EL PDF DE GUÍA DE REMISIÓN <<<
+                const unidad = unidadAbreviatura(d.unidad_medida);
+
+                tbodyDoc.innerHTML += `
+                    <tr>
+                        <td class="border border-gray-400 px-2 py-1 text-center">${index + 1}</td>
+                        <td class="border border-gray-400 px-2 py-1">${mostrarValor(d.descripcion_articulo)}</td>
+                        <td class="border border-gray-400 px-2 py-1 text-center">${unidad}</td>
+                        <td class="border border-gray-400 px-2 py-1 text-right font-bold">${mostrarValor(cantidad)}</td>
+                    </tr>`;
+            });
+        } else {
+            tbodyDoc.innerHTML = '<tr><td colspan="4" class="text-gray-500 italic p-4 text-center">Sin detalles de productos registrados.</td></tr>';
+        }
+
+        document.getElementById('guia-peso-total').textContent = mostrarValor(cantidadTotal, '', ' UNIDADES');
+
+
+        template.classList.remove('hidden');
+        showMessage(`Generando PDF de Guía de Remisión ${guia.serie_guia}-${guia.correlativo_guia}...`, 'info');
+
+        html2canvas(template, {
+            scale: 2,
+            useCORS: true
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const pageHeight = 295;
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            template.classList.add('hidden');
+
+            pdf.save(`Guia_Remision_${guia.serie_guia}-${guia.correlativo_guia}.pdf`);
+            showMessage(`✅ PDF de Guía de Remisión descargado.`, 'success');
+        }).catch(error => {
+            console.error('Error al generar el PDF de la Guía:', error);
+            template.classList.add('hidden');
+            showMessage("❌ Error al generar el PDF de la Guía de Remisión.", 'info');
+        });
     }
 
     function editarCompra(idCompra) {
