@@ -405,3 +405,64 @@ body {
         max-width: 100%;
     }
 }
+
+/* --- MEJORAS DE ESTILO PARA BÚSQUEDA DE CLIENTES Y ARTÍCULOS --- */
+
+/* Asegurar que el contenedor del input tenga posición relativa */
+/* Añadido .col-lg-6 para el campo de Cliente más grande */
+.col-md-6.col-lg-3,
+.col-lg-6 {
+    position: relative;
+}
+
+/* Estilo Base para el Contenedor de Búsqueda (Lista de Sugerencias) */
+.product-search-list {
+    position: absolute;
+    z-index: 1000;
+    width: 100%;
+    /* Altura ajustada para no ser demasiado intrusiva */
+    max-height: 180px;
+    overflow-y: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-top: 1px; /* Separación mínima */
+    border: 1px solid var(--primary-color); /* Borde con color primario */
+    border-radius: 0 0 0.5rem 0.5rem; /* Bordes redondeados solo abajo */
+    border-top: none;
+    background-color: var(--card-background);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Sombra más pronunciada */
+}
+
+/* Estilo para los Ítems Individuales de Sugerencia */
+.client-search-item,
+.product-search-item {
+    padding: 10px 15px; /* Más padding para mejor touch */
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color); /* Borde sutil */
+    font-size: var(--font-size-base);
+    color: var(--text-dark);
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+/* Estilo al pasar el mouse (hover) */
+.client-search-item:hover,
+.product-search-item:hover {
+    background-color: var(--primary-color); /* Fondo primario */
+    color: white; /* Texto blanco */
+}
+
+/* El último elemento no necesita borde inferior */
+.product-search-list li:last-child {
+    border-bottom: none;
+}
+
+/* Estilo para el indicador de cliente seleccionado */
+#spanClienteSeleccionado {
+    font-size: var(--font-size-small);
+    color: var(--secondary-color) !important; /* Acento verde para indicar selección */
+    font-weight: 700;
+}
+
+/* --- FIN MEJORAS BÚSQUEDA --- */

@@ -18,6 +18,7 @@ import sistema.Servlet.Usuario.ListarActividades;
 import sistema.Servlet.Usuario.ListarUsuario;
 import sistema.Servlet.Usuario.RegistrarUsuario;
 import sistema.Servlet.Login.verificarSesion;
+import sistema.Servlet.Venta.VentaServlet;
 import sistema.utils.JettyUTP;
 import java.net.URL;
 
@@ -45,6 +46,7 @@ public class App {
         webserver.addServlet(TipoPagoServlet.class,"/guardarTipoPago");
         webserver.addServlet(ProductoServlet.class,"/productos");
         webserver.addServlet(CatalogoServlet.class,"/CatalogoServlet");
+        webserver.addServlet(VentaServlet.class,"/VentaServlet");
 
         URL myURL = new URL("http://localhost:8082");
         System.out.println("*********************************************************");

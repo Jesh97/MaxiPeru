@@ -470,48 +470,186 @@ END$$
 -- ******************************************************
 
 DROP PROCEDURE IF EXISTS `sp_registrar_venta`$$
-CREATE PROCEDURE `sp_registrar_venta`(IN p_id_cliente INT, IN p_id_tipo_comprobante INT, IN p_id_moneda INT, IN p_fecha_emision DATE, IN p_fecha_vencimiento DATE, IN p_id_tipo_pago INT, IN p_estado_venta VARCHAR(50), IN p_tipo_descuento ENUM('global', 'item'), IN p_aplica_igv BOOLEAN, IN p_observaciones TEXT, IN p_subtotal DECIMAL(12,2), IN p_igv DECIMAL(12,2), IN p_descuento_total DECIMAL(12,2), IN p_total_final DECIMAL(12,2), IN p_total_peso DECIMAL(12,3), IN p_hay_traslado BOOLEAN, OUT p_id_venta INT)
+CREATE PROCEDURE `sp_registrar_venta`(
+    IN p_id_cliente INT,
+    IN p_id_tipo_comprobante INT,
+    IN p_id_moneda INT,
+    IN p_fecha_emision DATE,
+    IN p_fecha_vencimiento DATE,
+    IN p_id_tipo_pago INT,
+    IN p_estado_venta VARCHAR(50),
+    IN p_tipo_descuento ENUM('global', 'item'),
+    IN p_aplica_igv BOOLEAN,
+    IN p_observaciones TEXT,
+    IN p_subtotal DECIMAL(12,2),
+    IN p_igv DECIMAL(12,2),
+    IN p_descuento_total DECIMAL(12,2),
+    IN p_total_final DECIMAL(12,2),
+    IN p_total_peso DECIMAL(12,3),
+    IN p_hay_traslado BOOLEAN,
+    OUT p_id_venta INT
+)
 BEGIN
-    INSERT INTO venta(id_cliente, id_tipo_comprobante, id_moneda, fecha_emision, fecha_vencimiento, id_tipo_pago, estado_venta, tipo_descuento, aplica_igv, observaciones, subtotal, igv, descuento_total, total_final, total_peso, hay_traslado) VALUES (p_id_cliente, p_id_tipo_comprobante, p_id_moneda, p_fecha_emision, p_fecha_vencimiento, p_id_tipo_pago, p_estado_venta, p_tipo_descuento, p_aplica_igv, p_observaciones, p_subtotal, p_igv, p_descuento_total, p_total_final, p_total_peso, p_hay_traslado);
+    INSERT INTO venta(
+        id_cliente, id_tipo_comprobante, id_moneda, fecha_emision, fecha_vencimiento,
+        id_tipo_pago, estado_venta, tipo_descuento, aplica_igv, observaciones,
+        subtotal, igv, descuento_total, total_final, total_peso, hay_traslado
+    ) VALUES (
+        p_id_cliente, p_id_tipo_comprobante, p_id_moneda, p_fecha_emision, p_fecha_vencimiento,
+        p_id_tipo_pago, p_estado_venta, p_tipo_descuento, p_aplica_igv, p_observaciones,
+        p_subtotal, p_igv, p_descuento_total, p_total_final, p_total_peso, p_hay_traslado
+    );
     SET p_id_venta = LAST_INSERT_ID();
 END$$
 
-DROP PROCEDURE IF EXISTS `sp_agregar_detalle_venta`$$
-CREATE PROCEDURE `sp_agregar_detalle_venta`(IN p_id_venta INT, IN p_id_articulo INT, IN p_descripcion VARCHAR(255), IN p_cantidad DECIMAL(12,2), IN p_peso_unitario DECIMAL(10,3), IN p_precio_unitario DECIMAL(12,2), IN p_descuento_monto DECIMAL(12,2), IN p_subtotal DECIMAL(12,2), IN p_total DECIMAL(12,2), OUT p_id_detalle_venta INT)
+DROP PROCEDURE IF EXISTS `sp_agregar_descuento_global_venta`$$
+CREATE PROCEDURE `sp_agregar_descuento_global_venta`(
+    IN p_id_venta INT,
+    IN p_motivo VARCHAR(255),
+    IN p_tipo_valor ENUM('porcentaje', 'soles'),
+    IN p_valor DECIMAL(12,2)
+)
 BEGIN
-    INSERT INTO detalle_venta(id_venta, id_articulo, descripcion, cantidad, peso_unitario, precio_unitario, descuento_monto, subtotal, total) VALUES (p_id_venta, p_id_articulo, p_descripcion, p_cantidad, p_peso_unitario, p_precio_unitario, p_descuento_monto, p_subtotal, p_total);
+    INSERT INTO descuento (
+        id_venta, motivo, tipo_aplicacion, tipo_valor, valor, tasa_igv
+    )
+    VALUES (
+        p_id_venta, p_motivo, 'global', p_tipo_valor, p_valor, 0.18
+    );
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_agregar_detalle_venta`$$
+CREATE PROCEDURE `sp_agregar_detalle_venta`(
+    IN p_id_venta INT,
+    IN p_id_articulo INT,
+    IN p_descripcion VARCHAR(255),
+    IN p_cantidad DECIMAL(12,2),
+    IN p_peso_unitario DECIMAL(10,3),
+    IN p_precio_unitario DECIMAL(12,2),
+    IN p_descuento_monto DECIMAL(12,2),
+    IN p_subtotal DECIMAL(12,2),
+    IN p_total DECIMAL(12,2),
+    OUT p_id_detalle_venta INT
+)
+BEGIN
+    INSERT INTO detalle_venta(
+        id_venta, id_articulo, descripcion, cantidad, peso_unitario,
+        precio_unitario, descuento_monto, subtotal, total
+    ) VALUES (
+        p_id_venta, p_id_articulo, p_descripcion, p_cantidad, p_peso_unitario,
+        p_precio_unitario, p_descuento_monto, p_subtotal, p_total
+    );
     SET p_id_detalle_venta = LAST_INSERT_ID();
 END$$
 
-DROP PROCEDURE IF EXISTS `sp_consumir_stock_lote_venta`$$
-CREATE PROCEDURE `sp_consumir_stock_lote_venta`(IN p_id_detalle_venta INT, IN p_id_articulo INT, IN p_cantidad_a_consumir DECIMAL(12,2))
+DROP PROCEDURE IF EXISTS `sp_agregar_descuento_item_venta`$$
+CREATE PROCEDURE `sp_agregar_descuento_item_venta`(
+    IN p_id_detalle_venta INT,
+    IN p_motivo VARCHAR(255),
+    IN p_tipo_valor ENUM('porcentaje', 'soles'),
+    IN p_valor DECIMAL(12,2)
+)
 BEGIN
-    DECLARE v_cantidad_restante DECIMAL(12,2); DECLARE v_id_lote_actual INT; DECLARE v_disponible_lote DECIMAL(12,2); DECLARE v_cantidad_consumida DECIMAL(12,2); DECLARE finished BOOLEAN DEFAULT FALSE;
-    DECLARE cur_lotes CURSOR FOR SELECT id_lote, cantidad_disponible FROM inventario_lote WHERE id_articulo = p_id_articulo AND cantidad_disponible > 0 ORDER BY fecha_vencimiento IS NULL ASC, fecha_vencimiento ASC, fecha_ingreso ASC;
+    INSERT INTO descuento (
+        id_detalle_venta, motivo, tipo_aplicacion, tipo_valor, valor, tasa_igv
+    )
+    VALUES (
+        p_id_detalle_venta, p_motivo, 'item', p_tipo_valor, p_valor, 0.18
+    );
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_consumir_stock_lote_venta`$$
+CREATE PROCEDURE `sp_consumir_stock_lote_venta`(
+    IN p_id_detalle_venta INT,
+    IN p_id_articulo INT,
+    IN p_cantidad_a_consumir DECIMAL(12,2)
+)
+BEGIN
+    DECLARE v_cantidad_restante DECIMAL(12,2);
+    DECLARE v_id_lote_actual INT;
+    DECLARE v_disponible_lote DECIMAL(12,2);
+    DECLARE v_cantidad_consumida DECIMAL(12,2);
+    DECLARE finished BOOLEAN DEFAULT FALSE;
+    DECLARE cur_lotes CURSOR FOR
+        SELECT id_lote, cantidad_disponible
+        FROM inventario_lote
+        WHERE id_articulo = p_id_articulo AND cantidad_disponible > 0
+        ORDER BY fecha_vencimiento IS NULL ASC, fecha_vencimiento ASC, fecha_ingreso ASC;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = TRUE;
     SET v_cantidad_restante = p_cantidad_a_consumir;
     OPEN cur_lotes;
+
     lote_loop: LOOP
         FETCH cur_lotes INTO v_id_lote_actual, v_disponible_lote;
         IF finished OR v_cantidad_restante <= 0 THEN
             LEAVE lote_loop;
         END IF;
+
         SET v_cantidad_consumida = LEAST(v_cantidad_restante, v_disponible_lote);
         UPDATE inventario_lote SET cantidad_disponible = cantidad_disponible - v_cantidad_consumida WHERE id_lote = v_id_lote_actual;
         INSERT INTO lote_venta (id_detalle_venta, id_lote, cantidad) VALUES (p_id_detalle_venta, v_id_lote_actual, v_cantidad_consumida);
-        SET v_cantidad_restante = v_cantidad_restante - v_cantidad_consumida;
         UPDATE articulo SET cantidad = cantidad - v_cantidad_consumida WHERE id = p_id_articulo;
+
+        SET v_cantidad_restante = v_cantidad_restante - v_cantidad_consumida;
     END LOOP;
+
     CLOSE cur_lotes;
+
     IF v_cantidad_restante > 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Stock insuficiente en lotes disponibles.';
     END IF;
 END$$
 
-DROP PROCEDURE IF EXISTS `sp_agregar_conformidad_cliente`$$
-CREATE PROCEDURE `sp_agregar_conformidad_cliente`(IN p_id_venta INT, IN p_nombre_cliente_confirma VARCHAR(255), IN p_dni_cliente_confirma VARCHAR(20), IN p_tipo_entrega ENUM('tienda', 'remision'))
+DROP PROCEDURE IF EXISTS `sp_registrar_guia_transporte_venta`$$
+CREATE PROCEDURE `sp_registrar_guia_transporte_venta`(
+    IN p_id_venta INT,
+    IN p_modalidad_transporte ENUM('publico', 'privado'),
+    IN p_peso DECIMAL(12,3),
+    IN p_ruc_empresa VARCHAR(20),
+    IN p_razon_social_empresa VARCHAR(255),
+    IN p_marca_vehiculo VARCHAR(100),
+    IN p_dni_conductor VARCHAR(20),
+    IN p_nombre_conductor VARCHAR(255),
+    IN p_punto_partida VARCHAR(255),
+    IN p_punto_llegada VARCHAR(255),
+    IN p_fecha_traslado DATE,
+    IN p_observaciones TEXT,
+    IN p_conformidad_nombre VARCHAR(255),
+    IN p_conformidad_dni VARCHAR(20)
+)
 BEGIN
-    INSERT INTO conformidad_cliente (id_venta, nombre_cliente_confirma, dni_cliente_confirma, tipo_entrega) VALUES (p_id_venta, p_nombre_cliente_confirma, p_dni_cliente_confirma, p_tipo_entrega);
+    INSERT INTO guia_transporte (
+        id_venta, tipo_documento_ref, peso, fecha_traslado, observaciones, modalidad_transporte,
+        ruc_empresa, razon_social_empresa, marca_vehiculo, dni_conductor, nombre_conductor,
+        punto_partida, punto_llegada
+    )
+    VALUES (
+        p_id_venta, 'venta', p_peso, p_fecha_traslado, p_observaciones, p_modalidad_transporte,
+        p_ruc_empresa, p_razon_social_empresa, p_marca_vehiculo, p_dni_conductor, p_nombre_conductor,
+        p_punto_partida, p_punto_llegada
+    );
+
+    INSERT INTO conformidad_cliente (
+        id_venta, nombre_cliente_confirma, dni_cliente_confirma, tipo_entrega
+    )
+    VALUES (
+        p_id_venta, p_conformidad_nombre, p_conformidad_dni, 'remision'
+    );
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_registrar_conformidad_tienda`$$
+CREATE PROCEDURE `sp_registrar_conformidad_tienda`(
+    IN p_id_venta INT,
+    IN p_nombre_cliente_confirma VARCHAR(255),
+    IN p_dni_cliente_confirma VARCHAR(20)
+)
+BEGIN
+    INSERT INTO conformidad_cliente (
+        id_venta, nombre_cliente_confirma, dni_cliente_confirma, tipo_entrega
+    )
+    VALUES (
+        p_id_venta, p_nombre_cliente_confirma, p_dni_cliente_confirma, 'tienda'
+    );
 END$$
 
 -- ******************************************************

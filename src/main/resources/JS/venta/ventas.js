@@ -1,24 +1,22 @@
+const VENTA_SERVLET_URL = '/VentaServlet';
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias principales
     const bodyItemsVenta = document.getElementById('bodyItemsVenta');
     const agregarItemVentaBtn = document.getElementById('agregarItemVentaBtn');
+    const btnGuardarVenta = document.getElementById('btnGuardarVenta');
 
-    // Referencias al Resumen Financiero
     const subtotalSinIgvSpan = document.getElementById('subtotalSinIgv');
     const descuentoVentaSpan = document.getElementById('descuentoVenta');
     const igvVentaSpan = document.getElementById('igvVenta');
     const totalVentaSpan = document.getElementById('totalVenta');
     const pesoTotalVentaSpan = document.getElementById('pesoTotalVenta');
 
-    // 💡 NUEVA REFERENCIA: Checkbox de IGV
     const aplicaIgvCheckbox = document.getElementById('aplicaIgv');
 
-    // Elementos de Descuento
     const tipoDescuentoRadios = document.querySelectorAll('input[name="tipoDescuento"]');
     const descuentoGlobalContainer = document.getElementById('descuentoGlobalContainer');
     const descuentoHeader = document.querySelector('.descuento-header');
 
-    // Modales y elementos relacionados
     const modalDescuentoItem = new bootstrap.Modal(document.getElementById('modalDescuentoItem'));
     const itemDescripcionModal = document.getElementById('itemDescripcionModal');
     const valorDescuentoItem = document.getElementById('valorDescuentoItem');
@@ -32,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalTraslado = new bootstrap.Modal(document.getElementById('modalTraslado'));
     const modalConformidadCliente = new bootstrap.Modal(document.getElementById('modalConformidadCliente'));
 
-    // Variables de estado de Lotes (para mantener la lógica existente)
     const modalLotesVencimiento = new bootstrap.Modal(document.getElementById('modalLotesVencimiento'));
     const bodyLotes = document.getElementById('bodyLotes');
     const agregarLoteBtn = document.getElementById('agregarLoteBtn');
@@ -46,19 +43,149 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentItemQuantity = 0;
     let loteRowIndex = 0;
 
+    const busquedaProductosInput = document.getElementById('busquedaProductos');
+    const listaResultadosBusqueda = document.getElementById('listaResultadosBusqueda');
+    let busquedaTimeout;
 
-    // --- FUNCIONES DE CÁLCULO Y EVENTOS (Núcleo Corregido) ---
+    const busquedaClienteInput = document.getElementById('busquedaCliente');
+    const listaResultadosClientes = document.getElementById('listaResultadosClientes');
+    const inputIdCliente = document.getElementById('idCliente');
+    const spanClienteSeleccionado = document.getElementById('spanClienteSeleccionado');
 
-    /**
-     * Función principal que calcula todos los totales, aplicando el IGV condicionalmente.
-     */
+
+    const buscarClientes = async (query) => {
+        if (query.length < 3) {
+            listaResultadosClientes.innerHTML = '';
+            return;
+        }
+
+        const url = `${VENTA_SERVLET_URL}?action=buscarCliente&query=${encodeURIComponent(query)}`;
+
+        try {
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                let errorMensaje = 'Error al buscar clientes';
+                try {
+                    const errorJson = await response.json();
+                    errorMensaje = errorJson.error || errorMensaje;
+                } catch (jsonError) {
+                    errorMensaje = `Error HTTP ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(errorMensaje);
+            }
+
+            const clientes = await response.json();
+            mostrarResultadosClientes(clientes);
+        } catch (error) {
+            console.error('Fallo en la búsqueda de clientes:', error);
+            listaResultadosClientes.innerHTML = `<li class="list-group-item list-group-item-danger">Error: ${error.message}</li>`;
+        }
+    };
+
+    const mostrarResultadosClientes = (clientes) => {
+        listaResultadosClientes.innerHTML = '';
+        if (clientes.length === 0) {
+            listaResultadosClientes.innerHTML = `<li class="list-group-item">No se encontraron clientes.</li>`;
+            return;
+        }
+
+        const sugerenciasLimitadas = clientes.slice(0, 10);
+
+        sugerenciasLimitadas.forEach(cliente => {
+            const li = document.createElement('li');
+            li.className = 'client-search-item';
+            li.textContent = `${cliente.n_Documento} - ${cliente.razonSocial}`;
+            li.dataset.client = JSON.stringify({
+                id: cliente.id,
+                documento: cliente.n_Documento,
+                razonSocial: cliente.razonSocial
+            });
+            li.addEventListener('click', () => {
+                const clientData = JSON.parse(li.dataset.client);
+                inputIdCliente.value = clientData.id;
+                spanClienteSeleccionado.textContent = `${clientData.razonSocial} (${clientData.documento})`;
+
+                listaResultadosClientes.innerHTML = '';
+                busquedaClienteInput.value = clientData.razonSocial;
+            });
+            listaResultadosClientes.appendChild(li);
+        });
+    };
+
+    const buscarArticulos = async (query) => {
+        if (query.length < 3) {
+            listaResultadosBusqueda.innerHTML = '';
+            return;
+        }
+
+        const url = `${VENTA_SERVLET_URL}?action=buscarArticulos&query=${encodeURIComponent(query)}`;
+
+        try {
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                let errorMensaje = 'Error al buscar artículos';
+                try {
+                    const errorJson = await response.json();
+                    errorMensaje = errorJson.error || errorMensaje;
+                } catch (jsonError) {
+                    errorMensaje = `Error HTTP ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(errorMensaje);
+            }
+
+            const articulos = await response.json();
+            mostrarResultados(articulos);
+        } catch (error) {
+            console.error('Fallo en la búsqueda:', error);
+            listaResultadosBusqueda.innerHTML = `<li class="list-group-item list-group-item-danger">Error: ${error.message}</li>`;
+        }
+    };
+
+    const mostrarResultados = (articulos) => {
+        listaResultadosBusqueda.innerHTML = '';
+        if (articulos.length === 0) {
+            listaResultadosBusqueda.innerHTML = `<li class="list-group-item">No se encontraron artículos.</li>`;
+            return;
+        }
+
+        const sugerenciasLimitadas = articulos.slice(0, 10);
+
+        sugerenciasLimitadas.forEach(articulo => {
+            const li = document.createElement('li');
+            li.className = 'product-search-item';
+            li.textContent = `${articulo.codigo} - ${articulo.descripcion} (Stock: ${articulo.cantidad}) S/ ${articulo.precioUnitario.toFixed(2)}`;
+            li.dataset.product = JSON.stringify({
+                id: articulo.id,
+                codigo: articulo.codigo,
+                descripcion: articulo.descripcion,
+                precio: articulo.precioUnitario,
+                peso: articulo.pesoUnitario || 0,
+                stock: articulo.cantidad
+            });
+            li.addEventListener('click', () => {
+                const productData = JSON.parse(li.dataset.product);
+
+                if (productData.stock <= 0) {
+                    alert(`¡Alerta de Stock! El artículo "${productData.descripcion}" no está disponible. Stock actual: 0.`);
+                    return;
+                }
+
+                createItemRow(productData);
+                listaResultadosBusqueda.innerHTML = '';
+                busquedaProductosInput.value = '';
+            });
+            listaResultadosBusqueda.appendChild(li);
+        });
+    };
+
     const updateTotals = () => {
-        let subtotalBase = 0; // Suma de (Cantidad * Precio)
+        let subtotalBase = 0;
         let totalDescuentoAplicado = 0;
         let totalPeso = 0;
         const IGV_RATE = 0.18;
 
-        // 💡 CRÍTICO: Comprobar si se debe aplicar el IGV
         const shouldApplyIgv = aplicaIgvCheckbox.checked;
 
         const rows = bodyItemsVenta.querySelectorAll('tr');
@@ -71,13 +198,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const baseTotal = cantidad * precio;
 
-            // 1. Cálculo de Peso Total
             totalPeso += cantidad * pesoUnitario;
 
-            // 2. Acumular subtotal
             subtotalBase += baseTotal;
 
-            // 3. Cálculo de Descuento por Ítem
             let itemDiscount = 0;
             if (isPerItemDiscount) {
                 const valorDescItem = parseFloat(row.dataset.descuentoValor) || 0;
@@ -91,17 +215,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             totalDescuentoAplicado += itemDiscount;
 
-            // 4. Actualizar el Total del Ítem en la tabla
             const finalItemTotal = baseTotal - itemDiscount;
             const totalItemSpan = row.querySelector('.item-total');
             if (totalItemSpan) {
                  totalItemSpan.textContent = Math.max(0, finalItemTotal).toFixed(2);
             }
-
-            // (Si existe la función de lotes) updateLoteStatusDisplay(row, cantidad);
         });
 
-        // 5. Aplicar Descuento Global (si aplica)
         if (!isPerItemDiscount) {
             const valor = parseFloat(document.getElementById('valorDescuentoGlobal')?.value) || 0;
             const tipo = document.getElementById('tipoDescuentoGlobal')?.value;
@@ -115,13 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Ajustar descuento (límite: no puede exceder el subtotal base)
         totalDescuentoAplicado = Math.min(totalDescuentoAplicado, subtotalBase);
 
-        // 6. Resumen Financiero Final
         const subtotalFinal = subtotalBase - totalDescuentoAplicado;
 
-        // 💡 LÓGICA CONDICIONAL DE IGV
         let igv = 0;
         if (shouldApplyIgv && subtotalFinal > 0) {
             igv = subtotalFinal * IGV_RATE;
@@ -129,7 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const totalFinal = subtotalFinal + igv;
 
-        // 7. Actualizar la interfaz (DOM)
         subtotalSinIgvSpan.textContent = `S/ ${subtotalBase.toFixed(2)}`;
         descuentoVentaSpan.textContent = `S/ ${totalDescuentoAplicado.toFixed(2)}`;
         igvVentaSpan.textContent = `S/ ${igv.toFixed(2)}`;
@@ -137,23 +253,17 @@ document.addEventListener('DOMContentLoaded', () => {
         pesoTotalVentaSpan.textContent = `${totalPeso.toFixed(2)} Kg`;
     };
 
-    /**
-     * Configura los eventos 'input' para disparar el cálculo en los campos de una fila.
-     */
     const setupRowEvents = (row) => {
-        // Selecciona todos los inputs que afectan el cálculo de la línea
         const inputsToRecalculate = row.querySelectorAll('.item-cantidad, .item-precio, .item-peso');
         inputsToRecalculate.forEach(input => {
             input.addEventListener('input', updateTotals);
         });
 
-        // Evento para eliminar la fila
         row.querySelector('.eliminar-item-btn').addEventListener('click', () => {
             row.remove();
             updateTotals();
         });
 
-        // Evento para abrir el modal de descuento
         row.querySelector('.aplicar-descuento-btn')?.addEventListener('click', () => {
             currentRow = row;
             itemDescripcionModal.value = row.querySelector('.item-descripcion')?.value || 'Ítem sin descripción';
@@ -162,28 +272,26 @@ document.addEventListener('DOMContentLoaded', () => {
             modalDescuentoItem.show();
         });
 
-        // Evento para abrir el modal de lotes
         row.querySelector('.lote-btn')?.addEventListener('click', () => {
             const cantidad = parseFloat(row.querySelector('.item-cantidad')?.value) || 0;
             if (cantidad > 0) {
                 currentRow = row;
-                loadLotes(row); // Asume que loadLotes está definida
+                loadLotes(row);
             } else {
                 alert("Ingrese una cantidad mayor a cero para gestionar lotes.");
             }
         });
     };
 
-    /**
-     * Crea y añade una nueva fila de producto/servicio.
-     */
     const createItemRow = (product = null) => {
         const row = document.createElement('tr');
         row.dataset.descuentoValor = 0;
         row.dataset.descuentoTipo = 'monto';
         row.dataset.lotes = '[]';
+        row.dataset.idArticulo = product ? product.id : 0;
         const isPerItemDiscount = document.getElementById('descuentoPorItem').checked;
         const initialPrice = product && product.precio ? product.precio.toFixed(2) : '0.00';
+        const initialPeso = product && product.peso ? product.peso.toFixed(2) : '0.00';
 
         row.innerHTML = `
             <td><input type="text" class="form-control item-codigo" value="${product ? product.codigo : ''}" placeholder="Código"></td>
@@ -197,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <option value="metros">MTR</option>
                 </select>
             </td>
-            <td><input type="number" class="form-control item-peso" value="0.00" min="0" step="0.01"></td>
+            <td><input type="number" class="form-control item-peso" value="${initialPeso}" min="0" step="0.01"></td>
             <td><input type="number" class="form-control item-precio" value="${initialPrice}" min="0" step="0.01"></td>
             <td class="discount-column"><span class="item-descuento">S/ 0.00</span> <button type="button" class="btn btn-table btn-descuento-item aplicar-descuento-btn" title="Aplicar Descuento"><i class="bi bi-tag"></i></button></td>
             <td><span class="item-total fw-bold">0.00</span></td>
@@ -218,14 +326,151 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTotals();
     };
 
-    // --- MANEJO DE EVENTOS GLOBALES ---
+    const getGeneralData = () => {
+        const tipoDescuento = document.querySelector('input[name="tipoDescuento"]:checked').value;
+        const subtotalText = subtotalSinIgvSpan.textContent.replace('S/ ', '');
+        const descuentoTotalText = descuentoVentaSpan.textContent.replace('S/ ', '');
+        const igvText = igvVentaSpan.textContent.replace('S/ ', '');
+        const totalFinalText = totalVentaSpan.textContent.replace('S/ ', '');
+        const totalPesoText = pesoTotalVentaSpan.textContent.replace(' Kg', '');
+
+        const data = {
+            idCliente: parseFloat(document.getElementById('idCliente')?.value) || 0,
+            idTipoComprobante: parseFloat(document.getElementById('idTipoComprobante')?.value) || 0,
+            idMoneda: parseFloat(document.getElementById('idMoneda')?.value) || 0,
+            fechaEmision: document.getElementById('fechaEmision')?.value || new Date().toISOString().split('T')[0],
+            fechaVencimiento: document.getElementById('fechaVencimiento')?.value || '',
+            idTipoPago: parseFloat(document.getElementById('idTipoPago')?.value) || 0,
+            estadoVenta: document.getElementById('estadoVenta')?.value || 'Emitida',
+            tipoDescuento: tipoDescuento,
+            aplicaIgv: aplicaIgvCheckbox.checked,
+            observaciones: document.getElementById('observaciones')?.value || '',
+            subtotal: parseFloat(subtotalText),
+            igv: parseFloat(igvText),
+            descuentoTotal: parseFloat(descuentoTotalText),
+            totalFinal: parseFloat(totalFinalText),
+            totalPeso: parseFloat(totalPesoText),
+            hayTraslado: opcionTrasladoSelect.value === 'si'
+        };
+
+        if (tipoDescuento === 'global') {
+            data.descuentoGlobal = {
+                motivo: document.getElementById('motivoDescuentoGlobal')?.value || 'Descuento General',
+                tipoValor: document.getElementById('tipoDescuentoGlobal')?.value || 'soles',
+                valor: parseFloat(document.getElementById('valorDescuentoGlobal')?.value) || 0
+            };
+        }
+
+        return data;
+    };
+
+    const getDetalles = () => {
+        const detalles = [];
+        const rows = bodyItemsVenta.querySelectorAll('tr');
+        const isPerItemDiscount = document.getElementById('descuentoPorItem').checked;
+
+        rows.forEach(row => {
+            const cantidad = parseFloat(row.querySelector('.item-cantidad')?.value) || 0;
+            const precioUnitario = parseFloat(row.querySelector('.item-precio')?.value) || 0;
+            const totalItem = parseFloat(row.querySelector('.item-total')?.textContent) || 0;
+
+            const baseTotal = cantidad * precioUnitario;
+            const descuentoMonto = baseTotal - totalItem;
+
+            const detalle = {
+                idArticulo: parseFloat(row.dataset.idArticulo) || 0,
+                descripcion: row.querySelector('.item-descripcion')?.value || '',
+                cantidad: cantidad,
+                pesoUnitario: parseFloat(row.querySelector('.item-peso')?.value) || 0,
+                precioUnitario: precioUnitario,
+                descuentoMonto: descuentoMonto,
+                subtotal: baseTotal,
+                total: totalItem,
+                lotesConsumidos: JSON.parse(row.dataset.lotes)
+            };
+
+            if (isPerItemDiscount) {
+                detalle.detalleDescuento = {
+                    motivo: 'Descuento por ítem',
+                    tipoValor: row.dataset.descuentoTipo,
+                    valor: parseFloat(row.dataset.descuentoValor)
+                };
+            }
+            detalles.push(detalle);
+        });
+        return detalles;
+    };
+
+    const getTrasladoData = () => {
+        const hayTraslado = opcionTrasladoSelect.value === 'si';
+
+        if (hayTraslado) {
+            return {
+                modalidadTransporte: modalidadTransporteSelect.value,
+                peso: parseFloat(pesoTotalVentaSpan.textContent.replace(' Kg', '')),
+                rucEmpresa: document.getElementById('rucEmpresa')?.value || '',
+                razonSocialEmpresa: document.getElementById('razonSocialEmpresa')?.value || '',
+                marcaVehiculo: document.getElementById('marcaVehiculo')?.value || '',
+                dniConductor: document.getElementById('dniConductor')?.value || '',
+                nombreConductor: document.getElementById('nombreConductor')?.value || '',
+                puntoPartida: document.getElementById('puntoPartida')?.value || '',
+                puntoLlegada: document.getElementById('puntoLlegada')?.value || '',
+                fechaTraslado: document.getElementById('fechaTraslado')?.value || new Date().toISOString().split('T')[0],
+                observaciones: document.getElementById('observacionesTraslado')?.value || '',
+                conformidadNombre: document.getElementById('nombreConformidadTraslado')?.value || '',
+                conformidadDni: document.getElementById('dniConformidadTraslado')?.value || ''
+            };
+        } else {
+            return {
+                nombre: document.getElementById('nombreConformidadTienda')?.value || '',
+                dni: document.getElementById('dniConformidadTienda')?.value || ''
+            };
+        }
+    };
+
+    const registrarVenta = async () => {
+        try {
+            const ventaData = getGeneralData();
+            ventaData.detalles = getDetalles();
+
+            if (ventaData.hayTraslado) {
+                ventaData.datosTraslado = getTrasladoData();
+            } else {
+                ventaData.conformidadTienda = getTrasladoData();
+            }
+
+            if (ventaData.detalles.length === 0) {
+                alert("Debe agregar al menos un ítem a la venta.");
+                return;
+            }
+
+            const response = await fetch('VentaServlet', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(ventaData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(`¡Éxito! ${result.message}`);
+                window.location.reload();
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+
+        } catch (error) {
+            console.error('Error al registrar la venta:', error);
+            alert("Ocurrió un error de conexión o del servidor.");
+        }
+    };
 
     agregarItemVentaBtn.addEventListener('click', () => createItemRow());
 
-    // 💡 NUEVO EVENTO: Cambios en el Checkbox de IGV disparan el recálculo
     aplicaIgvCheckbox.addEventListener('change', updateTotals);
 
-    // Eventos de Descuento Global
     tipoDescuentoRadios.forEach(radio => {
         radio.addEventListener('change', () => {
             const isPerItem = radio.value === 'porItem';
@@ -238,7 +483,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('valorDescuentoGlobal')?.addEventListener('input', updateTotals);
     document.getElementById('tipoDescuentoGlobal')?.addEventListener('change', updateTotals);
 
-    // Evento para guardar el descuento de un ítem
     guardarDescuentoItemBtn.addEventListener('click', () => {
         if (currentRow) {
             currentRow.dataset.descuentoValor = valorDescuentoItem.value;
@@ -255,7 +499,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Lógica de Modales de Traslado y Conformidad ---
     modalidadTransporteSelect?.addEventListener('change', (e) => {
         const selectedValue = e.target.value;
         transportePublicoContainer.style.display = 'none';
@@ -278,8 +521,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Lógica de Lotes (Ejemplos mantenidos) ---
-    // **Asegúrate de que tus funciones de lotes originales están aquí**
     function updateLoteTotals() {
         const loteInputs = bodyLotes.querySelectorAll('.lote-cantidad');
         let sum = 0;
@@ -372,9 +613,24 @@ document.addEventListener('DOMContentLoaded', () => {
     agregarLoteBtn?.addEventListener('click', () => createLoteRow(0));
     guardarLotesBtn?.addEventListener('click', saveLotes);
 
-    // --- INICIALIZACIÓN ---
+    btnGuardarVenta?.addEventListener('click', registrarVenta);
 
-    // 💡 Asegurar que al menos una fila exista al inicio para probar
+    busquedaProductosInput.addEventListener('input', (e) => {
+        clearTimeout(busquedaTimeout);
+        const query = e.target.value.trim();
+        busquedaTimeout = setTimeout(() => {
+            buscarArticulos(query);
+        }, 300);
+    });
+
+    busquedaClienteInput.addEventListener('input', (e) => {
+        clearTimeout(busquedaTimeout);
+        const query = e.target.value.trim();
+        busquedaTimeout = setTimeout(() => {
+            buscarClientes(query);
+        }, 300);
+    });
+
     if (bodyItemsVenta.children.length === 0) {
         createItemRow();
     } else {
