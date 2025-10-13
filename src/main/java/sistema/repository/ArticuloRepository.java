@@ -14,4 +14,5 @@ public interface ArticuloRepository {
     List<Articulo> buscarArticulosParaCompra(String busqueda);
     List<Articulo> buscarArticulosParaVenta(String busqueda);
     List<Articulo> buscarInsumos(String busqueda);
+    List<sistema.Modelo.Compra.Lote> verLotesPorArticulo(int idArticulo);
 }

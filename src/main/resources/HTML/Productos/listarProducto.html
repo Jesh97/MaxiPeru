@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="../../CSS/Producto/listarProducto.css">
     <style>
-        /* Estilos base (Mantener la estética) */
         .filter-group {
             display: flex;
             align-items: flex-end;
@@ -68,23 +67,19 @@
             justify-content: flex-end;
         }
 
-        /* --- Estilos para la nueva ubicación y botones de exportación --- */
-
         .pagination-controls {
             display: flex;
-            /* IMPORTANTE: justify-content: space-between para separar los elementos a los extremos */
             justify-content: space-between;
             align-items: center;
             margin-top: 20px;
             padding: 10px 0;
             flex-wrap: wrap;
-            gap: 10px; /* Espacio entre los bloques en móvil */
+            gap: 10px;
         }
 
         .export-controls {
             display: flex;
             gap: 10px;
-            /* Ordena los botones de exportación a la derecha */
             margin-left: auto;
             flex-wrap: wrap;
         }
@@ -104,7 +99,7 @@
         }
 
         .btn-export-csv {
-            background-color: #3182CE; /* Azul para CSV */
+            background-color: #3182CE;
             color: white;
         }
         .btn-export-csv:hover {
@@ -113,7 +108,7 @@
         }
 
         .btn-export-excel {
-            background-color: #38A169; /* Verde para Excel */
+            background-color: #38A169;
             color: white;
         }
         .btn-export-excel:hover {
@@ -121,7 +116,6 @@
             transform: translateY(-1px);
         }
 
-        /* Contenedor de paginación para agrupar Prev/Info/Next */
         .page-controls-container {
             display: flex;
             align-items: center;
@@ -141,7 +135,6 @@
             .controls-buttons button {
                 width: 100%;
             }
-            /* En móvil, apilar los controles de paginación y exportación */
             .pagination-controls {
                 flex-direction: column;
                 align-items: center;
@@ -155,7 +148,7 @@
                 margin-left: 0;
                 justify-content: center;
                 width: 100%;
-                margin-top: 10px; /* Separación después de la paginación */
+                margin-top: 10px;
             }
             .export-controls button {
                 flex-grow: 1;
@@ -227,16 +220,10 @@
         </table>
     </div>
 
-    <!-- CONTROLES DE EXPORTACIÓN Y PAGINACIÓN AL FINAL -->
-    <!-- NOTA: El CSS 'justify-content: space-between' asegura que 'page-controls-container'
-         y 'export-controls' se separen a los extremos. -->
     <div id="paginacion-controles" class="pagination-controls">
-        <!-- El JS llenará el 'page-controls-container' aquí -->
         <div class="page-controls-container">
-            <!-- Botones de página e información van aquí -->
         </div>
 
-        <!-- Botones de Exportación (Van al extremo derecho gracias al CSS) -->
         <div class="export-controls">
             <button class="btn-export-csv" onclick="exportarDatos('csv')"><i class="fas fa-file-csv"></i> Exportar CSV</button>
             <button class="btn-export-excel" onclick="exportarDatos('xlsx')"><i class="fas fa-file-excel"></i> Exportar Excel</button>
@@ -328,6 +315,34 @@
     </div>
 </div>
 
+<div id="lotesModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="document.getElementById('lotesModal').style.display='none';">&times;</span>
+        <div class="modal-header-gradient modal-header-details">
+            <h2 id="lotesModalTitle">Lotes del Artículo</h2>
+        </div>
+        <div class="modal-body">
+            <table id="tabla-lotes" class="compact-table">
+                <colgroup>
+                    <col style="width: 33.33%;">
+                    <col style="width: 33.33%;">
+                    <col style="width: 33.33%;">
+                </colgroup>
+                <thead>
+                <tr>
+                    <th>Lote N°</th>
+                    <th class="data-center">Fec. Vencimiento</th>
+                    <th class="data-center">Stock Disponible</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <p id="lotesEmptyMessage" style="text-align: center; margin-top: 20px; color: #777; display: none;">No se encontraron lotes activos para este artículo.</p>
+        </div>
+    </div>
+</div>
+
 <div id="messageModal" class="modal">
     <div class="modal-content message-content">
         <span class="close" onclick="document.getElementById('messageModal').style.display='none';">&times;</span>
@@ -403,6 +418,7 @@
         </div>
     </div>
 </div>
+
 <script src="../../JS/Producto/listarProducto.js"></script>
 </body>
 </html>

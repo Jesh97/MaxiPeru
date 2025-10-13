@@ -1,6 +1,7 @@
 package sistema.Servlet.Producto;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
 import java.util.List;
 import jakarta.servlet.ServletException;
@@ -16,12 +17,18 @@ import sistema.Modelo.Articulo.Marca;
 import sistema.Modelo.Articulo.TipoArticulo;
 import sistema.Modelo.Articulo.UnidadMedida;
 import sistema.repository.ArticuloRepository;
+import sistema.Modelo.Compra.Lote;
 
 @WebServlet("/productos")
 public class ProductoServlet extends HttpServlet {
 
     private final ArticuloRepository articuloDAO = new ArticuloController();
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
+
+    public ProductoServlet() {
+        this.mapper = new ObjectMapper();
+        this.mapper.registerModule(new JavaTimeModule());
+    }
 
     private static class Respuesta {
         public boolean exito;
@@ -43,7 +50,7 @@ public class ProductoServlet extends HttpServlet {
         String accion = request.getParameter("accion");
         if (accion == null) accion = "listar";
 
-        List<Articulo> resultados = null;
+        List<Articulo> resultadosArticulos = null;
         String busqueda = request.getParameter("busqueda");
 
         String tipoAccionAuditoria = "PRODUCTO_CONSULTA";
@@ -52,21 +59,40 @@ public class ProductoServlet extends HttpServlet {
         try {
             switch (accion) {
                 case "listar":
-                    resultados = articuloDAO.listarArticulos();
+                    resultadosArticulos = articuloDAO.listarArticulos();
                     descripcionAuditoria = "Consulta realizada: Acceso al listado completo de todos los Artículos del Catálogo.";
                     break;
                 case "buscar_compra":
-                    resultados = articuloDAO.buscarArticulosParaCompra(busqueda);
+                    resultadosArticulos = articuloDAO.buscarArticulosParaCompra(busqueda);
                     descripcionAuditoria = "Búsqueda de Artículos para Compra con filtro: '" + (busqueda != null ? busqueda : "N/A") + "'.";
                     break;
                 case "buscar_venta":
-                    resultados = articuloDAO.buscarArticulosParaVenta(busqueda);
+                    resultadosArticulos = articuloDAO.buscarArticulosParaVenta(busqueda);
                     descripcionAuditoria = "Búsqueda de Artículos para Venta con filtro: '" + (busqueda != null ? busqueda : "N/A") + "'.";
                     break;
                 case "buscar_insumos":
-                    resultados = articuloDAO.buscarInsumos(busqueda);
+                    resultadosArticulos = articuloDAO.buscarInsumos(busqueda);
                     descripcionAuditoria = "Búsqueda de Insumos con filtro: '" + (busqueda != null ? busqueda : "N/A") + "'.";
                     break;
+                case "ver_lotes":
+                    String idArticuloParam = request.getParameter("id_articulo");
+                    if (idArticuloParam == null) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write(mapper.writeValueAsString(new Respuesta(false, "Parámetro 'id_articulo' es requerido para ver lotes.")));
+                        tipoAccionAuditoria = "PRODUCTO_CONSULTA_ERROR";
+                        descripcionAuditoria = "ERROR: Falta 'id_articulo' para la acción 'ver_lotes'.";
+                        Auditoria.registrar(request, tipoAccionAuditoria, descripcionAuditoria);
+                        return;
+                    }
+                    int idArticulo = Integer.parseInt(idArticuloParam);
+
+                    List<Lote> lotes = articuloDAO.verLotesPorArticulo(idArticulo);
+
+                    descripcionAuditoria = "Consulta realizada: Se listan los lotes del Artículo ID: " + idArticulo;
+                    Auditoria.registrar(request, "LOTE_CONSULTA", descripcionAuditoria);
+
+                    response.getWriter().write(mapper.writeValueAsString(lotes));
+                    return;
                 default:
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     response.getWriter().write(mapper.writeValueAsString(new Respuesta(false, "Acción no válida.")));
@@ -78,7 +104,11 @@ public class ProductoServlet extends HttpServlet {
 
             Auditoria.registrar(request, tipoAccionAuditoria, descripcionAuditoria);
 
-            response.getWriter().write(mapper.writeValueAsString(resultados));
+            response.getWriter().write(mapper.writeValueAsString(resultadosArticulos));
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(mapper.writeValueAsString(new Respuesta(false, "ID de artículo inválido: " + e.getMessage())));
+            Auditoria.registrar(request, "PRODUCTO_CONSULTA_ERROR_FORMATO", "ERROR: ID de artículo inválido. Detalle: " + e.getMessage());
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(mapper.writeValueAsString(new Respuesta(false, "Error al procesar la solicitud: " + e.getMessage())));

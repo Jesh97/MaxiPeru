@@ -1,28 +1,23 @@
 :root {
-    /* Paleta de Colores Refrescada: Azul Cielos y Esmeralda */
-    --primary-color: #0A7FAD; /* Azul Cielo Principal */
+    --primary-color: #0A7FAD;
     --primary-light: #38B6FF;
     --primary-dark: #004C6D;
-
-    --secondary-color: #059669; /* Verde Esmeralda/Éxito */
+    --secondary-color: #059669;
     --secondary-dark: #047857;
-
-    --edit-color: #F59E0B; /* Amarillo para Editar */
-    --delete-color: #E63946; /* Rojo para Eliminar */
-    --save-color: #3C8CE7; /* Azul para Guardar/Acción principal */
-
-    --background-color: #F8F9FA; /* Fondo muy claro */
+    --edit-color: #F59E0B;
+    --delete-color: #E63946;
+    --save-color: #3C8CE7;
+    --background-color: #F8F9FA;
     --card-background: #FFFFFF;
     --border-color: #E1E4E6;
-    --text-color: #212529; /* Texto oscuro */
-    --light-text-color: #6C757D; /* Texto secundario */
-
+    --text-color: #212529;
+    --light-text-color: #6C757D;
     --radius-default: 12px;
     --radius-large: 18px;
     --shadow-subtle: 0 3px 5px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.04);
     --shadow-medium: 0 8px 15px rgba(0, 0, 0, 0.08), 0 4px 6px rgba(0, 0, 0, 0.05);
     --shadow-premium: 0 15px 30px rgba(0, 0, 0, 0.12), 0 5px 10px rgba(0, 0, 0, 0.08);
-    --shadow-lift: 0 12px 25px rgba(10, 127, 173, 0.35); /* Sombra de primary */
+    --shadow-lift: 0 12px 25px rgba(10, 127, 173, 0.35);
 }
 
 html {
@@ -32,7 +27,6 @@ html {
 
 *, *::before, *::after {
     box-sizing: inherit;
-    /* Transición más suave para una sensación más fluida */
     transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -44,7 +38,6 @@ body {
     background-color: var(--background-color);
     color: var(--text-color);
     line-height: 1.6;
-    /* Reducción ligera del tamaño de la fuente base */
     font-size: 0.8rem;
 }
 
@@ -54,7 +47,6 @@ body {
     margin: 0 auto;
     min-height: 100vh;
     padding: 30px 0;
-
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -65,10 +57,10 @@ h1 {
     width: 100%;
     text-align: center;
     color: var(--primary-dark);
-    margin: 0 0 30px 0; /* Margen ligeramente reducido */
-    font-size: 2.4rem; /* Ligeramente más pequeño */
+    margin: 0 0 30px 0;
+    font-size: 2.4rem;
     font-weight: 900;
-    letter-spacing: -0.8px; /* Ajuste para un look moderno */
+    letter-spacing: -0.8px;
     text-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
@@ -79,9 +71,8 @@ h1 {
     gap: 20px;
     flex-wrap: wrap;
     align-items: center;
-
     background: var(--card-background);
-    padding: 25px; /* Padding ligeramente reducido */
+    padding: 25px;
     border-radius: var(--radius-large);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-medium);
@@ -94,19 +85,19 @@ h1 {
 }
 
 #busquedaGeneral {
-    padding: 11px 15px 11px 45px; /* Padding ajustado */
+    padding: 11px 15px 11px 45px;
     border: 1px solid var(--border-color);
-    border-radius: 10px; /* Borde ligeramente más pequeño */
+    border-radius: 10px;
     width: 100%;
     box-sizing: border-box;
-    font-size: 0.95rem; /* Ajuste ligero */
+    font-size: 0.95rem;
     background-color: var(--card-background);
     box-shadow: inset 0 1px 4px rgba(0,0,0,0.05);
 }
 
 #busquedaGeneral:focus {
     border-color: var(--primary-light);
-    box-shadow: 0 0 0 4px rgba(10, 127, 173, 0.25); /* Sombra de primary */
+    box-shadow: 0 0 0 4px rgba(10, 127, 173, 0.25);
     outline: none;
     background-color: var(--card-background);
 }
@@ -117,7 +108,7 @@ h1 {
     left: 16px;
     transform: translateY(-50%);
     color: var(--light-text-color);
-    font-size: 1.1em; /* Ligeramente más pequeño */
+    font-size: 1.1em;
     pointer-events: none;
 }
 
@@ -127,15 +118,15 @@ h1 {
     gap: 10px;
     font-weight: 600;
     color: var(--primary-dark);
-    font-size: 0.9rem; /* Ligeramente más pequeño */
+    font-size: 0.9rem;
 }
 .filters select {
-    padding: 8px 18px; /* Padding ajustado */
+    padding: 8px 18px;
     border: 1px solid var(--border-color);
     border-radius: 10px;
     min-width: 150px;
     background-color: #f9fafb;
-    font-size: 0.85rem; /* Reducción ligera */
+    font-size: 0.85rem;
     cursor: pointer;
     appearance: none;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236C757D'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z' clip-rule='evenodd' /%3E%3C/svg%3E");
@@ -148,9 +139,9 @@ h1 {
 }
 
 button {
-    padding: 10px 22px; /* Padding ajustado */
+    padding: 10px 22px;
     border: none;
-    border-radius: 10px; /* Borde ligeramente más pequeño */
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
     font-weight: 700;
@@ -161,7 +152,6 @@ button {
 }
 
 .btn-primary {
-    /* Nuevo gradiente azul primary */
     background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-dark) 100%);
     color: white;
     box-shadow: var(--shadow-lift);
@@ -173,7 +163,6 @@ button {
 }
 
 .btn-info {
-    /* Nuevo gradiente esmeralda secondary */
     background: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-dark) 100%);
     color: white;
     box-shadow: 0 8px 15px rgba(5, 150, 105, 0.3);
@@ -185,9 +174,9 @@ button {
 }
 
 .actions button {
-    padding: 6px 9px; /* Padding ajustado */
-    border-radius: 8px; /* Borde más pequeño */
-    font-size: 0.7rem; /* Reducción ligera */
+    padding: 6px 9px;
+    border-radius: 8px;
+    font-size: 0.7rem;
     font-weight: 600;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-transform: none;
@@ -219,10 +208,10 @@ table {
     border-collapse: separate;
     border-spacing: 0;
     min-width: 1400px;
-    font-size: 0.8rem; /* Reducción ligera */
+    font-size: 0.8rem;
 }
 th, td {
-    padding: 12px 16px; /* Padding ajustado */
+    padding: 12px 16px;
     text-align: left;
     white-space: nowrap;
     border-bottom: 1px solid #F3F4F6;
@@ -232,7 +221,7 @@ th {
     color: white;
     font-weight: 700;
     text-transform: uppercase;
-    font-size: 0.7rem; /* Reducción ligera */
+    font-size: 0.7rem;
     letter-spacing: 0.8px;
     position: sticky;
     top: 0;
@@ -246,7 +235,7 @@ tr:nth-child(even) {
     background-color: #FAFAFB;
 }
 tr:hover {
-    background-color: #F0F8FF; /* Color de hover más suave */
+    background-color: #F0F8FF;
     cursor: pointer;
     box-shadow: inset 3px 0 0 0 var(--primary-color);
 }
@@ -261,11 +250,9 @@ tr:hover {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-
     margin-top: 25px;
     gap: 20px;
     flex-wrap: wrap;
-
     padding: 20px 30px;
     background-color: var(--card-background);
     border: 1px solid var(--border-color);
@@ -280,8 +267,8 @@ tr:hover {
 }
 
 .export-controls button {
-     font-size: 0.8rem; /* Reducción ligera */
-     padding: 8px 16px; /* Padding ajustado */
+     font-size: 0.8rem;
+     padding: 8px 16px;
      text-transform: none;
      font-weight: 600;
 }
@@ -293,14 +280,14 @@ tr:hover {
 }
 
 .btn-page {
-    background-color: #E0F2FF; /* Color más claro y suave */
+    background-color: #E0F2FF;
     color: var(--primary-dark);
-    padding: 8px 16px; /* Padding ajustado */
+    padding: 8px 16px;
     font-weight: 600;
     text-transform: none;
     box-shadow: none;
-    border-radius: 8px; /* Borde más pequeño */
-    font-size: 0.85rem; /* Reducción ligera */
+    border-radius: 8px;
+    font-size: 0.85rem;
 }
 .btn-page:hover:not([disabled]) {
     background-color: var(--primary-color);
@@ -317,7 +304,7 @@ tr:hover {
 .page-info {
     color: var(--light-text-color);
     font-weight: 500;
-    font-size: 0.85rem; /* Reducción ligera */
+    font-size: 0.85rem;
 }
 
 .modal {
@@ -328,17 +315,17 @@ tr:hover {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.6); /* Oscuridad ligeramente menor */
+    background-color: rgba(0,0,0,0.6);
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(8px); /* Blur ligeramente menor */
+    backdrop-filter: blur(8px);
     transition: opacity 0.4s;
 }
 .modal-content {
     background-color: var(--card-background);
     padding: 0;
     border-radius: var(--radius-large);
-    box-shadow: 0 40px 80px rgba(0,0,0,0.5); /* Sombra ajustada */
+    box-shadow: 0 40px 80px rgba(0,0,0,0.5);
     position: relative;
     max-height: 90vh;
     overflow-y: auto;
@@ -348,11 +335,10 @@ tr:hover {
 }
 
 .modal-header-gradient {
-    /* Gradiente de primary */
     background: linear-gradient(135deg, var(--primary-light) 10%, var(--primary-dark) 90%);
     color: white;
-    padding: 25px 40px; /* Padding ajustado */
-    margin-bottom: 25px; /* Margen ajustado */
+    padding: 25px 40px;
+    margin-bottom: 25px;
     border-radius: var(--radius-large) var(--radius-large) 0 0;
     box-shadow: 0 5px 20px rgba(10, 127, 173, 0.35);
     text-align: center;
@@ -361,23 +347,21 @@ tr:hover {
     z-index: 50;
 }
 .modal-header-details {
-    /* Gradiente de secondary */
     background: linear-gradient(135deg, var(--secondary-color) 10%, var(--secondary-dark) 90%);
     box-shadow: 0 5px 20px rgba(5, 150, 105, 0.35);
 }
 .modal-header-message {
-    /* Gradiente de primary */
     background: linear-gradient(135deg, var(--primary-light) 10%, var(--primary-dark) 90%);
 }
 
 .modal-content h2 {
-    font-size: 1.5rem; /* Ligeramente más pequeño */
+    font-size: 1.5rem;
     font-weight: 900;
     letter-spacing: 0.5px;
     margin: 0;
 }
 .modal-content h3 {
-     font-size: 1.4rem; /* Ligeramente más pequeño */
+     font-size: 1.4rem;
      font-weight: 800;
      margin: 0;
 }
@@ -389,7 +373,7 @@ tr:hover {
 
 .close {
     color: white;
-    font-size: 34px; /* Ligeramente más pequeño */
+    font-size: 34px;
     font-weight: 300;
     position: absolute;
     top: 15px;
@@ -407,43 +391,51 @@ tr:hover {
 #articuloModal .modal-content { max-width: 1100px; }
 #detallesModal .modal-content { max-width: 650px; }
 #messageModal .modal-content { max-width: 480px; }
+#marcaModal .modal-content,
+#categoriaModal .modal-content,
+#tipoModal .modal-content {
+    max-width: 450px;
+    width: 90%;
+    padding: 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
 
 .modal-body {
-    padding: 0 40px 35px 40px; /* Padding ajustado */
+    padding: 0 40px 35px 40px;
 }
 
 .form-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 25px; /* Espacio ligeramente menor */
+    gap: 25px;
 }
 .form-group label {
     display: block;
     margin-bottom: 8px;
     font-weight: 700;
     color: var(--primary-dark);
-    font-size: 0.8rem; /* Reducción ligera */
+    font-size: 0.8rem;
     letter-spacing: 0.5px;
 }
 .form-group input, .form-group select {
     width: 100%;
-    padding: 9px 12px; /* Padding ajustado */
+    padding: 9px 12px;
     border: 1px solid var(--border-color);
-    border-radius: 9px; /* Borde ligeramente más pequeño */
+    border-radius: 9px;
     box-sizing: border-box;
     background-color: #F9FAFB;
-    font-size: 0.9rem; /* Reducción ligera */
+    font-size: 0.9rem;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
 }
 .form-group input:focus, .form-group select:focus {
     border-color: var(--primary-light);
-    box-shadow: 0 0 0 4px rgba(10, 127, 173, 0.25); /* Sombra de primary */
+    box-shadow: 0 0 0 4px rgba(10, 127, 173, 0.25);
     background-color: var(--card-background);
     outline: none;
 }
 
 .form-actions {
-    margin-top: 25px; /* Margen ajustado */
+    margin-top: 25px;
     text-align: right;
     padding-top: 20px;
     border-top: 1px solid #F3F4F6;
@@ -452,7 +444,6 @@ tr:hover {
     gap: 15px;
 }
 .btn-save {
-     /* Gradiente de save (azul más intenso) */
      background: linear-gradient(135deg, var(--save-color) 0%, var(--primary-color) 100%);
      color: white;
      box-shadow: 0 6px 15px rgba(60, 140, 231, 0.4);
@@ -466,9 +457,9 @@ tr:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0; /* Padding ajustado */
+    padding: 10px 0;
     border-bottom: 1px solid #F3F4F6;
-    font-size: 0.9rem; /* Reducción ligera */
+    font-size: 0.9rem;
 }
 .detail-row:last-child {
     border-bottom: none;
@@ -486,14 +477,14 @@ tr:hover {
 }
 .detail-value.highlight {
      color: var(--secondary-dark);
-     font-size: 0.95rem; /* Ligeramente más pequeño */
+     font-size: 0.95rem;
 }
 
 #messageModal .modal-content { text-align: center; }
 #messageText {
-    margin-bottom: 25px; /* Margen ajustado */
+    margin-bottom: 25px;
     color: var(--text-color);
-    font-size: 0.95rem; /* Reducción ligera */
+    font-size: 0.95rem;
     line-height: 1.5;
     font-weight: 500;
 }
@@ -505,7 +496,7 @@ tr:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(248, 249, 250, 0.85); /* Color de fondo más claro */
+    background-color: rgba(248, 249, 250, 0.85);
     display: none;
     align-items: center;
     justify-content: center;
@@ -513,11 +504,11 @@ tr:hover {
     backdrop-filter: blur(5px);
 }
 .spinner {
-    border: 7px solid #E0F2FF; /* Color más claro y borde más delgado */
+    border: 7px solid #E0F2FF;
     border-top: 7px solid var(--primary-color);
     border-radius: 50%;
-    width: 70px; /* Tamaño ligeramente menor */
-    height: 70px; /* Tamaño ligeramente menor */
+    width: 70px;
+    height: 70px;
     animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
     box-shadow: 0 0 30px rgba(10, 127, 173, 0.4);
 }
@@ -546,19 +537,19 @@ tr:hover {
     padding: 10px 16px;
     cursor: pointer;
     border-bottom: 1px solid #F3F4F6;
-    font-size: 0.85rem; /* Reducción ligera */
+    font-size: 0.85rem;
     line-height: 1.4;
     color: var(--text-color);
 }
 
 .sugerencia-item:hover {
-    background-color: #F0F8FF; /* Color de hover más suave */
+    background-color: #F0F8FF;
 }
 
 .highlight {
     font-weight: 700;
-    color: var(--primary-dark); /* Cambio de color para resaltar */
-    background-color: #E0F2FF; /* Fondo más suave */
+    color: var(--primary-dark);
+    background-color: #E0F2FF;
     padding: 2px 4px;
     border-radius: 4px;
 }
@@ -568,10 +559,10 @@ tr:hover {
         padding: 20px 0;
         gap: 20px;
     }
-    h1 { font-size: 1.8rem; margin-bottom: 20px; } /* Ajuste en móvil */
+    h1 { font-size: 1.8rem; margin-bottom: 20px; }
 
     .controls-and-search, .filters {
-        padding: 18px; /* Padding ajustado */
+        padding: 18px;
         gap: 15px;
     }
     .search-container {
@@ -586,12 +577,12 @@ tr:hover {
     }
     .controls-buttons button {
         width: 50%;
-        padding: 9px 15px; /* Padding ajustado */
-        font-size: 0.85rem; /* Ajuste en móvil */
+        padding: 9px 15px;
+        font-size: 0.85rem;
     }
 
     table { min-width: 1000px; }
-    th, td { padding: 10px 10px; font-size: 0.8rem; } /* Ajuste en móvil */
+    th, td { padding: 10px 10px; font-size: 0.8rem; }
 
     .pagination-controls {
         flex-direction: column;
@@ -608,14 +599,14 @@ tr:hover {
         justify-content: center;
     }
 
-    .modal-header-gradient { padding: 20px 20px; margin-bottom: 20px; } /* Ajuste en móvil */
-    .modal-body { padding: 0 20px 20px 20px; } /* Ajuste en móvil */
-    .modal-content h2 { font-size: 1.4rem; } /* Ajuste en móvil */
+    .modal-header-gradient { padding: 20px 20px; margin-bottom: 20px; }
+    .modal-body { padding: 0 20px 20px 20px; }
+    .modal-content h2 { font-size: 1.4rem; }
     .form-grid {
         grid-template-columns: 1fr;
-        gap: 18px; /* Espacio ligeramente menor */
+        gap: 18px;
     }
-    .close { top: 8px; right: 18px; font-size: 30px; } /* Ajuste en móvil */
+    .close { top: 8px; right: 18px; font-size: 30px; }
 }
 
 @media (max-width: 640px) {
@@ -629,3 +620,92 @@ tr:hover {
         width: 100%;
     }
 }
+
+/* === ANULACIÓN Y ESTILO ULTRA COMPACTO PARA MODAL DE LOTES (480px) === */
+
+/* 1. ANCHO Y CONTENEDOR */
+#lotesModal .modal-content {
+    /* Forzar el ancho a 480px */
+    max-width: 480px !important;
+    width: 90% !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid #CCCCCC !important;
+}
+
+/* 2. CABECERA: AZUL CORPORATIVO (Compacto) */
+#lotesModal .modal-header-gradient,
+#lotesModal .modal-header-details {
+    /* Usamos el primary-dark y reducimos el padding de la cabecera */
+    background: linear-gradient(135deg, var(--primary-dark) 10%, #003050 90%) !important;
+    padding: 15px 20px !important; /* Cabecera más pequeña */
+    margin-bottom: 0 !important;
+    border-radius: 8px 8px 0 0 !important;
+}
+
+#lotesModalTitle {
+    font-size: 1.15rem !important; /* Título ligeramente más pequeño */
+    font-weight: 700 !important;
+    color: white !important;
+    letter-spacing: 0.1px;
+}
+
+/* 3. CUERPO DEL MODAL */
+#lotesModal .modal-body {
+    padding: 10px 15px 15px 15px !important; /* Reducción extrema del padding del cuerpo */
+    overflow-x: hidden !important;
+}
+
+/* 4. TABLA: MÁXIMA DENSIDAD */
+#tabla-lotes {
+    min-width: unset !important; /* Anulación de 1400px */
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    border: 1px solid #DDDDDD !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+}
+
+/* Encabezado de la tabla (La clave para hacerlo compacto) */
+#tabla-lotes th {
+    background-color: var(--primary-dark) !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    font-size: 0.6rem !important; /* Títulos de columna minúsculos */
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px;
+    padding: 6px 8px !important; /* MÍNIMO padding de encabezado */
+    border-bottom: 2px solid var(--primary-light) !important;
+    position: static !important;
+}
+
+/* Celdas de datos (La otra clave para hacerlo compacto) */
+#tabla-lotes td {
+    font-size: 0.7rem !important; /* Datos muy pequeños */
+    padding: 5px 8px !important; /* MÍNIMO padding de celda */
+    text-align: center !important;
+    border-bottom: 1px solid #EEEEEE !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Filas cebra y hover */
+#tabla-lotes tbody tr:nth-child(even) {
+    background-color: #F8F8F8 !important;
+}
+#tabla-lotes tbody tr:hover {
+    background-color: #EBF7FF !important;
+    box-shadow: inset 2px 0 0 0 var(--primary-light) !important;
+}
+
+/* Mensaje de vacío */
+#lotesEmptyMessage {
+    margin-top: 15px !important;
+    padding: 10px !important;
+    font-size: 0.8rem !important;
+    border-top: 1px solid #F0F0F0 !important;
+}
+/* === FIN ANULACIÓN Y ESTILO ULTRA COMPACTO PARA MODAL DE LOTES === */

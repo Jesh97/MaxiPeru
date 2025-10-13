@@ -2,11 +2,14 @@ package sistema.Controller.Producto;
 
 import sistema.Ejecucion.Conexion;
 import sistema.Modelo.Articulo.*;
+import sistema.Modelo.Compra.Lote;
 import sistema.repository.ArticuloRepository;
+import java.math.BigDecimal;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +46,21 @@ public class ArticuloController implements ArticuloRepository {
         return a;
     }
 
+    private Lote mapearLote(ResultSet rs) throws SQLException {
+        Lote lote = new Lote();
+        lote.setIdLote(rs.getInt("ID_Lote"));
+        lote.setNumeroLote(rs.getString("Número_Lote"));
+
+        java.sql.Date fechaVencimientoSql = rs.getDate("Fecha_Vencimiento");
+        if (fechaVencimientoSql != null) {
+            lote.setFechaVencimiento(fechaVencimientoSql.toLocalDate());
+        }
+
+        lote.setCantidadLote(rs.getBigDecimal("Cantidad_Disponible"));
+
+        return lote;
+    }
+
     @Override
     public boolean agregarArticulo(Articulo articulo) {
         Connection conn = null;
@@ -69,7 +87,7 @@ public class ArticuloController implements ArticuloRepository {
         } catch (SQLException e) {
             System.err.println("Error al agregar artículo: " + e.getMessage());
         } finally {
-            try { if (cs != null) cs.close(); } catch (SQLException e) { /* log error */ }
+            try { if (cs != null) cs.close(); } catch (SQLException e) { }
             Conexion.cerrarConexion(conn);
         }
         return exito;
@@ -82,7 +100,6 @@ public class ArticuloController implements ArticuloRepository {
         boolean exito = false;
         try {
             conn = Conexion.obtenerConexion();
-            // AHORA SÓLO HAY 12 SIGNOS '?'
             cs = conn.prepareCall("{CALL sp_actualizar_articulo(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
 
             cs.setInt(1, articulo.getIdProducto());
@@ -96,13 +113,13 @@ public class ArticuloController implements ArticuloRepository {
             cs.setInt(9, articulo.getMarca().getIdMarca());
             cs.setInt(10, articulo.getCategoria().getIdCategoria());
             cs.setInt(11, articulo.getUnidad().getIdUnidad());
-            cs.setInt(12, articulo.getTipoArticulo().getId()); // Este es ahora el Parámetro 12
+            cs.setInt(12, articulo.getTipoArticulo().getId());
 
             exito = cs.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error al actualizar artículo: " + e.getMessage());
         } finally {
-            try { if (cs != null) cs.close(); } catch (SQLException e) { /* log error */ }
+            try { if (cs != null) cs.close(); } catch (SQLException e) { }
             Conexion.cerrarConexion(conn);
         }
         return exito;
@@ -121,7 +138,7 @@ public class ArticuloController implements ArticuloRepository {
         } catch (SQLException e) {
             System.err.println("Error al eliminar artículo: " + e.getMessage());
         } finally {
-            try { if (cs != null) cs.close(); } catch (SQLException e) { /* log error */ }
+            try { if (cs != null) cs.close(); } catch (SQLException e) { }
             Conexion.cerrarConexion(conn);
         }
         return exito;
@@ -143,8 +160,8 @@ public class ArticuloController implements ArticuloRepository {
         } catch (SQLException e) {
             System.err.println("Error al listar artículos: " + e.getMessage());
         } finally {
-            try { if (rs != null) rs.close(); } catch (SQLException e) { /* log error */ }
-            try { if (cs != null) cs.close(); } catch (SQLException e) { /* log error */ }
+            try { if (rs != null) rs.close(); } catch (SQLException e) { }
+            try { if (cs != null) cs.close(); } catch (SQLException e) { }
             Conexion.cerrarConexion(conn);
         }
         return articulos;
@@ -167,8 +184,8 @@ public class ArticuloController implements ArticuloRepository {
         } catch (SQLException e) {
             System.err.println("Error al buscar artículos para compra: " + e.getMessage());
         } finally {
-            try { if (rs != null) rs.close(); } catch (SQLException e) { /* log error */ }
-            try { if (cs != null) cs.close(); } catch (SQLException e) { /* log error */ }
+            try { if (rs != null) rs.close(); } catch (SQLException e) { }
+            try { if (cs != null) cs.close(); } catch (SQLException e) { }
             Conexion.cerrarConexion(conn);
         }
         return articulos;
@@ -191,8 +208,8 @@ public class ArticuloController implements ArticuloRepository {
         } catch (SQLException e) {
             System.err.println("Error al buscar artículos para venta: " + e.getMessage());
         } finally {
-            try { if (rs != null) rs.close(); } catch (SQLException e) { /* log error */ }
-            try { if (cs != null) cs.close(); } catch (SQLException e) { /* log error */ }
+            try { if (rs != null) rs.close(); } catch (SQLException e) { }
+            try { if (cs != null) cs.close(); } catch (SQLException e) { }
             Conexion.cerrarConexion(conn);
         }
         return articulos;
@@ -215,10 +232,35 @@ public class ArticuloController implements ArticuloRepository {
         } catch (SQLException e) {
             System.err.println("Error al buscar insumos: " + e.getMessage());
         } finally {
-            try { if (rs != null) rs.close(); } catch (SQLException e) { /* log error */ }
-            try { if (cs != null) cs.close(); } catch (SQLException e) { /* log error */ }
+            try { if (rs != null) rs.close(); } catch (SQLException e) { }
+            try { if (cs != null) cs.close(); } catch (SQLException e) { }
             Conexion.cerrarConexion(conn);
         }
         return articulos;
+    }
+
+    @Override
+    public List<Lote> verLotesPorArticulo(int idArticulo) {
+        List<Lote> lotes = new ArrayList<>();
+        Connection conn = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+        try {
+            conn = Conexion.obtenerConexion();
+            cs = conn.prepareCall("{CALL SP_VerLotesPorArticulo(?)}");
+            cs.setInt(1, idArticulo);
+            rs = cs.executeQuery();
+
+            while (rs.next()) {
+                lotes.add(mapearLote(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al ver lotes por artículo: " + e.getMessage());
+        } finally {
+            try { if (rs != null) rs.close(); } catch (SQLException e) { }
+            try { if (cs != null) cs.close(); } catch (SQLException e) { }
+            Conexion.cerrarConexion(conn);
+        }
+        return lotes;
     }
 }
