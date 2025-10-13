@@ -1,65 +1,29 @@
-body {
-    background: #f2f7fb;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+:root { font-family: 'Inter', sans-serif; }
+.shadow-3xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 10px rgba(0, 0, 0, 0.05); }
+.tab-button.active {
+    background-color: #4f46e5;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
 }
-
-h2 {
-    font-weight: 900;
-    letter-spacing: 0.5px;
+#factura-pdf-template {
+    font-size: 11px;
 }
-
-#compras-table th, #compras-table td {
-    vertical-align: middle;
-    text-align: center;
-    font-size: 0.95rem;
+#guia-pdf-template {
+    font-size: 10px;
+    color: #333;
+    border-width: 2px !important;
 }
-
-#compras-table tbody tr:hover {
-    background: #e3f2fd;
-    cursor: pointer;
-    transition: all 0.3s ease;
+.guia-box {
+    border: 1px solid #4a4a4a;
+    padding: 5px;
+    margin-bottom: 5px;
 }
-
-.badge {
-    font-weight: 700;
-    font-size: 0.95rem;
-}
-
-.modal-body {
-    background-color: #ffffff;
-}
-
-#info-proveedor {
-    font-size: 0.95rem;
-    line-height: 1.6;
-    background: linear-gradient(90deg, #e3f2fd, #ffffff);
-}
-
-.nav-pills .nav-link {
-    font-weight: 600;
-    border-radius: 0.5rem;
-}
-
-.table-striped>tbody>tr:nth-of-type(odd) {
-    background-color: #f9fafb;
-}
-
-.table-striped>tbody>tr:hover {
-    background-color: #d0e7ff;
-}
-
-.table-bordered th, .table-bordered td {
-    border-color: #dee2e6;
-}
-
-.table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
-    background-color: #cce5ff;
-}
-
-.modal-header.bg-gradient-primary {
-    background: linear-gradient(90deg, #0d6efd, #6610f2);
-}
-
-.btn-outline-primary {
-    font-weight: 600;
+.guia-header-title {
+    font-size: 12px;
+    font-weight: bold;
+    background-color: #f3f4f6;
+    padding: 3px 5px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #ccc;
 }

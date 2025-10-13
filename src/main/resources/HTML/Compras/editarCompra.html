@@ -61,6 +61,12 @@
             font-weight: 600;
             vertical-align: middle;
         }
+        .detalle-row input[type="number"]:not([readonly]) {
+            max-width: 100px; /* Ancho más compacto para números */
+        }
+        .detalle-row input[name="cantidad"] {
+            max-width: 70px;
+        }
     </style>
 </head>
 <body>
@@ -128,9 +134,9 @@
                             <div class="card-header bg-success">Totales y Opciones de Carga</div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-4 mb-3"><label for="totalAPagar" class="form-label">Total a Pagar (S/)</label><input type="number" class="form-control bg-light" id="totalAPagar" name="totalAPagar" step="0.01" required></div>
-                                    <div class="col-md-4 mb-3"><label for="totalIgv" class="form-label">Total IGV (S/)</label><input type="number" class="form-control bg-light" id="totalIgv" name="totalIgv" step="0.01" required></div>
-                                    <div class="col-md-4 mb-3"><label for="subtotalSinIgv" class="form-label">Subtotal (S/IGV)</label><input type="number" class="form-control bg-light" id="subtotalSinIgv" name="subtotalSinIgv" step="0.01" required></div>
+                                    <div class="col-md-4 mb-3"><label for="totalAPagar" class="form-label">Total a Pagar (S/)</label><input type="number" class="form-control bg-light" id="totalAPagar" name="totalAPagar" step="0.01" required readonly></div>
+                                    <div class="col-md-4 mb-3"><label for="totalIgv" class="form-label">Total IGV (S/)</label><input type="number" class="form-control bg-light" id="totalIgv" name="totalIgv" step="0.01" required readonly></div>
+                                    <div class="col-md-4 mb-3"><label for="subtotalSinIgv" class="form-label">Subtotal (S/IGV)</label><input type="number" class="form-control bg-light" id="subtotalSinIgv" name="subtotalSinIgv" step="0.01" required readonly></div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3"><label for="totalPeso" class="form-label">Total Peso (kg)</label><input type="number" class="form-control" id="totalPeso" name="totalPeso" step="0.001" required></div>
@@ -150,23 +156,27 @@
 
             <div class="tab-pane fade" id="detalles" role="tabpanel" aria-labelledby="detalles-tab">
                 <div class="card shadow-sm">
-                    <div class="card-header bg-secondary">Edición de Artículos y Lotes</div>
+                    <div class="card-header bg-secondary d-flex justify-content-between align-items-center">
+                        <span>Edición de Artículos y Lotes</span>
+                        <button type="button" class="btn btn-warning btn-sm fw-bold" onclick="agregarFilaProducto()"><i class="bi bi-plus-circle me-1"></i> Agregar Producto</button>
+                    </div>
                     <div class="card-body">
                         <div class="alert alert-warning border-left-warning" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i> **Precaución**: Al modificar **Cantidad**, **Precios** o **Lotes**, el sistema actualizará el stock y la información del lote asociado (usando `sp_editar_articulo_detalle` y `sp_actualizar_lote`).
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> **Precaución**: Las modificaciones impactarán directamente el stock. **Para agregar productos, ingrese su ID de Artículo.**
                         </div>
                         <div class="table-responsive">
                             <table class="table table-bordered table-sm table-hover table-professional" id="tabla-detalles-edicion">
                                 <thead class="text-center">
                                 <tr>
-                                    <th>ID Detalle</th>
-                                    <th>Artículo</th>
+                                    <th>ID Detalle / ID Art.</th>
+                                    <th>Descripción del Artículo</th>
                                     <th>Cantidad</th>
                                     <th>P. Unitario</th>
                                     <th>Bonificación</th>
                                     <th>Total Detalle</th>
                                     <th>Lote Nuevo</th>
                                     <th>F. Vencimiento Nueva</th>
+                                    <th class="text-danger"><i class="bi bi-trash"></i> Acciones</th>
                                 </tr>
                                 </thead>
                                 <tbody id="detalles-body">
@@ -216,10 +226,15 @@
 <script>
     const COMPRA_ID = new URLSearchParams(window.location.search).get('id');
     const COMPRA_ENDPOINT = "/CompraServlet";
+    const IGV_RATE = 0.18;
+    let nuevoDetalleCounter = -1;
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('compra-id-display').textContent = COMPRA_ID || 'N/A';
         document.getElementById('idCompra').value = COMPRA_ID;
+
+        document.getElementById('incluyeIgv').addEventListener('change', actualizarTotalesGlobales);
+        document.getElementById('costeTransporte').addEventListener('input', actualizarTotalesGlobales);
 
         if (COMPRA_ID) {
             cargarDatosCompra(COMPRA_ID);
@@ -228,13 +243,112 @@
         }
     });
 
+    function calcularTotalesDetalle(row) {
+        const cantidad = parseFloat(row.querySelector('input[name="cantidad"]').value) || 0;
+        const precioUnitario = parseFloat(row.querySelector('input[name="precioUnitario"]').value) || 0;
+        const bonificacion = parseFloat(row.querySelector('input[name="bonificacion"]').value) || 0;
+        const totalDetalle = (cantidad * precioUnitario) - bonificacion;
+        row.querySelector('input[name="total"]').value = totalDetalle.toFixed(2);
+        actualizarTotalesGlobales();
+    }
+
+    function actualizarTotalesGlobales() {
+        let subtotalTotal = 0;
+        let igvTotal = 0;
+        let totalAPagarTotal = 0;
+        const incluyeIgv = document.getElementById('incluyeIgv').checked;
+
+        document.querySelectorAll('#detalles-body .detalle-row').forEach(row => {
+            const totalDetalle = parseFloat(row.querySelector('input[name="total"]').value) || 0;
+
+            let subtotalSinIgv = 0;
+            let igvInsumo = 0;
+
+            if (incluyeIgv) {
+                subtotalSinIgv = totalDetalle / (1 + IGV_RATE);
+                igvInsumo = totalDetalle - subtotalSinIgv;
+            } else {
+                subtotalSinIgv = totalDetalle;
+                igvInsumo = totalDetalle * IGV_RATE;
+            }
+
+            subtotalTotal += subtotalSinIgv;
+            igvTotal += igvInsumo;
+            totalAPagarTotal += subtotalSinIgv + igvInsumo;
+        });
+
+        const costeTransporte = parseFloat(document.getElementById('costeTransporte').value) || 0;
+        totalAPagarTotal += costeTransporte;
+
+        document.getElementById('subtotalSinIgv').value = subtotalTotal.toFixed(2);
+        document.getElementById('totalIgv').value = igvTotal.toFixed(2);
+        document.getElementById('totalAPagar').value = totalAPagarTotal.toFixed(2);
+    }
+
+    function eliminarDetalle(buttonElement) {
+        const row = buttonElement.closest('.detalle-row');
+        const idDetalle = row.querySelector('input[name="idDetalle"]').value;
+
+        if (parseInt(idDetalle) > 0) {
+             if (!window.confirm(`¿Está seguro que desea eliminar el detalle ID ${idDetalle}? Esto requerirá lógica en el servidor para anular la transacción de stock.`)) {
+                return;
+             }
+        }
+
+        row.remove();
+        actualizarTotalesGlobales();
+    }
+
+    function agregarFilaProducto() {
+        const tbody = document.getElementById('detalles-body');
+        const tr = document.createElement('tr');
+        tr.className = 'detalle-row text-center table-info';
+
+        tr.innerHTML = `
+            <td>
+                <span class="badge bg-warning text-dark me-1">NUEVO</span>
+                <input type="hidden" name="idDetalle" value="${nuevoDetalleCounter}">
+                <input type="number" class="form-control form-control-sm mt-1 text-center" name="idArticulo" placeholder="ID Art." required>
+            </td>
+            <td class="text-start">
+                <input type="text" class="form-control form-control-sm" name="descripcionArticulo" placeholder="Descripción del Artículo" required>
+            </td>
+            <td><input type="number" class="form-control form-control-sm text-center detalle-input" name="cantidad" value="1" step="0.01" required></td>
+            <td><input type="number" class="form-control form-control-sm text-end detalle-input" name="precioUnitario" value="0.00" step="0.001" required></td>
+            <td><input type="number" class="form-control form-control-sm text-end detalle-input" name="bonificacion" value="0.00" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm text-end bg-light" name="total" value="0.00" step="0.01" required readonly></td>
+
+            <td><input type="text" class="form-control form-control-sm" name="numeroLoteNuevo" placeholder="Lote (Opc.)"></td>
+            <td><input type="date" class="form-control form-control-sm" name="fechaVencimientoNueva"></td>
+
+            <td><button type="button" class="btn btn-sm btn-danger" onclick="eliminarDetalle(this)"><i class="bi bi-trash"></i></button></td>
+
+            <input type="hidden" name="costeUnitarioTransporte" value="0">
+            <input type="hidden" name="costeTotalTransporte" value="0">
+            <input type="hidden" name="precioConDescuento" value="0">
+            <input type="hidden" name="igvInsumo" value="0">
+            <input type="hidden" name="pesoTotal" value="0">
+        `;
+
+        tr.querySelectorAll('.detalle-input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                calcularTotalesDetalle(e.target.closest('.detalle-row'));
+            });
+        });
+
+        tbody.appendChild(tr);
+        nuevoDetalleCounter--;
+        tr.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
     function toggleGuiaTab() {
         const hayTraslado = document.getElementById('hayTraslado').checked;
         const guiaTab = document.getElementById('guia-tab');
 
         if (!hayTraslado) {
             guiaTab.classList.add('d-none');
-            if (guiaTab.classList.contains('active')) {
+            const guiaButton = document.querySelector('button[data-bs-target="#guia"]');
+            if (guiaButton && guiaButton.classList.contains('active')) {
                 new bootstrap.Tab(document.getElementById('cabecera-tab')).show();
             }
         } else {
@@ -256,12 +370,13 @@
             if (compra && compra.id_compra) {
                 poblarFormulario(compra);
                 toggleGuiaTab();
+                actualizarTotalesGlobales();
             } else {
-                alert("No se pudo cargar la compra ID " + id + ". Verifique la respuesta del Servlet.");
+                window.alert("No se pudo cargar la compra ID " + id + ". Verifique la respuesta del Servlet.");
             }
         } catch (error) {
             console.error("Error al cargar los datos de la compra:", error);
-            alert("Error de conexión al intentar cargar los datos.");
+            window.alert("Error de conexión al intentar cargar los datos.");
         }
     }
 
@@ -281,9 +396,6 @@
         document.getElementById('hayBonificacion').checked = compra.hayBonificacion || false;
         document.getElementById('hayTraslado').checked = compra.hayTraslado || false;
 
-        document.getElementById('subtotalSinIgv').value = compra.subtotal || 0;
-        document.getElementById('totalIgv').value = compra.igv || 0;
-        document.getElementById('totalAPagar').value = compra.total || 0;
         document.getElementById('totalPeso').value = compra.totalPeso || 0;
         document.getElementById('costeTransporte').value = compra.costeTransporte || 0;
 
@@ -295,15 +407,23 @@
                 const tr = document.createElement('tr');
                 tr.className = 'detalle-row text-center';
                 tr.innerHTML = `
-                    <td>${d.idDetalle}<input type="hidden" name="idDetalle" value="${d.idDetalle}"></td>
-                    <td class="text-start">${d.descripcionArticulo || d.idArticulo}</td>
-                    <td><input type="number" class="form-control form-control-sm text-center" name="cantidad" value="${d.cantidad}" step="0.01" required></td>
-                    <td><input type="number" class="form-control form-control-sm text-end" name="precioUnitario" value="${d.precioUnitario}" step="0.001" required></td>
-                    <td><input type="number" class="form-control form-control-sm text-end" name="bonificacion" value="${d.bonificacion}" step="0.01"></td>
-                    <td><input type="number" class="form-control form-control-sm text-end bg-light" name="total" value="${d.total}" step="0.01" required></td>
+                    <td>
+                        <span class="badge bg-primary me-1">${d.idDetalle}</span>
+                        <input type="hidden" name="idDetalle" value="${d.idDetalle}">
+                        <input type="number" class="form-control form-control-sm mt-1 text-center" name="idArticulo" value="${d.idArticulo}" readonly>
+                    </td>
+                    <td class="text-start">
+                        <input type="text" class="form-control form-control-sm" name="descripcionArticulo" value="${d.descripcionArticulo || ''}" required>
+                    </td>
+                    <td><input type="number" class="form-control form-control-sm text-center detalle-input" name="cantidad" value="${d.cantidad}" step="0.01" required></td>
+                    <td><input type="number" class="form-control form-control-sm text-end detalle-input" name="precioUnitario" value="${d.precioUnitario}" step="0.001" required></td>
+                    <td><input type="number" class="form-control form-control-sm text-end detalle-input" name="bonificacion" value="${d.bonificacion}" step="0.01"></td>
+                    <td><input type="number" class="form-control form-control-sm text-end bg-light" name="total" value="${d.total}" step="0.01" required readonly></td>
 
                     <td><input type="text" class="form-control form-control-sm" name="numeroLoteNuevo" value="${lote.numeroLote || ''}"></td>
                     <td><input type="date" class="form-control form-control-sm" name="fechaVencimientoNueva" value="${lote.fechaVencimiento || ''}"></td>
+
+                    <td><button type="button" class="btn btn-sm btn-danger" onclick="eliminarDetalle(this)"><i class="bi bi-trash"></i></button></td>
 
                     <input type="hidden" name="costeUnitarioTransporte" value="${d.costeUnitarioTransporte || 0}">
                     <input type="hidden" name="costeTotalTransporte" value="${d.costeTotalTransporte || 0}">
@@ -312,6 +432,12 @@
                     <input type="hidden" name="pesoTotal" value="${d.pesoTotal || 0}">
                 `;
                 tbody.appendChild(tr);
+
+                tr.querySelectorAll('.detalle-input').forEach(input => {
+                    input.addEventListener('input', (e) => {
+                        calcularTotalesDetalle(e.target.closest('.detalle-row'));
+                    });
+                });
             });
         }
 
@@ -355,6 +481,8 @@
         data.hayBonificacion = form.hayBonificacion.checked;
         data.hayTraslado = form.hayTraslado.checked;
         data.observation = form.observation.value.trim();
+
+        // Totales de la cabecera (recalculados)
         data.subtotalSinIgv = parseFloat(form.subtotalSinIgv.value);
         data.totalIgv = parseFloat(form.totalIgv.value);
         data.totalAPagar = parseFloat(form.totalAPagar.value);
@@ -387,7 +515,14 @@
         const detalleRows = document.querySelectorAll('#detalles-body .detalle-row');
         detalleRows.forEach(row => {
             const d = {};
-            d.idDetalle = parseInt(row.querySelector('input[name="idDetalle"]').value);
+            const idDetalleInput = row.querySelector('input[name="idDetalle"]');
+
+            d.idDetalle = parseInt(idDetalleInput.value); // Positivo para existentes, negativo para nuevos
+
+            // **CAMPOS NUEVOS/EDITABLES**
+            d.idArticulo = parseInt(row.querySelector('input[name="idArticulo"]').value);
+            d.descripcionArticulo = row.querySelector('input[name="descripcionArticulo"]').value.trim();
+
             d.cantidad = parseFloat(row.querySelector('input[name="cantidad"]').value);
             d.precioUnitario = parseFloat(row.querySelector('input[name="precioUnitario"]').value);
             d.bonificacion = parseFloat(row.querySelector('input[name="bonificacion"]').value);
@@ -413,7 +548,7 @@
         });
 
         try {
-            const response = await fetch(COMPRA_ENDPOINT, {
+            const response = await fetch("/editarCompra", { // Usar el Servlet correcto
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -424,14 +559,14 @@
             const result = await response.json();
 
             if (response.ok && result.success) {
-                alert("✅ Compra ID " + data.idCompra + " actualizada exitosamente!");
+                window.alert("✅ Compra ID " + data.idCompra + " actualizada exitosamente!");
                 window.location.href = 'index.html';
             } else {
-                alert("❌ Error al actualizar: " + (result.message || response.statusText));
+                window.alert("❌ Error al actualizar: " + (result.message || response.statusText));
                 console.error("Respuesta del servidor:", result);
             }
         } catch (error) {
-            alert("❌ Error de red o inesperado al enviar los datos.");
+            window.alert("❌ Error de red o inesperado al enviar los datos.");
             console.error(error);
         }
     });
