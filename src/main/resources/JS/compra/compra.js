@@ -849,12 +849,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
 
+                const costoFlete = parseFloat(caja.costo) || parseFloat(caja.fleteTotal) || 0;
+
                 if (detallesCaja.length > 0) {
                     cajasCompra.push({
                         idCajaCompra: tempIdCaja++,
                         nombreCaja: nombreCaja,
                         cantidad: caja.cantidad || 1,
-                        costoCaja: parseFloat(caja.costo) || 0,
+                        costoCaja: costoFlete,
                         detalles: detallesCaja
                     });
                 }
@@ -960,11 +962,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 hayBonificacion: bonifSi?.checked,
                 hayTraslado: trasladoSi?.checked,
                 observation: $('#observacionesGenerales')?.value,
+
                 subtotalSinIgv: subtotalSinIgvCalculado,
                 totalIgv: totalIgvCalculado,
                 totalAPagar: totalCompraFinalCalculado,
+
                 totalPeso: totalPesoProductosCalculado,
                 costeTransporte: costeTransporteCalculado,
+
                 detalles: detalles,
                 referencia: referencia,
                 guiaTransporte: guia,

@@ -1,11 +1,5 @@
 let compraActual = null;
 
-/**
- * Mapea la unidad de medida completa a su abreviatura,
- * la lógica se toma de la función unidadAbreviatura de compra.js.
- * @param {string} unidad - La unidad de medida completa (ej: 'KILOGRAMO').
- * @returns {string} La abreviatura (ej: 'KG') o la unidad original si no se encuentra.
- */
 function unidadAbreviatura(unidad) {
     const map = {'LITRO': 'L', 'GALÓN': 'GL', 'BIDÓN': 'BD', 'UNIDAD': 'U', 'KILOGRAMO': 'KG', 'CIENTO': 'C', 'PAQUETE': 'PQ', 'MILLAR': 'MLL', 'ROLLO': 'RL', 'SACO': 'S'};
     if (!unidad) return '-';
@@ -29,7 +23,7 @@ function mostrarValor(valor, prefijo = '', sufijo = '') {
         return '-';
     }
 
-    if (typeof valor === 'string' && valor.includes('-')) {
+    if (typeof valor === 'string' && valor.includes('-') && !valor.includes('/') && !valor.includes('.')) {
         return valor;
     }
 
@@ -42,7 +36,7 @@ function mostrarValor(valor, prefijo = '', sufijo = '') {
             return `${prefijo}${num.toFixed(decimalPlaces)}${sufijo}`;
         }
 
-        return String(Math.round(num));
+        return String(num.toFixed(0));
     }
 
     return valor;
@@ -55,7 +49,6 @@ function numeroALetras(total) {
 async function cargarCompras() {
     const tbody = document.getElementById("tabla-compras");
     try {
-        // ASUME que /listarCompra devuelve un JSON con la estructura de compra
         const res = await fetch("/listarCompra");
         if (!res.ok) throw new Error("Error al cargar las compras.");
         const compras = await res.json();
@@ -70,8 +63,6 @@ async function cargarCompras() {
         compras.forEach((compra, index) => {
             const tr = document.createElement("tr");
             tr.classList.add('text-center', index % 2 === 0 ? 'bg-white' : 'bg-gray-50', 'hover:bg-indigo-50/50', 'transition', 'duration-150');
-            // La serialización JSON debe hacerse con cuidado para evitar problemas de comillas en el atributo onclick.
-            // Para el propósito de separar el código, mantenemos la lógica original.
             const compraDataString = JSON.stringify(compra).replace(/'/g, "\\'");
 
             tr.innerHTML = `
@@ -109,17 +100,26 @@ function verDetalles(compra) {
     document.getElementById('coste-transporte-display').textContent = mostrarValor(compra.coste_transporte, 'S/ ');
     document.getElementById('total-peso-display').textContent = mostrarValor(compra.total_peso, '', ' kg');
     document.getElementById('observacion-display').textContent = mostrarValor(compra.observacion) || 'N/A';
+
     const tbodyProducto = document.getElementById("tabla-producto");
     tbodyProducto.innerHTML = "";
     const tbodyTransporte = document.getElementById("tabla-transporte");
     tbodyTransporte.innerHTML = "";
+    const tbodyLotes = document.getElementById("tabla-lotes");
+    tbodyLotes.innerHTML = "";
+    const tbodyCajas = document.getElementById("tabla-cajas");
+    tbodyCajas.innerHTML = "";
+
+    const productoMap = {};
 
     if (compra.detalles && compra.detalles.length > 0) {
+
         compra.detalles.forEach((d, index) => {
             const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-
-            // >>> IMPLEMENTACIÓN EN EL MODAL (Nodal) <<<
             const unidad = unidadAbreviatura(d.unidad_medida);
+            const hasLotes = d.lotes && d.lotes.length > 0;
+
+            productoMap[d.id_articulo] = mostrarValor(d.descripcion_articulo);
 
             tbodyProducto.innerHTML += `
                 <tr class="${rowClass} hover:bg-indigo-50 transition duration-100">
@@ -131,7 +131,8 @@ function verDetalles(compra) {
                     <td class="px-4 py-2 border-r">${mostrarValor(d.precio_con_descuento, 'S/ ')}</td>
                     <td class="px-4 py-2 border-r">${mostrarValor(d.igv_insumo, 'S/ ')}</td>
                     <td class="px-4 py-2 border-r font-extrabold text-indigo-700">${mostrarValor(d.total_detalle, 'S/ ')}</td>
-                    <td class="px-4 py-2">${mostrarValor(d.peso_total, '', ' kg')}</td>
+                    <td class="px-4 py-2 border-r">${mostrarValor(d.peso_total, '', ' kg')}</td>
+                    <td class="px-4 py-2 font-bold ${hasLotes ? 'text-blue-600' : 'text-gray-400'} bg-gray-200">${hasLotes ? 'Sí' : 'No'}</td>
                 </tr>`;
 
             tbodyTransporte.innerHTML += `
@@ -139,11 +140,70 @@ function verDetalles(compra) {
                     <td class="px-4 py-2 border-r">${mostrarValor(d.coste_unitario_transporte, 'S/ ')}</td>
                     <td class="px-4 py-2 font-bold text-gray-700">${mostrarValor(d.coste_total_transporte, 'S/ ')}</td>
                 </tr>`;
+
+            if (hasLotes) {
+                const descripcionArticulo = mostrarValor(d.descripcion_articulo);
+                d.lotes.forEach((lote, loteIndex) => {
+                    const loteRowClass = loteIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                    tbodyLotes.innerHTML += `
+                        <tr class="${loteRowClass} hover:bg-gray-100 transition duration-100">
+                            <td class="px-4 py-2 border-r text-left font-medium">${descripcionArticulo}</td>
+                            <td class="px-4 py-2 border-r font-semibold">${mostrarValor(lote.numero_lote)}</td>
+                            <td class="px-4 py-2 border-r">${mostrarValor(lote.cantidad_lote)}</td>
+                            <td class="px-4 py-2 font-bold">${mostrarValor(lote.fecha_vencimiento)}</td>
+                        </tr>`;
+                });
+            }
         });
+
+        if (tbodyLotes.innerHTML === "") {
+             tbodyLotes.innerHTML = '<tr><td colspan="4" class="text-gray-500 italic p-6">No hay detalles de lotes registrados para los productos.</td></tr>';
+        }
+
     } else {
-        tbodyProducto.innerHTML = '<tr><td colspan="9" class="text-gray-500 italic p-6">No hay detalles de productos registrados.</td></tr>';
+        tbodyProducto.innerHTML = '<tr><td colspan="10" class="text-gray-500 italic p-6">No hay detalles de productos registrados.</td></tr>';
         tbodyTransporte.innerHTML = '<tr><td colspan="2" class="text-gray-500 italic p-6">No hay costos de transporte por detalle.</td></tr>';
+        tbodyLotes.innerHTML = '<tr><td colspan="4" class="text-gray-500 italic p-6">No hay detalles de lotes registrados para los productos.</td></tr>';
     }
+
+    let totalCajas = 0;
+    let totalCostoCajas = 0;
+    const cajasCompra = compra.cajas_compra || [];
+
+    if (cajasCompra.length > 0) {
+        totalCajas = cajasCompra.length;
+
+        cajasCompra.forEach((caja, index) => {
+            const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+            const costoCaja = parseFloat(caja.costo_caja) || 0;
+            totalCostoCajas += costoCaja;
+
+            let detallesContent = 'Sin productos';
+            if (caja.detalles && caja.detalles.length > 0) {
+                const resumenDetalles = caja.detalles.map(det => {
+                    const desc = productoMap[det.id_articulo] || `(ID: ${det.id_articulo})`;
+                    return `${mostrarValor(det.cantidad)} x ${desc}`;
+                }).join('; ');
+                detallesContent = `<p class="text-xs text-gray-600 text-left">${resumenDetalles}</p>`;
+            }
+
+            tbodyCajas.innerHTML += `
+                <tr class="${rowClass} hover:bg-blue-50 transition duration-100">
+                    <td class="px-4 py-2 border-r font-semibold">${mostrarValor(caja.id_caja_compra)}</td>
+                    <td class="px-4 py-2 border-r text-left">${mostrarValor(caja.nombre_caja)}</td>
+                    <td class="px-4 py-2 border-r">${mostrarValor(caja.cantidad)}</td>
+                    <td class="px-4 py-2 border-r font-extrabold text-blue-700 bg-blue-100">${mostrarValor(costoCaja, 'S/ ')}</td>
+                    <td class="px-4 py-2 text-left">${detallesContent}</td>
+                </tr>`;
+        });
+
+    } else {
+        tbodyCajas.innerHTML = '<tr><td colspan="5" class="text-gray-500 italic p-6">No hay información de cajas de compra registradas.</td></tr>';
+    }
+
+    document.getElementById('total-cajas-display').textContent = totalCajas;
+    document.getElementById('total-costo-cajas-display').textContent = mostrarValor(totalCostoCajas, 'S/ ');
+
 
     const gt = compra.guia || {};
     const infoGuiaHTML = gt.id_guia ? `
@@ -218,17 +278,19 @@ function descargarFactura() {
 
     if (compraActual.detalles && compraActual.detalles.length > 0) {
         compraActual.detalles.forEach((d) => {
-            const valorUnitario = parseFloat(d.precio_unitario) / 1.18;
-            const precioUnitario = d.precio_con_descuento || d.precio_unitario;
-            const subTotal = d.total_detalle;
+            const precioUnitarioRaw = parseFloat(d.precio_unitario) || 0;
+            const precioConDescuentoRaw = parseFloat(d.precio_con_descuento) || precioUnitarioRaw;
+
+            const valorUnitario = (precioConDescuentoRaw / (1 + 0.18)).toFixed(2);
+            const importeTotal = parseFloat(d.total_detalle) || 0;
 
             tbodyDoc.innerHTML += `
                 <tr class="h-8">
                     <td class="border border-gray-400 px-2 py-1 text-center">${mostrarValor(d.cantidad)}</td>
                     <td class="border border-gray-400 px-2 py-1">${mostrarValor(d.descripcion_articulo)}</td>
-                    <td class="border border-gray-400 px-2 py-1 text-right">${mostrarValor(valorUnitario.toFixed(2), 'S/ ')}</td>
-                    <td class="border border-gray-400 px-2 py-1 text-right">${mostrarValor(precioUnitario, 'S/ ')}</td>
-                    <td class="border border-gray-400 px-2 py-1 text-right font-bold">${mostrarValor(subTotal, 'S/ ')}</td>
+                    <td class="border border-gray-400 px-2 py-1 text-right">${mostrarValor(valorUnitario, 'S/ ')}</td>
+                    <td class="border border-gray-400 px-2 py-1 text-right">${mostrarValor(precioConDescuentoRaw, 'S/ ')}</td>
+                    <td class="border border-gray-400 px-2 py-1 text-right font-bold">${mostrarValor(importeTotal, 'S/ ')}</td>
                 </tr>`;
         });
     } else {
@@ -333,7 +395,6 @@ function descargarGuiaTransporte() {
         compraActual.detalles.forEach((d, index) => {
             const cantidad = parseFloat(d.cantidad) || 0;
             cantidadTotal += cantidad;
-            // >>> IMPLEMENTACIÓN EN EL PDF DE GUÍA DE REMISIÓN <<<
             const unidad = unidadAbreviatura(d.unidad_medida);
 
             tbodyDoc.innerHTML += `

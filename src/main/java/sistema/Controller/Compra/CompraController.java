@@ -94,6 +94,8 @@ public class CompraController implements CompraRepository {
              ResultSet rs = cs.executeQuery()) {
 
             Map<Integer, Map<String, Object>> compraMap = new LinkedHashMap<>();
+            Map<Integer, Map<Integer, Map<String, Object>>> detalleTracker = new HashMap<>();
+            Map<Integer, Map<Integer, Map<String, Object>>> cajaTracker = new HashMap<>();
 
             while (rs.next()) {
                 int idCompra = rs.getInt("id_compra");
@@ -120,7 +122,7 @@ public class CompraController implements CompraRepository {
                     Map<String, Object> proveedor = new HashMap<>();
                     proveedor.put("id", rs.getInt("id_proveedor"));
                     proveedor.put("ruc", rs.getString("ruc"));
-                    proveedor.put("razon_social", rs.getString("RAZON_FINAL"));
+                    proveedor.put("razon_social", rs.getString("razon_social"));
                     proveedor.put("direccion", rs.getString("direccion"));
                     proveedor.put("telefono", rs.getString("telefono"));
                     proveedor.put("correo", rs.getString("correo"));
@@ -128,22 +130,29 @@ public class CompraController implements CompraRepository {
                     compra.put("proveedor", proveedor);
 
                     compra.put("detalles", new ArrayList<>());
+                    compra.put("cajas", new ArrayList<>());
                     compra.put("guia", null);
                     compra.put("referencia", null);
+
                     compraMap.put(idCompra, compra);
+                    detalleTracker.put(idCompra, new LinkedHashMap<>());
+                    cajaTracker.put(idCompra, new LinkedHashMap<>());
                 }
 
-                if (rs.getInt("id_detalle") > 0) {
-                    List<Map<String, Object>> detallesList = (List<Map<String, Object>>) compra.get("detalles");
-                    int currentDetalleId = rs.getInt("id_detalle");
+                Map<Integer, Map<String, Object>> currentDetalleMap = detalleTracker.get(idCompra);
+                Map<Integer, Map<String, Object>> currentCajaMap = cajaTracker.get(idCompra);
 
-                    boolean detalleExiste = detallesList.stream().anyMatch(d -> d.get("id_detalle").equals(currentDetalleId));
+                int idDetalle = rs.getInt("id_detalle");
+                if (idDetalle > 0) {
+                    Map<String, Object> detalle = currentDetalleMap.get(idDetalle);
 
-                    if (!detalleExiste) {
-                        Map<String, Object> detalle = new HashMap<>();
-                        detalle.put("id_detalle", currentDetalleId);
+                    if (detalle == null) {
+                        detalle = new LinkedHashMap<>();
+                        detalle.put("id_detalle", idDetalle);
+                        detalle.put("id_articulo", rs.getInt("id_articulo"));
                         detalle.put("codigo_articulo", rs.getString("codigo_articulo"));
                         detalle.put("descripcion_articulo", rs.getString("descripcion_articulo"));
+                        detalle.put("id_unidad_articulo", rs.getInt("id_unidad_articulo"));
                         detalle.put("cantidad", rs.getBigDecimal("cantidad"));
                         detalle.put("precio_unitario", rs.getBigDecimal("precio_unitario"));
                         detalle.put("peso_total", rs.getBigDecimal("peso_total"));
@@ -152,7 +161,55 @@ public class CompraController implements CompraRepository {
                         detalle.put("total_detalle", rs.getBigDecimal("total_detalle"));
                         detalle.put("coste_unitario_transporte", rs.getBigDecimal("coste_unitario_transporte"));
                         detalle.put("coste_total_transporte", rs.getBigDecimal("coste_total_transporte"));
-                        detallesList.add(detalle);
+                        detalle.put("lotes", new ArrayList<>());
+
+                        ((List<Map<String, Object>>) compra.get("detalles")).add(detalle);
+                        currentDetalleMap.put(idDetalle, detalle);
+                    }
+
+                    int idLote = rs.getInt("id_lote");
+                    if (idLote > 0) {
+                        List<Map<String, Object>> lotesList = (List<Map<String, Object>>) detalle.get("lotes");
+
+                        if (lotesList.stream().noneMatch(l -> l.get("id_lote").equals(idLote))) {
+                            Map<String, Object> lote = new LinkedHashMap<>();
+                            lote.put("id_lote", idLote);
+                            lote.put("numero_lote", rs.getString("numero_lote"));
+                            lote.put("cantidad_lote", rs.getBigDecimal("cantidad_lote"));
+                            java.sql.Date fechaVencimientoLote = rs.getDate("fecha_vencimiento_lote");
+                            lote.put("fecha_vencimiento", fechaVencimientoLote != null ? DATE_FORMATTER.format(fechaVencimientoLote) : null);
+                            lotesList.add(lote);
+                        }
+                    }
+                }
+
+                int idCaja = rs.getInt("id_caja_compra");
+                if (idCaja > 0) {
+                    Map<String, Object> caja = currentCajaMap.get(idCaja);
+
+                    if (caja == null) {
+                        caja = new LinkedHashMap<>();
+                        caja.put("id_caja_compra", idCaja);
+                        caja.put("nombre_caja", rs.getString("nombre_caja"));
+                        caja.put("cantidad_total_articulos_caja", rs.getBigDecimal("cantidad_total_articulos_caja"));
+                        caja.put("costo_caja", rs.getBigDecimal("costo_caja"));
+                        caja.put("detalles_caja", new ArrayList<>());
+
+                        ((List<Map<String, Object>>) compra.get("cajas")).add(caja);
+                        currentCajaMap.put(idCaja, caja);
+                    }
+
+                    int idDetalleCaja = rs.getInt("id_detalle_caja");
+                    if (idDetalleCaja > 0) {
+                        List<Map<String, Object>> detallesCajaList = (List<Map<String, Object>>) caja.get("detalles_caja");
+
+                        if (detallesCajaList.stream().noneMatch(d -> d.get("id_detalle_caja").equals(idDetalleCaja))) {
+                            Map<String, Object> detalleCaja = new LinkedHashMap<>();
+                            detalleCaja.put("id_detalle_caja", idDetalleCaja);
+                            detalleCaja.put("id_articulo", rs.getInt("id_articulo_en_caja"));
+                            detalleCaja.put("cantidad", rs.getBigDecimal("cantidad_en_caja"));
+                            detallesCajaList.add(detalleCaja);
+                        }
                     }
                 }
 
@@ -160,6 +217,7 @@ public class CompraController implements CompraRepository {
                     Map<String, Object> guiaMap = new HashMap<>();
                     guiaMap.put("id_guia", rs.getInt("id_guia"));
                     guiaMap.put("ruc_guia", rs.getString("ruc_guia"));
+                    guiaMap.put("razon_social_guia", rs.getString("razon_social_guia"));
                     java.sql.Date fechaEmisionGuia = rs.getDate("fecha_emision_guia");
                     guiaMap.put("fecha_emision_guia", fechaEmisionGuia != null ? DATE_FORMATTER.format(fechaEmisionGuia) : null);
                     java.sql.Date fechaPedido = rs.getDate("fecha_pedido");

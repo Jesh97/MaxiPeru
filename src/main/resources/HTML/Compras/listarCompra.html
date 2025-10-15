@@ -90,7 +90,8 @@
                     </div>
 
                     <div class="flex space-x-3 p-1 bg-gray-100 rounded-xl shadow-inner mb-6" id="detallesTab" role="tablist">
-                        <button class="tab-button active px-5 py-2.5 font-semibold text-sm text-white bg-indigo-700 shadow-xl rounded-lg transition-all duration-300 transform hover:scale-[1.01]" data-target="productos" type="button"><i class="bi bi-box-seam mr-2"></i> Productos y Costos</button>
+                        <button class="tab-button active px-5 py-2.5 font-semibold text-sm text-white bg-indigo-700 shadow-xl rounded-lg transition-all duration-300 transform hover:scale-[1.01]" data-target="productos" type="button"><i class="bi bi-box-seam mr-2"></i> Productos, Lotes y Costos</button>
+                        <button class="tab-button px-5 py-2.5 font-semibold text-sm text-gray-700 rounded-lg hover:bg-white/80 hover:shadow-md transition-all duration-300" data-target="cajas" type="button"><i class="bi bi-boxes mr-2"></i> Cajas y Distribución</button>
                         <button class="tab-button px-5 py-2.5 font-semibold text-sm text-gray-700 rounded-lg hover:bg-white/80 hover:shadow-md transition-all duration-300" data-target="guia" type="button"><i class="bi bi-truck mr-2"></i> Guía Transporte</button>
                         <button class="tab-button px-5 py-2.5 font-semibold text-sm text-gray-700 rounded-lg hover:bg-white/80 hover:shadow-md transition-all duration-300" data-target="referencia" type="button"><i class="bi bi-file-earmark-text mr-2"></i> Referencias</button>
                     </div>
@@ -110,10 +111,27 @@
                                         <th class="px-4 py-3 font-semibold border-r">P. con Desc.</th>
                                         <th class="px-4 py-3 font-semibold border-r">IGV Ins.</th>
                                         <th class="px-4 py-3 font-semibold border-r bg-indigo-100">Total Detalle</th>
-                                        <th class="px-4 py-3 font-semibold">Peso Total</th>
+                                        <th class="px-4 py-3 font-semibold border-r">Peso Total</th>
+                                        <th class="px-4 py-3 font-semibold bg-gray-200">Lotes</th>
                                     </tr>
                                     </thead>
                                     <tbody id="tabla-producto" class="bg-white divide-y divide-gray-100 text-center text-sm"></tbody>
+                                </table>
+                            </div>
+
+                            <h6 class="text-xl font-semibold text-indigo-700 mb-4 border-b-2 pb-2 border-indigo-100 mt-8">Detalles de Lotes por Producto</h6>
+                            <div class="overflow-x-auto mb-8">
+                                <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg shadow-sm">
+                                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                                    <tr>
+                                        <th class="px-4 py-3 font-semibold border-r">Producto</th>
+                                        <th class="px-4 py-3 font-semibold border-r">N° Lote</th>
+                                        <th class="px-4 py-3 font-semibold border-r">Cant. Lote</th>
+                                        <th class="px-4 py-3 font-semibold bg-gray-200">Fecha Vencimiento</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tabla-lotes" class="bg-white divide-y divide-gray-100 text-center text-sm">
+                                    </tbody>
                                 </table>
                             </div>
 
@@ -128,6 +146,30 @@
                                     </thead>
                                     <tbody id="tabla-transporte" class="bg-white divide-y divide-gray-100 text-center text-sm"></tbody>
                                 </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane hidden" id="cajas">
+                            <h6 class="text-xl font-semibold text-indigo-700 mb-4 border-b-2 pb-2 border-indigo-100">Distribución de Artículos en Cajas y Costos de Flete</h6>
+                            <div class="overflow-x-auto mb-8">
+                                <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg shadow-sm">
+                                    <thead class="bg-blue-50 text-blue-700 uppercase text-xs tracking-wider">
+                                    <tr>
+                                        <th class="px-4 py-3 font-semibold border-r">ID Caja</th>
+                                        <th class="px-4 py-3 font-semibold border-r">Nombre/Ref.</th>
+                                        <th class="px-4 py-3 font-semibold border-r">Cant. Total Artículos</th>
+                                        <th class="px-4 py-3 font-semibold border-r bg-blue-100">Costo Flete Caja</th>
+                                        <th class="px-4 py-3 font-semibold">Detalles de Contenido</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tabla-cajas" class="bg-white divide-y divide-gray-100 text-center text-sm"></tbody>
+                                </table>
+                            </div>
+
+                            <h6 class="text-xl font-semibold text-indigo-700 mb-4 border-b-2 pb-2 border-indigo-100 mt-8">Resumen Global de Cajas</h6>
+                            <div id="resumen-cajas" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div class="p-3 bg-gray-50 rounded-lg border border-gray-200"><strong class="text-gray-600">Total Cajas Registradas:</strong> <span id="total-cajas-display" class="font-bold">0</span></div>
+                                <div class="p-3 bg-gray-50 rounded-lg border border-gray-200"><strong class="text-gray-600">Costo Total Flete:</strong> <span id="total-costo-cajas-display" class="font-bold">S/ 0.00</span></div>
                             </div>
                         </div>
 

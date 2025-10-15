@@ -225,7 +225,6 @@ public class CompraServlet extends HttpServlet {
                 }
             }
 
-
             if (root.has("descuentosGlobales")) {
                 for (var desc : root.get("descuentosGlobales")) {
                     Descuento descuento = new Descuento();
@@ -246,7 +245,6 @@ public class CompraServlet extends HttpServlet {
 
                     String nombreCajaRaw = c.path("nombreCaja").asText("").trim();
                     caja.setNombreCaja(nombreCajaRaw.isEmpty() ? "CAJA " + tempIdCaja : nombreCajaRaw);
-
                     caja.setCantidad(0);
                     caja.setCostoCaja(BigDecimal.valueOf(c.path("costoCaja").asDouble(0)));
 
@@ -268,7 +266,6 @@ public class CompraServlet extends HttpServlet {
                     }
 
                     caja.setCantidad(cantidadTotalCaja);
-
                     cajasCompra.add(caja);
                     detallesCajaMap.put(tempIdCaja, listaDetalles);
                     tempIdCaja++;
