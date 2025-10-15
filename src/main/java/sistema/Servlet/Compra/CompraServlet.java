@@ -16,6 +16,7 @@ import sistema.repository.ArticuloRepository;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -153,9 +154,7 @@ public class CompraServlet extends HttpServlet {
                 var gt = root.get("guiaTransporte");
 
                 String rucOrRazonSocial = gt.path("rucGuia").asText("").trim();
-
                 guia.setRucGuia(rucOrRazonSocial);
-                guia.setRazonSocialGuia(gt.path("razonSocialGuia").asText(rucOrRazonSocial).trim());
 
                 guia.setTipoComprobante(gt.path("tipoComprobante").asText("").trim());
                 guia.setSerie(gt.path("serie").asText("").trim());
@@ -244,27 +243,38 @@ public class CompraServlet extends HttpServlet {
                 for (var c : root.get("cajasCompra")) {
                     Caja caja = new Caja();
                     caja.setIdCajaCompra(tempIdCaja);
-                    caja.setNombreCaja(c.path("nombreCaja").asText("").trim());
-                    caja.setCantidad(c.path("cantidad").asInt(0));
 
+                    String nombreCajaRaw = c.path("nombreCaja").asText("").trim();
+                    caja.setNombreCaja(nombreCajaRaw.isEmpty() ? "CAJA " + tempIdCaja : nombreCajaRaw);
+
+                    caja.setCantidad(0);
                     caja.setCostoCaja(BigDecimal.valueOf(c.path("costoCaja").asDouble(0)));
-                    cajasCompra.add(caja);
 
                     List<DetalleCaja> listaDetalles = new ArrayList<>();
+                    int cantidadTotalCaja = 0;
+
                     if (c.has("detalles")) {
                         for (var dc : c.get("detalles")) {
                             DetalleCaja detCaja = new DetalleCaja();
                             detCaja.setIdCajaCompra(tempIdCaja);
                             detCaja.setIdArticulo(dc.path("idArticulo").asInt(0));
 
-                            detCaja.setCantidad(BigDecimal.valueOf(dc.path("cantidad").asDouble(0)));
+                            int cantidadDetalle = dc.path("cantidad").asInt(0);
+                            detCaja.setCantidad(BigDecimal.valueOf(cantidadDetalle));
+
+                            cantidadTotalCaja += cantidadDetalle;
                             listaDetalles.add(detCaja);
                         }
                     }
+
+                    caja.setCantidad(cantidadTotalCaja);
+
+                    cajasCompra.add(caja);
                     detallesCajaMap.put(tempIdCaja, listaDetalles);
                     tempIdCaja++;
                 }
             }
+
 
             int idCompra = compraController.registrarCompra(
                     compra, guia, docRef, detalles, descuentos, cajasCompra, detallesCajaMap
@@ -284,11 +294,27 @@ public class CompraServlet extends HttpServlet {
             response.getWriter().write(gson.toJson(Map.of("success", false, "message", e.getMessage())));
         } catch (SQLIntegrityConstraintViolationException e) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
-            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de Integridad SQL: Verifique que no exista un comprobante duplicado (Serie/Correlativo).")));
+            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de Integridad SQL: Verifique que no exista un comprobante duplicado (Serie/Correlativo) o que una clave foránea no esté fallando.")));
         }
         catch (SQLException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de Base de Datos: " + e.getMessage())));
+
+            String errorMessage = "Error de Base de Datos: " + e.getMessage();
+            Throwable cause = e.getCause();
+            if (cause != null) {
+                errorMessage += " [Causa Raíz: " + cause.getMessage() + "]";
+            }
+
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String stackTrace = sw.toString();
+
+            response.getWriter().write(gson.toJson(Map.of(
+                    "success", false,
+                    "message", errorMessage,
+                    "details", "StackTrace: " + stackTrace
+            )));
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error Inesperado: " + e.getMessage())));

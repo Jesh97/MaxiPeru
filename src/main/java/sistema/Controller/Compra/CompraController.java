@@ -7,6 +7,7 @@ import java.sql.*;
 import java.sql.Date;
 import java.util.*;
 import java.text.SimpleDateFormat;
+import java.math.BigDecimal;
 
 public class CompraController implements CompraRepository {
 
@@ -14,9 +15,7 @@ public class CompraController implements CompraRepository {
 
     private Connection getConnection() throws SQLException {
         Connection conn = Conexion.obtenerConexion();
-        if (conn == null) {
-            throw new SQLException("No se pudo establecer la conexión a la base de datos.");
-        }
+        if (conn == null) throw new SQLException("No se pudo establecer la conexión a la base de datos.");
         return conn;
     }
 
@@ -27,33 +26,21 @@ public class CompraController implements CompraRepository {
         int idCompra = -1;
 
         try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
             try {
-                conn.setAutoCommit(false);
 
                 idCompra = registrarCompraCabecera(conn, compra);
-                if (idCompra <= 0) {
-                    throw new SQLException("El registro de la cabecera de compra falló, se obtuvo un ID inválido: " + idCompra);
-                }
-
-                if (compra.isHayTraslado() && guia != null) {
-                    registrarGuia(conn, idCompra, guia);
-                }
-
-                if (docRef != null &&
-                        (docRef.getNumeroCotizacion() != null || docRef.getNumeroPedido() != null)) {
-                    registrarReferencia(conn, idCompra, docRef);
-                }
+                if (idCompra <= 0) throw new SQLException("El registro de la cabecera de compra falló, se obtuvo un ID inválido: " + idCompra);
 
                 Map<Integer, Integer> tempIdToRealIdMap = new HashMap<>();
+
                 if (detalles != null) {
                     for (DetalleCompra detalle : detalles) {
                         int tempDetalleId = detalle.getIdDetalle();
                         detalle.setIdCompra(idCompra);
 
                         int idDetalleReal = registrarDetalleCompra(conn, detalle);
-                        if (idDetalleReal <= 0) {
-                            throw new SQLException("No se pudo registrar el detalle de compra y obtener su ID.");
-                        }
+                        if (idDetalleReal <= 0) throw new SQLException("No se pudo registrar el detalle de compra y obtener su ID.");
                         tempIdToRealIdMap.put(tempDetalleId, idDetalleReal);
 
                         if (detalle.getLotes() != null && !detalle.getLotes().isEmpty()) {
@@ -66,32 +53,24 @@ public class CompraController implements CompraRepository {
                     }
                 }
 
+                if (cajas != null && !cajas.isEmpty()) {
+                    registrarCajasYDetalles(conn, idCompra, cajas, detallesCaja);
+                }
+
                 if (descuentos != null) {
                     for (Descuento d : descuentos) {
                         if ("item".equalsIgnoreCase(d.getNivel())) {
                             int realIdDetalle = tempIdToRealIdMap.getOrDefault(d.getIdDetalle(), -1);
-                            if (realIdDetalle != -1) {
-                                registrarDescuentoItem(conn, realIdDetalle, d);
-                            }
+                            if (realIdDetalle != -1) registrarDescuentoItem(conn, realIdDetalle, d);
                         } else if ("global".equalsIgnoreCase(d.getNivel())) {
                             registrarDescuentoGlobal(conn, idCompra, d);
                         }
                     }
                 }
 
-                if (cajas != null) {
-                    for (Caja caja : cajas) {
-                        int tempIdCaja = caja.getIdCajaCompra();
-                        caja.setIdCompra(idCompra);
-                        int idCajaReal = registrarCajaCompra(conn, caja);
-
-                        if (idCajaReal > 0 && detallesCaja != null && detallesCaja.containsKey(tempIdCaja)) {
-                            for (DetalleCaja detCaja : detallesCaja.get(tempIdCaja)) {
-                                detCaja.setIdCajaCompra(idCajaReal);
-                                registrarDetalleCajaCompra(conn, detCaja);
-                            }
-                        }
-                    }
+                if (compra.isHayTraslado() && guia != null) registrarGuia(conn, idCompra, guia);
+                if (docRef != null && (docRef.getNumeroCotizacion() != null || docRef.getNumeroPedido() != null)) {
+                    registrarReferencia(conn, idCompra, docRef);
                 }
 
                 conn.commit();
@@ -155,11 +134,10 @@ public class CompraController implements CompraRepository {
                 }
 
                 if (rs.getInt("id_detalle") > 0) {
-                    List<Map<String, Object>> detalles = (List<Map<String, Object>>) compra.get("detalles");
+                    List<Map<String, Object>> detallesList = (List<Map<String, Object>>) compra.get("detalles");
                     int currentDetalleId = rs.getInt("id_detalle");
 
-                    boolean detalleExiste = detalles.stream()
-                            .anyMatch(d -> d.get("id_detalle").equals(currentDetalleId));
+                    boolean detalleExiste = detallesList.stream().anyMatch(d -> d.get("id_detalle").equals(currentDetalleId));
 
                     if (!detalleExiste) {
                         Map<String, Object> detalle = new HashMap<>();
@@ -174,7 +152,7 @@ public class CompraController implements CompraRepository {
                         detalle.put("total_detalle", rs.getBigDecimal("total_detalle"));
                         detalle.put("coste_unitario_transporte", rs.getBigDecimal("coste_unitario_transporte"));
                         detalle.put("coste_total_transporte", rs.getBigDecimal("coste_total_transporte"));
-                        detalles.add(detalle);
+                        detallesList.add(detalle);
                     }
                 }
 
@@ -218,14 +196,11 @@ public class CompraController implements CompraRepository {
     public boolean editarCompra(Compra compra, GuiaTransporte guia, List<DetalleCompra> detallesEditados,
                                 Map<Integer, Lote> lotesEditados) throws SQLException {
 
-        if (compra.getIdCompra() <= 0) {
-            throw new IllegalArgumentException("ID de compra inválido para la edición.");
-        }
+        if (compra.getIdCompra() <= 0) throw new IllegalArgumentException("ID de compra inválido para la edición.");
 
         try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
             try {
-                conn.setAutoCommit(false);
-
                 if (detallesEditados != null) {
                     for (DetalleCompra detalle : detallesEditados) {
                         editarDetalleCompra(conn, detalle);
@@ -238,14 +213,10 @@ public class CompraController implements CompraRepository {
                 }
 
                 editarCompraCabecera(conn, compra);
-
-                if (compra.isHayTraslado() && guia != null) {
-                    editarGuiaTransporte(conn, compra.getIdCompra(), guia);
-                }
+                if (compra.isHayTraslado() && guia != null) editarGuiaTransporte(conn, compra.getIdCompra(), guia);
 
                 conn.commit();
                 return true;
-
             } catch (SQLException e) {
                 conn.rollback();
                 throw new SQLException("Error al editar la compra. Transacción revertida.", e);
@@ -471,28 +442,47 @@ public class CompraController implements CompraRepository {
         }
     }
 
-    private int registrarCajaCompra(Connection conn, Caja caja) throws SQLException {
-        int idCajaCompra;
-        String sql = "{call sp_agregar_caja_compra(?, ?, ?, ?, ?)}";
+    private void registrarCajasYDetalles(Connection conn, int idCompra, List<Caja> cajas, Map<Integer, List<DetalleCaja>> detallesCajaMap) throws SQLException {
+        for (Caja caja : cajas) {
+            int idCajaCompraReal = insertarCajaCompraSP(conn, idCompra, caja);
+
+            if (idCajaCompraReal <= 0) {
+                throw new SQLException("Error: No se pudo registrar la cabecera de la caja o se obtuvo un ID inválido.");
+            }
+
+            List<DetalleCaja> detalles = detallesCajaMap.getOrDefault(caja.getIdCajaCompra(), Collections.emptyList());
+
+            for (DetalleCaja detalle : detalles) {
+                insertarDetalleCajaCompraSP(conn, idCajaCompraReal, detalle);
+            }
+        }
+    }
+
+    private int insertarCajaCompraSP(Connection conn, int idCompra, Caja caja) throws SQLException {
+        int idCajaCompra = -1;
+        String sql = "{call sp_insertar_caja_compra(?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
             int i = 1;
-            cs.setInt(i++, caja.getIdCompra());
+            cs.setInt(i++, idCompra);
             cs.setString(i++, caja.getNombreCaja());
             cs.setInt(i++, caja.getCantidad());
-            cs.setBigDecimal(i++, caja.getCostoCaja());
+
+            cs.setBigDecimal(i++, caja.getCostoCaja() != null ? caja.getCostoCaja() : BigDecimal.ZERO);
             cs.registerOutParameter(i, Types.INTEGER);
+
             cs.execute();
             idCajaCompra = cs.getInt(i);
         }
         return idCajaCompra;
     }
 
-    private void registrarDetalleCajaCompra(Connection conn, DetalleCaja detalle) throws SQLException {
-        String sql = "{call sp_agregar_detalle_caja_compra(?, ?, ?)}";
+    private void insertarDetalleCajaCompraSP(Connection conn, int idCajaCompra, DetalleCaja detalle) throws SQLException {
+        String sql = "{call sp_insertar_detalle_caja_compra(?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setInt(1, detalle.getIdCajaCompra());
+            cs.setInt(1, idCajaCompra);
             cs.setInt(2, detalle.getIdArticulo());
-            cs.setBigDecimal(3, detalle.getCantidad());
+
+            cs.setBigDecimal(3, detalle.getCantidad() != null ? detalle.getCantidad() : BigDecimal.ZERO);
             cs.execute();
         }
     }

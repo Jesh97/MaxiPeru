@@ -785,6 +785,84 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function obtenerDatosCompra() {
+        const detalles = [];
+        const mapaArticulosValidados = {};
+
+        $$('#tablaProductosGeneral tr[data-fila-id]').forEach(trGeneral => {
+            const filaId = trGeneral.dataset.filaId;
+            const trFinanciero = $(`#tablaProductosFinanciero tr[data-fila-id="${filaId}"]`);
+            const cantidad = parseInt(trGeneral.querySelector('.cantidad')?.value) || 0;
+            const precioUnitario = parseFloat(trGeneral.querySelector('.precioUnitario')?.value) || 0;
+            const idArticulo = parseInt(trGeneral.querySelector('.idProducto')?.value) || 0;
+
+            if (cantidad === 0 && precioUnitario === 0 && !trFinanciero.querySelector('.bonificacion')?.checked) return;
+
+            if (idArticulo > 0) {
+                mapaArticulosValidados[filaId] = idArticulo;
+            }
+
+            const productoDetalle = {
+                idArticulo: idArticulo,
+                cantidad: cantidad,
+                precioUnitario: precioUnitario.toFixed(2),
+                bonificacion: trFinanciero.querySelector('.bonificacion')?.checked ?? false,
+                descuentoItemTipo: trFinanciero.dataset.descuentoItemTipo,
+                descuentoItemValor: (parseFloat(trFinanciero.dataset.descuentoItemValor) || 0).toFixed(2),
+                descuentoItemMotivo: trFinanciero.dataset.descuentoItemMotivo,
+                tasaIgvItem: (parseFloat(trFinanciero.dataset.tasaIgvItem) || IGV_RATE).toFixed(2),
+                costeUnitarioTransporte: (parseFloat(trGeneral.dataset.costeUnitarioTransporte) || 0).toFixed(4),
+                total: parseFloat(trFinanciero.dataset.totalDetalle) || 0,
+                pesoTotal: parseFloat(trGeneral.dataset.pesoTotal) || 0,
+                lotes: lotes[filaId] || []
+            };
+            detalles.push(productoDetalle);
+        });
+        return { detalles, mapaArticulosValidados };
+    }
+
+    function obtenerCajasCompraJSON(mapaArticulosValidados) {
+        const cajasCompra = [];
+        let tempIdCaja = 1;
+
+        if (typeof cajas !== 'undefined' && cajas.length > 0) {
+            cajas.forEach(caja => {
+                let nombreCaja = (caja.nombre || '').trim();
+
+                if (nombreCaja.length === 0) {
+                    nombreCaja = 'Caja S/N ' + tempIdCaja;
+                }
+
+                const detallesCaja = [];
+
+                if (caja.productos && caja.productos.length > 0) {
+                    caja.productos.forEach(prod => {
+
+                        const idArticulo = mapaArticulosValidados[prod.filaId] || 0;
+
+                        if (idArticulo > 0) {
+                            detallesCaja.push({
+                                idArticulo: idArticulo,
+                                cantidad: prod.cantidad
+                            });
+                        }
+                    });
+                }
+
+                if (detallesCaja.length > 0) {
+                    cajasCompra.push({
+                        idCajaCompra: tempIdCaja++,
+                        nombreCaja: nombreCaja,
+                        cantidad: caja.cantidad || 1,
+                        costoCaja: parseFloat(caja.costo) || 0,
+                        detalles: detallesCaja
+                    });
+                }
+            });
+        }
+        return cajasCompra;
+    }
+
     if (guardarCompraBtn) {
         guardarCompraBtn.addEventListener('click', async (e) => {
             e.preventDefault();
@@ -794,12 +872,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const detalles = [];
+            const mapaArticulosPorFilaId = {};
+
             $$('#tablaProductosGeneral tr[data-fila-id]').forEach(tr => {
                 const filaId = tr.dataset.filaId;
                 const trFinanciero = $(`#tablaProductosFinanciero tr[data-fila-id="${filaId}"]`);
                 const trGuiaTransporte = $(`#tablaProductosGuiaTransporte tr[data-fila-id="${filaId}"]`);
 
-                const idArticulo = tr.querySelector('.idProducto')?.value;
+                const idArticuloRaw = tr.querySelector('.idProducto')?.value;
+                const idArticulo = parseInt(idArticuloRaw, 10) || 0;
+
                 const cantidad = parseFloat(tr.querySelector('.cantidad')?.value) || 0;
                 const precioUnitario = parseFloat(tr.querySelector('.precioUnitario')?.value) || 0;
                 const costoUnitarioTransporte = parseFloat(trGuiaTransporte.querySelector('.costoUnitTransporte')?.value) || 0;
@@ -822,7 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const bonificacion = parseFloat(trFinanciero.dataset.bonificacionValor) || 0;
 
                 detalles.push({
-                    idArticulo: parseInt(idArticulo, 10) || 0,
+                    idArticulo: idArticulo,
                     cantidad: cantidad,
                     precioUnitario: precioUnitario,
                     bonificacion: bonificacion,
@@ -835,6 +917,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     descuentos: descuentos,
                     lotes: lotes[filaId] || []
                 });
+
+                if (idArticulo > 0) {
+                    mapaArticulosPorFilaId[filaId] = idArticulo;
+                }
             });
 
             if (detalles.length === 0) {
@@ -852,7 +938,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (monedaId <= 0) { alert('Debe seleccionar una moneda válida.'); return; }
 
             const descuentosGlobales = [];
-            if (descuentoSi?.checked && tipoDescuentoSelect?.value === 'global') {
+            if ($('#descuentoSi')?.checked && $('#tipoDescuento')?.value === 'global') {
                 const tipoValor = tipoValorDescuentoSelect.value;
                 const valorDescuentoInputVal = valorDescuentoInput.value.trim();
                 const valor = parseFloat(valorDescuentoInputVal) || 0;
@@ -883,7 +969,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 referencia: referencia,
                 guiaTransporte: guia,
                 descuentosGlobales: descuentosGlobales,
-                cajasCompra: cajas
+                cajasCompra: obtenerCajasCompraJSON(mapaArticulosPorFilaId)
             };
 
             try {
@@ -900,7 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 modalConfirm.show();
 
                 if (response.ok) {
-                    if (formCompra) formCompra.reset();
+                    if ($('#formCompra')) $('#formCompra').reset();
                     $$('tbody').forEach(tbody => tbody.innerHTML = '');
                     crearFilaProducto();
                     actualizarTotales();
@@ -1122,6 +1208,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modalCajas.hide();
         });
     }
+
 
     function obtenerCajasCompraParaEnvio() {
         const cajasCompraParaEnvio = [];

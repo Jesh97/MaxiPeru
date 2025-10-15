@@ -99,6 +99,31 @@ BEGIN
       AND a.id_tipo_articulo = 2;
 END$$
 
+DROP PROCEDURE IF EXISTS `SP_VerLotesPorArticulo`$$
+CREATE PROCEDURE SP_VerLotesPorArticulo(
+    IN p_id_articulo INT
+)
+BEGIN
+    SELECT
+        il.id_lote AS ID_Lote,
+        il.numero_lote AS Número_Lote,
+        il.fecha_vencimiento AS Fecha_Vencimiento,
+        il.cantidad_disponible AS Cantidad_Disponible,
+        il.fecha_ingreso AS Fecha_Ingreso_Lote,
+        art.descripcion AS Nombre_Articulo,
+        dc.precio_unitario AS Precio_Compra_Unitario -- Opcional: Para referencia
+    FROM
+        inventario_lote il
+    INNER JOIN
+        articulo art ON il.id_articulo = art.id
+    LEFT JOIN
+        detalle_compra dc ON il.id_detalle_compra = dc.id_detalle
+    WHERE
+        il.id_articulo = p_id_articulo
+    ORDER BY
+        il.fecha_vencimiento ASC;
+END$$
+
 -- ******************************************************
 -- 2. GESTIÓN DE CLIENTES
 -- ******************************************************
@@ -214,9 +239,37 @@ BEGIN
         OR razonSocial LIKE CONCAT('%', p_busqueda, '%');
 END$$
 
--- ******************************************************
--- 4. GESTIÓN DE COMPRAS
--- ******************************************************
+
+-- Gestion de compras
+
+DROP PROCEDURE IF EXISTS `sp_insertar_caja_compra`$$
+CREATE PROCEDURE `sp_insertar_caja_compra`(
+    IN p_id_compra INT,
+    IN p_nombre_caja VARCHAR(255),
+    IN p_cantidad INT,
+    IN p_costo_caja DECIMAL(12,2),
+    OUT p_id_caja_compra INT
+)
+BEGIN
+    INSERT INTO caja_compra (id_compra, nombre_caja, cantidad, costo_caja)
+    VALUES (p_id_compra, p_nombre_caja, p_cantidad, p_costo_caja);
+    SET p_id_caja_compra = LAST_INSERT_ID();
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_insertar_detalle_caja_compra`$$
+CREATE PROCEDURE `sp_insertar_detalle_caja_compra`(
+    IN p_id_caja_compra INT,
+    IN p_id_articulo INT,
+    IN p_cantidad DECIMAL(12,2)
+)
+BEGIN
+    INSERT INTO detalle_caja_compra (id_caja_compra, id_articulo, cantidad)
+    VALUES (p_id_caja_compra, p_id_articulo, p_cantidad);
+
+    UPDATE articulo
+    SET cantidad = cantidad + p_cantidad
+    WHERE id = p_id_articulo;
+END$$
 
 DROP PROCEDURE IF EXISTS `sp_registrar_compra`$$
 CREATE PROCEDURE `sp_registrar_compra`(
@@ -260,7 +313,6 @@ BEGIN
         p_coste_unitario_transporte, p_coste_total_transporte,
         p_precio_con_descuento, p_igv_insumo, p_total, p_peso_total
     );
-
     SET p_id_detalle = LAST_INSERT_ID();
 END$$
 
@@ -280,30 +332,7 @@ BEGIN
         p_id_articulo, p_id_detalle_compra, p_numero_lote, p_fecha_vencimiento,
         p_cantidad_lote, p_cantidad_lote
     );
-
     UPDATE articulo SET cantidad = cantidad + p_cantidad_lote WHERE id = p_id_articulo;
-END$$
-
-DROP PROCEDURE IF EXISTS `sp_agregar_caja_compra`$$
-CREATE PROCEDURE `sp_agregar_caja_compra`(
-    IN p_id_compra INT, IN p_nombre_caja VARCHAR(100), IN p_cantidad INT, IN p_costo_caja DECIMAL(12,2),
-    OUT p_id_caja_compra INT
-)
-BEGIN
-    INSERT INTO caja_compra (id_compra, nombre_caja, cantidad, costo_caja)
-    VALUES (p_id_compra, p_nombre_caja, p_cantidad, p_costo_caja);
-    SET p_id_caja_compra = LAST_INSERT_ID();
-END$$
-
-DROP PROCEDURE IF EXISTS `sp_agregar_detalle_caja_compra`$$
-CREATE PROCEDURE `sp_agregar_detalle_caja_compra`(
-    IN p_id_caja_compra INT, IN p_id_articulo INT, IN p_cantidad DECIMAL(12,2)
-)
-BEGIN
-    INSERT INTO detalle_caja_compra (id_caja_compra, id_articulo, cantidad)
-    VALUES (p_id_caja_compra, p_id_articulo, p_cantidad);
-
-    UPDATE articulo SET cantidad = cantidad + p_cantidad WHERE id = p_id_articulo;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_referencia_compra`$$
@@ -344,7 +373,7 @@ BEGIN
     SELECT
         c.id_compra, c.fecha_emision, c.fecha_vencimiento, tc.nombre AS tipo_comprobante, c.serie, c.correlativo,
         mo.nombre AS moneda, c.tipo_cambio, c.subtotal, c.igv, c.total, c.total_peso, c.coste_transporte,
-        c.observacion, p.id AS id_proveedor, p.ruc, p.razonSocial AS RAZON_FINAL, p.direccion, p.telefono, -- <--- CAMBIO AQUÍ
+        c.observacion, p.id AS id_proveedor, p.ruc, p.razonSocial AS RAZON_FINAL, p.direccion, p.telefono,
         p.correo, p.ciudad, dc.id_detalle, dc.id_articulo, a.codigo AS codigo_articulo,
         a.descripcion AS descripcion_articulo, dc.cantidad, dc.precio_unitario, dc.coste_unitario_transporte,
         dc.coste_total_transporte, dc.precio_con_descuento, dc.igv_insumo, dc.total AS total_detalle,
@@ -352,7 +381,8 @@ BEGIN
         gt.tipo_comprobante AS tipo_comprobante_guia, gt.serie AS serie_guia, gt.correlativo AS correlativo_guia,
         gt.serie_guia_transporte, gt.correlativo_guia_transporte, gt.ciudad_traslado,
         gt.coste_total_transporte AS coste_transporte_guia, gt.peso AS peso_guia, gt.fecha_pedido,
-        gt.fecha_entrega, rc.id_referencia, rc.numero_cotizacion, rc.numero_pedido
+        gt.fecha_entrega, gt.punto_partida, gt.punto_llegada,
+        rc.id_referencia, rc.numero_cotizacion, rc.numero_pedido
     FROM compra c
     INNER JOIN proveedor p ON c.id_proveedor = p.id
     INNER JOIN tipo_comprobante tc ON c.id_tipo_comprobante = tc.id
@@ -721,34 +751,6 @@ CREATE PROCEDURE `sp_agregar_descuento_item`(
 BEGIN
     INSERT INTO descuento (id_detalle_compra, id_detalle_venta, motivo, tipo_aplicacion, tipo_valor, valor, tasa_igv)
     VALUES (p_id_detalle_compra, p_id_detalle_venta, p_motivo, 'item', p_tipo_valor, p_valor, p_tasa_igv);
-END$$
-
-DROP PROCEDURE IF EXISTS `sp_agregar_guia_transporte`$$
-CREATE PROCEDURE `sp_agregar_guia_transporte`(
-    IN p_id_compra INT, IN p_id_venta INT, IN p_tipo_documento_ref ENUM('compra', 'venta'), IN p_ruc_guia VARCHAR(20),
-    IN p_razon_social_guia VARCHAR(255), IN p_fecha_emision DATE, IN p_tipo_comprobante VARCHAR(50),
-    IN p_serie VARCHAR(20), IN p_correlativo VARCHAR(50), IN p_serie_guia_transporte VARCHAR(20),
-    IN p_correlativo_guia_transporte VARCHAR(50), IN p_ciudad_traslado VARCHAR(100), IN p_punto_partida VARCHAR(255),
-    IN p_punto_llegada VARCHAR(255), IN p_coste_total_transporte DECIMAL(12,2), IN p_peso DECIMAL(12,3),
-    IN p_fecha_pedido DATE, IN p_fecha_entrega DATE, IN p_fecha_traslado DATE, IN p_observaciones TEXT,
-    IN p_modalidad_transporte ENUM('publico', 'privado'), IN p_ruc_empresa VARCHAR(20),
-    IN p_razon_social_empresa VARCHAR(255), IN p_marca_vehiculo VARCHAR(100),
-    IN p_dni_conductor VARCHAR(20), IN p_nombre_conductor VARCHAR(255)
-)
-BEGIN
-    INSERT INTO guia_transporte (
-        id_compra, id_venta, tipo_documento_ref, ruc_guia, razon_social_guia, fecha_emision, tipo_comprobante,
-        serie, correlativo, serie_guia_transporte, correlativo_guia_transporte,
-        ciudad_traslado, punto_partida, punto_llegada, coste_total_transporte, peso, fecha_pedido, fecha_entrega,
-        fecha_traslado, observaciones, modalidad_transporte, ruc_empresa, razon_social_empresa, marca_vehiculo,
-        dni_conductor, nombre_conductor
-    ) VALUES (
-        p_id_compra, p_id_venta, p_tipo_documento_ref, p_ruc_guia, p_razon_social_guia, p_fecha_emision, p_tipo_comprobante,
-        p_serie, p_correlativo, p_serie_guia_transporte, p_correlativo_guia_transporte,
-        p_ciudad_traslado, p_punto_partida, p_punto_llegada, p_coste_total_transporte, p_peso, p_fecha_pedido, p_fecha_entrega,
-        p_fecha_traslado, p_observaciones, p_modalidad_transporte, p_ruc_empresa, p_razon_social_empresa, p_marca_vehiculo,
-        p_dni_conductor, p_nombre_conductor
-    );
 END$$
 
 DELIMITER ;
