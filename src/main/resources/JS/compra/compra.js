@@ -1214,7 +1214,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
     function obtenerCajasCompraParaEnvio() {
         const cajasCompraParaEnvio = [];
         cajas.forEach(caja => {

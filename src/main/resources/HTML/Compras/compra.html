@@ -173,6 +173,25 @@
                     </div>
                 </div>
 
+                <div class="col-md-5 d-flex align-items-end">
+                    <div class="w-100">
+                        <label class="form-label small-muted">¿Costo de Transporte Condicional?</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="aplicaCostoCondicional" id="costoCondicionalSi" value="si">
+                                <label class="form-check-label small-muted" for="costoCondicionalSi">Sí</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="aplicaCostoCondicional" id="costoCondicionalNo" value="no" checked>
+                                <label class="form-check-label small-muted" for="costoCondicionalNo">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="montoMinimoCondicion" value="" />
+                <input type="hidden" id="costoAdicionalAplicado" value="" />
+
                 <div id="contenedorBtnGuia" style="display:flex;">
                     <button id="btnGuia" type="button" class="btn btn-outline-primary me-2">Guía de Transporte</button>
                     <button type="button" id="btnReferencia" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Agregar datos de referencia">
@@ -367,7 +386,6 @@
     </form>
 </main>
 
-<!-- Modal de Guía de Transporte (MODIFICADO) -->
 <div class="modal fade" id="modalGuia" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
