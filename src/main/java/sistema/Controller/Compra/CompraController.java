@@ -130,7 +130,7 @@ public class CompraController implements CompraRepository {
                     compra.put("proveedor", proveedor);
 
                     compra.put("detalles", new ArrayList<>());
-                    compra.put("cajas", new ArrayList<>());
+                    compra.put("cajas_compra", new ArrayList<>());
                     compra.put("guia", null);
                     compra.put("referencia", null);
 
@@ -152,7 +152,6 @@ public class CompraController implements CompraRepository {
                         detalle.put("id_articulo", rs.getInt("id_articulo"));
                         detalle.put("codigo_articulo", rs.getString("codigo_articulo"));
                         detalle.put("descripcion_articulo", rs.getString("descripcion_articulo"));
-                        detalle.put("id_unidad_articulo", rs.getInt("id_unidad_articulo"));
                         detalle.put("cantidad", rs.getBigDecimal("cantidad"));
                         detalle.put("precio_unitario", rs.getBigDecimal("precio_unitario"));
                         detalle.put("peso_total", rs.getBigDecimal("peso_total"));
@@ -191,17 +190,17 @@ public class CompraController implements CompraRepository {
                         caja = new LinkedHashMap<>();
                         caja.put("id_caja_compra", idCaja);
                         caja.put("nombre_caja", rs.getString("nombre_caja"));
-                        caja.put("cantidad_total_articulos_caja", rs.getBigDecimal("cantidad_total_articulos_caja"));
+                        caja.put("cantidad", rs.getBigDecimal("cantidad_total_articulos_caja"));
                         caja.put("costo_caja", rs.getBigDecimal("costo_caja"));
-                        caja.put("detalles_caja", new ArrayList<>());
+                        caja.put("detalles", new ArrayList<>());
 
-                        ((List<Map<String, Object>>) compra.get("cajas")).add(caja);
+                        ((List<Map<String, Object>>) compra.get("cajas_compra")).add(caja);
                         currentCajaMap.put(idCaja, caja);
                     }
 
                     int idDetalleCaja = rs.getInt("id_detalle_caja");
                     if (idDetalleCaja > 0) {
-                        List<Map<String, Object>> detallesCajaList = (List<Map<String, Object>>) caja.get("detalles_caja");
+                        List<Map<String, Object>> detallesCajaList = (List<Map<String, Object>>) caja.get("detalles");
 
                         if (detallesCajaList.stream().noneMatch(d -> d.get("id_detalle_caja").equals(idDetalleCaja))) {
                             Map<String, Object> detalleCaja = new LinkedHashMap<>();

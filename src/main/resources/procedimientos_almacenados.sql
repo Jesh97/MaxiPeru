@@ -241,7 +241,6 @@ END$$
 
 
 -- Gestion de compras
-
 DROP PROCEDURE IF EXISTS `sp_insertar_caja_compra`$$
 CREATE PROCEDURE `sp_insertar_caja_compra`(
     IN p_id_compra INT,
@@ -256,7 +255,7 @@ BEGIN
     SET p_id_caja_compra = LAST_INSERT_ID();
 END$$
 
-DROP PROCEDURE IF EXISTS `sp_insertar_detalle_caja_compra`$$
+DROP PROCEDURE IF EXISTS `sp_insertar_detalle_caja_compra`;
 CREATE PROCEDURE `sp_insertar_detalle_caja_compra`(
     IN p_id_caja_compra INT,
     IN p_id_articulo INT,
@@ -265,10 +264,6 @@ CREATE PROCEDURE `sp_insertar_detalle_caja_compra`(
 BEGIN
     INSERT INTO detalle_caja_compra (id_caja_compra, id_articulo, cantidad)
     VALUES (p_id_caja_compra, p_id_articulo, p_cantidad);
-
-    UPDATE articulo
-    SET cantidad = cantidad + p_cantidad
-    WHERE id = p_id_articulo;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_registrar_compra`$$
@@ -346,7 +341,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_guia_transporte_compra`$$
 CREATE PROCEDURE `sp_agregar_guia_transporte_compra`(
-    IN p_id_compra INT, IN p_ruc_guia VARCHAR(20), IN p_razon_social_guia VARCHAR(255), IN p_fecha_emision DATE,
+    IN p_id_compra INT, IN p_ruc_guia VARCHAR(255), IN p_fecha_emision DATE,
     IN p_tipo_comprobante VARCHAR(50), IN p_serie VARCHAR(10), IN p_correlativo VARCHAR(20),
     IN p_ciudad_traslado VARCHAR(100), IN p_punto_partida VARCHAR(255), IN p_punto_llegada VARCHAR(255),
     IN p_serie_guia_transporte VARCHAR(10), IN p_correlativo_guia_transporte VARCHAR(20),
@@ -355,12 +350,12 @@ CREATE PROCEDURE `sp_agregar_guia_transporte_compra`(
 )
 BEGIN
     INSERT INTO guia_transporte (
-        id_compra, tipo_documento_ref, ruc_guia, razon_social_guia, fecha_emision, tipo_comprobante,
+        id_compra, tipo_documento_ref, ruc_guia, fecha_emision, tipo_comprobante,
         serie, correlativo, ciudad_traslado, punto_partida, punto_llegada,
         serie_guia_transporte, correlativo_guia_transporte, coste_total_transporte,
         peso, fecha_pedido, fecha_entrega
     ) VALUES (
-        p_id_compra, 'compra', p_ruc_guia, p_razon_social_guia, p_fecha_emision, p_tipo_comprobante,
+        p_id_compra, 'compra', p_ruc_guia, p_fecha_emision, p_tipo_comprobante,
         p_serie, p_correlativo, p_ciudad_traslado, p_punto_partida, p_punto_llegada,
         p_serie_guia_transporte, p_correlativo_guia_transporte, p_coste_total_transporte,
         p_peso, p_fecha_pedido, p_fecha_entrega
@@ -372,16 +367,19 @@ CREATE PROCEDURE `sp_listar_compras_final`()
 BEGIN
     SELECT
         c.id_compra, c.fecha_emision, c.fecha_vencimiento, tc.nombre AS tipo_comprobante, c.serie, c.correlativo,
-        mo.nombre AS moneda, c.tipo_cambio, c.subtotal, c.igv, c.total, c.total_peso, c.coste_transporte,
-        c.observacion, p.id AS id_proveedor, p.ruc, p.razonSocial AS RAZON_FINAL, p.direccion, p.telefono,
-        p.correo, p.ciudad, dc.id_detalle, dc.id_articulo, a.codigo AS codigo_articulo,
-        a.descripcion AS descripcion_articulo, dc.cantidad, dc.precio_unitario, dc.coste_unitario_transporte,
-        dc.coste_total_transporte, dc.precio_con_descuento, dc.igv_insumo, dc.total AS total_detalle,
-        dc.peso_total, gt.id_guia, gt.ruc_guia, gt.razon_social_guia, gt.fecha_emision AS fecha_emision_guia,
+        mo.nombre AS moneda, c.tipo_cambio, c.subtotal, c.igv, c.total, c.total_peso, c.coste_transporte, c.observacion,
+        p.id AS id_proveedor, p.ruc, p.razonSocial AS razon_social, p.direccion, p.telefono, p.correo, p.ciudad,
+        dc.id_detalle, dc.id_articulo, a.codigo AS codigo_articulo, a.descripcion AS descripcion_articulo,
+        dc.cantidad, dc.precio_unitario, dc.coste_unitario_transporte, dc.coste_total_transporte, dc.precio_con_descuento,
+        dc.igv_insumo, dc.total AS total_detalle, dc.peso_total,
+        il.id_lote, il.numero_lote, il.cantidad_ingreso AS cantidad_lote, il.fecha_vencimiento AS fecha_vencimiento_lote,
+        cc.id_caja_compra, cc.nombre_caja, cc.cantidad AS cantidad_total_articulos_caja, cc.costo_caja,
+        dcc.id_detalle_caja, dcc.id_articulo AS id_articulo_en_caja, dcc.cantidad AS cantidad_en_caja,
+        gt.id_guia, gt.ruc_guia, gt.razon_social_guia, gt.fecha_emision AS fecha_emision_guia,
         gt.tipo_comprobante AS tipo_comprobante_guia, gt.serie AS serie_guia, gt.correlativo AS correlativo_guia,
         gt.serie_guia_transporte, gt.correlativo_guia_transporte, gt.ciudad_traslado,
-        gt.coste_total_transporte AS coste_transporte_guia, gt.peso AS peso_guia, gt.fecha_pedido,
-        gt.fecha_entrega, gt.punto_partida, gt.punto_llegada,
+        gt.coste_total_transporte AS coste_transporte_guia, gt.peso AS peso_guia, gt.fecha_pedido, gt.fecha_entrega,
+        gt.punto_partida, gt.punto_llegada,
         rc.id_referencia, rc.numero_cotizacion, rc.numero_pedido
     FROM compra c
     INNER JOIN proveedor p ON c.id_proveedor = p.id
@@ -389,9 +387,13 @@ BEGIN
     INNER JOIN moneda mo ON c.id_moneda = mo.id_moneda
     LEFT JOIN detalle_compra dc ON c.id_compra = dc.id_compra
     LEFT JOIN articulo a ON dc.id_articulo = a.id
+    LEFT JOIN unidad_medida um ON a.id_unidad = um.id_unidad
+    LEFT JOIN inventario_lote il ON dc.id_detalle = il.id_detalle_compra
+    LEFT JOIN caja_compra cc ON c.id_compra = cc.id_compra
+    LEFT JOIN detalle_caja_compra dcc ON cc.id_caja_compra = dcc.id_caja_compra
     LEFT JOIN guia_transporte gt ON c.id_compra = gt.id_compra
     LEFT JOIN referencia_compra rc ON c.id_compra = rc.id_compra
-    ORDER BY c.id_compra DESC, dc.id_detalle ASC;
+    ORDER BY c.id_compra DESC, dc.id_detalle ASC, il.id_lote ASC, cc.id_caja_compra ASC;
 END$$
 
 -- 1. PROCEDIMIENTO PARA EDITAR LA COMPRA PRINCIPAL

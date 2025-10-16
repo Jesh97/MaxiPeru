@@ -3,33 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listado de Compras</title>
+    <title>Listado de Compras - Premium</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="../../CSS/Compra/listarCompra.css">
 </head>
-<body class="font-sans antialiased bg-gray-100 text-gray-800">
+<body class="font-sans antialiased bg-gray-50 text-gray-800 min-h-screen flex flex-col">
 
-<div id="customMessageBox" class="fixed top-4 right-4 z-50 transition-opacity duration-300 opacity-0"></div>
+<div id="customMessageBox" class="fixed top-6 right-6 z-[100] transition-opacity duration-300 opacity-0"></div>
 
-<div class="px-4 sm:px-6 py-6">
-    <h2 class="text-4xl font-extrabold text-center text-indigo-700 mb-6 pb-4 border-b-4 border-indigo-100/50">
-        📦 REGISTRO DE COMPRAS CENTRALIZADO
+<div class="flex-1 container mx-auto px-4 sm:px-6 py-10 w-full max-w-8xl">
+    <h2 class="text-5xl font-extrabold text-center text-indigo-900 mb-10 pb-4 border-b-4 border-indigo-300 shadow-md bg-white p-4 rounded-xl tracking-tight">
+        <i class="bi bi-box-seam text-indigo-500 mr-3"></i> REGISTRO DE COMPRAS CENTRALIZADO
     </h2>
 
-    <div class="shadow-3xl rounded-2xl overflow-hidden bg-white border border-gray-200">
+    <div class="shadow-2xl rounded-2xl overflow-hidden bg-white border border-gray-200/70">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200" id="compras-table">
-                <thead class="bg-indigo-700 text-white uppercase tracking-wider text-xs">
+                <thead class="bg-indigo-700 text-white uppercase tracking-wider text-xs sticky top-0 z-10">
                 <tr>
-                    <th class="px-4 py-3 font-semibold">Fecha Emisión</th>
-                    <th class="px-4 py-3 font-semibold">Fecha Vencimiento</th>
-                    <th class="px-4 py-3 font-semibold">Comprobante</th>
-                    <th class="px-4 py-3 font-semibold">Serie-Correlativo</th>
-                    <th class="px-4 py-3 font-semibold">Proveedor</th>
-                    <th class="px-4 py-3 font-semibold">Moneda</th>
-                    <th class="px-4 py-3 font-semibold">Total</th>
-                    <th class="px-4 py-3 font-semibold">Acciones</th>
+                    <th class="px-4 py-4 font-semibold text-center">Fecha Emisión</th>
+                    <th class="px-4 py-4 font-semibold text-center">Fecha Vencimiento</th>
+                    <th class="px-4 py-4 font-semibold text-left">Comprobante</th>
+                    <th class="px-4 py-4 font-semibold text-center">Serie-Correlativo</th>
+                    <th class="px-4 py-4 font-semibold text-left">Proveedor</th>
+                    <th class="px-4 py-4 font-semibold text-center">Moneda</th>
+                    <th class="px-4 py-4 font-semibold text-center">Total</th>
+                    <th class="px-4 py-4 font-semibold text-center">Acciones</th>
                 </tr>
                 </thead>
                 <tbody id="tabla-compras" class="bg-white divide-y divide-gray-100 text-sm"></tbody>
@@ -38,159 +37,141 @@
     </div>
 </div>
 
-<div id="detallesModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="detallesModalLabel">
+<div id="detallesModal" class="fixed inset-0 bg-gray-900 bg-opacity-80 hidden z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="detallesModalLabel">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-xl shadow-3xl w-full max-w-7xl my-8 transform transition-all">
+        <div class="bg-white rounded-3xl shadow-3xl w-full max-w-8xl my-8 transform transition-all duration-300 ease-in-out">
             <div class="modal-content">
-                <div class="flex justify-between items-center p-6 bg-gradient-to-r from-indigo-700 to-indigo-900 text-white rounded-t-xl border-b-4 border-indigo-900/50">
-                    <h5 class="text-2xl font-bold" id="detallesModalLabel">Detalles de la Compra</h5>
-                    <button type="button" class="text-white hover:text-gray-200 focus:outline-none" onclick="document.getElementById('detallesModal').classList.add('hidden')" aria-label="Cerrar">
-                        <i class="bi bi-x-lg text-2xl"></i>
+                <div class="flex justify-between items-center p-6 bg-gradient-to-r from-indigo-700 to-indigo-900 text-white rounded-t-3xl border-b-4 border-indigo-900/50">
+                    <h5 class="text-3xl font-extrabold tracking-wide" id="detallesModalLabel"><i class="bi bi-receipt mr-2"></i> Detalles de la Compra</h5>
+                    <button type="button" class="text-white hover:text-gray-200 focus:outline-none transition" onclick="document.getElementById('detallesModal').classList.add('hidden')" aria-label="Cerrar">
+                        <i class="bi bi-x-lg text-2xl font-bold"></i>
                     </button>
                 </div>
 
                 <div class="p-8">
 
-                    <div id="summary-cards" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-
-                        <div id="summary-card-total" class="p-5 bg-green-500 rounded-xl text-white shadow-lg transition-transform hover:scale-[1.02] duration-300">
-                            <i class="bi bi-currency-dollar text-3xl float-right"></i>
-                            <p class="text-sm font-medium">TOTAL FACTURA</p>
+                    <div id="summary-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                        <div class="p-5 bg-green-600 rounded-xl text-white shadow-xl transition-transform hover:scale-[1.02] duration-300 transform border-b-4 border-green-800">
+                            <i class="bi bi-currency-dollar text-3xl float-right opacity-80"></i>
+                            <p class="text-sm font-medium uppercase tracking-wider">TOTAL FACTURA</p>
                             <h3 class="text-3xl font-extrabold mt-1" id="total-final-display">S/ 0.00</h3>
                         </div>
-
-                        <div id="summary-card-comprobante" class="p-5 bg-white rounded-xl shadow-lg border-l-4 border-indigo-500 transition-transform hover:scale-[1.02] duration-300">
-                            <i class="bi bi-receipt text-3xl float-right text-indigo-500"></i>
-                            <p class="text-sm font-medium text-gray-500">COMPROBANTE</p>
-                            <h3 class="text-xl font-bold mt-1 text-gray-800" id="comprobante-display"></h3>
+                        <div class="p-5 bg-white rounded-xl shadow-xl border-l-4 border-indigo-600 transition-transform hover:scale-[1.02] duration-300 transform">
+                            <i class="bi bi-receipt text-3xl float-right text-indigo-600 opacity-80"></i>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">COMPROBANTE</p>
+                            <h3 class="text-xl font-bold mt-1" id="comprobante-display"></h3>
                         </div>
-
-                        <div id="summary-card-proveedor" class="p-5 bg-white rounded-xl shadow-lg border-l-4 border-gray-400 transition-transform hover:scale-[1.02] duration-300 col-span-1 md:col-span-2 lg:col-span-1">
-                            <i class="bi bi-shop text-3xl float-right text-gray-500"></i>
-                            <p class="text-sm font-medium text-gray-500">PROVEEDOR (RUC)</p>
-                            <h3 class="text-xl font-bold mt-1 text-gray-800" id="proveedor-display"></h3>
+                        <div class="p-5 bg-white rounded-xl shadow-xl border-l-4 border-gray-500 transition-transform hover:scale-[1.02] duration-300 transform">
+                            <i class="bi bi-shop text-3xl float-right text-gray-500 opacity-80"></i>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">PROVEEDOR (RUC)</p>
+                            <h3 class="text-xl font-bold mt-1 text-gray-800 truncate" id="proveedor-display"></h3>
                         </div>
-
-                        <div id="summary-card-dates" class="p-5 bg-white rounded-xl shadow-lg border-l-4 border-amber-500 transition-transform hover:scale-[1.02] duration-300">
-                            <i class="bi bi-calendar-check text-3xl float-right text-amber-500"></i>
-                            <p class="text-sm font-medium text-gray-500">EMISIÓN / VENCIMIENTO</p>
+                        <div class="p-5 bg-white rounded-xl shadow-xl border-l-4 border-amber-500 transition-transform hover:scale-[1.02] duration-300 transform">
+                            <i class="bi bi-calendar-check text-3xl float-right text-amber-500 opacity-80"></i>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">EMISIÓN / VENCIMIENTO</p>
                             <h3 class="text-xl font-bold mt-1 text-gray-800" id="dates-display"></h3>
                         </div>
                     </div>
 
-                    <div id="info-details" class="p-6 mb-8 bg-white border border-gray-200 rounded-xl shadow-md">
+                    <div id="info-details" class="p-6 mb-8 bg-indigo-50/50 border border-indigo-200 rounded-xl shadow-lg">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-sm text-gray-700">
-                            <div class="col-span-1 border-r border-gray-100 pr-4"><strong class="text-gray-500">Subtotal:</strong> <span id="subtotal-display"></span></div>
-                            <div class="col-span-1 border-r border-gray-100 pr-4"><strong class="text-gray-500">IGV:</strong> <span id="igv-display"></span></div>
-                            <div class="col-span-1 border-r border-gray-100 pr-4"><strong class="text-gray-500">T. Cambio:</strong> <span id="tipo-cambio-display"></span></div>
-                            <div class="col-span-1 border-r border-gray-100 pr-4"><strong class="text-gray-500">C. Transporte:</strong> <span id="coste-transporte-display"></span></div>
-                            <div class="col-span-1"><strong class="text-gray-500">T. Peso:</strong> <span id="total-peso-display"></span></div>
+                            <div class="col-span-1 border-r border-indigo-100 pr-4"><strong class="text-gray-600 uppercase text-xs">Subtotal:</strong> <span class="font-semibold" id="subtotal-display"></span></div>
+                            <div class="col-span-1 border-r border-indigo-100 pr-4"><strong class="text-gray-600 uppercase text-xs">IGV:</strong> <span class="font-semibold" id="igv-display"></span></div>
+                            <div class="col-span-1 border-r border-indigo-100 pr-4"><strong class="text-gray-600 uppercase text-xs">T. Cambio:</strong> <span class="font-semibold" id="tipo-cambio-display"></span></div>
+                            <div class="col-span-1 border-r border-indigo-100 pr-4"><strong class="text-gray-600 uppercase text-xs">C. Transporte:</strong> <span class="font-semibold" id="coste-transporte-display"></span></div>
+                            <div class="col-span-1"><strong class="text-gray-600 uppercase text-xs">T. Peso:</strong> <span class="font-semibold" id="total-peso-display"></span></div>
                         </div>
-                        <p class="mt-4 pt-3 border-t border-gray-100 text-sm italic text-gray-500"><strong class="text-gray-600">Observación:</strong> <span id="observacion-display"></span></p>
+                        <p class="mt-4 pt-3 border-t border-indigo-100 text-sm italic text-gray-500"><strong class="text-gray-700 uppercase text-xs">Observación:</strong> <span class="text-gray-700" id="observacion-display"></span></p>
                     </div>
 
-                    <div class="flex space-x-3 p-1 bg-gray-100 rounded-xl shadow-inner mb-6" id="detallesTab" role="tablist">
-                        <button class="tab-button active px-5 py-2.5 font-semibold text-sm text-white bg-indigo-700 shadow-xl rounded-lg transition-all duration-300 transform hover:scale-[1.01]" data-target="productos" type="button"><i class="bi bi-box-seam mr-2"></i> Productos, Lotes y Costos</button>
-                        <button class="tab-button px-5 py-2.5 font-semibold text-sm text-gray-700 rounded-lg hover:bg-white/80 hover:shadow-md transition-all duration-300" data-target="cajas" type="button"><i class="bi bi-boxes mr-2"></i> Cajas y Distribución</button>
-                        <button class="tab-button px-5 py-2.5 font-semibold text-sm text-gray-700 rounded-lg hover:bg-white/80 hover:shadow-md transition-all duration-300" data-target="guia" type="button"><i class="bi bi-truck mr-2"></i> Guía Transporte</button>
-                        <button class="tab-button px-5 py-2.5 font-semibold text-sm text-gray-700 rounded-lg hover:bg-white/80 hover:shadow-md transition-all duration-300" data-target="referencia" type="button"><i class="bi bi-file-earmark-text mr-2"></i> Referencias</button>
+                    <div class="flex space-x-3 p-1 bg-gray-100 rounded-xl shadow-inner mb-8" id="detallesTab" role="tablist">
+                        <button class="tab-button active px-5 py-3 font-extrabold text-sm text-white bg-indigo-700 shadow-xl rounded-xl transition-all duration-300 transform hover:scale-[1.01]" data-target="productos" type="button"><i class="bi bi-box-seam mr-2"></i> Productos y Costos</button>
+                        <button class="tab-button px-5 py-3 font-extrabold text-sm text-gray-700 rounded-xl hover:bg-white/80 hover:shadow-md transition-all duration-300" data-target="lotes" type="button"><i class="bi bi-calendar-range mr-2"></i> Resumen de Lotes</button>
+                        <button class="tab-button px-5 py-3 font-extrabold text-sm text-gray-700 rounded-xl hover:bg-white/80 hover:shadow-md transition-all duration-300" data-target="cajas" type="button"><i class="bi bi-boxes mr-2"></i> Resumen de Cajas</button>
+                        <button class="tab-button px-5 py-3 font-extrabold text-sm text-gray-700 rounded-xl hover:bg-white/80 hover:shadow-md transition-all duration-300" data-target="guia" type="button"><i class="bi bi-truck mr-2"></i> Guía Transporte</button>
+                        <button class="tab-button px-5 py-3 font-extrabold text-sm text-gray-700 rounded-xl hover:bg-white/80 hover:shadow-md transition-all duration-300" data-target="referencia" type="button"><i class="bi bi-file-earmark-text mr-2"></i> Referencias</button>
                     </div>
 
                     <div class="tab-content">
                         <div class="tab-pane active" id="productos">
-                            <h6 class="text-xl font-semibold text-indigo-700 mb-4 border-b-2 pb-2 border-indigo-100">Artículos Comprados y Costos</h6>
-                            <div class="overflow-x-auto mb-8">
-                                <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg shadow-sm">
-                                    <thead class="bg-indigo-50 text-indigo-700 uppercase text-xs tracking-wider">
+                            <h6 class="text-2xl font-extrabold text-indigo-700 mb-4 border-b-2 pb-2 border-indigo-100">Artículos Comprados y Precios</h6>
+                            <div class="overflow-x-auto mb-10 shadow-lg rounded-xl border border-gray-200">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-indigo-600 text-white uppercase text-xs tracking-wider">
                                     <tr>
-                                        <th class="px-4 py-3 font-semibold border-r">Código</th>
-                                        <th class="px-4 py-3 font-semibold border-r">Descripción</th>
-                                        <th class="px-4 py-3 font-semibold border-r">Unidad</th>
-                                        <th class="px-4 py-3 font-semibold border-r">Cant.</th>
-                                        <th class="px-4 py-3 font-semibold border-r">P. Unitario</th>
-                                        <th class="px-4 py-3 font-semibold border-r">P. con Desc.</th>
-                                        <th class="px-4 py-3 font-semibold border-r">IGV Ins.</th>
-                                        <th class="px-4 py-3 font-semibold border-r bg-indigo-100">Total Detalle</th>
-                                        <th class="px-4 py-3 font-semibold border-r">Peso Total</th>
-                                        <th class="px-4 py-3 font-semibold bg-gray-200">Lotes</th>
+                                        <th class="px-4 py-3 font-semibold border-r border-indigo-500/50">Código</th>
+                                        <th class="px-4 py-3 font-semibold border-r border-indigo-500/50 text-left">Descripción</th>
+                                        <th class="px-4 py-3 font-semibold border-r border-indigo-500/50">Unidad</th>
+                                        <th class="px-4 py-3 font-semibold border-r border-indigo-500/50">Cant.</th>
+                                        <th class="px-4 py-3 font-semibold border-r border-indigo-500/50">Precio de Venta</th>
+                                        <th class="px-4 py-3 font-semibold border-r border-indigo-500/50 bg-indigo-700/80">Total Detalle</th>
+                                        <th class="px-4 py-3 font-semibold">Acciones</th>
                                     </tr>
                                     </thead>
                                     <tbody id="tabla-producto" class="bg-white divide-y divide-gray-100 text-center text-sm"></tbody>
                                 </table>
                             </div>
+                        </div>
 
-                            <h6 class="text-xl font-semibold text-indigo-700 mb-4 border-b-2 pb-2 border-indigo-100 mt-8">Detalles de Lotes por Producto</h6>
-                            <div class="overflow-x-auto mb-8">
-                                <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg shadow-sm">
-                                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                        <div class="tab-pane hidden" id="lotes">
+                            <h6 class="text-2xl font-extrabold text-indigo-700 mb-4 border-b-2 pb-2 border-indigo-100">Resumen de Lotes Registrados por Producto</h6>
+                            <div class="overflow-x-auto mb-8 shadow-lg rounded-xl border border-gray-200">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-700 text-white uppercase text-xs tracking-wider">
                                     <tr>
-                                        <th class="px-4 py-3 font-semibold border-r">Producto</th>
-                                        <th class="px-4 py-3 font-semibold border-r">N° Lote</th>
-                                        <th class="px-4 py-3 font-semibold border-r">Cant. Lote</th>
-                                        <th class="px-4 py-3 font-semibold bg-gray-200">Fecha Vencimiento</th>
+                                        <th class="px-4 py-3 font-semibold border-r border-gray-500/50 text-left">Producto</th>
+                                        <th class="px-4 py-3 font-semibold border-r border-gray-500/50 text-center">Cantidad General</th>
+                                        <th class="px-4 py-3 font-semibold text-center">Lotes Registrados</th>
+                                        <th class="px-4 py-3 font-semibold text-center">Acciones</th>
                                     </tr>
                                     </thead>
-                                    <tbody id="tabla-lotes" class="bg-white divide-y divide-gray-100 text-center text-sm">
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <h6 class="text-xl font-semibold text-indigo-700 mb-4 border-b-2 pb-2 border-indigo-100">Distribución de Costes de Flete</h6>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg shadow-sm">
-                                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
-                                    <tr>
-                                        <th class="px-4 py-3 font-semibold border-r">Coste Unit. Transp.</th>
-                                        <th class="px-4 py-3 font-semibold bg-gray-200">Coste Total Transp.</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody id="tabla-transporte" class="bg-white divide-y divide-gray-100 text-center text-sm"></tbody>
+                                    <tbody id="tabla-lotes-resumen" class="bg-white divide-y divide-gray-100 text-sm"></tbody>
                                 </table>
                             </div>
                         </div>
 
                         <div class="tab-pane hidden" id="cajas">
-                            <h6 class="text-xl font-semibold text-indigo-700 mb-4 border-b-2 pb-2 border-indigo-100">Distribución de Artículos en Cajas y Costos de Flete</h6>
-                            <div class="overflow-x-auto mb-8">
-                                <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg shadow-sm">
-                                    <thead class="bg-blue-50 text-blue-700 uppercase text-xs tracking-wider">
-                                    <tr>
-                                        <th class="px-4 py-3 font-semibold border-r">ID Caja</th>
-                                        <th class="px-4 py-3 font-semibold border-r">Nombre/Ref.</th>
-                                        <th class="px-4 py-3 font-semibold border-r">Cant. Total Artículos</th>
-                                        <th class="px-4 py-3 font-semibold border-r bg-blue-100">Costo Flete Caja</th>
-                                        <th class="px-4 py-3 font-semibold">Detalles de Contenido</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody id="tabla-cajas" class="bg-white divide-y divide-gray-100 text-center text-sm"></tbody>
-                                </table>
+                            <h6 class="text-2xl font-extrabold text-blue-700 mb-4 border-b-2 pb-2 border-blue-100">Cajas Registradas y Costos de Flete</h6>
+                            <div id="resumen-cajas" class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-6">
+                                <div class="p-4 bg-white rounded-xl shadow-lg border-l-4 border-blue-500"><strong class="text-gray-600 uppercase text-xs">Total Cajas Registradas:</strong> <span id="total-cajas-display" class="font-bold text-xl block mt-1 text-blue-700">0</span></div>
+                                <div class="p-4 bg-white rounded-xl shadow-lg border-l-4 border-green-500"><strong class="text-gray-600 uppercase text-xs">Costo Total Flete Cajas:</strong> <span id="total-costo-cajas-display" class="font-bold text-xl block mt-1 text-green-700">S/ 0.00</span></div>
                             </div>
 
-                            <h6 class="text-xl font-semibold text-indigo-700 mb-4 border-b-2 pb-2 border-indigo-100 mt-8">Resumen Global de Cajas</h6>
-                            <div id="resumen-cajas" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                <div class="p-3 bg-gray-50 rounded-lg border border-gray-200"><strong class="text-gray-600">Total Cajas Registradas:</strong> <span id="total-cajas-display" class="font-bold">0</span></div>
-                                <div class="p-3 bg-gray-50 rounded-lg border border-gray-200"><strong class="text-gray-600">Costo Total Flete:</strong> <span id="total-costo-cajas-display" class="font-bold">S/ 0.00</span></div>
+                            <div class="overflow-x-auto mb-8 shadow-lg rounded-xl border border-gray-200">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-blue-600 text-white uppercase text-xs tracking-wider">
+                                    <tr>
+                                        <th class="px-4 py-3 font-semibold border-r border-blue-500/50 text-left">Nombre/Ref.</th>
+                                        <th class="px-4 py-3 font-semibold border-r border-blue-500/50 text-center">Cant. Total Artículos</th>
+                                        <th class="px-4 py-3 font-semibold border-r border-blue-500/50 bg-blue-700/80">Costo Flete Caja</th>
+                                        <th class="px-4 py-3 font-semibold text-center">Acciones</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tabla-cajas-resumen" class="bg-white divide-y divide-gray-100 text-sm"></tbody>
+                                </table>
                             </div>
                         </div>
 
                         <div class="tab-pane hidden" id="guia">
-                            <div id="info-guia" class="p-6 bg-emerald-50 rounded-xl shadow-lg border-l-4 border-emerald-500"></div>
+                            <h6 class="text-2xl font-extrabold text-emerald-700 mb-4 border-b-2 pb-2 border-emerald-100">Información de Guía de Remisión de Transporte</h6>
+                            <div id="info-guia" class="p-6 bg-white rounded-xl shadow-lg border border-gray-200"></div>
                         </div>
 
                         <div class="tab-pane hidden" id="referencia">
-                            <div id="info-referencia" class="p-6 bg-amber-50 rounded-xl shadow-lg border-l-4 border-amber-500"></div>
+                            <h6 class="text-2xl font-extrabold text-amber-700 mb-4 border-b-2 pb-2 border-amber-100">Documentos de Referencia (Cotización / Pedido)</h6>
+                            <div id="info-referencia" class="p-6 bg-white rounded-xl shadow-lg border border-gray-200"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex justify-end space-x-3 p-4 bg-gray-100 border-t rounded-b-xl">
-                    <button type="button" class="px-5 py-2.5 text-sm font-extrabold rounded-xl transition-all border-2 border-green-600 text-green-700 hover:bg-green-50/70 hover:shadow-lg" onclick="descargarFactura()">
+                <div class="flex justify-end space-x-4 p-4 bg-gray-100 border-t rounded-b-2xl">
+                    <button type="button" class="px-6 py-3 text-sm font-extrabold rounded-xl transition-all border-2 border-green-600 text-green-700 bg-white hover:bg-green-50/70 shadow-lg hover:shadow-xl" onclick="descargarFactura()">
                         <i class="bi bi-file-earmark-arrow-down mr-2"></i> Descargar Factura
                     </button>
-                    <button type="button" class="px-5 py-2.5 text-sm font-extrabold rounded-xl transition-all border-2 border-cyan-600 text-cyan-700 hover:bg-cyan-50/70 hover:shadow-lg" onclick="descargarGuiaTransporte()">
+                    <button type="button" class="px-6 py-3 text-sm font-extrabold rounded-xl transition-all border-2 border-cyan-600 text-cyan-700 bg-white hover:bg-cyan-50/70 shadow-lg hover:shadow-xl" onclick="descargarGuiaTransporte()">
                         <i class="bi bi-file-earmark-arrow-down mr-2"></i> Descargar Guía Transporte
                     </button>
-                    <button type="button" class="px-5 py-2.5 text-sm font-extrabold rounded-xl transition-all bg-indigo-700 text-white hover:bg-indigo-800 shadow-xl" onclick="document.getElementById('detallesModal').classList.add('hidden')">
+                    <button type="button" class="px-6 py-3 text-sm font-extrabold rounded-xl transition-all bg-indigo-700 text-white hover:bg-indigo-800 shadow-xl" onclick="document.getElementById('detallesModal').classList.add('hidden')">
                         <i class="bi bi-x-lg mr-2"></i> Cerrar
                     </button>
                 </div>
@@ -199,71 +180,173 @@
     </div>
 </div>
 
-<div id="factura-pdf-template" class="p-8 bg-white hidden" style="width: 800px; margin: 0 auto; font-size: 11px;">
+<div id="detallesLotesModal" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden z-[60] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="detallesLotesModalLabel">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-3xl w-full max-w-4xl my-8 transform transition-all duration-300 ease-in-out">
+            <div class="modal-content">
+                <div class="flex justify-between items-center p-5 bg-gray-700 text-white rounded-t-2xl">
+                    <h5 class="text-xl font-extrabold" id="detallesLotesModalLabel"><i class="bi bi-tag mr-2"></i> Lotes Registrados para: <span id="lote-producto-titulo" class="text-amber-300"></span></h5>
+                    <button type="button" class="text-white hover:text-gray-200 focus:outline-none transition" onclick="document.getElementById('detallesLotesModal').classList.add('hidden')" aria-label="Cerrar">
+                        <i class="bi bi-x-lg text-lg"></i>
+                    </button>
+                </div>
 
-    <div class="flex justify-between items-start mb-6 border-b-2 border-indigo-700 pb-4">
-        <div id="emisor-datos" class="w-3/5">
-            <h1 class="text-2xl font-extrabold text-indigo-800 mb-2" id="nombre-proveedor-doc"></h1>
-        </div>
+                <div class="p-6">
+                    <div class="overflow-x-auto shadow-md rounded-lg border border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3 font-semibold border-r">N° Lote</th>
+                                <th class="px-4 py-3 font-semibold border-r">Cant. Lote</th>
+                                <th class="px-4 py-3 font-semibold bg-gray-200">Fecha Vencimiento</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabla-lotes-detalle" class="bg-white divide-y divide-gray-100 text-center text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
 
-        <div class="border border-indigo-700 bg-indigo-50 p-3 text-center rounded-lg shadow-md" style="width: 250px;">
-            <h2 class="text-base font-extrabold text-indigo-800 py-1" id="ruc-cuadro-doc">R.U.C.: </h2>
-            <h2 class="text-xl font-extrabold text-indigo-700 mt-1 mb-2">FACTURA ELECTRÓNICA</h2>
-            <p class="text-2xl font-bold text-red-700" id="numero-factura-doc"></p>
+                <div class="flex justify-end p-4 bg-gray-100 border-t rounded-b-2xl">
+                    <button type="button" class="px-5 py-2.5 text-sm font-extrabold rounded-xl bg-gray-600 text-white hover:bg-gray-700 shadow-lg" onclick="document.getElementById('detallesLotesModal').classList.add('hidden')">
+                        <i class="bi bi-x-lg mr-2"></i> Cerrar
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
+</div>
 
+<div id="detallesProductoModal" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden z-[60] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="detallesProductoModalLabel">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-3xl w-full max-w-3xl my-8 transform transition-all duration-300 ease-in-out">
+            <div class="modal-content">
+                <div class="flex justify-between items-center p-5 bg-teal-700 text-white rounded-t-2xl">
+                    <h5 class="text-xl font-extrabold" id="detallesProductoModalLabel"><i class="bi bi-info-circle mr-2"></i> Detalles Completos del Artículo: <span id="producto-detalle-titulo" class="text-teal-300"></span></h5>
+                    <button type="button" class="text-white hover:text-gray-200 focus:outline-none transition" onclick="document.getElementById('detallesProductoModal').classList.add('hidden')" aria-label="Cerrar">
+                        <i class="bi bi-x-lg text-lg"></i>
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <div id="producto-detalles-content" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4 border-b pb-4 border-gray-200">
+                            <div><strong class="text-gray-600 block uppercase text-xs">P. Unitario sin Descuento:</strong> <span id="detalle-punitario" class="font-bold text-gray-800 text-lg"></span></div>
+                            <div><strong class="text-gray-600 block uppercase text-xs">IGV Insumo:</strong> <span id="detalle-igvinsumo" class="font-bold text-gray-800 text-lg"></span></div>
+                            <div class="col-span-2"><strong class="text-gray-600 block uppercase text-xs">Peso Total Estimado:</strong> <span id="detalle-peso" class="font-bold text-gray-800 text-lg"></span></div>
+                        </div>
+
+                        <h6 class="text-lg font-extrabold text-teal-700 mb-2 border-b-2 pb-1 border-teal-100">Distribución de Costos de Flete</h6>
+                        <div class="grid grid-cols-2 gap-4 bg-teal-50 p-4 rounded-lg">
+                            <div><strong class="text-gray-600 block uppercase text-xs">Costo Unitario de Transporte:</strong> <span id="detalle-costeunitario" class="font-bold text-teal-800 text-lg"></span></div>
+                            <div><strong class="text-gray-600 block uppercase text-xs">Costo Total de Transporte:</strong> <span id="detalle-costetotal" class="font-extrabold text-teal-800 text-xl"></span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end p-4 bg-gray-100 border-t rounded-b-2xl">
+                    <button type="button" class="px-5 py-2.5 text-sm font-extrabold rounded-xl bg-gray-600 text-white hover:bg-gray-700 shadow-lg" onclick="document.getElementById('detallesProductoModal').classList.add('hidden')">
+                        <i class="bi bi-x-lg mr-2"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="detallesCajasModal" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden z-[60] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="detallesCajasModalLabel">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-3xl w-full max-w-4xl my-8 transform transition-all duration-300 ease-in-out">
+            <div class="modal-content">
+                <div class="flex justify-between items-center p-5 bg-blue-700 text-white rounded-t-2xl">
+                    <h5 class="text-xl font-extrabold" id="detallesCajasModalLabel"><i class="bi bi-boxes mr-2"></i> Contenido de la Caja: <span id="caja-nombre-titulo" class="text-cyan-300"></span></h5>
+                    <button type="button" class="text-white hover:text-gray-200 focus:outline-none transition" onclick="document.getElementById('detallesCajasModal').classList.add('hidden')" aria-label="Cerrar">
+                        <i class="bi bi-x-lg text-lg"></i>
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <div class="overflow-x-auto shadow-md rounded-lg border border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-blue-100 text-blue-700 uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3 font-semibold border-r">Código Artículo</th>
+                                <th class="px-4 py-3 font-semibold border-r text-left">Descripción</th>
+                                <th class="px-4 py-3 font-semibold bg-blue-200">Cantidad Asignada</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabla-cajas-detalle" class="bg-white divide-y divide-gray-100 text-center text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="flex justify-end p-4 bg-gray-100 border-t rounded-b-2xl">
+                    <button type="button" class="px-5 py-2.5 text-sm font-extrabold rounded-xl bg-gray-600 text-white hover:bg-gray-700 shadow-lg" onclick="document.getElementById('detallesCajasModal').classList.add('hidden')">
+                        <i class="bi bi-x-lg mr-2"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="factura-pdf-template" class="p-8 bg-white hidden" style="width: 800px; margin: 0 auto; font-size: 12px; font-family: sans-serif;">
+    <div class="flex justify-between items-start mb-6 border-b-2 border-indigo-700 pb-4">
+        <div id="emisor-datos" class="w-3/5">
+            <h1 class="text-lg font-extrabold text-indigo-800 mb-1" id="nombre-proveedor-doc"></h1>
+            <p class="text-xs text-gray-600">Dirección del Proveedor</p>
+        </div>
+        <div class="border border-indigo-700 bg-indigo-50 p-3 text-center rounded-lg shadow-md" style="width: 250px;">
+            <h2 class="text-sm font-extrabold text-indigo-800 py-1" id="ruc-cuadro-doc">R.U.C.: </h2>
+            <h2 class="text-base font-extrabold text-indigo-700 mt-1 mb-1">FACTURA ELECTRÓNICA</h2>
+            <p class="text-lg font-bold text-red-700" id="numero-factura-doc"></p>
+        </div>
+    </div>
     <div class="mb-6 border border-gray-400 p-4 rounded-lg bg-gray-50/50">
-        <h3 class="text-sm font-bold text-indigo-700 mb-2 border-b border-indigo-200 pb-1">DATOS DEL ADQUIRIENTE (MAXINEGOCIOS)</h3>
-        <div class="grid grid-cols-5 gap-y-2 gap-x-4 text-gray-700">
+        <h3 class="text-sm font-extrabold text-indigo-700 mb-2 border-b border-indigo-200 pb-1">DATOS DEL ADQUIRIENTE (MAXINEGOCIOS)</h3>
+        <div class="grid grid-cols-5 gap-y-2 gap-x-4 text-gray-700 text-sm">
             <div>
-                <p class="font-bold text-gray-500">RUC DEL PROVEEDOR:</p>
+                <p class="font-bold text-gray-500 text-xs">RUC PROVEEDOR:</p>
                 <p class="pl-2 font-semibold text-gray-800"><span id="ruc-doc-repetido"></span></p>
             </div>
             <div class="col-span-2">
-                <p class="font-bold text-gray-500">NOMBRE DE LA EMPRESA:</p>
+                <p class="font-bold text-gray-500 text-xs">EMPRESA:</p>
                 <p class="pl-2 font-semibold text-gray-800">MAXINEGOCIOS PERUVIAN S.A.C</p>
             </div>
             <div>
-                <p class="font-bold text-gray-500">FECHA DE EMISIÓN:</p>
+                <p class="font-bold text-gray-500 text-xs">F. EMISIÓN:</p>
                 <p class="pl-2 font-semibold text-gray-800"><span id="fecha-emision-doc"></span></p>
             </div>
             <div>
-                <p class="font-bold text-gray-500">MONEDA:</p>
+                <p class="font-bold text-gray-500 text-xs">MONEDA:</p>
                 <p class="pl-2 font-semibold text-gray-800"><span id="moneda-doc"></span></p>
             </div>
             <div class="col-span-5 mt-2">
-                <p class="font-bold text-gray-500">DIRECCIÓN:</p>
+                <p class="font-bold text-gray-500 text-xs">DIRECCIÓN:</p>
                 <p class="pl-2 font-semibold text-gray-800">MZA. D1 LOTE. 02 URB. LA MOLINA ALTA LAMBAYEQUE - CHICLAYO - PIMENTEL</p>
             </div>
         </div>
     </div>
-
-    <table class="w-full border-collapse border border-gray-900 text-xs mb-6">
+    <table class="w-full border-collapse border border-gray-900 text-sm mb-6">
         <thead class="bg-indigo-700 text-white">
         <tr>
-            <th class="border border-indigo-500 px-2 py-2 w-16 text-center">CANT.</th>
-            <th class="border border-indigo-500 px-2 py-2">DESCRIPCIÓN</th>
-            <th class="border border-indigo-500 px-2 py-2 w-28 text-center">VALOR U.</th>
-            <th class="border border-indigo-500 px-2 py-2 w-28 text-center">PRECIO U.</th>
-            <th class="border border-indigo-500 px-2 py-2 w-28 text-center bg-indigo-800">IMPORTE TOTAL</th>
+            <th class="border border-indigo-500 px-2 py-2 w-16 text-center text-xs">CANT.</th>
+            <th class="border border-indigo-500 px-2 py-2 text-xs">DESCRIPCIÓN</th>
+            <th class="border border-indigo-500 px-2 py-2 w-28 text-center text-xs">VALOR U.</th>
+            <th class="border border-indigo-500 px-2 py-2 w-28 text-center text-xs">PRECIO U.</th>
+            <th class="border border-indigo-500 px-2 py-2 w-28 text-center bg-indigo-800 text-xs">IMPORTE TOTAL</th>
         </tr>
         </thead>
-        <tbody id="tabla-producto-doc">
-        </tbody>
+        <tbody id="tabla-producto-doc"></tbody>
     </table>
-
     <div class="flex justify-between items-start">
         <div class="w-2/3 pr-6">
-            <p class="font-bold border-t border-b border-gray-400 py-2 mb-4 text-base">SON: <span id="letras-doc" class="font-normal italic text-gray-700"></span></p>
-
+            <p class="font-bold border-t border-b border-gray-400 py-2 mb-4 text-sm">SON: <span id="letras-doc" class="font-normal italic text-gray-700"></span></p>
             <div class="border border-gray-400 p-3 mb-4 bg-yellow-50/50 rounded-lg">
                 <p class="font-bold text-gray-500 text-xs mb-1">OBSERVACIÓN:</p>
-                <p id="observacion-doc" class="pl-2 text-gray-800"></p>
+                <p id="observacion-doc" class="pl-2 text-gray-800 text-sm"></p>
             </div>
         </div>
-
-        <div class="w-1/3 border border-gray-900 shadow-xl rounded-lg overflow-hidden">
+        <div class="w-1/3 border border-gray-900 shadow-xl rounded-lg overflow-hidden text-sm">
             <div class="flex justify-between px-3 py-1.5 border-b border-gray-400">
                 <span class="font-semibold text-gray-600">OP. GRAVADAS:</span>
                 <span id="op-gravadas-doc" class="font-bold text-right"></span>
@@ -272,7 +355,7 @@
                 <span class="font-semibold text-gray-600">IGV (18%):</span>
                 <span id="igv-doc" class="font-bold text-right"></span>
             </div>
-            <div class="flex justify-between px-3 py-2 text-lg bg-indigo-700 text-white">
+            <div class="flex justify-between px-3 py-2 text-base bg-indigo-700 text-white">
                 <span class="font-extrabold">TOTAL:</span>
                 <span class="font-extrabold" id="total-doc"></span>
             </div>
@@ -280,89 +363,676 @@
     </div>
 </div>
 
-<div id="guia-pdf-template" class="p-4 bg-white hidden" style="width: 800px; margin: 0 auto; border: 2px solid #333; font-family: sans-serif;">
-
-    <div class="flex justify-between items-start mb-2">
-        <div id="guia-emisor-datos" class="w-2/3 pr-4 border-r border-gray-400">
-            <h1 class="text-xl font-bold mb-0 leading-tight text-indigo-800" id="guia-emisor-razon-social"></h1>
+<div id="guia-pdf-template" class="p-6 bg-white hidden" style="width: 800px; margin: 0 auto; border: 2px solid #333; font-size: 12px; font-family: sans-serif;">
+    <div class="flex justify-between items-start mb-4 border-b pb-2 border-gray-400">
+        <div id="guia-emisor-datos" class="w-2/3 pr-4">
+            <h1 class="text-lg font-bold mb-0 leading-tight text-indigo-800" id="guia-emisor-razon-social"></h1>
             <p class="text-xs">RUC: <span id="guia-emisor-ruc"></span></p>
             <p class="text-xs" id="guia-emisor-direccion"></p>
         </div>
-
         <div class="border border-red-700 p-2 text-center" style="width: 250px;">
-            <h2 class="text-base font-extrabold text-red-700 py-1 border-b border-red-700">R.U.C.: <span id="guia-cuadro-ruc"></span></h2>
-            <h2 class="text-lg font-extrabold mt-1">GUÍA DE REMISIÓN</h2>
-            <h2 class="text-lg font-extrabold mb-0">ELECTRÓNICA</h2>
-            <h2 class="text-lg font-extrabold text-red-700 mb-1">TRANSPORTISTA</h2>
-            <p class="text-xl font-bold mt-1" id="guia-numero-doc"></p>
+            <h2 class="text-sm font-extrabold text-red-700 py-1 border-b border-red-700">R.U.C.: <span id="guia-cuadro-ruc"></span></h2>
+            <h2 class="text-base font-extrabold mt-1">GUÍA DE REMISIÓN ELECTRÓNICA</h2>
+            <h2 class="text-base font-extrabold text-red-700 mb-1">TRANSPORTISTA</h2>
+            <p class="text-lg font-bold mt-1" id="guia-numero-doc"></p>
         </div>
     </div>
-
-    <div class="w-full text-sm mb-4 border border-gray-700 bg-gray-50/70 p-1">
-        <p class="font-semibold text-center">FECHA DE TRASLADO: <span id="guia-fecha-traslado" class="font-bold"></span></p>
+    <div class="w-full text-sm mb-4 border border-gray-700 bg-gray-50/70 p-2 rounded">
+        <div class="grid grid-cols-3 gap-2 text-sm">
+            <p class="font-semibold text-center"><span class="text-gray-500">FECHA DE TRASLADO:</span> <span id="guia-fecha-traslado" class="font-bold text-indigo-700"></span></p>
+            <p class="font-semibold text-center"><span class="text-gray-500">FECHA DE ENTREGA:</span> <span id="guia-fecha-entrega" class="font-bold text-indigo-700"></span></p>
+        </div>
     </div>
-
     <div class="grid grid-cols-2 gap-4 text-sm mb-4">
-        <div class="guia-box">
-            <p class="guia-header-title text-indigo-700">DEL REMITENTE</p>
-            <div class="pl-2">
-                <p><span class="font-semibold text-gray-700">RUC:</span> <span id="guia-remitente-ruc" class="font-bold">-</span></p>
-                <p><span class="font-semibold text-gray-700">Razón Social:</span> <span id="guia-remitente-rs" class="font-bold">-</span></p>
+        <div class="border border-gray-400 p-3 rounded">
+            <p class="font-extrabold text-indigo-700 border-b border-indigo-200 mb-1 pb-1">DEL REMITENTE</p>
+            <div class="pl-2 text-sm">
+                <p><span class="font-semibold text-gray-700">RUC:</span> <span id="guia-remitente-ruc" class="font-bold text-gray-800">-</span></p>
+                <p><span class="font-semibold text-gray-700">Razón Social:</span> <span id="guia-remitente-rs" class="font-bold text-gray-800">-</span></p>
             </div>
         </div>
-        <div class="guia-box">
-            <p class="guia-header-title text-indigo-700">DEL DESTINATARIO</p>
-            <div class="pl-2">
-                <p><span class="font-semibold text-gray-700">RUC:</span> <span id="guia-destinatario-ruc" class="font-bold">-</span></p>
-                <p><span class="font-semibold text-gray-700">Razón Social:</span> <span id="guia-destinatario-rs" class="font-bold">-</span></p>
+        <div class="border border-gray-400 p-3 rounded">
+            <p class="font-extrabold text-indigo-700 border-b border-indigo-200 mb-1 pb-1">DEL DESTINATARIO</p>
+            <div class="pl-2 text-sm">
+                <p><span class="font-semibold text-gray-700">RUC:</span> <span id="guia-destinatario-ruc" class="font-bold text-gray-800">-</span></p>
+                <p><span class="font-semibold text-gray-700">Razón Social:</span> <span id="guia-destinatario-rs" class="font-bold text-gray-800">-</span></p>
             </div>
         </div>
     </div>
-
     <div class="grid grid-cols-2 gap-4 text-sm mb-4">
-        <div class="guia-box">
-            <p class="guia-header-title text-emerald-700">DEL TRASLADO</p>
-            <div class="pl-2">
-                <p><span class="font-semibold text-gray-700">PUNTO DE PARTIDA:</span> <span id="guia-punto-partida"></span></p>
-                <p><span class="font-semibold text-gray-700">PUNTO DE LLEGADA:</span> <span id="guia-punto-llegada"></span></p>
-                <p><span class="font-semibold text-gray-700">FECHA DE ENTREGA:</span> <span id="guia-fecha-entrega"></span></p>
+        <div class="border border-gray-400 p-3 rounded bg-emerald-50">
+            <p class="font-extrabold text-emerald-700 border-b border-emerald-200 mb-1 pb-1">DEL TRASLADO</p>
+            <div class="pl-2 text-sm">
+                <p><span class="font-semibold text-gray-700">PUNTO DE PARTIDA:</span> <span id="guia-punto-partida" class="font-medium"></span></p>
+                <p><span class="font-semibold text-gray-700">PUNTO DE LLEGADA:</span> <span id="guia-punto-llegada" class="font-medium"></span></p>
             </div>
         </div>
-        <div class="guia-box">
-            <p class="guia-header-title text-amber-700">DOCUMENTOS RELACIONADOS</p>
-            <div class="pl-2">
-                <p><span class="font-semibold text-gray-700">COTIZACIÓN N°:</span> <span id="guia-num-cotizacion">-</span></p>
-                <p><span class="font-semibold text-gray-700">ORDEN DE COMPRA N°:</span> <span id="guia-num-pedido">-</span></p>
+        <div class="border border-gray-400 p-3 rounded bg-amber-50">
+            <p class="font-extrabold text-amber-700 border-b border-amber-200 mb-1 pb-1">DOCUMENTOS RELACIONADOS</p>
+            <div class="pl-2 text-sm">
+                <p><span class="font-semibold text-gray-700">COTIZACIÓN N°:</span> <span id="guia-num-cotizacion" class="font-medium">-</span></p>
+                <p><span class="font-semibold text-gray-700">ORDEN DE COMPRA N°:</span> <span id="guia-num-pedido" class="font-medium">-</span></p>
             </div>
         </div>
     </div>
-
-    <h3 class="guia-header-title mt-2 mb-0 border-t border-gray-300 bg-indigo-50/50 text-indigo-800">DETALLE DE BIENES A TRANSPORTAR</h3>
-    <table class="w-full border-collapse border border-gray-700 text-xs mb-4">
+    <h3 class="font-extrabold text-base mt-2 mb-0 border-t border-gray-300 bg-indigo-100/50 text-indigo-800 p-2">DETALLE DE BIENES A TRANSPORTAR</h3>
+    <table class="w-full border-collapse border border-gray-700 text-sm mb-4">
         <thead class="bg-indigo-700 text-white">
         <tr>
-            <th class="border border-indigo-500 px-2 py-1 w-12 text-center">ITEM</th>
-            <th class="border border-indigo-500 px-2 py-1">DESCRIPCIÓN</th>
-            <th class="border border-indigo-500 px-2 py-1 w-24 text-center">UNIDAD</th>
-            <th class="border border-indigo-500 px-2 py-1 w-24 text-center font-bold">CANTIDAD</th>
+            <th class="border border-indigo-500 px-2 py-1 w-12 text-xs text-center">ITEM</th>
+            <th class="border border-indigo-500 px-2 py-1 text-xs">DESCRIPCIÓN</th>
+            <th class="border border-indigo-500 px-2 py-1 w-24 text-center text-xs">UNIDAD</th>
+            <th class="border border-indigo-500 px-2 py-1 w-24 text-center font-bold text-xs">CANTIDAD</th>
         </tr>
         </thead>
-        <tbody id="tabla-guia-producto-doc">
-        </tbody>
+        <tbody id="tabla-guia-producto-doc"></tbody>
         <tfoot>
         <tr>
-            <td colspan="4" class="px-2 py-1 text-right font-extrabold bg-gray-200 border-t border-gray-700">
+            <td colspan="4" class="px-2 py-1 text-right font-extrabold bg-gray-200 border-t border-gray-700 text-sm">
                 CANTIDAD TOTAL: <span id="guia-peso-total" class="ml-2 text-base text-red-700"></span>
             </td>
         </tr>
         </tfoot>
     </table>
-
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+    let compraActual = null;
+    let productoMap = {}; // id_articulo -> {detalle: {}, lotes: []}
+    let cajaMap = {};      // id_caja_compra -> {caja: {}, contenido: []}
+
+    function unidadAbreviatura(unidad) {
+        const map = {'LITRO': 'L', 'GALÓN': 'GL', 'BIDÓN': 'BD', 'UNIDAD': 'U', 'KILOGRAMO': 'KG', 'CIENTO': 'C', 'PAQUETE': 'PQ', 'MILLAR': 'MLL', 'ROLLO': 'RL', 'SACO': 'S'};
+        if (!unidad) return '-';
+        return map[unidad.toUpperCase()] || unidad;
+    }
+
+    function showMessage(message, type = 'info') {
+        const box = document.getElementById('customMessageBox');
+        const color = type === 'success' ? 'bg-green-100 text-green-800 border-green-500' : 'bg-indigo-100 text-indigo-800 border-indigo-500';
+        box.innerHTML = `<div class="p-4 rounded-xl shadow-2xl text-base font-semibold ${color} border-l-4">${message}</div>`;
+        box.classList.remove('hidden', 'opacity-0');
+        box.classList.add('opacity-100');
+        setTimeout(() => {
+            box.classList.remove('opacity-100');
+            box.classList.add('opacity-0');
+            setTimeout(() => box.classList.add('hidden'), 300);
+        }, 3000);
+    }
+
+    function mostrarValor(valor, prefijo = '', sufijo = '') {
+        if (valor === null || valor === undefined || valor === 0 || valor === '0.00' || valor === '' || valor === '0') {
+            return '-';
+        }
+
+        if (typeof valor === 'string' && valor.includes('-') && !valor.includes('/') && !valor.includes('.')) {
+            return valor;
+        }
+
+        const num = parseFloat(valor);
+
+        if (!isNaN(num)) {
+            if (prefijo.includes('S/') || sufijo.includes('kg')) {
+                const isCurrency = prefijo.includes('S/');
+                const decimalPlaces = isCurrency ? 2 : 3;
+                return `${prefijo}${num.toFixed(decimalPlaces)}${sufijo}`;
+            }
+
+            if (sufijo === '' && prefijo === '' && num === Math.floor(num)) {
+                 return String(num.toFixed(0));
+            }
+
+            return String(num.toFixed(2));
+        }
+
+        return valor;
+    }
+
+    function numeroALetras(total) {
+        // Implementación real de número a letras aquí (placeholder)
+        return `[CANTIDAD EN LETRAS DE ${mostrarValor(total, 'S/ ')}]`;
+    }
+
+    async function cargarCompras() {
+        const tbody = document.getElementById("tabla-compras");
+        try {
+            // Asumo que esta URL es correcta del código anterior
+            const res = await fetch("/listarCompra");
+            if (!res.ok) throw new Error("Error al cargar las compras.");
+            const compras = await res.json();
+
+            tbody.innerHTML = "";
+
+            if (compras.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-gray-500 italic">No se encontraron registros de compras.</td></tr>';
+                return;
+            }
+
+            compras.forEach((compra, index) => {
+                const tr = document.createElement("tr");
+                tr.classList.add('text-center', index % 2 === 0 ? 'bg-white' : 'bg-gray-50', 'hover:bg-indigo-50/50', 'transition', 'duration-150', 'border-b', 'border-gray-100');
+                // Usar JSON.stringify para pasar el objeto completo al click del botón
+                const compraDataString = JSON.stringify(compra).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap text-gray-600">${mostrarValor(compra.fecha_emision)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-gray-600">${mostrarValor(compra.fecha_vencimiento)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-left font-medium">${mostrarValor(compra.tipo_comprobante)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap font-medium">${mostrarValor(compra.serie)}-${mostrarValor(compra.correlativo)}</td>
+                    <td class="px-4 py-3 text-left font-semibold text-gray-800">${mostrarValor(compra.proveedor.razon_social)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-gray-500">${mostrarValor(compra.moneda)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap"><span class="inline-flex items-center px-4 py-1.5 text-sm font-extrabold bg-green-600 text-white rounded-full shadow-lg">${mostrarValor(compra.total, 'S/ ')}</span></td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <button class="bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold py-1.5 px-3 rounded-xl shadow-md transition duration-200 text-xs mr-2" onclick='editarCompra(${compra.id_compra})'><i class="bi bi-pencil-square"></i> Editar</button>
+                        <button class="bg-indigo-700 hover:bg-indigo-800 text-white font-semibold py-1.5 px-3 rounded-xl shadow-md transition duration-200 text-xs" onclick='verDetalles(${compraDataString})'><i class="bi bi-eye"></i> Detalles</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+        } catch (error) {
+            console.error(error);
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-red-600 italic font-bold bg-red-50">❌ Error al conectar con el servidor para obtener las compras.</td></tr>';
+        }
+    }
+
+    function verDetalles(compra) {
+        compraActual = compra;
+        productoMap = {};
+        cajaMap = {};
+
+        const proveedor = compra.proveedor;
+
+        // 1. Cargar Info General
+        document.getElementById('total-final-display').textContent = mostrarValor(compra.total, 'S/ ');
+        document.getElementById('comprobante-display').textContent = `${mostrarValor(compra.tipo_comprobante)} ${mostrarValor(compra.serie)}-${mostrarValor(compra.correlativo)}`;
+        document.getElementById('proveedor-display').textContent = `${mostrarValor(proveedor.razon_social)} (${mostrarValor(proveedor.ruc)})`;
+        document.getElementById('dates-display').textContent = `${mostrarValor(compra.fecha_emision)} / ${mostrarValor(compra.fecha_vencimiento)}`;
+        document.getElementById('subtotal-display').textContent = mostrarValor(compra.subtotal, 'S/ ');
+        document.getElementById('igv-display').textContent = mostrarValor(compra.igv, 'S/ ');
+        document.getElementById('tipo-cambio-display').textContent = mostrarValor(compra.tipo_cambio);
+        document.getElementById('coste-transporte-display').textContent = mostrarValor(compra.coste_transporte, 'S/ ');
+        document.getElementById('total-peso-display').textContent = mostrarValor(compra.total_peso, '', ' kg');
+        document.getElementById('observacion-display').textContent = mostrarValor(compra.observacion) || 'N/A';
+
+        const tbodyProducto = document.getElementById("tabla-producto");
+        tbodyProducto.innerHTML = "";
+
+        // 2. Pre-procesar Datos (Productos y Lotes)
+        const lotesResumenBody = document.getElementById("tabla-lotes-resumen");
+        lotesResumenBody.innerHTML = "";
+        let hayProductos = false;
+
+        if (compra.detalles && compra.detalles.length > 0) {
+            hayProductos = true;
+            compra.detalles.forEach((d, index) => {
+                const idArticulo = d.id_articulo;
+
+                // Llenar el mapa de productos para búsquedas futuras de lotes y cajas
+                productoMap[idArticulo] = {
+                    detalle: d,
+                    lotes: d.lotes || [],
+                    cantidadLotesAsignada: (d.lotes || []).reduce((sum, lote) => sum + (parseFloat(lote.cantidad_lote) || 0), 0)
+                };
+
+                const productoData = productoMap[idArticulo];
+                const lotesCount = productoData.lotes.length;
+                const unidad = unidadAbreviatura(d.unidad_medida);
+                const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+
+                // Tabla de Productos y Costos (Pestaña 1)
+                // Se muestran menos columnas, y se agrega el botón de Detalles
+                tbodyProducto.innerHTML += `
+                    <tr class="${rowClass} hover:bg-indigo-50 transition duration-100 border-b border-gray-100">
+                        <td class="px-4 py-2 border-r border-gray-100">${mostrarValor(d.codigo_articulo)}</td>
+                        <td class="px-4 py-2 text-left border-r border-gray-100 text-gray-700 font-medium">${mostrarValor(d.descripcion_articulo)}</td>
+                        <td class="px-4 py-2 border-r border-gray-100 font-medium">${unidad}</td>
+                        <td class="px-4 py-2 border-r border-gray-100 font-extrabold">${mostrarValor(d.cantidad)}</td>
+                        <td class="px-4 py-2 border-r border-gray-100 font-extrabold text-green-700">${mostrarValor(d.precio_con_descuento, 'S/ ')}</td>
+                        <td class="px-4 py-2 border-r border-gray-100 font-extrabold text-indigo-700 bg-indigo-50">${mostrarValor(d.total_detalle, 'S/ ')}</td>
+                        <td class="px-4 py-2">
+                            <button class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-1 px-3 rounded-xl shadow-md transition duration-200 text-xs" onclick='mostrarDetallesProducto(${idArticulo})'><i class="bi bi-three-dots mr-1"></i> Detalles</button>
+                        </td>
+                    </tr>`;
+
+                // Resumen de Lotes (Pestaña 2) - Se incluyen todos los productos para mostrar "No tiene lote"
+                const lotesDisplay = lotesCount > 0
+                    ? `<span class="font-extrabold text-green-700">${lotesCount} lote${lotesCount > 1 ? 's' : ''}</span>`
+                    : `<span class="italic font-bold text-red-500">No tiene lote</span>`;
+
+                const actionButton = lotesCount > 0
+                    ? `<button class="bg-gray-700 hover:bg-gray-800 text-white font-semibold py-1.5 px-3 rounded-xl shadow-md transition duration-200 text-xs" onclick='mostrarDetallesLote(${idArticulo}, "${mostrarValor(d.descripcion_articulo)}")'><i class="bi bi-eye mr-1"></i> Ver Lotes</button>`
+                    : `<button class="bg-red-400 text-white font-semibold py-1.5 px-3 rounded-xl shadow-md text-xs cursor-not-allowed" disabled><i class="bi bi-x-circle mr-1"></i> No Aplica</button>`;
+
+                const cantidadGeneral = `${mostrarValor(d.cantidad)} ${unidad}`;
+
+
+                lotesResumenBody.innerHTML += `
+                    <tr class="${rowClass} hover:bg-gray-100 transition duration-100 border-b border-gray-100 text-center">
+                        <td class="px-4 py-3 text-left font-semibold text-gray-800">${mostrarValor(d.descripcion_articulo)}</td>
+                        <td class="px-4 py-3 font-extrabold">${cantidadGeneral}</td>
+                        <td class="px-4 py-3">${lotesDisplay}</td>
+                        <td class="px-4 py-3">${actionButton}</td>
+                    </tr>`;
+            });
+
+        }
+
+        if (!hayProductos) {
+            const noDetailsMessage = '<tr><td colspan="7" class="text-gray-500 italic p-6 text-center">No hay detalles de productos registrados.</td></tr>';
+            tbodyProducto.innerHTML = noDetailsMessage;
+            lotesResumenBody.innerHTML = '<tr><td colspan="4" class="text-gray-500 italic p-6 text-center">No hay productos registrados en esta compra.</td></tr>';
+        }
+
+
+        // 3. Pre-procesar Datos (Cajas)
+        const cajasResumenBody = document.getElementById("tabla-cajas-resumen");
+        cajasResumenBody.innerHTML = "";
+        let totalCajas = 0;
+        let totalCostoCajas = 0;
+        const cajasCompra = compra.cajas_compra || [];
+
+        if (cajasCompra.length > 0) {
+            totalCajas = cajasCompra.length;
+
+            cajasCompra.forEach((caja, index) => {
+                const idCaja = caja.id_caja_compra;
+                const costoCaja = parseFloat(caja.costo_caja) || 0;
+                totalCostoCajas += costoCaja;
+
+                // Llenar el mapa de cajas
+                cajaMap[idCaja] = {
+                    caja: caja,
+                    contenido: caja.detalles || []
+                };
+
+                // Resumen de Cajas (Pestaña 3) - Columna ID Caja ELIMINADA
+                const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                cajasResumenBody.innerHTML += `
+                    <tr class="${rowClass} hover:bg-blue-50 transition duration-100 border-b border-gray-100 text-center">
+                        <td class="px-4 py-3 border-r border-gray-100 text-left font-medium text-gray-700">${mostrarValor(caja.nombre_caja)}</td>
+                        <td class="px-4 py-3 border-r border-gray-100 font-extrabold">${mostrarValor(caja.cantidad)}</td>
+                        <td class="px-4 py-3 border-r border-gray-100 font-extrabold text-blue-700 bg-blue-100">${mostrarValor(costoCaja, 'S/ ')}</td>
+                        <td class="px-4 py-3">
+                            <button class="bg-blue-700 hover:bg-blue-800 text-white font-semibold py-1.5 px-3 rounded-xl shadow-md transition duration-200 text-xs" onclick='mostrarContenidoCaja(${idCaja}, "${mostrarValor(caja.nombre_caja)}")'><i class="bi bi-box mr-1"></i> Ver Contenido</button>
+                        </td>
+                    </tr>`;
+            });
+
+        } else {
+            cajasResumenBody.innerHTML = '<tr><td colspan="4" class="text-gray-500 italic p-6 text-center">No hay información de cajas de compra registradas.</td></tr>';
+        }
+
+        document.getElementById('total-cajas-display').textContent = totalCajas;
+        document.getElementById('total-costo-cajas-display').textContent = mostrarValor(totalCostoCajas, 'S/ ');
+
+
+        // 4. Guia y Referencia (Pestañas 4 y 5)
+        const gt = compra.guia || {};
+        const infoGuiaHTML = gt.id_guia ? `
+            <div class="mb-5 p-5 border border-emerald-300 rounded-xl bg-emerald-50/70 shadow-md">
+                <div class="font-extrabold text-lg text-emerald-700 mb-3 border-b pb-2 border-emerald-200 uppercase">Datos de la Guía de Remisión (Emisor)</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div><strong class="text-gray-600">ID Guía:</strong> <span class="font-medium text-gray-800">${mostrarValor(gt.id_guia)}</span></div>
+                    <div class="col-span-2"><strong class="text-gray-600">RUC/Razón Social:</strong> <span class="font-medium text-gray-800">${mostrarValor(gt.ruc_guia)}</span></div>
+                    <div><strong class="text-gray-600">F. Emisión:</strong> <span class="font-medium text-gray-800">${mostrarValor(gt.fecha_emision_guia)}</span></div>
+                    <div><strong class="text-gray-600">Tipo Comp.:</strong> <span class="font-medium text-gray-800">${mostrarValor(gt.tipo_comprobante_guia)}</span></div>
+                    <div><strong class="text-gray-600">Serie/Correlativo:</strong> <span class="font-medium text-gray-800">${mostrarValor(gt.serie_guia)}-${mostrarValor(gt.correlativo_guia)}</span></div>
+                </div>
+            </div>
+
+            <div class="p-5 border border-orange-300 rounded-xl bg-orange-50/70 shadow-md">
+                <div class="font-extrabold text-lg text-orange-700 mb-3 border-b pb-2 border-orange-200 uppercase">Detalles y Costos del Traslado</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div><strong class="text-gray-600">Punto de Partida:</strong> <span class="font-medium text-gray-800">${mostrarValor(gt.puntoPartida)}</span></div>
+                    <div><strong class="text-gray-600">Punto de Llegada:</strong> <span class="font-medium text-gray-800">${mostrarValor(gt.puntoLlegada)}</span></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
+                    <div><strong class="text-gray-600">Guía Transp. S/C:</strong> <span class="font-medium text-gray-800">${mostrarValor(gt.serie_guia_transporte)}-${mostrarValor(gt.correlativo_guia_transporte)}</span></div>
+                    <div><strong class="text-gray-600">Ciudad Traslado:</strong> <span class="font-medium text-gray-800">${mostrarValor(gt.ciudad_traslado)}</span></div>
+                    <div><strong class="text-gray-600">Peso Total:</strong> <span class="font-medium text-gray-800">${mostrarValor(gt.peso_guia, '', ' kg')}</span></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 pt-3 border-t border-orange-200/50 text-sm">
+                    <div><strong class="text-gray-600">Costo Total:</strong> <span class="font-extrabold text-green-700 block text-base">${mostrarValor(gt.coste_transporte_guia, 'S/ ')}</span></div>
+                    <div><strong class="text-gray-600">F. Pedido:</strong> <span class="font-medium text-gray-800">${mostrarValor(gt.fecha_pedido)}</span></div>
+                    <div><strong class="text-gray-600">F. Entrega:</strong> <span class="font-medium text-gray-800">${mostrarValor(gt.fecha_entrega)}</span></div>
+                </div>
+            </div>
+        ` : `<p class="text-gray-500 italic p-8 text-center bg-white rounded-xl shadow-inner border border-gray-100">No hay guía de transporte asociada a esta compra.</p>`;
+        document.getElementById("info-guia").innerHTML = infoGuiaHTML;
+
+
+        const rc = compra.referencia || {};
+        const infoReferenciaHTML = rc.id_referencia ? `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 border border-amber-300 rounded-xl bg-amber-50/70 shadow-lg">
+                <div class="border-r border-amber-200 pr-4"><strong class="text-gray-600 uppercase text-xs">Número Cotización:</strong> <span class="font-extrabold text-lg block mt-1 text-gray-800">${mostrarValor(rc.numero_cotizacion)}</span></div>
+                <div><strong class="text-gray-600 uppercase text-xs">Número Pedido:</strong> <span class="font-extrabold text-lg block mt-1 text-gray-800">${mostrarValor(rc.numero_pedido)}</span></div>
+            </div>
+        ` : `<p class="text-gray-500 italic p-8 text-center bg-white rounded-xl shadow-inner border border-gray-100">No hay referencias (cotización/pedido) asociadas a esta compra.</p>`;
+        document.getElementById("info-referencia").innerHTML = infoReferenciaHTML;
+
+        // Al abrir el modal, asegurar que la pestaña de productos esté activa
+        document.querySelectorAll('#detallesTab .tab-button').forEach(btn => {
+            btn.classList.remove('active', 'bg-indigo-700', 'text-white', 'shadow-xl', 'transform', 'hover:scale-[1.01]', 'text-gray-700', 'hover:bg-white/80', 'hover:shadow-md');
+            btn.classList.add('text-gray-700', 'hover:bg-white/80', 'hover:shadow-md');
+        });
+
+        const productosButton = document.querySelector('#detallesTab button[data-target="productos"]');
+        productosButton.classList.add('active', 'bg-indigo-700', 'text-white', 'shadow-xl', 'transform', 'hover:scale-[1.01]');
+        productosButton.classList.remove('text-gray-700', 'hover:bg-white/80', 'hover:shadow-md');
+
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.add('hidden');
+        });
+        document.getElementById('productos').classList.remove('hidden');
+
+        document.getElementById('detallesModal').classList.remove('hidden');
+    }
+
+    function mostrarDetallesProducto(idArticulo) {
+        const data = productoMap[idArticulo];
+        if (!data) {
+            showMessage("No se encontró el detalle del artículo.", 'info');
+            return;
+        }
+
+        const d = data.detalle;
+        document.getElementById('producto-detalle-titulo').textContent = mostrarValor(d.descripcion_articulo);
+
+        document.getElementById('detalle-punitario').textContent = mostrarValor(d.precio_unitario, 'S/ ');
+        document.getElementById('detalle-igvinsumo').textContent = mostrarValor(d.igv_insumo, 'S/ ');
+        document.getElementById('detalle-peso').textContent = mostrarValor(d.peso_total, '', ' kg');
+        document.getElementById('detalle-costeunitario').textContent = mostrarValor(d.coste_unitario_transporte, 'S/ ');
+        document.getElementById('detalle-costetotal').textContent = mostrarValor(d.coste_total_transporte, 'S/ ');
+
+        document.getElementById('detallesProductoModal').classList.remove('hidden');
+    }
+
+
+    function mostrarDetallesLote(idArticulo, descripcion) {
+        const data = productoMap[idArticulo];
+        const tbodyDetalle = document.getElementById("tabla-lotes-detalle");
+        tbodyDetalle.innerHTML = "";
+        document.getElementById('lote-producto-titulo').textContent = descripcion;
+
+        if (data && data.lotes.length > 0) {
+            data.lotes.forEach((lote, index) => {
+                const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                tbodyDetalle.innerHTML += `
+                    <tr class="${rowClass} hover:bg-gray-100 transition duration-100 border-b border-gray-100">
+                        <td class="px-4 py-2 border-r border-gray-100 font-semibold">${mostrarValor(lote.numero_lote)}</td>
+                        <td class="px-4 py-2 border-r border-gray-100">${mostrarValor(lote.cantidad_lote)}</td>
+                        <td class="px-4 py-2 font-bold bg-gray-200/50">${mostrarValor(lote.fecha_vencimiento)}</td>
+                    </tr>`;
+            });
+        } else {
+            // Mostrar "No tiene lote" explícitamente en el detalle
+            tbodyDetalle.innerHTML = '<tr><td colspan="3" class="font-extrabold text-red-600 p-6 text-center bg-red-50/50">ESTE PRODUCTO NO TIENE LOTES REGISTRADOS.</td></tr>';
+        }
+
+        document.getElementById('detallesLotesModal').classList.remove('hidden');
+    }
+
+    function mostrarContenidoCaja(idCaja, nombreCaja) {
+        const data = cajaMap[idCaja];
+        const tbodyDetalle = document.getElementById("tabla-cajas-detalle");
+        tbodyDetalle.innerHTML = "";
+        document.getElementById('caja-nombre-titulo').textContent = nombreCaja || idCaja;
+
+        if (data && data.contenido.length > 0) {
+            data.contenido.forEach((item, index) => {
+                const productoInfo = productoMap[item.id_articulo] ? productoMap[item.id_articulo].detalle : {};
+                const descripcion = productoInfo.descripcion_articulo || `Artículo ID: ${item.id_articulo}`;
+                const codigo = productoInfo.codigo_articulo || '-';
+                const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+
+                tbodyDetalle.innerHTML += `
+                    <tr class="${rowClass} hover:bg-blue-50 transition duration-100 border-b border-gray-100">
+                        <td class="px-4 py-2 border-r border-gray-100 font-semibold">${mostrarValor(codigo)}</td>
+                        <td class="px-4 py-2 border-r border-gray-100 text-left font-medium text-gray-700">${mostrarValor(descripcion)}</td>
+                        <td class="px-4 py-2 font-bold text-blue-700 bg-blue-50">${mostrarValor(item.cantidad)}</td>
+                    </tr>`;
+            });
+        } else {
+            tbodyDetalle.innerHTML = '<tr><td colspan="3" class="text-gray-500 italic p-6 text-center">No se encontraron artículos dentro de esta caja.</td></tr>';
+        }
+
+        document.getElementById('detallesCajasModal').classList.remove('hidden');
+    }
+
+    function descargarFactura() {
+        // Lógica para descargar la factura (misma que antes)
+        if (!compraActual) {
+            showMessage("Por favor, selecciona una compra para ver sus detalles primero.", 'info');
+            return;
+        }
+
+        const template = document.getElementById('factura-pdf-template');
+        const proveedor = compraActual.proveedor;
+
+        document.getElementById('nombre-proveedor-doc').textContent = mostrarValor(proveedor.razon_social);
+        document.getElementById('ruc-cuadro-doc').textContent = `R.U.C.: ${mostrarValor(proveedor.ruc)}`;
+        document.getElementById('ruc-doc-repetido').textContent = mostrarValor(proveedor.ruc);
+        document.getElementById('fecha-emision-doc').textContent = mostrarValor(compraActual.fecha_emision);
+        document.getElementById('moneda-doc').textContent = mostrarValor(compraActual.moneda);
+        document.getElementById('numero-factura-doc').textContent = `${mostrarValor(compraActual.tipo_comprobante)}-${mostrarValor(compraActual.serie)}-${mostrarValor(compraActual.correlativo)}`;
+
+        const tbodyDoc = document.getElementById("tabla-producto-doc");
+        tbodyDoc.innerHTML = "";
+
+        if (compraActual.detalles && compraActual.detalles.length > 0) {
+            compraActual.detalles.forEach((d, index) => {
+                const precioUnitarioRaw = parseFloat(d.precio_unitario) || 0;
+                const precioConDescuentoRaw = parseFloat(d.precio_con_descuento) || precioUnitarioRaw;
+                const precioBase = precioConDescuentoRaw;
+                const valorUnitario = (precioBase / (1 + 0.18));
+                const importeTotal = parseFloat(d.total_detalle) || 0;
+
+                tbodyDoc.innerHTML += `
+                    <tr class="h-8 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-gray-100 text-sm">
+                        <td class="border border-gray-400 px-2 py-1 text-center">${mostrarValor(d.cantidad)}</td>
+                        <td class="border border-gray-400 px-2 py-1">${mostrarValor(d.descripcion_articulo)}</td>
+                        <td class="border border-gray-400 px-2 py-1 text-right">${mostrarValor(valorUnitario, 'S/ ')}</td>
+                        <td class="border border-gray-400 px-2 py-1 text-right">${mostrarValor(precioBase, 'S/ ')}</td>
+                        <td class="border border-gray-400 px-2 py-1 text-right font-bold text-indigo-700">${mostrarValor(importeTotal, 'S/ ')}</td>
+                    </tr>`;
+            });
+        } else {
+            tbodyDoc.innerHTML = '<tr><td colspan="5" class="text-gray-500 italic p-4 text-center text-sm">Sin detalles de productos registrados.</td></tr>';
+        }
+
+        document.getElementById('letras-doc').textContent = numeroALetras(compraActual.total);
+        document.getElementById('observacion-doc').textContent = mostrarValor(compraActual.observacion) || 'N/A';
+        document.getElementById('op-gravadas-doc').textContent = mostrarValor(compraActual.subtotal, 'S/ ');
+        document.getElementById('igv-doc').textContent = mostrarValor(compraActual.igv, 'S/ ');
+        document.getElementById('total-doc').textContent = mostrarValor(compraActual.total, 'S/ ');
+
+
+        template.classList.remove('hidden');
+        showMessage(`Generando PDF de factura ${compraActual.serie}-${compraActual.correlativo}...`, 'info');
+
+        html2canvas(template, {
+            scale: 2,
+            useCORS: true
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const pageHeight = 295;
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            template.classList.add('hidden');
+
+            pdf.save(`Factura_${compraActual.serie}-${compraActual.correlativo}.pdf`);
+            showMessage(`✅ PDF de factura descargado.`, 'success');
+        }).catch(error => {
+            console.error(error);
+            template.classList.add('hidden');
+            showMessage("❌ Error al generar el PDF.", 'info');
+        });
+    }
+
+    function descargarGuiaTransporte() {
+        // Lógica para descargar la Guía de Remisión (misma que antes)
+        if (!compraActual || !compraActual.guia || !compraActual.guia.id_guia) {
+            showMessage("No hay información de guía de transporte para esta compra.", 'info');
+            return;
+        }
+
+        const template = document.getElementById('guia-pdf-template');
+        const guia = compraActual.guia;
+        const proveedor = compraActual.proveedor;
+        const referencia = compraActual.referencia || {};
+
+        document.getElementById('guia-emisor-razon-social').textContent = mostrarValor(proveedor.razon_social);
+        document.getElementById('guia-emisor-ruc').textContent = mostrarValor(proveedor.ruc);
+        document.getElementById('guia-cuadro-ruc').textContent = mostrarValor(proveedor.ruc);
+        document.getElementById('guia-emisor-direccion').textContent = mostrarValor(proveedor.direccion) || 'Dirección no especificada';
+
+        document.getElementById('guia-numero-doc').textContent = `${mostrarValor(guia.serie_guia)}-${mostrarValor(guia.correlativo_guia)}`;
+        document.getElementById('guia-fecha-traslado').textContent = mostrarValor(guia.fecha_emision_guia);
+        document.getElementById('guia-fecha-entrega').textContent = mostrarValor(guia.fecha_entrega);
+
+        document.getElementById('guia-destinatario-ruc').textContent = mostrarValor(proveedor.ruc);
+        document.getElementById('guia-destinatario-rs').textContent = mostrarValor(proveedor.razon_social);
+
+        const remitenteRucFull = mostrarValor(guia.ruc_guia);
+        let remitenteRuc = '-';
+        let remitenteRs = '-';
+
+        if (remitenteRucFull.includes(' - ')) {
+            const parts = remitenteRucFull.split(' - ', 2);
+            remitenteRuc = parts[0].trim();
+            remitenteRs = parts[1].trim();
+        } else if (remitenteRucFull !== '-') {
+            remitenteRuc = remitenteRucFull;
+            remitenteRs = mostrarValor(guia.razon_social_guia) || '-';
+        } else {
+             remitenteRs = mostrarValor(guia.razon_social_guia) || '-';
+        }
+
+        document.getElementById('guia-remitente-ruc').textContent = remitenteRuc;
+        document.getElementById('guia-remitente-rs').textContent = remitenteRs;
+
+        document.getElementById('guia-punto-partida').textContent = mostrarValor(guia.puntoPartida);
+        document.getElementById('guia-punto-llegada').textContent = mostrarValor(guia.puntoLlegada);
+
+        document.getElementById('guia-num-cotizacion').textContent = mostrarValor(referencia.numero_cotizacion);
+        document.getElementById('guia-num-pedido').textContent = mostrarValor(referencia.numero_pedido);
+
+        const tbodyDoc = document.getElementById("tabla-guia-producto-doc");
+        tbodyDoc.innerHTML = "";
+        let cantidadTotal = 0;
+        if (compraActual.detalles && compraActual.detalles.length > 0) {
+            compraActual.detalles.forEach((d, index) => {
+                const cantidad = parseFloat(d.cantidad) || 0;
+                cantidadTotal += cantidad;
+                const unidad = unidadAbreviatura(d.unidad_medida);
+
+                tbodyDoc.innerHTML += `
+                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-gray-100 text-sm">
+                        <td class="border border-gray-400 px-2 py-1 text-center">${index + 1}</td>
+                        <td class="border border-gray-400 px-2 py-1">${mostrarValor(d.descripcion_articulo)}</td>
+                        <td class="border border-gray-400 px-2 py-1 w-24 text-center">${unidad}</td>
+                        <td class="border border-gray-400 px-2 py-1 w-24 text-right font-bold text-red-700">${mostrarValor(cantidad)}</td>
+                    </tr>`;
+            });
+        } else {
+            tbodyDoc.innerHTML = '<tr><td colspan="4" class="text-gray-500 italic p-4 text-center text-sm">Sin detalles de productos registrados.</td></tr>';
+        }
+
+        document.getElementById('guia-peso-total').textContent = mostrarValor(cantidadTotal, '', ' UNIDADES');
+
+
+        template.classList.remove('hidden');
+        showMessage(`Generando PDF de Guía de Remisión ${guia.serie_guia}-${guia.correlativo_guia}...`, 'info');
+
+        html2canvas(template, {
+            scale: 2,
+            useCORS: true
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const pageHeight = 295;
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            template.classList.add('hidden');
+
+            pdf.save(`Guia_Remision_${guia.serie_guia}-${guia.correlativo_guia}.pdf`);
+            showMessage(`✅ PDF de Guía de Remisión descargado.`, 'success');
+        }).catch(error => {
+            console.error('Error al generar el PDF de la Guía:', error);
+            template.classList.add('hidden');
+            showMessage("❌ Error al generar el PDF de la Guía de Remisión.", 'info');
+        });
+    }
+
+    function editarCompra(idCompra) {
+        // Asumo que esta URL es correcta del código anterior
+        window.location.href = `editarCompra.html?id=${idCompra}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Esto se mantiene, pero si el usuario no tiene implementado '/listarCompra', fallará
+        // Asumiendo que el usuario tiene una lógica de carga de compras funcional.
+        cargarCompras();
+
+        document.querySelectorAll('#detallesTab .tab-button').forEach(button => {
+            button.addEventListener('click', function() {
+                // Eliminar estilos de todas las pestañas
+                document.querySelectorAll('#detallesTab .tab-button').forEach(btn => {
+                    btn.classList.remove('active', 'bg-indigo-700', 'text-white', 'shadow-xl', 'transform', 'hover:scale-[1.01]');
+                    btn.classList.add('text-gray-700', 'hover:bg-white/80', 'hover:shadow-md');
+                });
+
+                // Aplicar estilos a la pestaña activa
+                this.classList.add('active', 'bg-indigo-700', 'text-white', 'shadow-xl', 'transform', 'hover:scale-[1.01]');
+                this.classList.remove('text-gray-700', 'hover:bg-white/80', 'hover:shadow-md');
+
+                // Ocultar todos los paneles
+                document.querySelectorAll('.tab-pane').forEach(pane => {
+                    pane.classList.add('hidden');
+                });
+
+                // Mostrar el panel objetivo
+                document.getElementById(this.dataset.target).classList.remove('hidden');
+            });
+        });
+    });
+</script>
 <script src="../../JS/compra/listarCompra.js"></script>
 </body>
 </html>
