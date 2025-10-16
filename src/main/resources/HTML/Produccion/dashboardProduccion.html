@@ -4,77 +4,71 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>MaxiPerú | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-    <link href="../../CSS/Dashboard/dashboard.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="../../CSS/Dashboard/dashboard.css">
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
-        <!-- Sidebar -->
-        <nav class="col-md-2 sidebar d-flex flex-column align-items-center bg-dark text-white vh-100">
-            <div class="logo text-center mb-4 mt-3">
-                <img src="../../img/logo1.png" alt="Logo MaxiPerú" class="img-fluid w-100 px-3"/>
-                <h5 class="mt-2">MaxiPerú</h5>
+<div id="app-wrapper" class="d-flex min-h-screen p-0">
+    <nav id="sidebar" class="sidebar d-flex flex-column align-items-center text-white">
+        <div class="logo text-center mb-10 mt-6 px-4">
+            <div class="p-3 bg-white rounded-xl shadow-lg">
+                <span class="text-4xl font-extrabold" style="color: var(--primary-blue);">Maxi</span><span class="text-4xl font-extrabold" style="color: var(--primary-fucsia);">Perú</span>
             </div>
-            <div class="nav flex-column w-100">
-                <a href="#" class="nav-link text-white active"><i class="fas fa-chart-line me-2"></i>Dashboard</a>
-                <a href="#" class="nav-link text-white"><i class="fas fa-box-open me-2"></i>Productos</a>
-                <a href="#" class="nav-link text-white"><i class="fas fa-flask me-2"></i>Insumos</a>
-                <a href="#" class="nav-link text-white"><i class="fas fa-industry me-2"></i>Producción</a>
-            </div>
-        </nav>
+        </div>
+        <div class="nav flex-column w-full space-y-2" id="nav-links">
+            <a href="Dashboard/home.html" class="nav-link active" target="contentFrame">
+                <i class="fas fa-chart-line w-6 text-center"></i><span class="ms-3">Dashboard</span>
+            </a>
+            <a href="../Compras/compra.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-shopping-cart w-6 text-center"></i><span class="ms-3">Compras</span>
+            </a>
+            <a href="../Ventas/venta.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-cash-register w-6 text-center"></i><span class="ms-3">Ventas</span>
+            </a>
+            <a href="../Gastos/gastos.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-dollar-sign w-6 text-center"></i><span class="ms-3">Gastos</span>
+            </a>
+            <a href="../Productos/listarProducto.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-boxes w-6 text-center"></i><span class="ms-3">Productos</span>
+            </a>
+            <a href="../Proveedor/Proveedor.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-truck w-6 text-center"></i><span class="ms-3">Proveedores</span>
+            </a>
+            <a href="../Cliente/Clientes.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-users w-6 text-center"></i><span class="ms-3">Clientes</span>
+            </a>
+            <a href="Produccion/Produccion.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-industry w-6 text-center"></i><span class="ms-3">Producción</span>
+            </a>
+            <a href="../Usuario/listarUsuario.html" class="nav-link" target="contentFrame">
+                <i class="fas fa-user-cog w-6 text-center"></i><span class="ms-3">Usuarios</span>
+            </a>
+        </div>
+    </nav>
 
-        <!-- Main content -->
-        <main class="col-md-10">
-            <div class="topbar d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
-                <h2 class="m-0">Panel de Control</h2>
-                <form action="../../ServletLogout" method="post">
-                    <button type="submit" class="btn btn-logout">
-                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
-                    </button>
-                </form>
+    <div id="main-area" class="p-0 d-flex flex-column">
+        <div class="topbar d-flex justify-content-between items-center sticky top-0">
+            <div class="d-flex items-center">
+                <button id="sidebarToggle" class="btn btn-lg p-2 me-4 transition duration-300 transform hover:scale-110" style="color: var(--primary-blue);">
+                    <i class="fas fa-arrow-left"></i> <!-- Icono predeterminado para expandido en desktop -->
+                </button>
+                <h2 class="text-2xl font-extrabold m-0 text-gray-800 transition duration-300 hover:text-blue-700" id="titulo-pagina">Bienvenidos</h2>
             </div>
+            <form action="/cerrarSesion" method="post">
+                <button type="submit" class="btn btn-logout bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-full transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                </button>
+            </form>
+        </div>
 
-            <div class="p-4">
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <div class="card text-white bg-primary">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fas fa-box"></i> Productos en Stock</h5>
-                                <h3 class="card-text" id="productosStock">...</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card text-white bg-success">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fas fa-truck"></i> Proveedores</h5>
-                                <h3 class="card-text" id="proveedoresCount">...</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card text-white bg-warning">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fas fa-shopping-cart"></i> Órdenes</h5>
-                                <h3 class="card-text" id="ordenesCount">...</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chart -->
-                <div class="mt-5">
-                    <h4 class="mb-4">Resumen General</h4>
-                    <canvas id="graficoInventario" height="120"></canvas>
-                </div>
-            </div>
+        <main class="main-content-area-wrapper flex-grow">
+            <iframe id="contentFrame" name="contentFrame" src="Dashboard/home.html" class="content-frame"></iframe>
         </main>
     </div>
 </div>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="../../JS/login/dashboard.js"></script>
