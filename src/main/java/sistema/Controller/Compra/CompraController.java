@@ -22,7 +22,8 @@ public class CompraController implements CompraRepository {
     @Override
     public int registrarCompra(Compra compra, GuiaTransporte guia, DocumentoReferencia docRef,
                                List<DetalleCompra> detalles, List<Descuento> descuentos,
-                               List<Caja> cajas, Map<Integer, List<DetalleCaja>> detallesCaja) throws SQLException {
+                               List<Caja> cajas, Map<Integer, List<DetalleCaja>> detallesCaja,
+                               ReglaAplicada regla) throws SQLException {
         int idCompra = -1;
 
         try (Connection conn = getConnection()) {
@@ -33,6 +34,10 @@ public class CompraController implements CompraRepository {
                 if (idCompra <= 0) throw new SQLException("El registro de la cabecera de compra falló, se obtuvo un ID inválido: " + idCompra);
 
                 Map<Integer, Integer> tempIdToRealIdMap = new HashMap<>();
+
+                if (regla != null) {
+                    registrarReglaAplicada(conn, idCompra, regla);
+                }
 
                 if (detalles != null) {
                     for (DetalleCompra detalle : detalles) {
@@ -173,7 +178,7 @@ public class CompraController implements CompraRepository {
                         if (lotesList.stream().noneMatch(l -> l.get("id_lote").equals(idLote))) {
                             Map<String, Object> lote = new LinkedHashMap<>();
                             lote.put("id_lote", idLote);
-                            lote.put("numero_lote", rs.getString("numero_lote"));
+                            lote.put("numero_lote", rs.getString("codigo_lote"));
                             lote.put("cantidad_lote", rs.getBigDecimal("cantidad_lote"));
                             java.sql.Date fechaVencimientoLote = rs.getDate("fecha_vencimiento_lote");
                             lote.put("fecha_vencimiento", fechaVencimientoLote != null ? DATE_FORMATTER.format(fechaVencimientoLote) : null);
@@ -395,11 +400,12 @@ public class CompraController implements CompraRepository {
 
     private int registrarDetalleCompra(Connection conn, DetalleCompra detalle) throws SQLException {
         int idDetalleReal = -1;
-        String sql = "{call sp_agregar_detalle_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        String sql = "{call sp_agregar_detalle_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
             int i = 1;
             cs.setInt(i++, detalle.getIdCompra());
             cs.setInt(i++, detalle.getIdArticulo());
+            cs.setInt(i++, detalle.getIdUnidad());
             cs.setBigDecimal(i++, detalle.getCantidad());
             cs.setBigDecimal(i++, detalle.getPrecioUnitario());
             cs.setBigDecimal(i++, detalle.getBonificacion());
@@ -467,7 +473,7 @@ public class CompraController implements CompraRepository {
     }
 
     private void registrarGuia(Connection conn, int idCompra, GuiaTransporte guia) throws SQLException {
-        String sql = "{call sp_agregar_guia_transporte_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        String sql = "{call sp_agregar_guia_transporte_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
             int i = 1;
             cs.setInt(i++, idCompra);
@@ -495,6 +501,18 @@ public class CompraController implements CompraRepository {
             cs.setInt(1, idCompra);
             cs.setString(2, docRef.getNumeroCotizacion());
             cs.setString(3, docRef.getNumeroPedido());
+            cs.execute();
+        }
+    }
+
+    private void registrarReglaAplicada(Connection conn, int idCompra, ReglaAplicada regla) throws SQLException {
+        String sql = "{call sp_agregar_regla_compra(?, ?, ?, ?)}";
+        try (CallableStatement cs = conn.prepareCall(sql)) {
+            int i = 1;
+            cs.setInt(i++, idCompra);
+            cs.setBoolean(i++, regla.isAplicaCostoAdicional());
+            cs.setBigDecimal(i++, regla.getMontoMinimo() != null ? regla.getMontoMinimo() : BigDecimal.ZERO);
+            cs.setBigDecimal(i++, regla.getCostoAdicional() != null ? regla.getCostoAdicional() : BigDecimal.ZERO);
             cs.execute();
         }
     }

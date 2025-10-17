@@ -9,7 +9,8 @@ public interface CompraRepository {
 
     int registrarCompra(Compra compra, GuiaTransporte guia, DocumentoReferencia docRef,
                         List<DetalleCompra> detalles, List<Descuento> descuentos,
-                        List<Caja> cajas, Map<Integer, List<DetalleCaja>> detallesCaja) throws SQLException;
+                        List<Caja> cajas, Map<Integer, List<DetalleCaja>> detallesCaja,
+                        ReglaAplicada regla) throws SQLException;
 
     List<Map<String, Object>> listarComprasConDetalles() throws SQLException;
 

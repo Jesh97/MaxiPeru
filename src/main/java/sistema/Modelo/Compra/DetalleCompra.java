@@ -12,11 +12,13 @@ public class DetalleCompra {
     private int idCompra;
     @JsonProperty("id_articulo")
     private int idArticulo;
+    @JsonProperty("id_unidad")
+    private int idUnidad;
     @JsonProperty("cantidad")
     private BigDecimal cantidad;
     @JsonProperty("precio_unitario")
     private BigDecimal precioUnitario;
-    @JsonProperty("bonificacion") // Mapeo para el nuevo campo 'bonificacion'
+    @JsonProperty("bonificacion")
     private BigDecimal bonificacion;
     @JsonProperty("coste_unitario_transporte")
     private BigDecimal costeUnitarioTransporte;
@@ -24,7 +26,7 @@ public class DetalleCompra {
     private BigDecimal costeTotalTransporte;
     @JsonProperty("precio_con_descuento")
     private BigDecimal precioConDescuento;
-    @JsonProperty("igv_insumo") // Mapeo para 'igv_insumo'
+    @JsonProperty("igv_insumo")
     private BigDecimal igvInsumo;
     @JsonProperty("total")
     private BigDecimal total;
@@ -33,13 +35,14 @@ public class DetalleCompra {
     @JsonProperty("lotes")
     private List<Lote> lotes;
 
-    public DetalleCompra(int idDetalle, int idCompra, int idArticulo, BigDecimal cantidad, BigDecimal precioUnitario,
+    public DetalleCompra(int idDetalle, int idCompra, int idArticulo, int idUnidad, BigDecimal cantidad, BigDecimal precioUnitario,
                          BigDecimal bonificacion, BigDecimal costeUnitarioTransporte, BigDecimal costeTotalTransporte,
                          BigDecimal precioConDescuento, BigDecimal igvInsumo, BigDecimal total, BigDecimal pesoTotal,
                          List<Lote> lotes) {
         this.idDetalle = idDetalle;
         this.idCompra = idCompra;
         this.idArticulo = idArticulo;
+        this.idUnidad = idUnidad;
         this.cantidad = cantidad;
         this.precioUnitario = precioUnitario;
         this.bonificacion = bonificacion;
@@ -77,6 +80,14 @@ public class DetalleCompra {
 
     public void setIdArticulo(int idArticulo) {
         this.idArticulo = idArticulo;
+    }
+
+    public int getIdUnidad() {
+        return idUnidad;
+    }
+
+    public void setIdUnidad(int idUnidad) {
+        this.idUnidad = idUnidad;
     }
 
     public BigDecimal getCantidad() {
@@ -165,6 +176,7 @@ public class DetalleCompra {
                 "idDetalle=" + idDetalle +
                 ", idCompra=" + idCompra +
                 ", idArticulo=" + idArticulo +
+                ", idUnidad=" + idUnidad +
                 ", cantidad=" + cantidad +
                 ", precioUnitario=" + precioUnitario +
                 ", bonificacion=" + bonificacion +

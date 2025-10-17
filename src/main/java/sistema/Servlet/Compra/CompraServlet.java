@@ -85,6 +85,7 @@ public class CompraServlet extends HttpServlet {
         Compra compra = new Compra();
         GuiaTransporte guia = null;
         DocumentoReferencia docRef = null;
+        ReglaAplicada regla = null; // Variable agregada
         List<DetalleCompra> detalles = new ArrayList<>();
         List<Descuento> descuentos = new ArrayList<>();
         List<Caja> cajasCompra = new ArrayList<>();
@@ -122,10 +123,8 @@ public class CompraServlet extends HttpServlet {
                 compra.setFechaEmision(LocalDate.now());
             }
             compra.setFechaVencimiento(parseDate(root, "fechaVencimiento"));
-
             compra.setIdTipoPago(root.path("tipoPagoId").asInt());
             compra.setIdFormaPago(root.path("formaPagoId").asInt());
-
             compra.setTipoCambio(BigDecimal.valueOf(root.path("tipoCambio").asDouble(1.0)));
             compra.setIncluyeIgv(root.path("incluyeIgv").asBoolean(true));
             compra.setHayBonificacion(root.path("hayBonificacion").asBoolean(false));
@@ -134,13 +133,19 @@ public class CompraServlet extends HttpServlet {
             compra.setHayTraslado(hayTraslado);
 
             compra.setObservacion(root.path("observation").asText("").trim());
-
             compra.setSubtotal(BigDecimal.valueOf(root.path("subtotalSinIgv").asDouble(0)));
             compra.setIgv(BigDecimal.valueOf(root.path("totalIgv").asDouble(0)));
             compra.setTotal(BigDecimal.valueOf(root.path("totalAPagar").asDouble(0)));
             compra.setTotalPeso(BigDecimal.valueOf(root.path("totalPeso").asDouble(0)));
             compra.setCosteTransporte(BigDecimal.valueOf(root.path("costeTransporte").asDouble(0)));
 
+            if (root.has("reglaAplicada") && root.get("reglaAplicada").isObject()) {
+                var ra = root.get("reglaAplicada");
+                regla = new ReglaAplicada();
+                regla.setAplicaCostoAdicional(ra.path("aplicaCostoAdicional").asBoolean(false));
+                regla.setMontoMinimo(BigDecimal.valueOf(ra.path("montoMinimo").asDouble(0)));
+                regla.setCostoAdicional(BigDecimal.valueOf(ra.path("costoAdicional").asDouble(0)));
+            }
 
             if (root.has("referencia") && root.get("referencia").isObject()) {
                 var dr = root.get("referencia");
@@ -155,19 +160,16 @@ public class CompraServlet extends HttpServlet {
 
                 String rucOrRazonSocial = gt.path("rucGuia").asText("").trim();
                 guia.setRucGuia(rucOrRazonSocial);
-
                 guia.setTipoComprobante(gt.path("tipoComprobante").asText("").trim());
                 guia.setSerie(gt.path("serie").asText("").trim());
                 guia.setCorrelativo(gt.path("correlativo").asText("").trim());
                 guia.setSerieGuiaTransporte(gt.path("serieGuiaTransporte").asText("").trim());
                 guia.setCorrelativoGuiaTransporte(gt.path("correlativoGuiaTransporte").asText("").trim());
-
                 guia.setCiudadTraslado(gt.path("ciudadTraslado").asText("").trim());
                 guia.setPuntoPartida(gt.path("puntoPartida").asText("").trim());
                 guia.setPuntoLlegada(gt.path("puntoLlegada").asText("").trim());
                 guia.setCosteTotalTransporte(BigDecimal.valueOf(gt.path("costeTotalTransporte").asDouble(0)));
                 guia.setPeso(BigDecimal.valueOf(gt.path("peso").asDouble(0)));
-
                 guia.setFechaEmision(parseDate(gt, "fechaEmision"));
                 guia.setFechaPedido(parseDate(gt, "fechaPedido"));
                 guia.setFechaEntrega(parseDate(gt, "fechaEntrega"));
@@ -183,7 +185,7 @@ public class CompraServlet extends HttpServlet {
                     detalle.setIdDetalle(tempId);
                     int idArticulo = d.path("idArticulo").asInt();
                     detalle.setIdArticulo(idArticulo);
-
+                    detalle.setIdUnidad(d.path("idUnidad").asInt(0)); // Asegurando que idUnidad se lea
                     detalle.setCantidad(BigDecimal.valueOf(d.path("cantidad").asDouble(0)));
                     detalle.setPrecioUnitario(BigDecimal.valueOf(d.path("precioUnitario").asDouble(0)));
                     detalle.setBonificacion(BigDecimal.valueOf(d.path("bonificacion").asDouble(0)));
@@ -272,9 +274,8 @@ public class CompraServlet extends HttpServlet {
                 }
             }
 
-
             int idCompra = compraController.registrarCompra(
-                    compra, guia, docRef, detalles, descuentos, cajasCompra, detallesCajaMap
+                    compra, guia, docRef, detalles, descuentos, cajasCompra, detallesCajaMap, regla
             );
 
             String tipoComprobante = root.path("tipoComprobanteId").asText();
