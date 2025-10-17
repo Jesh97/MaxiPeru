@@ -443,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 trFilaGeneral.querySelector('.unidadMedida').value = producto.unidadMedida || 'UNIDAD';
                 trFilaGeneral.querySelector('.descripcion').value = producto.descripcion || '';
                 trFilaGeneral.querySelector('.idProducto').value = producto.idProducto || 0;
-                trFilaGeneral.querySelector('.precioUnitario').value = producto.precioUnitario || '0.00';
+                trFilaGeneral.querySelector('.precioUnitario').value = producto.precioCompra || '0.00';
 
                 const selectorFinanciero = `#tablaProductosFinanciero tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
                 const trFinanciero = document.querySelector(selectorFinanciero);

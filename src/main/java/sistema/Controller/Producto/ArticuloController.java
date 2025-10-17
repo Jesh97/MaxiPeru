@@ -38,10 +38,10 @@ public class ArticuloController implements ArticuloRepository {
         a.setCodigo(rs.getString("codigo"));
         a.setDescripcion(rs.getString("descripcion"));
         a.setCantidad(rs.getInt("cantidad"));
-        a.setPrecioCompra(rs.getDouble("precio_compra"));
-        a.setPrecioVenta(rs.getDouble("precio_venta"));
+        try {a.setPrecioCompra(rs.getDouble("precio_compra"));} catch (SQLException e) {a.setPrecioCompra(0.0);}
+        try {a.setPrecioVenta(rs.getDouble("precio_venta"));} catch (SQLException e) {a.setPrecioVenta(0.0);}
         a.setPesoUnitario(rs.getDouble("peso_unitario"));
-        a.setDensidad(rs.getDouble("densidad"));
+        try {a.setDensidad(rs.getDouble("densidad"));} catch (SQLException e) {a.setDensidad(0.0);}
         a.setAroma(rs.getString("aroma"));
         a.setColor(rs.getString("color"));
         return a;
@@ -67,7 +67,6 @@ public class ArticuloController implements ArticuloRepository {
         try {
             conn = Conexion.obtenerConexion();
             cs = conn.prepareCall("{CALL sp_agregar_articulo(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
-
             cs.setString(1, articulo.getCodigo());
             cs.setString(2, articulo.getDescripcion());
             cs.setInt(3, articulo.getCantidad());
@@ -81,7 +80,6 @@ public class ArticuloController implements ArticuloRepository {
             cs.setInt(11, articulo.getCategoria().getIdCategoria());
             cs.setInt(12, articulo.getUnidad().getIdUnidad());
             cs.setInt(13, articulo.getTipoArticulo().getId());
-
             exito = cs.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error al agregar artículo: " + e.getMessage());
@@ -100,7 +98,6 @@ public class ArticuloController implements ArticuloRepository {
         try {
             conn = Conexion.obtenerConexion();
             cs = conn.prepareCall("{CALL sp_actualizar_articulo(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
-
             cs.setInt(1, articulo.getIdProducto());
             cs.setString(2, articulo.getDescripcion());
             cs.setInt(3, articulo.getCantidad());
@@ -114,7 +111,6 @@ public class ArticuloController implements ArticuloRepository {
             cs.setInt(11, articulo.getCategoria().getIdCategoria());
             cs.setInt(12, articulo.getUnidad().getIdUnidad());
             cs.setInt(13, articulo.getTipoArticulo().getId());
-
             exito = cs.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error al actualizar artículo: " + e.getMessage());
@@ -250,7 +246,6 @@ public class ArticuloController implements ArticuloRepository {
             cs = conn.prepareCall("{CALL SP_VerLotesPorArticulo(?)}");
             cs.setInt(1, idArticulo);
             rs = cs.executeQuery();
-
             while (rs.next()) {
                 lotes.add(mapearLote(rs));
             }

@@ -85,7 +85,7 @@ public class CompraServlet extends HttpServlet {
         Compra compra = new Compra();
         GuiaTransporte guia = null;
         DocumentoReferencia docRef = null;
-        ReglaAplicada regla = null; // Variable agregada
+        ReglaAplicada regla = null;
         List<DetalleCompra> detalles = new ArrayList<>();
         List<Descuento> descuentos = new ArrayList<>();
         List<Caja> cajasCompra = new ArrayList<>();
@@ -174,7 +174,6 @@ public class CompraServlet extends HttpServlet {
                 guia.setFechaPedido(parseDate(gt, "fechaPedido"));
                 guia.setFechaEntrega(parseDate(gt, "fechaEntrega"));
             }
-
 
             if (root.has("detalles")) {
                 int tempId = 1;
