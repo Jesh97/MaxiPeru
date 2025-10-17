@@ -6,7 +6,8 @@ public class Articulo {
     private String codigo;
     private String descripcion;
     private int cantidad;
-    private double precioUnitario;
+    private double precioCompra;
+    private double precioVenta;
     private double pesoUnitario;
     private double densidad;
     private String aroma;
@@ -16,14 +17,15 @@ public class Articulo {
     private UnidadMedida unidad;
     private TipoArticulo tipoArticulo;
 
-    public Articulo(int idProducto, String codigo, String descripcion, int cantidad, double precioUnitario,
-                    double pesoUnitario, double densidad, String aroma, String color, Marca marca, Categoria categoria,
-                    UnidadMedida unidad, TipoArticulo tipoArticulo) {
+    public Articulo(int idProducto, String codigo, String descripcion, int cantidad, double precioCompra,
+                    double precioVenta, double pesoUnitario, double densidad, String aroma, String color,
+                    Marca marca, Categoria categoria, UnidadMedida unidad, TipoArticulo tipoArticulo) {
         this.idProducto = idProducto;
         this.codigo = codigo;
         this.descripcion = descripcion;
         this.cantidad = cantidad;
-        this.precioUnitario = precioUnitario;
+        this.precioCompra = precioCompra;
+        this.precioVenta = precioVenta;
         this.pesoUnitario = pesoUnitario;
         this.densidad = densidad;
         this.aroma = aroma;
@@ -69,12 +71,20 @@ public class Articulo {
         this.cantidad = cantidad;
     }
 
-    public double getPrecioUnitario() {
-        return precioUnitario;
+    public double getPrecioCompra() {
+        return precioCompra;
     }
 
-    public void setPrecioUnitario(double precioUnitario) {
-        this.precioUnitario = precioUnitario;
+    public void setPrecioCompra(double precioCompra) {
+        this.precioCompra = precioCompra;
+    }
+
+    public double getPrecioVenta() {
+        return precioVenta;
+    }
+
+    public void setPrecioVenta(double precioVenta) {
+        this.precioVenta = precioVenta;
     }
 
     public double getPesoUnitario() {
@@ -148,7 +158,8 @@ public class Articulo {
                 ", codigo='" + codigo + '\'' +
                 ", descripcion='" + descripcion + '\'' +
                 ", cantidad=" + cantidad +
-                ", precioUnitario=" + precioUnitario +
+                ", precioCompra=" + precioCompra +
+                ", precioVenta=" + precioVenta +
                 ", pesoUnitario=" + pesoUnitario +
                 ", densidad=" + densidad +
                 ", aroma='" + aroma + '\'' +

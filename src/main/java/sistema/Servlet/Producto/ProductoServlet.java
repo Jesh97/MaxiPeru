@@ -132,7 +132,8 @@ public class ProductoServlet extends HttpServlet {
 
         try {
             int cantidad = Integer.parseInt(request.getParameter("cantidad"));
-            double precioUnitario = Double.parseDouble(request.getParameter("precio_unitario"));
+            double precioCompra = Double.parseDouble(request.getParameter("precio_compra"));
+            double precioVenta = Double.parseDouble(request.getParameter("precio_venta"));
             double pesoUnitario = Double.parseDouble(request.getParameter("peso_unitario"));
             double densidad = Double.parseDouble(request.getParameter("densidad"));
             String aroma = request.getParameter("aroma");
@@ -147,7 +148,7 @@ public class ProductoServlet extends HttpServlet {
             UnidadMedida unidad = new UnidadMedida(idUnidad, null, null);
             TipoArticulo tipoArticulo = new TipoArticulo(idTipoArticulo, null);
 
-            Articulo nuevoArticulo = new Articulo(0, codigo, descripcion, cantidad, precioUnitario,
+            Articulo nuevoArticulo = new Articulo(0, codigo, descripcion, cantidad, precioCompra, precioVenta,
                     pesoUnitario, densidad, aroma, color, marca,
                     categoria, unidad, tipoArticulo);
 
@@ -194,7 +195,8 @@ public class ProductoServlet extends HttpServlet {
             int idProducto = Integer.parseInt(idProductoParam);
             String codigo = request.getParameter("codigo");
             int cantidad = Integer.parseInt(request.getParameter("cantidad"));
-            double precioUnitario = Double.parseDouble(request.getParameter("precio_unitario"));
+            double precioCompra = Double.parseDouble(request.getParameter("precio_compra"));
+            double precioVenta = Double.parseDouble(request.getParameter("precio_venta"));
             double pesoUnitario = Double.parseDouble(request.getParameter("peso_unitario"));
             double densidad = Double.parseDouble(request.getParameter("densidad"));
             String aroma = request.getParameter("aroma");
@@ -209,7 +211,7 @@ public class ProductoServlet extends HttpServlet {
             UnidadMedida unidad = new UnidadMedida(idUnidad, null, null);
             TipoArticulo tipoArticulo = new TipoArticulo(idTipoArticulo, null);
 
-            Articulo articuloActualizado = new Articulo(idProducto, codigo, descripcion, cantidad, precioUnitario,
+            Articulo articuloActualizado = new Articulo(idProducto, codigo, descripcion, cantidad, precioCompra, precioVenta,
                     pesoUnitario, densidad, aroma, color, marca,
                     categoria, unidad, tipoArticulo);
 

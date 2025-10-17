@@ -132,7 +132,6 @@ async function verLotes(idArticulo, descripcionArticulo) {
     loadingOverlay.style.display = 'flex';
 
     try {
-        // LÍNEA CORREGIDA: Usar API_ARTICULOS
         const response = await fetch(`${API_ARTICULOS}?accion=ver_lotes&id_articulo=${idArticulo}`);
 
         if (!response.ok) {
@@ -159,8 +158,8 @@ async function verLotes(idArticulo, descripcionArticulo) {
 
                     row.innerHTML = `
                         <td>${lote.numeroLote || 'SIN NÚMERO'}</td>
-                        <td class="data-center">${fechaVencimiento}</td>
                         <td class="data-center">${cantidadDisponible}</td>
+                        <td class="data-center">${fechaVencimiento}</td>
                     `;
                     tablaLotesBody.appendChild(row);
                 });
@@ -194,7 +193,8 @@ function abrirFormulario(id = 0) {
             document.getElementById('codigo').value = articulo.codigo;
             document.getElementById('descripcion').value = articulo.descripcion;
             document.getElementById('cantidad').value = articulo.cantidad;
-            document.getElementById('precioUnitario').value = articulo.precioUnitario;
+            document.getElementById('precioCompra').value = articulo.precioCompra;
+            document.getElementById('precioVenta').value = articulo.precioVenta;
             document.getElementById('pesoUnitario').value = articulo.pesoUnitario;
             document.getElementById('densidad').value = articulo.densidad;
             document.getElementById('aroma').value = articulo.aroma || '';
@@ -462,7 +462,7 @@ function mostrarTabla(listaCompleta) {
         paginaActual = Math.max(1, totalPaginas);
     }
 
-    const COLSPAN = 7;
+    const COLSPAN = 8;
     const inicio = (paginaActual - 1) * ARTICULOS_POR_PAGINA;
     const fin = inicio + ARTICULOS_POR_PAGINA;
     const articulosPagina = articulosFiltrados.slice(inicio, fin);
@@ -476,7 +476,8 @@ function mostrarTabla(listaCompleta) {
     articulosPagina.forEach(p => {
         const unidadDisplay = getUnidadDisplay(p);
 
-        const precioUnitario = (p.precioUnitario !== undefined && p.precioUnitario !== null) ? p.precioUnitario.toFixed(2) : '0.00';
+        const precioCompra = (p.precioCompra !== undefined && p.precioCompra !== null) ? p.precioCompra.toFixed(2) : '0.00';
+        const precioVenta = (p.precioVenta !== undefined && p.precioVenta !== null) ? p.precioVenta.toFixed(2) : '0.00';
         const pesoUnitario = (p.pesoUnitario !== undefined && p.pesoUnitario !== null) ? p.pesoUnitario.toFixed(3) : '0.000';
 
         const tr = document.createElement('tr');
@@ -485,7 +486,8 @@ function mostrarTabla(listaCompleta) {
             <td>${p.codigo || '-'}</td>
             <td>${p.descripcion || 'Sin descripción'}</td>
             <td class="data-center">${p.cantidad || 0}</td>
-            <td class="data-center">S/ ${precioUnitario}</td>
+            <td class="data-center">S/ ${precioCompra}</td>
+            <td class="data-center">S/ ${precioVenta}</td>
             <td class="data-center">${pesoUnitario}</td>
             <td class="data-unit">${unidadDisplay}</td>
             <td class="actions">
@@ -643,7 +645,7 @@ function exportarDatos(format) {
     }
 
     const headers = [
-        "ID Producto", "Código", "Descripción", "Stock", "Precio Unitario (S/)", "Peso Unitario (kg)",
+        "ID Producto", "Código", "Descripción", "Stock", "Precio Compra (S/)", "Precio Venta (S/)", "Peso Unitario (kg)",
         "Densidad", "Aroma", "Color",
         "Marca", "Categoría", "Tipo", "Unidad de Medida", "Abreviatura Unidad"
     ];
@@ -667,7 +669,8 @@ function exportarDatos(format) {
             sanitize(articulo.codigo),
             sanitize(articulo.descripcion),
             sanitize(articulo.cantidad),
-            sanitize(articulo.precioUnitario),
+            sanitize(articulo.precioCompra),
+            sanitize(articulo.precioVenta),
             sanitize(articulo.pesoUnitario),
             sanitize(articulo.densidad),
             sanitize(articulo.aroma),

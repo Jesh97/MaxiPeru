@@ -4,12 +4,10 @@ import sistema.Ejecucion.Conexion;
 import sistema.Modelo.Articulo.*;
 import sistema.Modelo.Compra.Lote;
 import sistema.repository.ArticuloRepository;
-import java.math.BigDecimal;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +19,8 @@ public class ArticuloController implements ArticuloRepository {
         a.setCodigo(rs.getString("codigo"));
         a.setDescripcion(rs.getString("descripcion"));
         a.setCantidad(rs.getInt("cantidad"));
-        a.setPrecioUnitario(rs.getDouble("precio_unitario"));
+        a.setPrecioCompra(rs.getDouble("precio_compra"));
+        a.setPrecioVenta(rs.getDouble("precio_venta"));
         a.setPesoUnitario(rs.getDouble("peso_unitario"));
         a.setDensidad(rs.getDouble("densidad"));
         a.setAroma(rs.getString("aroma"));
@@ -39,8 +38,10 @@ public class ArticuloController implements ArticuloRepository {
         a.setCodigo(rs.getString("codigo"));
         a.setDescripcion(rs.getString("descripcion"));
         a.setCantidad(rs.getInt("cantidad"));
-        a.setPrecioUnitario(rs.getDouble("precio_unitario"));
+        a.setPrecioCompra(rs.getDouble("precio_compra"));
+        a.setPrecioVenta(rs.getDouble("precio_venta"));
         a.setPesoUnitario(rs.getDouble("peso_unitario"));
+        a.setDensidad(rs.getDouble("densidad"));
         a.setAroma(rs.getString("aroma"));
         a.setColor(rs.getString("color"));
         return a;
@@ -49,15 +50,12 @@ public class ArticuloController implements ArticuloRepository {
     private Lote mapearLote(ResultSet rs) throws SQLException {
         Lote lote = new Lote();
         lote.setIdLote(rs.getInt("ID_Lote"));
-        lote.setNumeroLote(rs.getString("Número_Lote"));
-
+        lote.setNumeroLote(rs.getString("Codigo_Lote"));
+        lote.setCantidadLote(rs.getBigDecimal("Cantidad_Disponible"));
         java.sql.Date fechaVencimientoSql = rs.getDate("Fecha_Vencimiento");
         if (fechaVencimientoSql != null) {
             lote.setFechaVencimiento(fechaVencimientoSql.toLocalDate());
         }
-
-        lote.setCantidadLote(rs.getBigDecimal("Cantidad_Disponible"));
-
         return lote;
     }
 
@@ -68,20 +66,21 @@ public class ArticuloController implements ArticuloRepository {
         boolean exito = false;
         try {
             conn = Conexion.obtenerConexion();
-            cs = conn.prepareCall("{CALL sp_agregar_articulo(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
+            cs = conn.prepareCall("{CALL sp_agregar_articulo(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
 
             cs.setString(1, articulo.getCodigo());
             cs.setString(2, articulo.getDescripcion());
             cs.setInt(3, articulo.getCantidad());
-            cs.setDouble(4, articulo.getPrecioUnitario());
-            cs.setDouble(5, articulo.getPesoUnitario());
-            cs.setDouble(6, articulo.getDensidad());
-            cs.setString(7, articulo.getAroma());
-            cs.setString(8, articulo.getColor());
-            cs.setInt(9, articulo.getMarca().getIdMarca());
-            cs.setInt(10, articulo.getCategoria().getIdCategoria());
-            cs.setInt(11, articulo.getUnidad().getIdUnidad());
-            cs.setInt(12, articulo.getTipoArticulo().getId());
+            cs.setDouble(4, articulo.getPrecioCompra());
+            cs.setDouble(5, articulo.getPrecioVenta());
+            cs.setDouble(6, articulo.getPesoUnitario());
+            cs.setDouble(7, articulo.getDensidad());
+            cs.setString(8, articulo.getAroma());
+            cs.setString(9, articulo.getColor());
+            cs.setInt(10, articulo.getMarca().getIdMarca());
+            cs.setInt(11, articulo.getCategoria().getIdCategoria());
+            cs.setInt(12, articulo.getUnidad().getIdUnidad());
+            cs.setInt(13, articulo.getTipoArticulo().getId());
 
             exito = cs.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -100,20 +99,21 @@ public class ArticuloController implements ArticuloRepository {
         boolean exito = false;
         try {
             conn = Conexion.obtenerConexion();
-            cs = conn.prepareCall("{CALL sp_actualizar_articulo(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
+            cs = conn.prepareCall("{CALL sp_actualizar_articulo(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
 
             cs.setInt(1, articulo.getIdProducto());
             cs.setString(2, articulo.getDescripcion());
             cs.setInt(3, articulo.getCantidad());
-            cs.setDouble(4, articulo.getPrecioUnitario());
-            cs.setDouble(5, articulo.getPesoUnitario());
-            cs.setDouble(6, articulo.getDensidad());
-            cs.setString(7, articulo.getAroma());
-            cs.setString(8, articulo.getColor());
-            cs.setInt(9, articulo.getMarca().getIdMarca());
-            cs.setInt(10, articulo.getCategoria().getIdCategoria());
-            cs.setInt(11, articulo.getUnidad().getIdUnidad());
-            cs.setInt(12, articulo.getTipoArticulo().getId());
+            cs.setDouble(4, articulo.getPrecioCompra());
+            cs.setDouble(5, articulo.getPrecioVenta());
+            cs.setDouble(6, articulo.getPesoUnitario());
+            cs.setDouble(7, articulo.getDensidad());
+            cs.setString(8, articulo.getAroma());
+            cs.setString(9, articulo.getColor());
+            cs.setInt(10, articulo.getMarca().getIdMarca());
+            cs.setInt(11, articulo.getCategoria().getIdCategoria());
+            cs.setInt(12, articulo.getUnidad().getIdUnidad());
+            cs.setInt(13, articulo.getTipoArticulo().getId());
 
             exito = cs.executeUpdate() > 0;
         } catch (SQLException e) {
