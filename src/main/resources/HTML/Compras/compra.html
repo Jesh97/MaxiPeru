@@ -173,24 +173,21 @@
                     </div>
                 </div>
 
-                <div class="col-md-5 d-flex align-items-end">
+                <div class="col-md-6 d-flex align-items-end">
                     <div class="w-100">
-                        <label class="form-label small-muted">¿Costo de Transporte Condicional?</label>
+                        <label class="form-label small-muted">Regla de Costo Adicional (Transporte)</label>
                         <div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="aplicaCostoCondicional" id="costoCondicionalSi" value="si">
-                                <label class="form-check-label small-muted" for="costoCondicionalSi">Sí</label>
+                                <input class="form-check-input" type="radio" name="aplicaCostoCondicional" id="reglaAplicaCostoAdicional" value="si">
+                                <label class="form-check-label small-muted" for="reglaAplicaCostoAdicional">Sí, aplicar regla</label>
                             </div>
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="aplicaCostoCondicional" id="costoCondicionalNo" value="no" checked>
-                                <label class="form-check-label small-muted" for="costoCondicionalNo">No</label>
+                                <input class="form-check-input" type="radio" name="aplicaCostoCondicional" id="reglaNoAplica" value="no" checked>
+                                <label class="form-check-label small-muted" for="reglaNoAplica">No aplica</label>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <input type="hidden" id="montoMinimoCondicion" value="" />
-                <input type="hidden" id="costoAdicionalAplicado" value="" />
 
                 <div id="contenedorBtnGuia" style="display:flex;">
                     <button id="btnGuia" type="button" class="btn btn-outline-primary me-2">Guía de Transporte</button>
@@ -365,7 +362,13 @@
                     <div class="line"><span class="muted">Subtotal (sin IGV)</span><span id="subtotalSinIgv">S/ 0.00</span></div>
                     <div class="line"><span class="muted">IGV (18%)</span><span id="totalIgv">S/ 0.00</span></div>
                     <div class="line" style="font-size:1.15rem; margin-top:8px;"><span>Total de Compra</span><span id="totalCompraFinal">S/ 0.00</span></div>
+
                     <div class="mt-3 small-muted">Coste de transporte total: <span id="costeTransporteLabel">0.00</span></div>
+
+                    <div id="mensajeAlertaTransporte" class="alert alert-warning p-2 mt-2 d-none" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        El coste de transporte calculado no coincide con el coste ingresado.
+                    </div>
                     <div class="line"><span class="muted">Peso Total Productos</span><span id="totalPesoProductos">0.000 kg</span></div>
                     <div class="line" style="font-weight: 700; font-size:1.2rem; margin-top:8px;">
                         <span>Total a Pagar</span><span id="totalAPagar">S/ 0.00</span>
@@ -373,7 +376,6 @@
 
                     <div class="d-grid gap-2 mt-3">
                         <button type="button" id="guardarCompraBtn" class="btn btn-success btn-lg mb-2"><i class="bi bi-save"></i> Guardar Compra</button>
-                        <!-- BOTÓN LISTAR COMPRA MOVIDO AQUÍ, DEBAJO DE GUARDAR COMPRA -->
                         <a href="listarCompra.html" class="btn btn-primary btn-lg">
                             <i class="bi bi-card-list"></i> Ver Lista de Compras
                         </a>
@@ -381,8 +383,6 @@
                 </section>
             </div>
         </div>
-
-        <!-- SECCIÓN DE COMPRAS REGISTRADAS ANTERIORMENTE MOVIDA FUE ELIMINADA DE AQUÍ -->
     </form>
 </main>
 
@@ -727,8 +727,34 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalReglaCosto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-gear"></i> Regla de Costo Adicional (Transporte)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small-muted">Define el monto mínimo de compra que debe superar la orden para aplicar un costo adicional fijo de transporte.</p>
+                <div class="mb-3">
+                    <label class="form-label small-muted">Monto Mínimo de Compra (S/)</label>
+                    <input type="number" min="0" step="0.01" id="reglaMontoMinimo" class="form-control" placeholder="Ej: 500.00" value="0.00"/>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small-muted">Costo Adicional Fijo (S/)</label>
+                    <input type="number" min="0" step="0.01" id="reglaCostoAdicional" class="form-control" placeholder="Ej: 50.00" value="0.00"/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btnCancelarReglaCosto">Cancelar</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="btnGuardarReglaCosto">Aceptar Regla</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" xintegrity="sha384-I7E8V-n7D6T4tH9A4K0Pz0B9x9qD4z4z4p9w8J9Q4x5R5z2K7E6p6B8D8F7B5p5g6D9A6B8A7E9p9F9F8d6A6A6" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
 <script src="../../JS/compra/compra.js"></script>

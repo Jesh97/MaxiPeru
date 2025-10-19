@@ -20,6 +20,11 @@ let guia = {
     correlativoGuiaTransporte: '', peso: '', fechaPedido: '', fechaEntrega: ''
 };
 
+const UNIDAD_ID_MAP = {
+    'LITRO': 1, 'GALÓN': 2, 'BIDÓN': 3, 'UNIDAD': 4, 'KILOGRAMO': 5, 'CIENTO': 6, 'PAQUETE': 7, 'MILLAR': 8,
+    'ROLLO': 9, 'SACO': 10
+};
+
 let subtotalSinIgvCalculado = 0;
 let totalIgvCalculado = 0;
 let totalCompraFinalCalculado = 0;
@@ -88,10 +93,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalCajas = new bootstrap.Modal($('#modalCajas'));
     const btnGuardarLote = $('#btnGuardarLote');
     const btnAgregarLote = $('#btnAgregarLote');
+    const modalReglaCostoElement = $('#modalReglaCosto');
 
     let debounceTimer = null;
     let debounceTimerProducto = null;
     let filaIdLoteActual = null;
+
+    if (modalReglaCostoElement) {
+        const modalReglaCosto = new bootstrap.Modal(modalReglaCostoElement);
+        const reglaAplicaCostoAdicional = $('#reglaAplicaCostoAdicional');
+
+        if (reglaAplicaCostoAdicional) {
+            reglaAplicaCostoAdicional.addEventListener('change', () => {
+                if (reglaAplicaCostoAdicional.checked) {
+                    modalReglaCosto.show();
+                }
+            });
+        }
+
+        const btnGuardarReglaCosto = $('#btnGuardarReglaCosto');
+        const aplicaCostoAdicionalCheckbox = $('#aplicaCostoAdicional');
+
+        if (btnGuardarReglaCosto) {
+            btnGuardarReglaCosto.addEventListener('click', actualizarTotales);
+        }
+    }
 
     if (inputProveedor) {
         inputProveedor.addEventListener('input', () => {
@@ -443,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 trFilaGeneral.querySelector('.unidadMedida').value = producto.unidadMedida || 'UNIDAD';
                 trFilaGeneral.querySelector('.descripcion').value = producto.descripcion || '';
                 trFilaGeneral.querySelector('.idProducto').value = producto.idProducto || 0;
-                trFilaGeneral.querySelector('.precioUnitario').value = producto.precioCompra || '0.00';
+                trFilaGeneral.querySelector('.precioUnitario').value = producto.precioUnitario || '0.00';
 
                 const selectorFinanciero = `#tablaProductosFinanciero tr[data-fila-id="${trFilaGeneral.dataset.filaId}"]`;
                 const trFinanciero = document.querySelector(selectorFinanciero);
@@ -785,86 +811,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function obtenerDatosCompra() {
-        const detalles = [];
-        const mapaArticulosValidados = {};
-
-        $$('#tablaProductosGeneral tr[data-fila-id]').forEach(trGeneral => {
-            const filaId = trGeneral.dataset.filaId;
-            const trFinanciero = $(`#tablaProductosFinanciero tr[data-fila-id="${filaId}"]`);
-            const cantidad = parseInt(trGeneral.querySelector('.cantidad')?.value) || 0;
-            const precioUnitario = parseFloat(trGeneral.querySelector('.precioUnitario')?.value) || 0;
-            const idArticulo = parseInt(trGeneral.querySelector('.idProducto')?.value) || 0;
-
-            if (cantidad === 0 && precioUnitario === 0 && !trFinanciero.querySelector('.bonificacion')?.checked) return;
-
-            if (idArticulo > 0) {
-                mapaArticulosValidados[filaId] = idArticulo;
-            }
-
-            const productoDetalle = {
-                idArticulo: idArticulo,
-                cantidad: cantidad,
-                precioUnitario: precioUnitario.toFixed(2),
-                bonificacion: trFinanciero.querySelector('.bonificacion')?.checked ?? false,
-                descuentoItemTipo: trFinanciero.dataset.descuentoItemTipo,
-                descuentoItemValor: (parseFloat(trFinanciero.dataset.descuentoItemValor) || 0).toFixed(2),
-                descuentoItemMotivo: trFinanciero.dataset.descuentoItemMotivo,
-                tasaIgvItem: (parseFloat(trFinanciero.dataset.tasaIgvItem) || IGV_RATE).toFixed(2),
-                costeUnitarioTransporte: (parseFloat(trGeneral.dataset.costeUnitarioTransporte) || 0).toFixed(4),
-                total: parseFloat(trFinanciero.dataset.totalDetalle) || 0,
-                pesoTotal: parseFloat(trGeneral.dataset.pesoTotal) || 0,
-                lotes: lotes[filaId] || []
-            };
-            detalles.push(productoDetalle);
-        });
-        return { detalles, mapaArticulosValidados };
-    }
-
-    function obtenerCajasCompraJSON(mapaArticulosValidados) {
-        const cajasCompra = [];
-        let tempIdCaja = 1;
-
-        if (typeof cajas !== 'undefined' && cajas.length > 0) {
-            cajas.forEach(caja => {
-                let nombreCaja = (caja.nombre || '').trim();
-
-                if (nombreCaja.length === 0) {
-                    nombreCaja = 'Caja S/N ' + tempIdCaja;
-                }
-
-                const detallesCaja = [];
-
-                if (caja.productos && caja.productos.length > 0) {
-                    caja.productos.forEach(prod => {
-
-                        const idArticulo = mapaArticulosValidados[prod.filaId] || 0;
-
-                        if (idArticulo > 0) {
-                            detallesCaja.push({
-                                idArticulo: idArticulo,
-                                cantidad: prod.cantidad
-                            });
-                        }
-                    });
-                }
-
-                const costoFlete = parseFloat(caja.costo) || parseFloat(caja.fleteTotal) || 0;
-
-                if (detallesCaja.length > 0) {
-                    cajasCompra.push({
-                        idCajaCompra: tempIdCaja++,
-                        nombreCaja: nombreCaja,
-                        cantidad: caja.cantidad || 1,
-                        costoCaja: costoFlete,
-                        detalles: detallesCaja
-                    });
-                }
-            });
-        }
-        return cajasCompra;
-    }
-
     if (guardarCompraBtn) {
         guardarCompraBtn.addEventListener('click', async (e) => {
             e.preventDefault();
@@ -874,20 +820,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const detalles = [];
-            const mapaArticulosPorFilaId = {};
-
             $$('#tablaProductosGeneral tr[data-fila-id]').forEach(tr => {
                 const filaId = tr.dataset.filaId;
                 const trFinanciero = $(`#tablaProductosFinanciero tr[data-fila-id="${filaId}"]`);
                 const trGuiaTransporte = $(`#tablaProductosGuiaTransporte tr[data-fila-id="${filaId}"]`);
 
-                const idArticuloRaw = tr.querySelector('.idProducto')?.value;
-                const idArticulo = parseInt(idArticuloRaw, 10) || 0;
-
+                const idArticulo = tr.querySelector('.idProducto')?.value;
                 const cantidad = parseFloat(tr.querySelector('.cantidad')?.value) || 0;
                 const precioUnitario = parseFloat(tr.querySelector('.precioUnitario')?.value) || 0;
                 const costoUnitarioTransporte = parseFloat(trGuiaTransporte.querySelector('.costoUnitTransporte')?.value) || 0;
                 const costeTotalTransporte = costoUnitarioTransporte * cantidad;
+
+                const unidadTexto = tr.querySelector('.unidadMedida')?.value?.toUpperCase() || '';
+                const idUnidad = UNIDAD_ID_MAP[unidadTexto] || 0;
 
                 const descuentos = [];
                 const descuentoItemValor = parseFloat(trFinanciero.dataset.descuentoItemValor) || 0;
@@ -906,7 +851,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const bonificacion = parseFloat(trFinanciero.dataset.bonificacionValor) || 0;
 
                 detalles.push({
-                    idArticulo: idArticulo,
+                    idArticulo: parseInt(idArticulo, 10) || 0,
+                    idUnidad: idUnidad,
                     cantidad: cantidad,
                     precioUnitario: precioUnitario,
                     bonificacion: bonificacion,
@@ -919,10 +865,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     descuentos: descuentos,
                     lotes: lotes[filaId] || []
                 });
-
-                if (idArticulo > 0) {
-                    mapaArticulosPorFilaId[filaId] = idArticulo;
-                }
             });
 
             if (detalles.length === 0) {
@@ -940,7 +882,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (monedaId <= 0) { alert('Debe seleccionar una moneda válida.'); return; }
 
             const descuentosGlobales = [];
-            if ($('#descuentoSi')?.checked && $('#tipoDescuento')?.value === 'global') {
+            if (descuentoSi?.checked && tipoDescuentoSelect?.value === 'global') {
                 const tipoValor = tipoValorDescuentoSelect.value;
                 const valorDescuentoInputVal = valorDescuentoInput.value.trim();
                 const valor = parseFloat(valorDescuentoInputVal) || 0;
@@ -962,19 +904,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 hayBonificacion: bonifSi?.checked,
                 hayTraslado: trasladoSi?.checked,
                 observation: $('#observacionesGenerales')?.value,
-
                 subtotalSinIgv: subtotalSinIgvCalculado,
                 totalIgv: totalIgvCalculado,
                 totalAPagar: totalCompraFinalCalculado,
-
                 totalPeso: totalPesoProductosCalculado,
                 costeTransporte: costeTransporteCalculado,
-
                 detalles: detalles,
                 referencia: referencia,
                 guiaTransporte: guia,
                 descuentosGlobales: descuentosGlobales,
-                cajasCompra: obtenerCajasCompraJSON(mapaArticulosPorFilaId)
+                cajasCompra: cajas
             };
 
             try {
@@ -991,7 +930,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 modalConfirm.show();
 
                 if (response.ok) {
-                    if ($('#formCompra')) $('#formCompra').reset();
+                    if (formCompra) formCompra.reset();
                     $$('tbody').forEach(tbody => tbody.innerHTML = '');
                     crearFilaProducto();
                     actualizarTotales();
