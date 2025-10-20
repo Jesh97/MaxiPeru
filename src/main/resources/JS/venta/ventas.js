@@ -4,54 +4,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const bodyItemsVenta = document.getElementById('bodyItemsVenta');
     const agregarItemVentaBtn = document.getElementById('agregarItemVentaBtn');
     const btnGuardarVenta = document.getElementById('btnGuardarVenta');
-
     const subtotalSinIgvSpan = document.getElementById('subtotalSinIgv');
     const descuentoVentaSpan = document.getElementById('descuentoVenta');
     const igvVentaSpan = document.getElementById('igvVenta');
     const totalVentaSpan = document.getElementById('totalVenta');
     const pesoTotalVentaSpan = document.getElementById('pesoTotalVenta');
-
     const aplicaIgvCheckbox = document.getElementById('aplicaIgv');
-
     const tipoDescuentoRadios = document.querySelectorAll('input[name="tipoDescuento"]');
     const descuentoGlobalContainer = document.getElementById('descuentoGlobalContainer');
     const descuentoHeader = document.querySelector('.descuento-header');
-
     const modalDescuentoItem = new bootstrap.Modal(document.getElementById('modalDescuentoItem'));
     const itemDescripcionModal = document.getElementById('itemDescripcionModal');
     const valorDescuentoItem = document.getElementById('valorDescuentoItem');
     const tipoDescuentoItem = document.getElementById('tipoDescuentoItem');
     const guardarDescuentoItemBtn = document.getElementById('guardarDescuentoItemBtn');
-
     const opcionTrasladoSelect = document.getElementById('opcionTraslado');
     const modalidadTransporteSelect = document.getElementById('modalidadTransporte');
     const transportePublicoContainer = document.getElementById('transportePublicoContainer');
     const transportePrivadoContainer = document.getElementById('transportePrivadoContainer');
     const modalTraslado = new bootstrap.Modal(document.getElementById('modalTraslado'));
     const modalConformidadCliente = new bootstrap.Modal(document.getElementById('modalConformidadCliente'));
-
     const modalLotesVencimiento = new bootstrap.Modal(document.getElementById('modalLotesVencimiento'));
-    const bodyLotes = document.getElementById('bodyLotes');
-    const agregarLoteBtn = document.getElementById('agregarLoteBtn');
-    const guardarLotesBtn = document.getElementById('guardarLotesBtn');
+    const tablaLotesDisponiblesBody = document.getElementById('bodyLotes');
     const itemLoteDescripcion = document.getElementById('itemLoteDescripcion');
     const itemLoteCantidadTotal = document.getElementById('itemLoteCantidadTotal');
-    const alertaLotes = document.getElementById('alertaLotes');
-    const sumaLotesSpan = document.getElementById('sumaLotes');
-    const totalItemLoteSpan = document.getElementById('totalItemLote');
     let currentRow = null;
-    let currentItemQuantity = 0;
-    let loteRowIndex = 0;
-
     const busquedaProductosInput = document.getElementById('busquedaProductos');
     const listaResultadosBusqueda = document.getElementById('listaResultadosBusqueda');
     let busquedaTimeout;
-
     const busquedaClienteInput = document.getElementById('busquedaCliente');
     const listaResultadosClientes = document.getElementById('listaResultadosClientes');
     const inputIdCliente = document.getElementById('idCliente');
     const spanClienteSeleccionado = document.getElementById('spanClienteSeleccionado');
-
 
     const buscarClientes = async (query) => {
         if (query.length < 3) {
@@ -63,23 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const response = await fetch(url);
-
-            if (!response.ok) {
-                let errorMensaje = 'Error al buscar clientes';
-                try {
-                    const errorJson = await response.json();
-                    errorMensaje = errorJson.error || errorMensaje;
-                } catch (jsonError) {
-                    errorMensaje = `Error HTTP ${response.status}: ${response.statusText}`;
-                }
-                throw new Error(errorMensaje);
-            }
-
             const clientes = await response.json();
             mostrarResultadosClientes(clientes);
         } catch (error) {
-            console.error('Fallo en la búsqueda de clientes:', error);
-            listaResultadosClientes.innerHTML = `<li class="list-group-item list-group-item-danger">Error: ${error.message}</li>`;
+            listaResultadosClientes.innerHTML = `<li class="list-group-item list-group-item-danger">Error al buscar clientes.</li>`;
         }
     };
 
@@ -90,9 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const sugerenciasLimitadas = clientes.slice(0, 10);
-
-        sugerenciasLimitadas.forEach(cliente => {
+        clientes.slice(0, 10).forEach(cliente => {
             const li = document.createElement('li');
             li.className = 'client-search-item';
             li.textContent = `${cliente.n_Documento} - ${cliente.razonSocial}`;
@@ -123,23 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const response = await fetch(url);
-
-            if (!response.ok) {
-                let errorMensaje = 'Error al buscar artículos';
-                try {
-                    const errorJson = await response.json();
-                    errorMensaje = errorJson.error || errorMensaje;
-                } catch (jsonError) {
-                    errorMensaje = `Error HTTP ${response.status}: ${response.statusText}`;
-                }
-                throw new Error(errorMensaje);
-            }
-
             const articulos = await response.json();
             mostrarResultados(articulos);
         } catch (error) {
-            console.error('Fallo en la búsqueda:', error);
-            listaResultadosBusqueda.innerHTML = `<li class="list-group-item list-group-item-danger">Error: ${error.message}</li>`;
+            listaResultadosBusqueda.innerHTML = `<li class="list-group-item list-group-item-danger">Error al buscar artículos.</li>`;
         }
     };
 
@@ -150,9 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const sugerenciasLimitadas = articulos.slice(0, 10);
-
-        sugerenciasLimitadas.forEach(articulo => {
+        articulos.slice(0, 10).forEach(articulo => {
             const li = document.createElement('li');
             li.className = 'product-search-item';
             li.textContent = `${articulo.codigo} - ${articulo.descripcion} (Stock: ${articulo.cantidad}) S/ ${articulo.precioUnitario.toFixed(2)}`;
@@ -220,6 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (totalItemSpan) {
                  totalItemSpan.textContent = Math.max(0, finalItemTotal).toFixed(2);
             }
+
+            const loteBtn = row.querySelector('.lote-btn');
+            if (loteBtn) loteBtn.disabled = cantidad <= 0;
         });
 
         if (!isPerItemDiscount) {
@@ -274,11 +231,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         row.querySelector('.lote-btn')?.addEventListener('click', () => {
             const cantidad = parseFloat(row.querySelector('.item-cantidad')?.value) || 0;
-            if (cantidad > 0) {
+            const idArticulo = parseFloat(row.dataset.idArticulo) || 0;
+            if (cantidad > 0 && idArticulo > 0) {
                 currentRow = row;
-                loadLotes(row);
+                loadLotes(row, idArticulo, cantidad);
             } else {
-                alert("Ingrese una cantidad mayor a cero para gestionar lotes.");
+                alert("Ingrese una cantidad mayor a cero y asegúrese de que el ítem tenga un ID de Artículo válido para ver los lotes.");
             }
         });
     };
@@ -287,7 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const row = document.createElement('tr');
         row.dataset.descuentoValor = 0;
         row.dataset.descuentoTipo = 'monto';
-        row.dataset.lotes = '[]';
         row.dataset.idArticulo = product ? product.id : 0;
         const isPerItemDiscount = document.getElementById('descuentoPorItem').checked;
         const initialPrice = product && product.precio ? product.precio.toFixed(2) : '0.00';
@@ -310,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <td class="discount-column"><span class="item-descuento">S/ 0.00</span> <button type="button" class="btn btn-table btn-descuento-item aplicar-descuento-btn" title="Aplicar Descuento"><i class="bi bi-tag"></i></button></td>
             <td><span class="item-total fw-bold">0.00</span></td>
             <td class="action-cell">
-                <button type="button" class="btn btn-table btn-lotes-item lote-btn" title="Registro de Lotes"><i class="bi bi-boxes"></i></button>
+                <button type="button" class="btn btn-table btn-lotes-item lote-btn" title="Ver Lotes Disponibles"><i class="bi bi-boxes"></i></button>
                 <button type="button" class="btn btn-table btn-delete-item eliminar-item-btn" aria-label="Eliminar ítem" title="Eliminar Ítem"><i class="bi bi-trash"></i></button>
             </td>
         `;
@@ -339,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
             idTipoComprobante: parseFloat(document.getElementById('idTipoComprobante')?.value) || 0,
             idMoneda: parseFloat(document.getElementById('idMoneda')?.value) || 0,
             fechaEmision: document.getElementById('fechaEmision')?.value || new Date().toISOString().split('T')[0],
-            fechaVencimiento: document.getElementById('fechaVencimiento')?.value || '',
+            fechaVencimiento: document.getElementById('fechaVencimiento')?.value || null,
             idTipoPago: parseFloat(document.getElementById('idTipoPago')?.value) || 0,
             estadoVenta: document.getElementById('estadoVenta')?.value || 'Emitida',
             tipoDescuento: tipoDescuento,
@@ -356,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tipoDescuento === 'global') {
             data.descuentoGlobal = {
                 motivo: document.getElementById('motivoDescuentoGlobal')?.value || 'Descuento General',
-                tipoValor: document.getElementById('tipoDescuentoGlobal')?.value || 'soles',
+                tipoValor: document.getElementById('tipoDescuentoGlobal')?.value || 'monto',
                 valor: parseFloat(document.getElementById('valorDescuentoGlobal')?.value) || 0
             };
         }
@@ -385,8 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 precioUnitario: precioUnitario,
                 descuentoMonto: descuentoMonto,
                 subtotal: baseTotal,
-                total: totalItem,
-                lotesConsumidos: JSON.parse(row.dataset.lotes)
+                total: totalItem
             };
 
             if (isPerItemDiscount) {
@@ -433,18 +389,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const ventaData = getGeneralData();
             ventaData.detalles = getDetalles();
 
+            if (ventaData.detalles.length === 0) {
+                alert("Debe agregar al menos un ítem a la venta.");
+                return;
+            }
+
             if (ventaData.hayTraslado) {
                 ventaData.datosTraslado = getTrasladoData();
             } else {
                 ventaData.conformidadTienda = getTrasladoData();
             }
 
-            if (ventaData.detalles.length === 0) {
-                alert("Debe agregar al menos un ítem a la venta.");
-                return;
-            }
-
-            const response = await fetch('VentaServlet', {
+            const response = await fetch(VENTA_SERVLET_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -462,10 +418,52 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
         } catch (error) {
-            console.error('Error al registrar la venta:', error);
-            alert("Ocurrió un error de conexión o del servidor.");
+            alert("Ocurrió un error de conexión o del servidor: " + error.message);
         }
     };
+
+    const buscarLotes = async (idArticulo) => {
+        const url = `${VENTA_SERVLET_URL}?action=buscarLotes&idArticulo=${idArticulo}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Error al buscar lotes disponibles.');
+        }
+        return await response.json();
+    };
+
+    const displayLotesDisponibles = (lotes) => {
+        tablaLotesDisponiblesBody.innerHTML = '';
+        if (lotes.length === 0) {
+            tablaLotesDisponiblesBody.innerHTML = `<tr><td colspan="4">No hay lotes disponibles para este artículo.</td></tr>`;
+            return;
+        }
+
+        lotes.forEach(lote => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${lote.lote}</td>
+                <td>${lote.cantidadDisponible.toFixed(2)}</td>
+                <td>${lote.vencimiento || 'N/A'}</td>
+                <td>S/ ${(lote.precioCompraUnitario || 0).toFixed(2)}</td>
+            `;
+            tablaLotesDisponiblesBody.appendChild(row);
+        });
+    };
+
+    function loadLotes(row, idArticulo, cantidad) {
+        itemLoteDescripcion.textContent = row.querySelector('.item-descripcion').value;
+        itemLoteCantidadTotal.textContent = cantidad.toFixed(2);
+
+        tablaLotesDisponiblesBody.innerHTML = '<tr><td colspan="4">Cargando lotes disponibles...</td></tr>';
+
+        buscarLotes(idArticulo)
+            .then(lotes => displayLotesDisponibles(lotes))
+            .catch(error => {
+                tablaLotesDisponiblesBody.innerHTML = `<tr><td colspan="4" class="text-danger">${error.message}</td></tr>`;
+            });
+
+        modalLotesVencimiento.show();
+    }
 
     agregarItemVentaBtn.addEventListener('click', () => createItemRow());
 
@@ -521,98 +519,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function updateLoteTotals() {
-        const loteInputs = bodyLotes.querySelectorAll('.lote-cantidad');
-        let sum = 0;
-        loteInputs.forEach(input => {
-            sum += parseFloat(input.value) || 0;
-        });
-
-        sumaLotesSpan.textContent = sum.toFixed(0);
-        totalItemLoteSpan.textContent = currentItemQuantity.toFixed(0);
-
-        if (sum !== currentItemQuantity) {
-            alertaLotes.style.display = 'block';
-            guardarLotesBtn.disabled = true;
-        } else {
-            alertaLotes.style.display = 'none';
-            guardarLotesBtn.disabled = false;
-        }
-    }
-    function createLoteRow(cantidad = 0, lote = '', vencimiento = '') {
-        loteRowIndex++;
-        const row = document.createElement('tr');
-        row.id = `lote-row-${loteRowIndex}`;
-        row.innerHTML = `
-            <td><input type="text" class="form-control lote-numero" value="${lote}" placeholder="Lote"></td>
-            <td><input type="number" class="form-control lote-cantidad" value="${cantidad}" min="1" step="1" required></td>
-            <td><input type="date" class="form-control lote-vencimiento" value="${vencimiento}"></td>
-            <td>
-                <button type="button" class="btn btn-outline-danger btn-sm eliminar-lote-btn" title="Eliminar Lote">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </td>
-        `;
-        row.querySelector('.lote-cantidad').addEventListener('input', updateLoteTotals);
-        row.querySelector('.eliminar-lote-btn').addEventListener('click', () => {
-            row.remove();
-            updateLoteTotals();
-        });
-        bodyLotes.appendChild(row);
-    }
-    function loadLotes(row) {
-        bodyLotes.innerHTML = '';
-        const lotesData = row.dataset.lotes ? JSON.parse(row.dataset.lotes) : [];
-        currentItemQuantity = parseFloat(row.querySelector('.item-cantidad').value) || 0;
-        const itemDesc = row.querySelector('.item-descripcion').value;
-        if (currentItemQuantity === 0) {
-            console.error("Debe ingresar una cantidad mayor a cero para gestionar lotes.");
-            return;
-        }
-
-        itemLoteDescripcion.textContent = itemDesc;
-        itemLoteCantidadTotal.textContent = currentItemQuantity;
-        if (lotesData.length > 0) {
-            lotesData.forEach(lote => createLoteRow(lote.cantidad, lote.lote, lote.vencimiento));
-        } else if (currentItemQuantity > 0) {
-            createLoteRow(currentItemQuantity);
-        }
-
-        updateLoteTotals();
-        modalLotesVencimiento.show();
-    }
-    function saveLotes() {
-        if (!currentRow) return;
-        const newLotes = [];
-        const loteRows = bodyLotes.querySelectorAll('tr');
-        let sum = 0;
-        loteRows.forEach(row => {
-            const cantidad = parseFloat(row.querySelector('.lote-cantidad').value) || 0;
-            const lote = row.querySelector('.lote-numero').value.trim();
-            const vencimiento = row.querySelector('.lote-vencimiento').value;
-
-            if (cantidad > 0) {
-                newLotes.push({ cantidad, lote, vencimiento });
-                sum += cantidad;
-            }
-        });
-        if (sum !== currentItemQuantity) {
-            console.error("Error de validación: La suma de las cantidades de los lotes no coincide con la cantidad total del ítem.");
-            return;
-        }
-
-        currentRow.dataset.lotes = JSON.stringify(newLotes);
-        updateLoteStatusDisplay(currentRow, parseFloat(currentRow.querySelector('.item-cantidad').value) || 0);
-        modalLotesVencimiento.hide();
-    }
-    function updateLoteStatusDisplay(row, currentQuantity) {
-        const loteBtn = row.querySelector('.lote-btn');
-        loteBtn.disabled = currentQuantity <= 0;
-    }
-
-    agregarLoteBtn?.addEventListener('click', () => createLoteRow(0));
-    guardarLotesBtn?.addEventListener('click', saveLotes);
-
     btnGuardarVenta?.addEventListener('click', registrarVenta);
 
     busquedaProductosInput.addEventListener('input', (e) => {
@@ -636,6 +542,5 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         bodyItemsVenta.querySelectorAll('tr').forEach(setupRowEvents);
     }
-
     updateTotals();
 });

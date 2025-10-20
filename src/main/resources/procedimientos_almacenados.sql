@@ -51,36 +51,21 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_para_compra`$$
-CREATE PROCEDURE `sp_buscar_articulos_para_compra`(
-    IN p_busqueda VARCHAR(100)
-)
+CREATE PROCEDURE `sp_buscar_articulos_para_compra`(IN p_busqueda VARCHAR(100))
 BEGIN
-    SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.peso_unitario, a.aroma, a.color
-    FROM articulo a
-    WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
-      AND a.id_tipo_articulo IN (2, 3, 4);
+SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario, a.aroma, a.color FROM articulo a WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%')) AND a.id_tipo_articulo IN (2, 3, 4);
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_para_venta`$$
-CREATE PROCEDURE `sp_buscar_articulos_para_venta`(
-    IN p_busqueda VARCHAR(100)
-)
+CREATE PROCEDURE `sp_buscar_articulos_para_venta`(IN p_busqueda VARCHAR(100))
 BEGIN
-    SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_venta, a.peso_unitario, a.aroma, a.color
-    FROM articulo a
-    WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
-      AND a.id_tipo_articulo IN (1, 3);
+SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario, a.aroma, a.color FROM articulo a WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%')) AND a.id_tipo_articulo IN (1, 3);
 END$$
 
-DROP PROCEDURE IF EXISTS `sp_buscar_insumos`$$
-CREATE PROCEDURE `sp_buscar_insumos`(
-    IN p_busqueda VARCHAR(100)
-)
+DROP PROCEDURE IF EXISTS `sp_buscar_articulos_para_produccion`$$
+CREATE PROCEDURE `sp_buscar_articulos_para_produccion`(IN p_busqueda VARCHAR(100))
 BEGIN
-    SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.peso_unitario, a.aroma, a.color
-    FROM articulo a
-    WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
-      AND a.id_tipo_articulo = 2;
+SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario, a.aroma, a.color FROM articulo a WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%')) AND a.id_tipo_articulo IN (2, 4);
 END$$
 
 DROP PROCEDURE IF EXISTS `SP_VerLotesPorArticulo`$$
@@ -289,26 +274,39 @@ DROP PROCEDURE IF EXISTS `sp_listar_compras_final`$$
 CREATE PROCEDURE `sp_listar_compras_final`()
 BEGIN
     SELECT
-        c.id_compra, c.fecha_emision, c.fecha_vencimiento, tc.nombre AS tipo_comprobante, c.serie, c.correlativo, mo.nombre AS moneda, c.tipo_cambio, c.subtotal, c.igv, c.total, c.total_peso, c.coste_transporte, c.observacion,
+        c.id_compra, c.fecha_emision, c.fecha_vencimiento, c.serie, c.correlativo, c.subtotal, c.igv, c.total, c.total_peso, c.coste_transporte, c.observacion,
+        c.incluye_igv, c.hay_bonificacion, c.hay_traslado, c.tipo_cambio,
+        tc.id AS id_tipo_comprobante, tc.nombre AS tipo_comprobante,
+        mo.id_moneda AS id_moneda, mo.nombre AS moneda,
+        tp.id AS id_tipo_pago, tp.nombre AS tipo_pago,
+        fp.id AS id_forma_pago, fp.nombre AS forma_pago,
         p.id AS id_proveedor, p.ruc, p.razonSocial AS razon_social, p.direccion, p.telefono, p.correo, p.ciudad,
-        dc.id_detalle, dc.id_articulo, a.codigo AS codigo_articulo, a.descripcion AS descripcion_articulo, dc.cantidad, dc.precio_unitario, dc.coste_unitario_transporte, dc.coste_total_transporte, dc.precio_con_descuento, dc.igv_insumo, dc.total AS total_detalle, dc.peso_total,
+        dc.id_detalle, dc.cantidad, dc.precio_unitario, dc.bonificacion,
+        dc.coste_unitario_transporte, dc.coste_total_transporte, dc.precio_con_descuento, dc.igv_insumo, dc.total AS total_detalle, dc.peso_total,
+        a.id AS id_articulo, a.codigo AS codigo_articulo, a.descripcion AS descripcion_articulo,
+        um.id_unidad AS id_unidad_articulo, um.nombre AS unidad_medida_articulo,
         il.id_lote, il.codigo_lote, il.cantidad_ingreso AS cantidad_lote, il.fecha_vencimiento AS fecha_vencimiento_lote,
         cc.id_caja_compra, cc.nombre_caja, cc.cantidad AS cantidad_total_articulos_caja, cc.costo_caja,
         dcc.id_detalle_caja, dcc.id_articulo AS id_articulo_en_caja, dcc.cantidad AS cantidad_en_caja,
-        gt.id_guia, gt.ruc_guia, gt.razon_social_guia, gt.fecha_emision AS fecha_emision_guia, gt.tipo_comprobante AS tipo_comprobante_guia, gt.serie AS serie_guia, gt.correlativo AS correlativo_guia, gt.serie_guia_transporte, gt.correlativo_guia_transporte, gt.ciudad_traslado,
-        gt.coste_total_transporte AS coste_transporte_guia, gt.peso AS peso_guia, gt.fecha_pedido, gt.fecha_entrega, gt.punto_partida, gt.punto_llegada,
+        gt.id_guia, gt.tipo_documento_ref, gt.ruc_guia, gt.razon_social_guia, gt.fecha_emision AS fecha_emision_guia, gt.tipo_comprobante AS tipo_comprobante_guia, gt.serie AS serie_guia, gt.correlativo AS correlativo_guia,
+        gt.serie_guia_transporte, gt.correlativo_guia_transporte, gt.ciudad_traslado, gt.punto_partida, gt.punto_llegada,
+        gt.coste_total_transporte AS coste_transporte_guia, gt.peso AS peso_guia, gt.fecha_pedido, gt.fecha_entrega,
+        rac.id AS id_regla_compra, rac.aplica_costo_adicional, rac.monto_minimo_condicion, rac.costo_adicional_aplicado,
         rc.id_referencia, rc.numero_cotizacion, rc.numero_pedido
     FROM compra c
     INNER JOIN proveedor p ON c.id_proveedor = p.id
     INNER JOIN tipo_comprobante tc ON c.id_tipo_comprobante = tc.id
     INNER JOIN moneda mo ON c.id_moneda = mo.id_moneda
+    LEFT JOIN tipo_pago tp ON c.id_tipo_pago = tp.id
+    LEFT JOIN forma_pago fp ON c.id_forma_pago = fp.id
     LEFT JOIN detalle_compra dc ON c.id_compra = dc.id_compra
     LEFT JOIN articulo a ON dc.id_articulo = a.id
-    LEFT JOIN unidad_medida um ON a.id_unidad = um.id_unidad
+    LEFT JOIN unidad_medida um ON dc.id_unidad = um.id_unidad
     LEFT JOIN inventario_lote il ON dc.id_detalle = il.id_detalle_compra
     LEFT JOIN caja_compra cc ON c.id_compra = cc.id_compra
     LEFT JOIN detalle_caja_compra dcc ON cc.id_caja_compra = dcc.id_caja_compra
     LEFT JOIN guia_transporte gt ON c.id_compra = gt.id_compra
+    LEFT JOIN regla_aplicada_compra rac ON c.id_compra = rac.id_compra
     LEFT JOIN referencia_compra rc ON c.id_compra = rc.id_compra
     ORDER BY c.id_compra DESC, dc.id_detalle ASC, il.id_lote ASC, cc.id_caja_compra ASC;
 END$$

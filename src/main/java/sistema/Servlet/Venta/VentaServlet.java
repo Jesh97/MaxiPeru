@@ -2,16 +2,16 @@ package sistema.Servlet.Venta;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.JsonSyntaxException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sistema.Controller.Venta.VentaController;
-import sistema.Controller.Producto.ArticuloController;
-import sistema.Controller.Venta.ClienteController;
 import sistema.Ejecucion.Conexion;
-import sistema.Modelo.Cliente.Cliente;
+
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
@@ -24,62 +24,63 @@ import java.util.Map;
 public class VentaServlet extends HttpServlet {
 
     private final VentaController ventaController = new VentaController();
-    private final ArticuloController articuloController = new ArticuloController();
-    private final ClienteController clienteController = new ClienteController();
     private final Gson gson = new Gson();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        response.setContentType("application/json;charset=UTF-8");
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
         String action = request.getParameter("action");
+        Connection con = null;
 
-        if ("buscarArticulos".equals(action)) {
-            String busqueda = request.getParameter("query");
+        try {
+            con = Conexion.obtenerConexion();
 
-            if (busqueda == null || busqueda.trim().isEmpty()) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print(gson.toJson(Map.of("error","Parámetro 'query' es requerido para la búsqueda de artículos.")));
-                out.flush();
-                return;
-            }
-
-            Connection con = null;
-            try {
-                con = Conexion.obtenerConexion();
-                List<Map<String, Object>> articulos = ventaController.buscarArticulosParaVenta(con, busqueda);
+            if ("buscarArticulos".equals(action)) {
+                String query = request.getParameter("query");
+                if (query == null || query.trim().isEmpty()) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.print(gson.toJson(Map.of("error","Parámetro 'query' es requerido para la búsqueda de artículos.")));
+                    return;
+                }
+                List<Map<String, Object>> articulos = ventaController.buscarArticulos(con, query);
                 out.print(gson.toJson(articulos));
-            } catch (SQLException e) {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                out.print(gson.toJson(Map.of("error", "Error de base de datos en la búsqueda de artículos: " + e.getMessage())));
-            } finally {
-                Conexion.cerrarConexion(con);
-            }
-        } else if ("buscarCliente".equals(action)) {
-            String busqueda = request.getParameter("query");
-
-            if (busqueda == null || busqueda.trim().isEmpty()) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print(gson.toJson(Map.of("error","Parámetro 'query' es requerido para la búsqueda de clientes.")));
-                out.flush();
-                return;
-            }
-
-            try {
-                List<Cliente> clientes = clienteController.buscar(busqueda);
+            } else if ("buscarCliente".equals(action)) {
+                String query = request.getParameter("query");
+                if (query == null || query.trim().isEmpty()) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.print(gson.toJson(Map.of("error","Parámetro 'query' es requerido para la búsqueda de clientes.")));
+                    return;
+                }
+                List<Map<String, Object>> clientes = ventaController.buscarClientes(con, query);
                 out.print(gson.toJson(clientes));
-            } catch (Exception e) {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                out.print(gson.toJson(Map.of("error", "Error en la búsqueda de clientes: " + e.getMessage())));
+            } else if ("buscarLotes".equals(action)) {
+                String idArticuloStr = request.getParameter("idArticulo");
+                if (idArticuloStr == null || idArticuloStr.trim().isEmpty()) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    out.print(gson.toJson(Map.of("error", "Parámetro 'idArticulo' es requerido para la búsqueda de lotes.")));
+                    return;
+                }
+                int idArticulo = Integer.parseInt(idArticuloStr);
+                List<Map<String, Object>> lotes = ventaController.buscarLotesDisponibles(con, idArticulo);
+                out.print(gson.toJson(lotes));
+            } else {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.print(gson.toJson(Map.of("error", "Acción no válida.")));
             }
-        }
-        else {
+
+        } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print(gson.toJson(Map.of("error", "Acción GET no reconocida.")));
+            out.print(gson.toJson(Map.of("error", "ID de Artículo inválido.")));
+        } catch (SQLException e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            out.print(gson.toJson(Map.of("error", "Error de base de datos: " + e.getMessage())));
+        } finally {
+            Conexion.cerrarConexion(con);
+            out.flush();
         }
-        out.flush();
     }
 
     @Override
@@ -88,33 +89,27 @@ public class VentaServlet extends HttpServlet {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
         Connection con = null;
+        int idVenta = 0;
 
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = request.getReader().readLine()) != null) {
-            sb.append(line);
-        }
+        try (BufferedReader reader = request.getReader()) {
+            Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
+            Map<String, Object> ventaData = gson.fromJson(reader, mapType);
 
-        Map<String, Object> ventaData = gson.fromJson(sb.toString(), new TypeToken<Map<String, Object>>(){}.getType());
-
-        try {
             con = Conexion.obtenerConexion();
             con.setAutoCommit(false);
 
-            // Conversiones robustas
             int idCliente = ((Double) ventaData.getOrDefault("idCliente", 0.0)).intValue();
             int idTipoComprobante = ((Double) ventaData.getOrDefault("idTipoComprobante", 0.0)).intValue();
             int idMoneda = ((Double) ventaData.getOrDefault("idMoneda", 0.0)).intValue();
-            int idTipoPago = ((Double) ventaData.getOrDefault("idTipoPago", 0.0)).intValue();
-
             String fechaEmision = (String) ventaData.getOrDefault("fechaEmision", "");
-            String fechaVencimiento = (String) ventaData.getOrDefault("fechaVencimiento", "");
-            String estadoVenta = (String) ventaData.getOrDefault("estadoVenta", "Emitida");
+            String fechaVencimiento = (String) ventaData.getOrDefault("fechaVencimiento", null);
+            int idTipoPago = ((Double) ventaData.getOrDefault("idTipoPago", 0.0)).intValue();
+            String estadoVenta = (String) ventaData.getOrDefault("estadoVenta", "Pendiente");
             String tipoDescuento = (String) ventaData.getOrDefault("tipoDescuento", "global");
-            String observaciones = (String) ventaData.getOrDefault("observaciones", "");
-
             boolean aplicaIgv = (Boolean) ventaData.getOrDefault("aplicaIgv", false);
+            String observaciones = (String) ventaData.getOrDefault("observaciones", "");
             double subtotal = (Double) ventaData.getOrDefault("subtotal", 0.0);
             double igv = (Double) ventaData.getOrDefault("igv", 0.0);
             double descuentoTotal = (Double) ventaData.getOrDefault("descuentoTotal", 0.0);
@@ -122,24 +117,18 @@ public class VentaServlet extends HttpServlet {
             double totalPeso = (Double) ventaData.getOrDefault("totalPeso", 0.0);
             boolean hayTraslado = (Boolean) ventaData.getOrDefault("hayTraslado", false);
 
-            int idVenta = ventaController.registrarVenta(
-                    con, idCliente, idTipoComprobante, idMoneda, fechaEmision, fechaVencimiento,
-                    idTipoPago, estadoVenta, tipoDescuento, aplicaIgv, observaciones,
-                    subtotal, igv, descuentoTotal, totalFinal, totalPeso, hayTraslado
-            );
+            idVenta = ventaController.registrarVenta(con, idCliente, idTipoComprobante, idMoneda, fechaEmision, fechaVencimiento, idTipoPago, estadoVenta, tipoDescuento, aplicaIgv, observaciones, subtotal, igv, descuentoTotal, totalFinal, totalPeso, hayTraslado);
 
-            if (idVenta <= 0) {
-                throw new Exception("No se pudo obtener el ID de Venta. Abortando.");
-            }
+            if (idVenta == 0) throw new SQLException("Fallo al obtener ID de Venta.");
 
-            if ("global".equals(tipoDescuento)) {
-                Map<String, Object> descuentoGlobal = (Map<String, Object>) ventaData.get("descuentoGlobal");
-                ventaController.agregarDescuentoGlobalVenta(
-                        con, idVenta,
-                        (String) descuentoGlobal.getOrDefault("motivo", "Descuento General"),
-                        (String) descuentoGlobal.getOrDefault("tipoValor", "soles"),
-                        (Double) descuentoGlobal.getOrDefault("valor", 0.0)
-                );
+            if ("global".equals(tipoDescuento) && ventaData.containsKey("descuentoGlobal")) {
+                Map<String, Object> descGlobal = (Map<String, Object>) ventaData.get("descuentoGlobal");
+                String motivo = (String) descGlobal.getOrDefault("motivo", "Descuento General");
+                String tipoValor = (String) descGlobal.getOrDefault("tipoValor", "monto");
+                double valor = (Double) descGlobal.getOrDefault("valor", 0.0);
+
+                String tipoValorSP = tipoValor.equals("monto") ? "soles" : "porcentaje";
+                ventaController.agregarDescuentoGlobalVenta(con, idVenta, motivo, tipoValorSP, valor);
             }
 
             Type detalleListType = new TypeToken<List<Map<String, Object>>>(){}.getType();
@@ -148,104 +137,59 @@ public class VentaServlet extends HttpServlet {
             for (Map<String, Object> detalle : detalles) {
                 int idArticulo = ((Double) detalle.getOrDefault("idArticulo", 0.0)).intValue();
                 double cantidad = (Double) detalle.getOrDefault("cantidad", 0.0);
-                double descuentoMonto = (Double) detalle.getOrDefault("descuentoMonto", 0.0);
                 double pesoUnitario = (Double) detalle.getOrDefault("pesoUnitario", 0.0);
                 double precioUnitario = (Double) detalle.getOrDefault("precioUnitario", 0.0);
+                double descuentoMonto = (Double) detalle.getOrDefault("descuentoMonto", 0.0);
                 double subtotalDetalle = (Double) detalle.getOrDefault("subtotal", 0.0);
                 double totalDetalle = (Double) detalle.getOrDefault("total", 0.0);
 
-                int idDetalleVenta = ventaController.agregarDetalleVenta(
-                        con, idVenta, idArticulo, (String) detalle.getOrDefault("descripcion", ""), cantidad,
-                        pesoUnitario, precioUnitario, descuentoMonto, subtotalDetalle, totalDetalle
-                );
+                int idDetalleVenta = ventaController.agregarDetalleVenta(con, idVenta, idArticulo, (String) detalle.getOrDefault("descripcion", ""), cantidad, pesoUnitario, precioUnitario, descuentoMonto, subtotalDetalle, totalDetalle);
 
-                // Lógica de consumo de lotes (Corregido)
-                Type loteListType = new TypeToken<List<Map<String, Object>>>(){}.getType();
-                List<Map<String, Object>> lotesConsumidos = gson.fromJson(gson.toJson(detalle.get("lotesConsumidos")), loteListType);
+                if (idDetalleVenta == 0) throw new SQLException("Fallo al obtener ID de Detalle Venta.");
 
-                for (Map<String, Object> lote : lotesConsumidos) {
-                    double cantidadLote = (Double) lote.getOrDefault("cantidad", 0.0);
-                    String numeroLote = (String) lote.getOrDefault("lote", "");
-                    String vencimiento = (String) lote.getOrDefault("vencimiento", null);
+                double cantidadConsumir = (Double) detalle.getOrDefault("cantidad", 0.0);
+                ventaController.registrarConsumoLoteVenta(con, idDetalleVenta, idArticulo, cantidadConsumir);
 
-                    if (cantidadLote > 0) {
-                        ventaController.registrarLoteConsumido(
-                                con,
-                                idDetalleVenta,
-                                idArticulo,
-                                numeroLote,
-                                cantidadLote,
-                                vencimiento
-                        );
-                    }
-                }
-                // Fin Lógica de lotes
-
-                if ("porItem".equals(tipoDescuento) && descuentoMonto > 0) {
+                if ("porItem".equals(tipoDescuento) && detalle.containsKey("detalleDescuento")) {
                     Map<String, Object> descItem = (Map<String, Object>) detalle.get("detalleDescuento");
-                    ventaController.agregarDescuentoItemVenta(
-                            con, idDetalleVenta,
-                            (String) descItem.getOrDefault("motivo", "Descuento por ítem"),
-                            (String) descItem.getOrDefault("tipoValor", "soles"),
-                            (Double) descItem.getOrDefault("valor", 0.0)
-                    );
+                    String motivo = (String) descItem.getOrDefault("motivo", "Descuento por ítem");
+                    String tipoValor = (String) descItem.getOrDefault("tipoValor", "monto");
+                    double valor = (Double) descItem.getOrDefault("valor", 0.0);
+
+                    String tipoValorSP = tipoValor.equals("monto") ? "soles" : "porcentaje";
+                    ventaController.agregarDescuentoItemVenta(con, idDetalleVenta, motivo, tipoValorSP, valor);
                 }
             }
 
-            if (hayTraslado) {
-                Map<String, Object> traslado = (Map<String, Object>) ventaData.get("datosTraslado");
-                ventaController.registrarGuiaTransporteVenta(
-                        con, idVenta,
-                        (String) traslado.getOrDefault("modalidadTransporte", ""),
-                        (Double) traslado.getOrDefault("peso", 0.0),
-                        (String) traslado.getOrDefault("rucEmpresa", ""),
-                        (String) traslado.getOrDefault("razonSocialEmpresa", ""),
-                        (String) traslado.getOrDefault("marcaVehiculo", ""),
-                        (String) traslado.getOrDefault("dniConductor", ""),
-                        (String) traslado.getOrDefault("nombreConductor", ""),
-                        (String) traslado.getOrDefault("puntoPartida", ""),
-                        (String) traslado.getOrDefault("puntoLlegada", ""),
-                        (String) traslado.getOrDefault("fechaTraslado", ""),
-                        (String) traslado.getOrDefault("observaciones", ""),
-                        (String) traslado.getOrDefault("conformidadNombre", ""),
-                        (String) traslado.getOrDefault("conformidadDni", "")
-                );
-            } else {
-                Map<String, Object> conformidad = (Map<String, Object>) ventaData.get("conformidadTienda");
-                ventaController.registrarConformidadTienda(
-                        con, idVenta,
-                        (String) conformidad.getOrDefault("nombre", ""),
-                        (String) conformidad.getOrDefault("dni", "")
-                );
+            if (hayTraslado && ventaData.containsKey("datosTraslado")) {
+                Map<String, Object> datosTraslado = (Map<String, Object>) ventaData.get("datosTraslado");
+                ventaController.registrarGuiaTransporteVenta(con, idVenta, (String) datosTraslado.getOrDefault("modalidadTransporte", ""), (Double) datosTraslado.getOrDefault("peso", 0.0), (String) datosTraslado.getOrDefault("rucEmpresa", ""), (String) datosTraslado.getOrDefault("razonSocialEmpresa", ""), (String) datosTraslado.getOrDefault("marcaVehiculo", ""), (String) datosTraslado.getOrDefault("dniConductor", ""), (String) datosTraslado.getOrDefault("nombreConductor", ""), (String) datosTraslado.getOrDefault("puntoPartida", ""), (String) datosTraslado.getOrDefault("puntoLlegada", ""), (String) datosTraslado.getOrDefault("fechaTraslado", ""), (String) datosTraslado.getOrDefault("observaciones", ""), (String) datosTraslado.getOrDefault("conformidadNombre", ""), (String) datosTraslado.getOrDefault("conformidadDni", ""));
+            } else if (!hayTraslado && ventaData.containsKey("conformidadTienda")) {
+                Map<String, Object> conformidadTienda = (Map<String, Object>) ventaData.get("conformidadTienda");
+                ventaController.registrarConformidadTienda(con, idVenta, (String) conformidadTienda.getOrDefault("nombre", ""), (String) conformidadTienda.getOrDefault("dni", ""));
             }
 
             con.commit();
+            out.print(gson.toJson(Map.of("success", true, "message", "Venta N°" + idVenta + " registrada con éxito.")));
 
-            response.getWriter().write(gson.toJson(Map.of("success", true, "message", "Venta registrada con éxito. ID: " + idVenta)));
-
+        } catch (JsonSyntaxException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.print(gson.toJson(Map.of("success", false, "message", "Error en el formato JSON de la solicitud.")));
         } catch (SQLException e) {
-            if (con != null) {
-                try {
-                    con.rollback();
-                } catch (SQLException ex) { }
-            }
+            try {
+                if (con != null) con.rollback();
+            } catch (SQLException ex) {}
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de base de datos: " + e.getMessage())));
+            out.print(gson.toJson(Map.of("success", false, "message", "Error de base de datos: " + e.getMessage())));
         } catch (Exception e) {
-            if (con != null) {
-                try {
-                    con.rollback();
-                } catch (SQLException ex) { }
-            }
+            try {
+                if (con != null) con.rollback();
+            } catch (SQLException ex) {}
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error Inesperado: " + e.getMessage())));
+            out.print(gson.toJson(Map.of("success", false, "message", "Error interno del servidor: " + e.getMessage())));
         } finally {
-            if (con != null) {
-                try {
-                    con.setAutoCommit(true);
-                    Conexion.cerrarConexion(con);
-                } catch (SQLException e) { }
-            }
+            Conexion.cerrarConexion(con);
+            out.flush();
         }
     }
 }

@@ -219,7 +219,7 @@ public class ArticuloController implements ArticuloRepository {
         ResultSet rs = null;
         try {
             conn = Conexion.obtenerConexion();
-            cs = conn.prepareCall("{CALL sp_buscar_insumos(?)}");
+            cs = conn.prepareCall("{CALL sp_buscar_articulos_para_produccion(?)}");
             cs.setString(1, busqueda);
             rs = cs.executeQuery();
             while (rs.next()) {
