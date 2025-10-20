@@ -565,6 +565,36 @@ BEGIN
     VALUES (p_id_venta, p_nombre_cliente_confirma, p_dni_cliente_confirma, 'tienda');
 END$$
 
+DROP PROCEDURE IF EXISTS `sp_listar_ventas_final`$$
+CREATE PROCEDURE `sp_listar_ventas_final`()
+BEGIN
+    SELECT
+        v.id_venta, v.serie, v.correlativo, v.fecha_emision, v.fecha_vencimiento, v.estado_venta, v.tipo_descuento AS venta_tipo_descuento, v.aplica_igv, v.observaciones AS venta_observaciones, v.subtotal AS venta_subtotal, v.igv AS venta_igv, v.descuento_total AS venta_descuento_total, v.total_final, v.total_peso AS venta_total_peso, v.hay_traslado,
+        tc.nombre AS tipo_comprobante, m.nombre AS moneda_nombre, m.simbolo AS moneda_simbolo, tp.nombre AS tipo_pago_nombre,
+        c.id AS id_cliente, c.razonSocial AS cliente_razon_social, c.n_documento AS cliente_documento, c.direccion AS cliente_direccion, c.telefono AS cliente_telefono, c.correo AS cliente_correo,
+        dv.id_detalle_venta, dv.descripcion AS detalle_descripcion, dv.cantidad AS detalle_cantidad, dv.peso_unitario AS detalle_peso_unitario, dv.precio_unitario AS detalle_precio_unitario, dv.descuento_monto AS detalle_descuento_monto, dv.subtotal AS detalle_subtotal, dv.total AS detalle_total,
+        a.id AS id_articulo, a.codigo AS articulo_codigo, u.nombre AS unidad_medida_nombre,
+        d.id_descuento, d.motivo AS descuento_motivo, d.tipo_aplicacion AS descuento_aplicacion, d.tipo_valor AS descuento_tipo_valor, d.valor AS descuento_valor, d.tasa_igv AS descuento_tasa_igv,
+        lv.id_lote_venta, il.id_lote, il.codigo_lote, il.fecha_vencimiento AS lote_fecha_vencimiento, lv.cantidad AS lote_cantidad_consumida,
+        gt.id_guia, gt.fecha_traslado, gt.modalidad_transporte, gt.ruc_empresa AS transporte_ruc_empresa, gt.razon_social_empresa AS transporte_razon_social, gt.dni_conductor AS transporte_dni_conductor, gt.nombre_conductor AS transporte_nombre_conductor, gt.punto_partida, gt.punto_llegada,
+        cc.nombre_cliente_confirma, cc.dni_cliente_confirma, cc.tipo_entrega
+    FROM venta v
+    INNER JOIN cliente c ON v.id_cliente = c.id
+    INNER JOIN tipo_comprobante tc ON v.id_tipo_comprobante = tc.id
+    INNER JOIN moneda m ON v.id_moneda = m.id_moneda
+    LEFT JOIN tipo_pago tp ON v.id_tipo_pago = tp.id
+    LEFT JOIN detalle_venta dv ON v.id_venta = dv.id_venta
+    LEFT JOIN articulo a ON dv.id_articulo = a.id
+    LEFT JOIN unidad_medida u ON dv.id_unidad = u.id_unidad
+    LEFT JOIN descuento d ON v.id_venta = d.id_venta OR dv.id_detalle_venta = d.id_detalle_venta
+    LEFT JOIN lote_venta lv ON dv.id_detalle_venta = lv.id_detalle_venta
+    LEFT JOIN inventario_lote il ON lv.id_lote = il.id_lote
+    LEFT JOIN guia_transporte gt ON v.id_venta = gt.id_venta AND gt.tipo_documento_ref = 'venta'
+    LEFT JOIN conformidad_cliente cc ON v.id_venta = cc.id_venta
+    ORDER BY
+        v.id_venta DESC, dv.id_detalle_venta ASC;
+END$$
+
 DROP PROCEDURE IF EXISTS `sp_registrar_gasto`$$
 CREATE PROCEDURE `sp_registrar_gasto`(
     IN p_id_proveedor INT, IN p_id_tipo_gasto INT, IN p_motivo VARCHAR(100), IN p_placa VARCHAR(50),
