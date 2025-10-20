@@ -8,8 +8,6 @@ import java.sql.Date;
 import java.util.*;
 import java.text.SimpleDateFormat;
 import java.math.BigDecimal;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 public class CompraController implements CompraRepository {
 

@@ -211,6 +211,8 @@ CREATE TABLE venta (
     id_venta INT AUTO_INCREMENT PRIMARY KEY,
     id_cliente INT NOT NULL,
     id_tipo_comprobante INT NOT NULL,
+    serie VARCHAR(20) NOT NULL,
+    correlativo VARCHAR(50) NOT NULL,
     id_moneda INT NOT NULL,
     fecha_emision DATE NOT NULL,
     fecha_vencimiento DATE,
@@ -236,6 +238,7 @@ CREATE TABLE detalle_venta (
     id_detalle INT AUTO_INCREMENT PRIMARY KEY,
     id_venta INT NOT NULL,
     id_articulo INT NOT NULL,
+    id_unidad INT NOT NULL,
     descripcion VARCHAR(255) NULL,
     cantidad DECIMAL(12,2) NOT NULL,
     peso_unitario DECIMAL(10,3) NOT NULL,
@@ -244,7 +247,8 @@ CREATE TABLE detalle_venta (
     subtotal DECIMAL(12,2) NOT NULL,
     total DECIMAL(12,2) NOT NULL,
     FOREIGN KEY (id_venta) REFERENCES venta(id_venta) ON DELETE CASCADE,
-    FOREIGN KEY (id_articulo) REFERENCES articulo(id) ON DELETE RESTRICT
+    FOREIGN KEY (id_articulo) REFERENCES articulo(id) ON DELETE RESTRICT,
+    FOREIGN KEY (id_unidad) REFERENCES unidad_medida(id_unidad) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE lote_venta (
@@ -350,8 +354,8 @@ CREATE TABLE descuento (
     id_venta INT NULL,
     id_detalle_venta INT NULL,
     motivo VARCHAR(255) NULL,
-    tipo_aplicacion ENUM('global', 'item') NOT NULL,
-    tipo_valor ENUM('porcentaje', 'soles') NOT NULL,
+    tipo_aplicacion ENUM('global', 'item')  NULL,
+    tipo_valor ENUM('porcentaje', 'soles')  NULL,
     valor DECIMAL(12,2) NOT NULL,
     tasa_igv DECIMAL(5,2) NULL,
     FOREIGN KEY (id_compra) REFERENCES compra(id_compra) ON DELETE CASCADE,

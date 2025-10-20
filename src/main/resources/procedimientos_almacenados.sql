@@ -59,7 +59,11 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_para_venta`$$
 CREATE PROCEDURE `sp_buscar_articulos_para_venta`(IN p_busqueda VARCHAR(100))
 BEGIN
-SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario, a.aroma, a.color FROM articulo a WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%')) AND a.id_tipo_articulo IN (1, 3);
+    SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario, a.aroma, a.color
+    FROM articulo a
+    WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
+    AND a.id_tipo_articulo IN (1, 3)
+    AND a.cantidad > 0;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_para_produccion`$$
@@ -482,7 +486,8 @@ END$$
 
 DROP PROCEDURE IF EXISTS `sp_registrar_venta`$$
 CREATE PROCEDURE `sp_registrar_venta`(
-    IN p_id_cliente INT, IN p_id_tipo_comprobante INT, IN p_id_moneda INT, IN p_fecha_emision DATE,
+    IN p_id_cliente INT, IN p_id_tipo_comprobante INT, IN p_serie VARCHAR(20), IN p_correlativo VARCHAR(50),
+    IN p_id_moneda INT, IN p_fecha_emision DATE,
     IN p_fecha_vencimiento DATE, IN p_id_tipo_pago INT, IN p_estado_venta VARCHAR(50),
     IN p_tipo_descuento ENUM('global', 'item'), IN p_aplica_igv BOOLEAN, IN p_observaciones TEXT,
     IN p_subtotal DECIMAL(12,2), IN p_igv DECIMAL(12,2), IN p_descuento_total DECIMAL(12,2),
@@ -490,21 +495,22 @@ CREATE PROCEDURE `sp_registrar_venta`(
     OUT p_id_venta INT
 )
 BEGIN
-    INSERT INTO venta(id_cliente, id_tipo_comprobante, id_moneda, fecha_emision, fecha_vencimiento, id_tipo_pago, estado_venta, tipo_descuento, aplica_igv, observaciones, subtotal, igv, descuento_total, total_final, total_peso, hay_traslado)
-    VALUES (p_id_cliente, p_id_tipo_comprobante, p_id_moneda, p_fecha_emision, p_fecha_vencimiento, p_id_tipo_pago, p_estado_venta, p_tipo_descuento, p_aplica_igv, p_observaciones, p_subtotal, p_igv, p_descuento_total, p_total_final, p_total_peso, p_hay_traslado);
+    INSERT INTO venta(id_cliente, id_tipo_comprobante, serie, correlativo, id_moneda, fecha_emision, fecha_vencimiento, id_tipo_pago, estado_venta, tipo_descuento, aplica_igv, observaciones, subtotal, igv, descuento_total, total_final, total_peso, hay_traslado)
+    VALUES (p_id_cliente, p_id_tipo_comprobante, p_serie, p_correlativo, p_id_moneda, p_fecha_emision, p_fecha_vencimiento, p_id_tipo_pago, p_estado_venta, p_tipo_descuento, p_aplica_igv, p_observaciones, p_subtotal, p_igv, p_descuento_total, p_total_final, p_total_peso, p_hay_traslado);
     SET p_id_venta = LAST_INSERT_ID();
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_detalle_venta`$$
 CREATE PROCEDURE `sp_agregar_detalle_venta`(
-    IN p_id_venta INT, IN p_id_articulo INT, IN p_descripcion VARCHAR(255), IN p_cantidad DECIMAL(12,2),
+    IN p_id_venta INT, IN p_id_articulo INT, IN p_id_unidad INT, IN p_descripcion VARCHAR(255),
+    IN p_cantidad DECIMAL(12,2),
     IN p_peso_unitario DECIMAL(10,3), IN p_precio_unitario DECIMAL(12,2), IN p_descuento_monto DECIMAL(12,2),
     IN p_subtotal DECIMAL(12,2), IN p_total DECIMAL(12,2),
     OUT p_id_detalle_venta INT
 )
 BEGIN
-    INSERT INTO detalle_venta(id_venta, id_articulo, descripcion, cantidad, peso_unitario, precio_unitario, descuento_monto, subtotal, total)
-    VALUES (p_id_venta, p_id_articulo, p_descripcion, p_cantidad, p_peso_unitario, p_precio_unitario, p_descuento_monto, p_subtotal, p_total);
+    INSERT INTO detalle_venta(id_venta, id_articulo, id_unidad, descripcion, cantidad, peso_unitario, precio_unitario, descuento_monto, subtotal, total)
+    VALUES (p_id_venta, p_id_articulo, p_id_unidad, p_descripcion, p_cantidad, p_peso_unitario, p_precio_unitario, p_descuento_monto, p_subtotal, p_total);
     SET p_id_detalle_venta = LAST_INSERT_ID();
 END$$
 
