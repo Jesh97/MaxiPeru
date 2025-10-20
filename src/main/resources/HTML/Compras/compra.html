@@ -359,12 +359,21 @@
                 <section class="card-section totals">
                     <div class="section-title"><i class="bi bi-calculator"></i> Totales</div>
                     <div class="mb-2 small-muted">Moneda seleccionada: <strong id="monedaLabel">Soles</strong></div>
+
                     <div class="line"><span class="muted">Subtotal (sin IGV)</span><span id="subtotalSinIgv">S/ 0.00</span></div>
                     <div class="line"><span class="muted">IGV (18%)</span><span id="totalIgv">S/ 0.00</span></div>
                     <div class="line" style="font-size:1.15rem; margin-top:8px;"><span>Total de Compra</span><span id="totalCompraFinal">S/ 0.00</span></div>
 
                     <div class="mt-3 small-muted">Coste de transporte total: <span id="costeTransporteLabel">0.00</span></div>
 
+                    <div class="row" id="filaCostoAdicional" style="display: none;">
+                        <div class="col-6">
+                            <label class="form-label small-muted">Costo Adicional Regla:</label>
+                        </div>
+                        <div class="col-6 text-end">
+                            <strong id="resumenCostoAdicional">S/ 0.00</strong>
+                        </div>
+                    </div>
                     <div id="mensajeAlertaTransporte" class="alert alert-warning p-2 mt-2 d-none" role="alert">
                         <i class="bi bi-exclamation-triangle-fill me-1"></i>
                         El coste de transporte calculado no coincide con el coste ingresado.

@@ -31,6 +31,7 @@ let totalCompraFinalCalculado = 0;
 let totalAPagarCalculado = 0;
 let totalPesoProductosCalculado = 0;
 let costeTransporteCalculado = 0;
+let costoAdicionalAplicado = 0;
 let cajas = [];
 let proximoIdCaja = 1;
 let itemEnEdicion = null;
@@ -716,8 +717,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         totalCompraFinalCalculado = subtotalSinIgvCalculado + totalIgvCalculado;
+
+        const aplicaCostoAdicionalGeneral = $('#reglaAplicaCostoAdicional')?.checked || false;
+        const montoMinimo = parseFloat($('#reglaMontoMinimo')?.value) || 0;
+        const costoAdicional = parseFloat($('#reglaCostoAdicional')?.value) || 0;
+        let costoAdicionalAplicado = 0;
+
+        if (aplicaCostoAdicionalGeneral && subtotalSinIgvCalculado > montoMinimo) {
+            costoAdicionalAplicado = costoAdicional;
+        }
+
         costeTransporteCalculado = costeTransporteProductos;
-        totalAPagarCalculado = totalCompraFinalCalculado + costeTransporteCalculado;
+
+        totalAPagarCalculado = totalCompraFinalCalculado + costeTransporteCalculado + costoAdicionalAplicado;
+
+        const resumenCostoAdicional = $('#resumenCostoAdicional');
+        const filaCostoAdicional = $('#filaCostoAdicional');
+
+        if (resumenCostoAdicional) {
+            resumenCostoAdicional.textContent = formatCurrency(costoAdicionalAplicado, 'PEN');
+        }
+
+        if (filaCostoAdicional) {
+            if (costoAdicionalAplicado > 0) {
+                filaCostoAdicional.style.display = 'flex';
+            } else {
+                filaCostoAdicional.style.display = 'none';
+            }
+        }
+
         totalPesoProductosCalculado = pesoTotalProductos;
         const costeTotalIngresado = parseFloat(guia.costeTotalTransporte) || 0;
         const tolerancia = 0.01;
@@ -889,6 +917,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 descuentosGlobales.push({ motivo: 'Descuento Global', tipoValor: tipoValor, valor: valor, tasaIgv: 0.18 });
             }
 
+            const aplicaCostoAdicional = $('#reglaAplicaCostoAdicional')?.checked || false;
+            const montoMinimo = parseFloat($('#reglaMontoMinimo')?.value) || 0;
+            const costoAdicional = parseFloat($('#reglaCostoAdicional')?.value) || 0;
+
             const data = {
                 proveedorId: proveedorId,
                 tipoComprobanteId: tipoComprobanteId,
@@ -913,7 +945,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 referencia: referencia,
                 guiaTransporte: guia,
                 descuentosGlobales: descuentosGlobales,
-                cajasCompra: cajas
+                cajasCompra: cajas,
+                reglaAplicada: {
+                    aplicaCostoAdicional: aplicaCostoAdicional,
+                    montoMinimo: montoMinimo,
+                    costoAdicional: costoAdicional
+                }
             };
 
             try {
