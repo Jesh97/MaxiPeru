@@ -55,23 +55,28 @@ public class Compra {
     private BigDecimal totalPeso;
     @JsonProperty("coste_transporte")
     private BigDecimal costeTransporte;
+    private BigDecimal costoAdicional;
 
-    // Constructor completo actualizado
-    public Compra(int idCompra, int idProveedor, int idTipoComprobante, String serie, String correlativo,
-                  LocalDate fechaEmision, LocalDate fechaVencimiento, int idTipoPago, int idFormaPago,
-                  int idMoneda, BigDecimal tipoCambio, boolean incluyeIgv, boolean hayBonificacion,
-                  boolean hayTraslado, String observacion, BigDecimal subtotal, BigDecimal igv,
-                  BigDecimal total, BigDecimal totalPeso, BigDecimal costeTransporte) {
+    public Compra(int idCompra, int idProveedor, int idTipoComprobante, int idTipoPago, int idFormaPago,
+                  int idMoneda, String nombreTipoComprobante, String nombreTipoPago, String nombreFormaPago,
+                  String nombreMoneda, String serie, String correlativo, LocalDate fechaEmision,
+                  LocalDate fechaVencimiento, BigDecimal tipoCambio, boolean incluyeIgv, boolean hayBonificacion,
+                  boolean hayTraslado, String observacion, BigDecimal subtotal, BigDecimal igv, BigDecimal total,
+                  BigDecimal totalPeso, BigDecimal costeTransporte, BigDecimal costoAdicional) {
         this.idCompra = idCompra;
         this.idProveedor = idProveedor;
         this.idTipoComprobante = idTipoComprobante;
+        this.idTipoPago = idTipoPago;
+        this.idFormaPago = idFormaPago;
+        this.idMoneda = idMoneda;
+        this.nombreTipoComprobante = nombreTipoComprobante;
+        this.nombreTipoPago = nombreTipoPago;
+        this.nombreFormaPago = nombreFormaPago;
+        this.nombreMoneda = nombreMoneda;
         this.serie = serie;
         this.correlativo = correlativo;
         this.fechaEmision = fechaEmision;
         this.fechaVencimiento = fechaVencimiento;
-        this.idTipoPago = idTipoPago;
-        this.idFormaPago = idFormaPago;
-        this.idMoneda = idMoneda;
         this.tipoCambio = tipoCambio;
         this.incluyeIgv = incluyeIgv;
         this.hayBonificacion = hayBonificacion;
@@ -82,6 +87,7 @@ public class Compra {
         this.total = total;
         this.totalPeso = totalPeso;
         this.costeTransporte = costeTransporte;
+        this.costoAdicional = costoAdicional;
     }
 
     public Compra() {
@@ -129,6 +135,14 @@ public class Compra {
     public BigDecimal getCosteTransporte() { return costeTransporte; }
     public void setCosteTransporte(BigDecimal costeTransporte) { this.costeTransporte = costeTransporte; }
 
+    public BigDecimal getCostoAdicional() {
+        return costoAdicional;
+    }
+
+    public void setCostoAdicional(BigDecimal costoAdicional) {
+        this.costoAdicional = costoAdicional;
+    }
+
     @Override
     public String toString() {
         return "Compra{" +
@@ -138,6 +152,10 @@ public class Compra {
                 ", idTipoPago=" + idTipoPago +
                 ", idFormaPago=" + idFormaPago +
                 ", idMoneda=" + idMoneda +
+                ", nombreTipoComprobante='" + nombreTipoComprobante + '\'' +
+                ", nombreTipoPago='" + nombreTipoPago + '\'' +
+                ", nombreFormaPago='" + nombreFormaPago + '\'' +
+                ", nombreMoneda='" + nombreMoneda + '\'' +
                 ", serie='" + serie + '\'' +
                 ", correlativo='" + correlativo + '\'' +
                 ", fechaEmision=" + fechaEmision +
@@ -152,6 +170,7 @@ public class Compra {
                 ", total=" + total +
                 ", totalPeso=" + totalPeso +
                 ", costeTransporte=" + costeTransporte +
+                ", costoAdicional=" + costoAdicional +
                 '}';
     }
 }

@@ -338,7 +338,7 @@ public class CompraController implements CompraRepository {
         String sql = "{call sp_actualizar_lote(?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idDetalleCompra);
-            cs.setString(2, lote.getNumeroLote());
+            cs.setString(2, lote.getCodigoLote());
             cs.setDate(3, lote.getFechaVencimiento() != null ? Date.valueOf(lote.getFechaVencimiento()) : null);
             cs.execute();
         }
@@ -391,6 +391,7 @@ public class CompraController implements CompraRepository {
             cs.setBigDecimal(i++, compra.getTotal());
             cs.setBigDecimal(i++, compra.getTotalPeso());
             cs.setBigDecimal(i++, compra.getCosteTransporte());
+
             cs.registerOutParameter(i, Types.INTEGER);
             cs.execute();
             idCompra = cs.getInt(i);
@@ -428,7 +429,7 @@ public class CompraController implements CompraRepository {
             int i = 1;
             cs.setInt(i++, idDetalleCompra);
             cs.setInt(i++, idArticulo);
-            cs.setString(i++, lote.getNumeroLote());
+            cs.setString(i++, lote.getCodigoLote());
             cs.setDate(i++, lote.getFechaVencimiento() != null ? Date.valueOf(lote.getFechaVencimiento()) : null);
             cs.setBigDecimal(i++, lote.getCantidadLote());
             cs.execute();
@@ -437,7 +438,7 @@ public class CompraController implements CompraRepository {
 
     private Lote crearLoteVirtual(DetalleCompra detalle) {
         Lote loteVirtual = new Lote();
-        loteVirtual.setNumeroLote(null);
+        loteVirtual.setCodigoLote(null);
         loteVirtual.setFechaVencimiento(null);
         loteVirtual.setCantidadLote(detalle.getCantidad());
         loteVirtual.setIdArticulo(detalle.getIdArticulo());

@@ -7,14 +7,14 @@ public class Lote {
 
     private int idLote;
     private int idArticulo;
-    private String numeroLote;
+    private String codigoLote;
     private LocalDate fechaVencimiento;
     private BigDecimal cantidadLote;
 
-    public Lote(int idLote, int idArticulo, String numeroLote, LocalDate fechaVencimiento, BigDecimal cantidadLote) {
+    public Lote(int idLote, int idArticulo, String codigoLote, LocalDate fechaVencimiento, BigDecimal cantidadLote) {
         this.idLote = idLote;
         this.idArticulo = idArticulo;
-        this.numeroLote = numeroLote;
+        this.codigoLote = codigoLote;
         this.fechaVencimiento = fechaVencimiento;
         this.cantidadLote = cantidadLote;
     }
@@ -38,12 +38,12 @@ public class Lote {
         this.idArticulo = idArticulo;
     }
 
-    public String getNumeroLote() {
-        return numeroLote;
+    public String getCodigoLote() {
+        return codigoLote;
     }
 
-    public void setNumeroLote(String numeroLote) {
-        this.numeroLote = numeroLote;
+    public void setCodigoLote(String codigoLote) {
+        this.codigoLote = codigoLote;
     }
 
     public LocalDate getFechaVencimiento() {
@@ -67,7 +67,7 @@ public class Lote {
         return "Lote{" +
                 "idLote=" + idLote +
                 ", idArticulo=" + idArticulo +
-                ", numeroLote='" + numeroLote + '\'' +
+                ", codigoLote='" + codigoLote + '\'' +
                 ", fechaVencimiento=" + fechaVencimiento +
                 ", cantidadLote=" + cantidadLote +
                 '}';

@@ -156,7 +156,7 @@ public class EditarCompra extends HttpServlet {
                     if (d.has("loteEditado") && d.get("loteEditado").isObject()) {
                         var l = d.get("loteEditado");
                         Lote lote = new Lote();
-                        lote.setNumeroLote(l.path("numeroLote").asText("").trim());
+                        lote.setCodigoLote(l.path("numeroLote").asText("").trim());
                         lote.setFechaVencimiento(parseDate(l, "fechaVencimiento"));
                         lotesEditados.put(idDetalle, lote);
                     }

@@ -231,20 +231,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (fechaEmisionInput && tipoPagoSelect && fechaVencimientoInput) {
         function calcularFechaVencimiento() {
-            const fechaEmision = new Date(fechaEmisionInput.value);
-            if (!fechaEmision.getTime()) {
+            const fechaStr = fechaEmisionInput.value;
+            if (!fechaStr) {
                 fechaVencimientoInput.value = '';
                 return;
             }
-            const tipoPago = tipoPagoSelect.value;
+            const parts = fechaStr.split('-');
+            if (parts.length !== 3 || isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) {
+                fechaVencimientoInput.value = '';
+                return;
+            }
+
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1;
+            const day = parseInt(parts[2]);
+
+            const selectedOption = tipoPagoSelect.options[tipoPagoSelect.selectedIndex];
+            const tipoPagoTexto = selectedOption ? selectedOption.text : '';
+
             let dias = 0;
-            const match = tipoPago.match(/\d+/);
+            const match = tipoPagoTexto.match(/\d+/);
             dias = match ? parseInt(match[0]) : 0;
 
-            const fechaVencimiento = new Date(fechaEmision);
+            const fechaBase = new Date(year, month, day, 12, 0, 0);
+
+            const fechaVencimiento = new Date(fechaBase.getTime());
             fechaVencimiento.setDate(fechaVencimiento.getDate() + dias);
-            fechaVencimientoInput.value = fechaVencimiento.toISOString().split('T')[0];
+
+            if (isNaN(fechaVencimiento.getTime())) {
+                fechaVencimientoInput.value = '';
+                return;
+            }
+
+            const finalYear = fechaVencimiento.getFullYear();
+            const finalMonth = String(fechaVencimiento.getMonth() + 1).padStart(2, '0');
+            const finalDay = String(fechaVencimiento.getDate()).padStart(2, '0');
+
+            fechaVencimientoInput.value = `${finalYear}-${finalMonth}-${finalDay}`;
         }
+
         fechaEmisionInput.addEventListener('change', calcularFechaVencimiento);
         tipoPagoSelect.addEventListener('change', calcularFechaVencimiento);
     }
@@ -1633,7 +1658,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filaLote.dataset.idLote = idLote;
         filaLote.innerHTML = `
             <div class="input-group input-group-sm me-2 flex-grow-1">
-                <span class="input-group-text">Lote N°</span>
+                <span class="input-group-text">Codigo Lote</span>
                 <input type="text" class="form-control lote-numero-lote" value="${numeroLote || ''}">
             </div>
             <div class="input-group input-group-sm me-2">

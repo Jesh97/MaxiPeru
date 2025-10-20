@@ -111,7 +111,7 @@ public class CompraServlet extends HttpServlet {
 
             compra.setIdMoneda(root.path("monedaId").asInt(0));
             if (compra.getIdMoneda() <= 0) {
-                throw new IllegalArgumentException("El ID de Moneda es inválido.");
+                throw new IllegalArgumentException("El ID de Moneda es inválido o no se ha seleccionado una moneda.");
             }
 
             compra.setIdTipoComprobante(root.path("tipoComprobanteId").asInt());
@@ -139,12 +139,16 @@ public class CompraServlet extends HttpServlet {
             compra.setTotalPeso(BigDecimal.valueOf(root.path("totalPeso").asDouble(0)));
             compra.setCosteTransporte(BigDecimal.valueOf(root.path("costeTransporte").asDouble(0)));
 
+
             if (root.has("reglaAplicada") && root.get("reglaAplicada").isObject()) {
                 var ra = root.get("reglaAplicada");
                 regla = new ReglaAplicada();
                 regla.setAplicaCostoAdicional(ra.path("aplicaCostoAdicional").asBoolean(false));
                 regla.setMontoMinimo(BigDecimal.valueOf(ra.path("montoMinimo").asDouble(0)));
                 regla.setCostoAdicional(BigDecimal.valueOf(ra.path("costoAdicional").asDouble(0)));
+                compra.setCostoAdicional(regla.getCostoAdicional());
+            } else {
+                compra.setCostoAdicional(BigDecimal.ZERO);
             }
 
             if (root.has("referencia") && root.get("referencia").isObject()) {
@@ -184,7 +188,7 @@ public class CompraServlet extends HttpServlet {
                     detalle.setIdDetalle(tempId);
                     int idArticulo = d.path("idArticulo").asInt();
                     detalle.setIdArticulo(idArticulo);
-                    detalle.setIdUnidad(d.path("idUnidad").asInt(0)); // Asegurando que idUnidad se lea
+                    detalle.setIdUnidad(d.path("idUnidad").asInt(0));
                     detalle.setCantidad(BigDecimal.valueOf(d.path("cantidad").asDouble(0)));
                     detalle.setPrecioUnitario(BigDecimal.valueOf(d.path("precioUnitario").asDouble(0)));
                     detalle.setBonificacion(BigDecimal.valueOf(d.path("bonificacion").asDouble(0)));
@@ -200,7 +204,13 @@ public class CompraServlet extends HttpServlet {
                         for (var l : d.get("lotes")) {
                             Lote lote = new Lote();
                             lote.setIdArticulo(idArticulo);
-                            lote.setNumeroLote(l.path("numeroLote").asText("").trim());
+
+                            String numeroLote = l.path("numeroLote").asText("").trim();
+                            if (numeroLote.isEmpty()) {
+                                throw new IllegalArgumentException("El campo Número de Lote no puede estar vacío para el artículo con ID: " + idArticulo + ".");
+                            }
+
+                            lote.setCodigoLote(numeroLote);
                             lote.setFechaVencimiento(parseDate(l, "fechaVencimiento"));
                             lote.setCantidadLote(BigDecimal.valueOf(l.path("cantidadLote").asDouble(0)));
                             lotes.add(lote);
@@ -291,7 +301,11 @@ public class CompraServlet extends HttpServlet {
             response.getWriter().write(gson.toJson(Map.of("success", false, "message", e.getMessage())));
         } catch (SQLIntegrityConstraintViolationException e) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
-            response.getWriter().write(gson.toJson(Map.of("success", false, "message", "Error de Integridad SQL: Verifique que no exista un comprobante duplicado (Serie/Correlativo) o que una clave foránea no esté fallando.")));
+            String specificMessage = "Error de Integridad SQL: Verifique que no exista un comprobante duplicado (Serie/Correlativo).";
+            if (e.getMessage().toLowerCase().contains("compra_ibfk_5") || e.getMessage().toLowerCase().contains("id_moneda")) {
+                specificMessage = "El ID de Moneda seleccionado no es válido o no existe en la base de datos.";
+            }
+            response.getWriter().write(gson.toJson(Map.of("success", false, "message", specificMessage)));
         }
         catch (SQLException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

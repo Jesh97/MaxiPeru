@@ -50,7 +50,7 @@ public class ArticuloController implements ArticuloRepository {
     private Lote mapearLote(ResultSet rs) throws SQLException {
         Lote lote = new Lote();
         lote.setIdLote(rs.getInt("ID_Lote"));
-        lote.setNumeroLote(rs.getString("Codigo_Lote"));
+        lote.setCodigoLote(rs.getString("Codigo_Lote"));
         lote.setCantidadLote(rs.getBigDecimal("Cantidad_Disponible"));
         java.sql.Date fechaVencimientoSql = rs.getDate("Fecha_Vencimiento");
         if (fechaVencimientoSql != null) {
