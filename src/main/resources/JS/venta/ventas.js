@@ -1,5 +1,27 @@
 const VENTA_SERVLET_URL = '/VentaServlet';
 
+const unidadesMedida = [
+    { id: 1, nombre: 'LITRO', abreviatura: 'L' },
+    { id: 2, nombre: 'GALON', abreviatura: 'GLN' },
+    { id: 3, nombre: 'BIDON', abreviatura: 'BDN' },
+    { id: 4, nombre: 'UNIDAD', abreviatura: 'UND' },
+    { id: 5, nombre: 'KILOGRAMO', abreviatura: 'KG' },
+    { id: 6, nombre: 'PAQUETE', abreviatura: 'PQ' },
+    { id: 7, nombre: 'ROLLO', abreviatura: 'RL' },
+    { id: 8, nombre: 'SACO', abreviatura: 'SC' },
+    { id: 9, nombre: 'PLANCHA', abreviatura: 'PL' },
+    { id: 10, nombre: 'CIENTO', abreviatura: 'C' }
+];
+
+function generarOpcionesUnidad(valorSeleccionado = 4) {
+    let options = '';
+    unidadesMedida.forEach(unidad => {
+        const selected = unidad.id === valorSeleccionado ? 'selected' : '';
+        options += `<option value="${unidad.id}" ${selected}>${unidad.abreviatura}</option>`;
+    });
+    return options;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const bodyItemsVenta = document.getElementById('bodyItemsVenta');
     const agregarItemVentaBtn = document.getElementById('agregarItemVentaBtn');
@@ -36,37 +58,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const listaResultadosClientes = document.getElementById('listaResultadosClientes');
     const inputIdCliente = document.getElementById('idCliente');
     const spanClienteSeleccionado = document.getElementById('spanClienteSeleccionado');
-
-    // NUEVOS CAMPOS AGREGADOS: SERIE Y CORRELATIVO
     const serieComprobanteInput = document.getElementById('serieComprobante');
     const correlativoComprobanteInput = document.getElementById('correlativoComprobante');
-
     let debounceTimerClientes;
+    const pesoTotalTrasladoInput = document.getElementById('pesoTotalTraslado');
+
+    const buscarClientes = async (q) => {
+        if (q.length < 1) {
+            listaResultadosClientes.innerHTML = '';
+            return;
+        }
+        const url = `${VENTA_SERVLET_URL}?action=buscarCliente&query=${encodeURIComponent(q)}`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Error HTTP! estado: ${response.status}`);
+            }
+            const clientes = await response.json();
+            mostrarResultadosClientes(clientes);
+        } catch (error) {
+            listaResultadosClientes.innerHTML = `<li class="list-group-item list-group-item-danger">Error al buscar clientes.</li>`;
+        }
+    };
 
     if (busquedaClienteInput) {
         busquedaClienteInput.addEventListener('input', () => {
             clearTimeout(debounceTimerClientes);
             const q = busquedaClienteInput.value.trim();
-
-            if (q.length < 3) {
-                listaResultadosClientes.innerHTML = '';
-                return;
-            }
-
-            debounceTimerClientes = setTimeout(async () => {
-                const url = `${VENTA_SERVLET_URL}?action=buscarCliente&query=${encodeURIComponent(q)}`;
-
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error(`Error HTTP! estado: ${response.status}`);
-                    }
-                    const clientes = await response.json();
-                    mostrarResultadosClientes(clientes);
-                } catch (error) {
-                    console.error("Error al buscar clientes:", error);
-                    listaResultadosClientes.innerHTML = `<li class="list-group-item list-group-item-danger">Error al buscar clientes.</li>`;
-                }
+            debounceTimerClientes = setTimeout(() => {
+                buscarClientes(q);
             }, 300);
         });
 
@@ -79,12 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const mostrarResultadosClientes = (clientes) => {
         listaResultadosClientes.innerHTML = '';
-
         if (clientes.length === 0) {
             listaResultadosClientes.innerHTML = `<li class="list-group-item">No se encontraron clientes.</li>`;
             return;
         }
-
         clientes.slice(0, 10).forEach(cliente => {
             const li = document.createElement('li');
             li.className = 'client-search-item list-group-item list-group-item-action';
@@ -98,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const clientData = JSON.parse(li.dataset.client);
                 inputIdCliente.value = clientData.id;
                 spanClienteSeleccionado.textContent = `${clientData.razonSocial} (${clientData.documento})`;
-
                 listaResultadosClientes.innerHTML = '';
                 busquedaClienteInput.value = clientData.razonSocial;
             });
@@ -107,13 +124,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const buscarArticulos = async (query) => {
-        if (query.length < 3) {
+        if (query.length < 1) {
             listaResultadosBusqueda.innerHTML = '';
             return;
         }
-
         const url = `${VENTA_SERVLET_URL}?action=buscarArticulos&query=${encodeURIComponent(query)}`;
-
         try {
             const response = await fetch(url);
             const articulos = await response.json();
@@ -129,7 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
             listaResultadosBusqueda.innerHTML = `<li class="list-group-item">No se encontraron artículos.</li>`;
             return;
         }
-
         articulos.slice(0, 10).forEach(articulo => {
             const li = document.createElement('li');
             li.className = 'product-search-item';
@@ -140,16 +154,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 descripcion: articulo.descripcion,
                 precio: articulo.precioUnitario,
                 peso: articulo.pesoUnitario || 0,
-                stock: articulo.cantidad
+                stock: articulo.cantidad,
+                idUnidad: articulo.idUnidad || 4
             });
             li.addEventListener('click', () => {
                 const productData = JSON.parse(li.dataset.product);
-
                 if (productData.stock <= 0) {
                     alert(`¡Alerta de Stock! El artículo "${productData.descripcion}" no está disponible. Stock actual: 0.`);
                     return;
                 }
-
                 createItemRow(productData);
                 listaResultadosBusqueda.innerHTML = '';
                 busquedaProductosInput.value = '';
@@ -163,28 +176,22 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalDescuentoAplicado = 0;
         let totalPeso = 0;
         const IGV_RATE = 0.18;
-
         const shouldApplyIgv = aplicaIgvCheckbox.checked;
-
         const rows = bodyItemsVenta.querySelectorAll('tr');
         const isPerItemDiscount = document.getElementById('descuentoPorItem').checked;
 
         rows.forEach(row => {
             const cantidad = parseFloat(row.querySelector('.item-cantidad')?.value) || 0;
-            const precio = parseFloat(row.querySelector('.item-precio')?.value) || 0;
-            const pesoUnitario = parseFloat(row.querySelector('.item-peso')?.value) || 0;
-
+            const precio = parseFloat(row.querySelector('.item-precio-unitario')?.value) || 0;
+            const pesoUnitario = parseFloat(row.querySelector('.item-peso-unitario')?.value) || 0;
             const baseTotal = cantidad * precio;
-
             totalPeso += cantidad * pesoUnitario;
-
             subtotalBase += baseTotal;
 
             let itemDiscount = 0;
             if (isPerItemDiscount) {
                 const valorDescItem = parseFloat(row.dataset.descuentoValor) || 0;
                 const tipoDescItem = row.dataset.descuentoTipo || 'monto';
-
                 if (tipoDescItem === 'porcentaje') {
                     itemDiscount = baseTotal * (valorDescItem / 100);
                 } else {
@@ -192,39 +199,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             totalDescuentoAplicado += itemDiscount;
-
             const finalItemTotal = baseTotal - itemDiscount;
-            const totalItemSpan = row.querySelector('.item-total');
-            if (totalItemSpan) {
-                 totalItemSpan.textContent = Math.max(0, finalItemTotal).toFixed(2);
-            }
 
-            const loteBtn = row.querySelector('.lote-btn');
+            row.querySelector('.item-subtotal-value').value = baseTotal.toFixed(2);
+            row.querySelector('.item-total-value').value = Math.max(0, finalItemTotal).toFixed(2);
+
+            const totalItemSpan = row.querySelector('.item-total-line');
+            if (totalItemSpan) {
+                 totalItemSpan.textContent = `S/ ${Math.max(0, finalItemTotal).toFixed(2)}`;
+            }
+            const loteBtn = row.querySelector('.btn-lotes-item');
             if (loteBtn) loteBtn.disabled = cantidad <= 0;
         });
 
-        if (!isPerItemDiscount) {
+        let descuentoGlobalCalculado = 0;
+        if (!isPerItemDiscount && document.getElementById('aplicaDescuentoSi').checked) {
             const valor = parseFloat(document.getElementById('valorDescuentoGlobal')?.value) || 0;
             const tipo = document.getElementById('tipoDescuentoGlobal')?.value;
-            const subtotalNeto = subtotalBase - totalDescuentoAplicado;
+            const subtotalNeto = subtotalBase;
 
             if (tipo === 'porcentaje') {
-                const globalDiscount = subtotalNeto * (valor / 100);
-                totalDescuentoAplicado += globalDiscount;
+                descuentoGlobalCalculado = subtotalNeto * (valor / 100);
             } else {
-                totalDescuentoAplicado += valor;
+                descuentoGlobalCalculado = valor;
             }
+            totalDescuentoAplicado += descuentoGlobalCalculado;
         }
 
         totalDescuentoAplicado = Math.min(totalDescuentoAplicado, subtotalBase);
-
         const subtotalFinal = subtotalBase - totalDescuentoAplicado;
 
         let igv = 0;
         if (shouldApplyIgv && subtotalFinal > 0) {
             igv = subtotalFinal * IGV_RATE;
         }
-
         const totalFinal = subtotalFinal + igv;
 
         subtotalSinIgvSpan.textContent = `S/ ${subtotalBase.toFixed(2)}`;
@@ -232,28 +240,30 @@ document.addEventListener('DOMContentLoaded', () => {
         igvVentaSpan.textContent = `S/ ${igv.toFixed(2)}`;
         totalVentaSpan.textContent = `S/ ${Math.max(0, totalFinal).toFixed(2)}`;
         pesoTotalVentaSpan.textContent = `${totalPeso.toFixed(2)} Kg`;
+
+        if (pesoTotalTrasladoInput) {
+            pesoTotalTrasladoInput.value = totalPeso.toFixed(3);
+        }
     };
 
     const setupRowEvents = (row) => {
-        const inputsToRecalculate = row.querySelectorAll('.item-cantidad, .item-precio, .item-peso');
+        const inputsToRecalculate = row.querySelectorAll('.item-cantidad, .item-precio-unitario, .item-peso-unitario, .item-unidad-medida');
         inputsToRecalculate.forEach(input => {
             input.addEventListener('input', updateTotals);
+            input.addEventListener('change', updateTotals);
         });
-
-        row.querySelector('.eliminar-item-btn').addEventListener('click', () => {
+        row.querySelector('.btn-delete-item').addEventListener('click', () => {
             row.remove();
             updateTotals();
         });
-
-        row.querySelector('.aplicar-descuento-btn')?.addEventListener('click', () => {
+        row.querySelector('.btn-descuento-item')?.addEventListener('click', () => {
             currentRow = row;
             itemDescripcionModal.value = row.querySelector('.item-descripcion')?.value || 'Ítem sin descripción';
             valorDescuentoItem.value = row.dataset.descuentoValor;
             tipoDescuentoItem.value = row.dataset.descuentoTipo;
             modalDescuentoItem.show();
         });
-
-        row.querySelector('.lote-btn')?.addEventListener('click', () => {
+        row.querySelector('.btn-lotes-item')?.addEventListener('click', () => {
             const cantidad = parseFloat(row.querySelector('.item-cantidad')?.value) || 0;
             const idArticulo = parseFloat(row.dataset.idArticulo) || 0;
             if (cantidad > 0 && idArticulo > 0) {
@@ -267,42 +277,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const createItemRow = (product = null) => {
         const row = document.createElement('tr');
+        const index = bodyItemsVenta.rows.length;
+        row.setAttribute('data-index', index);
         row.dataset.descuentoValor = 0;
         row.dataset.descuentoTipo = 'monto';
         row.dataset.idArticulo = product ? product.id : 0;
+        row.dataset.idDetalleVenta = 0;
+
         const isPerItemDiscount = document.getElementById('descuentoPorItem').checked;
         const initialPrice = product && product.precio ? product.precio.toFixed(2) : '0.00';
-        const initialPeso = product && product.peso ? product.peso.toFixed(2) : '0.00';
+        const initialPeso = product && product.peso ? product.peso.toFixed(3) : '0.000';
+        const initialUnidadId = product && product.idUnidad ? product.idUnidad : 4;
 
         row.innerHTML = `
-            <td><input type="text" class="form-control item-codigo" value="${product ? product.codigo : ''}" placeholder="Código"></td>
-            <td class="table-description-col"><input type="text" class="form-control item-descripcion" value="${product ? product.descripcion : ''}" placeholder="Descripción"></td>
-            <td><input type="number" class="form-control item-cantidad" value="1" min="1"></td>
             <td>
-                <select class="form-select item-unidad-medida">
-                    <option value="unidades">UND</option>
-                    <option value="kg">KG</option>
-                    <option value="litros">LIT</option>
-                    <option value="metros">MTR</option>
+                <input type="text" class="form-control item-codigo" data-field="codigo" value="${product ? product.codigo : ''}" style="min-width: 80px;" readonly>
+            </td>
+            <td class="table-description-col">
+                <input type="text" class="form-control item-descripcion" data-field="descripcion" value="${product ? product.descripcion : ''}" style="min-width: 250px;">
+            </td>
+            <td>
+                <input type="number" class="form-control item-cantidad" data-field="cantidad" value="1" min="0.01" step="0.01" style="max-width: 80px;">
+            </td>
+            <td>
+                <select class="form-select item-unidad-medida" data-field="idUnidad" style="min-width: 100px;">
+                    ${generarOpcionesUnidad(initialUnidadId)}
                 </select>
             </td>
-            <td><input type="number" class="form-control item-peso" value="${initialPeso}" min="0" step="0.01"></td>
-            <td><input type="number" class="form-control item-precio" value="${initialPrice}" min="0" step="0.01"></td>
-            <td class="discount-column"><span class="item-descuento">S/ 0.00</span> <button type="button" class="btn btn-table btn-descuento-item aplicar-descuento-btn" title="Aplicar Descuento"><i class="bi bi-tag"></i></button></td>
-            <td><span class="item-total fw-bold">0.00</span></td>
+            <td>
+                <input type="number" class="form-control item-peso-unitario" data-field="pesoUnitario" value="${initialPeso}" min="0" step="0.001" style="max-width: 100px;">
+            </td>
+            <td>
+                <input type="number" class="form-control item-precio-unitario" data-field="precioUnitario" value="${initialPrice}" min="0.01" step="0.01" style="max-width: 100px;">
+            </td>
+            <td class="discount-column" style="${isPerItemDiscount ? '' : 'display:none;'}">
+                <span class="item-descuento-valor">S/ 0.00</span>
+                <button type="button" class="btn btn-descuento-item btn-table" title="Aplicar Descuento"><i class="bi bi-tag"></i></button>
+            </td>
+            <td>
+                <span class="item-total-line fw-bold">S/ 0.00</span>
+                <input type="hidden" class="item-subtotal-value" value="0.00">
+                <input type="hidden" class="item-total-value" value="0.00">
+            </td>
             <td class="action-cell">
-                <button type="button" class="btn btn-table btn-lotes-item lote-btn" title="Ver Lotes Disponibles"><i class="bi bi-boxes"></i></button>
-                <button type="button" class="btn btn-table btn-delete-item eliminar-item-btn" aria-label="Eliminar ítem" title="Eliminar Ítem"><i class="bi bi-trash"></i></button>
+                <button type="button" class="btn btn-table btn-lotes-item" title="Ver Lotes Disponibles"><i class="bi bi-box-seam"></i></button>
+                <button type="button" class="btn btn-table btn-delete-item" aria-label="Eliminar ítem" title="Eliminar Ítem"><i class="bi bi-trash"></i></button>
             </td>
         `;
 
-        const discountColumn = row.querySelector('.discount-column');
-        if (discountColumn) {
-            discountColumn.style.display = isPerItemDiscount ? '' : 'none';
-        }
-
         bodyItemsVenta.appendChild(row);
-
         setupRowEvents(row);
         updateTotals();
     };
@@ -318,15 +341,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             idCliente: parseFloat(document.getElementById('idCliente')?.value) || 0,
             idTipoComprobante: parseFloat(document.getElementById('idTipoComprobante')?.value) || 0,
-            // CAPTURA DE SERIE Y CORRELATIVO
-            serieComprobante: serieComprobanteInput?.value || '',
-            correlativoComprobante: correlativoComprobanteInput?.value || '',
-            // FIN DE CAPTURA
+            serie: serieComprobanteInput?.value || '',
+            correlativo: correlativoComprobanteInput?.value || '',
             idMoneda: parseFloat(document.getElementById('idMoneda')?.value) || 0,
             fechaEmision: document.getElementById('fechaEmision')?.value || new Date().toISOString().split('T')[0],
             fechaVencimiento: document.getElementById('fechaVencimiento')?.value || null,
             idTipoPago: parseFloat(document.getElementById('idTipoPago')?.value) || 0,
-            estadoVenta: document.getElementById('estadoVenta')?.value || 'Emitida',
+            estadoVenta: document.getElementById('estadoVenta')?.value || 'Pendiente',
             tipoDescuento: tipoDescuento,
             aplicaIgv: aplicaIgvCheckbox.checked,
             observaciones: document.getElementById('observaciones')?.value || '',
@@ -338,14 +359,13 @@ document.addEventListener('DOMContentLoaded', () => {
             hayTraslado: opcionTrasladoSelect.value === 'si'
         };
 
-        if (tipoDescuento === 'global') {
+        if (tipoDescuento === 'global' && document.getElementById('aplicaDescuentoSi').checked) {
             data.descuentoGlobal = {
                 motivo: document.getElementById('motivoDescuentoGlobal')?.value || 'Descuento General',
                 tipoValor: document.getElementById('tipoDescuentoGlobal')?.value || 'monto',
                 valor: parseFloat(document.getElementById('valorDescuentoGlobal')?.value) || 0
             };
         }
-
         return data;
     };
 
@@ -356,24 +376,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         rows.forEach(row => {
             const cantidad = parseFloat(row.querySelector('.item-cantidad')?.value) || 0;
-            const precioUnitario = parseFloat(row.querySelector('.item-precio')?.value) || 0;
-            const totalItem = parseFloat(row.querySelector('.item-total')?.textContent) || 0;
-
-            const baseTotal = cantidad * precioUnitario;
-            const descuentoMonto = baseTotal - totalItem;
+            const precioUnitario = parseFloat(row.querySelector('.item-precio-unitario')?.value) || 0;
+            const totalItem = parseFloat(row.querySelector('.item-total-value')?.value) || 0;
+            const subtotalItem = parseFloat(row.querySelector('.item-subtotal-value')?.value) || 0;
+            const descuentoMonto = subtotalItem - totalItem;
 
             const detalle = {
                 idArticulo: parseFloat(row.dataset.idArticulo) || 0,
+                idUnidad: parseFloat(row.querySelector('.item-unidad-medida')?.value) || 0,
                 descripcion: row.querySelector('.item-descripcion')?.value || '',
                 cantidad: cantidad,
-                pesoUnitario: parseFloat(row.querySelector('.item-peso')?.value) || 0,
+                pesoUnitario: parseFloat(row.querySelector('.item-peso-unitario')?.value) || 0,
                 precioUnitario: precioUnitario,
                 descuentoMonto: descuentoMonto,
-                subtotal: baseTotal,
+                subtotal: subtotalItem,
                 total: totalItem
             };
 
-            if (isPerItemDiscount) {
+            if (isPerItemDiscount && parseFloat(row.dataset.descuentoValor) > 0) {
                 detalle.detalleDescuento = {
                     motivo: 'Descuento por ítem',
                     tipoValor: row.dataset.descuentoTipo,
@@ -387,14 +407,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getTrasladoData = () => {
         const hayTraslado = opcionTrasladoSelect.value === 'si';
+        const pesoTotal = parseFloat(pesoTotalVentaSpan.textContent.replace(' Kg', '')) || 0;
 
         if (hayTraslado) {
             return {
                 modalidadTransporte: modalidadTransporteSelect.value,
-                peso: parseFloat(pesoTotalVentaSpan.textContent.replace(' Kg', '')),
+                peso: pesoTotal,
                 rucEmpresa: document.getElementById('rucEmpresa')?.value || '',
                 razonSocialEmpresa: document.getElementById('razonSocialEmpresa')?.value || '',
-                marcaVehiculo: document.getElementById('marcaVehiculo')?.value || '',
+                placaVehiculo: document.getElementById('placaVehiculo')?.value || '',
                 dniConductor: document.getElementById('dniConductor')?.value || '',
                 nombreConductor: document.getElementById('nombreConductor')?.value || '',
                 puntoPartida: document.getElementById('puntoPartida')?.value || '',
@@ -417,14 +438,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const ventaData = getGeneralData();
             ventaData.detalles = getDetalles();
 
-            if (ventaData.detalles.length === 0) {
-                alert("Debe agregar al menos un ítem a la venta.");
+            if (ventaData.detalles.length === 0 || ventaData.detalles.some(d => d.idArticulo === 0)) {
+                alert("Debe agregar al menos un ítem válido a la venta (con ID de Artículo).");
                 return;
             }
 
-            // Validar campos de serie y correlativo
-            if (!ventaData.serieComprobante || !ventaData.correlativoComprobante) {
+            if (!ventaData.serie || !ventaData.correlativo) {
                 alert("Los campos de Serie y Correlativo son obligatorios.");
+                return;
+            }
+
+            if (ventaData.idCliente === 0) {
+                alert("Debe seleccionar un cliente.");
                 return;
             }
 
@@ -506,20 +531,35 @@ document.addEventListener('DOMContentLoaded', () => {
     tipoDescuentoRadios.forEach(radio => {
         radio.addEventListener('change', () => {
             const isPerItem = radio.value === 'porItem';
-            descuentoGlobalContainer.style.display = isPerItem ? 'none' : 'block';
-            if (descuentoHeader) descuentoHeader.style.display = isPerItem ? '' : 'none';
+            descuentoGlobalContainer.style.display = isPerItem ? 'none' : (document.getElementById('aplicaDescuentoSi').checked ? 'block' : 'none');
+            if (descuentoHeader) descuentoHeader.style.display = isPerItem ? 'table-cell' : 'none';
             bodyItemsVenta.querySelectorAll('.discount-column').forEach(col => col.style.display = isPerItem ? '' : 'none');
             updateTotals();
         });
     });
+
     document.getElementById('valorDescuentoGlobal')?.addEventListener('input', updateTotals);
     document.getElementById('tipoDescuentoGlobal')?.addEventListener('change', updateTotals);
+    document.querySelectorAll('input[name="aplicaDescuento"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            const aplica = document.getElementById('aplicaDescuentoSi').checked;
+            const tipoDesc = document.querySelector('input[name="tipoDescuento"]:checked').value;
+
+            opcionTipoDescuentoContainer.style.display = aplica ? 'block' : 'none';
+            descuentoGlobalContainer.style.display = (aplica && tipoDesc === 'global') ? 'block' : 'none';
+            if (descuentoHeader) descuentoHeader.style.display = (aplica && tipoDesc === 'porItem') ? 'table-cell' : 'none';
+            bodyItemsVenta.querySelectorAll('.discount-column').forEach(col => col.style.display = (aplica && tipoDesc === 'porItem') ? '' : 'none');
+
+            updateTotals();
+        });
+    });
+
 
     guardarDescuentoItemBtn.addEventListener('click', () => {
         if (currentRow) {
             currentRow.dataset.descuentoValor = valorDescuentoItem.value;
             currentRow.dataset.descuentoTipo = tipoDescuentoItem.value;
-            const descuentoSpan = currentRow.querySelector('.item-descuento');
+            const descuentoSpan = currentRow.querySelector('.item-descuento-valor');
             const valor = parseFloat(valorDescuentoItem.value) || 0;
             if (tipoDescuentoItem.value === 'porcentaje') {
                 descuentoSpan.textContent = `-${valor.toFixed(2)}%`;
@@ -547,6 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalTraslado.hide();
         modalConformidadCliente.hide();
         if (opcion === 'si') {
+            updateTotals();
             modalTraslado.show();
         } else if (opcion === 'no') {
             modalConformidadCliente.show();
@@ -564,10 +605,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     busquedaClienteInput.addEventListener('input', (e) => {
-        clearTimeout(busquedaTimeout);
-        const query = e.target.value.trim();
-        busquedaTimeout = setTimeout(() => {
-            buscarClientes(query);
+        clearTimeout(debounceTimerClientes);
+        const q = e.target.value.trim();
+        debounceTimerClientes = setTimeout(() => {
+            buscarClientes(q);
         }, 300);
     });
 

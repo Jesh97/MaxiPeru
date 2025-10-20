@@ -103,7 +103,12 @@ public class VentaServlet extends HttpServlet {
             int idTipoComprobante = ((Double) ventaData.getOrDefault("idTipoComprobante", 0.0)).intValue();
             int idMoneda = ((Double) ventaData.getOrDefault("idMoneda", 0.0)).intValue();
             String fechaEmision = (String) ventaData.getOrDefault("fechaEmision", "");
+
             String fechaVencimiento = (String) ventaData.getOrDefault("fechaVencimiento", null);
+            if (fechaVencimiento != null && fechaVencimiento.isEmpty()) {
+                fechaVencimiento = null;
+            }
+
             int idTipoPago = ((Double) ventaData.getOrDefault("idTipoPago", 0.0)).intValue();
             String estadoVenta = (String) ventaData.getOrDefault("estadoVenta", "Pendiente");
             String tipoDescuento = (String) ventaData.getOrDefault("tipoDescuento", "global");
@@ -117,7 +122,6 @@ public class VentaServlet extends HttpServlet {
             boolean hayTraslado = (Boolean) ventaData.getOrDefault("hayTraslado", false);
             String serie = (String) ventaData.getOrDefault("serie", "");
             String correlativo = (String) ventaData.getOrDefault("correlativo", "");
-
 
             idVenta = ventaController.registrarVenta(con, idCliente, idTipoComprobante, idMoneda, fechaEmision, fechaVencimiento, idTipoPago, estadoVenta, tipoDescuento, aplicaIgv, observaciones, subtotal, igv, descuentoTotal, totalFinal, totalPeso, hayTraslado, serie, correlativo);
 
@@ -138,14 +142,16 @@ public class VentaServlet extends HttpServlet {
 
             for (Map<String, Object> detalle : detalles) {
                 int idArticulo = ((Double) detalle.getOrDefault("idArticulo", 0.0)).intValue();
+                int idUnidad = ((Double) detalle.getOrDefault("idUnidad", 0.0)).intValue();
                 double cantidad = (Double) detalle.getOrDefault("cantidad", 0.0);
                 double pesoUnitario = (Double) detalle.getOrDefault("pesoUnitario", 0.0);
                 double precioUnitario = (Double) detalle.getOrDefault("precioUnitario", 0.0);
                 double descuentoMonto = (Double) detalle.getOrDefault("descuentoMonto", 0.0);
                 double subtotalDetalle = (Double) detalle.getOrDefault("subtotal", 0.0);
                 double totalDetalle = (Double) detalle.getOrDefault("total", 0.0);
+                String descripcion = (String) detalle.getOrDefault("descripcion", "");
 
-                int idDetalleVenta = ventaController.agregarDetalleVenta(con, idVenta, idArticulo, (String) detalle.getOrDefault("descripcion", ""), cantidad, pesoUnitario, precioUnitario, descuentoMonto, subtotalDetalle, totalDetalle);
+                int idDetalleVenta = ventaController.agregarDetalleVenta(con, idVenta, idArticulo, idUnidad, descripcion, cantidad, pesoUnitario, precioUnitario, descuentoMonto, subtotalDetalle, totalDetalle);
 
                 if (idDetalleVenta == 0) throw new SQLException("Fallo al obtener ID de Detalle Venta.");
 
@@ -165,7 +171,23 @@ public class VentaServlet extends HttpServlet {
 
             if (hayTraslado && ventaData.containsKey("datosTraslado")) {
                 Map<String, Object> datosTraslado = (Map<String, Object>) ventaData.get("datosTraslado");
-                ventaController.registrarGuiaTransporteVenta(con, idVenta, (String) datosTraslado.getOrDefault("modalidadTransporte", ""), (Double) datosTraslado.getOrDefault("peso", 0.0), (String) datosTraslado.getOrDefault("rucEmpresa", ""), (String) datosTraslado.getOrDefault("razonSocialEmpresa", ""), (String) datosTraslado.getOrDefault("marcaVehiculo", ""), (String) datosTraslado.getOrDefault("dniConductor", ""), (String) datosTraslado.getOrDefault("nombreConductor", ""), (String) datosTraslado.getOrDefault("puntoPartida", ""), (String) datosTraslado.getOrDefault("puntoLlegada", ""), (String) datosTraslado.getOrDefault("fechaTraslado", ""), (String) datosTraslado.getOrDefault("observaciones", ""), (String) datosTraslado.getOrDefault("conformidadNombre", ""), (String) datosTraslado.getOrDefault("conformidadDni", ""));
+
+                String modalidadTransporte = (String) datosTraslado.getOrDefault("modalidadTransporte", "");
+                double peso = (Double) datosTraslado.getOrDefault("peso", 0.0);
+                String rucEmpresa = (String) datosTraslado.getOrDefault("rucEmpresa", "");
+                String razonSocialEmpresa = (String) datosTraslado.getOrDefault("razonSocialEmpresa", "");
+                String marcaVehiculo = (String) datosTraslado.getOrDefault("placaVehiculo", "");
+                String dniConductor = (String) datosTraslado.getOrDefault("dniConductor", "");
+                String nombreConductor = (String) datosTraslado.getOrDefault("nombreConductor", "");
+                String puntoPartida = (String) datosTraslado.getOrDefault("puntoPartida", "");
+                String puntoLlegada = (String) datosTraslado.getOrDefault("puntoLlegada", "");
+                String fechaTrasladoStr = (String) datosTraslado.getOrDefault("fechaTraslado", "");
+                String observacionesTraslado = (String) datosTraslado.getOrDefault("observaciones", "");
+                String conformidadNombre = (String) datosTraslado.getOrDefault("conformidadNombre", "");
+                String conformidadDni = (String) datosTraslado.getOrDefault("conformidadDni", "");
+
+                ventaController.registrarGuiaTransporteVenta(con, idVenta, modalidadTransporte, peso, rucEmpresa, razonSocialEmpresa, marcaVehiculo, dniConductor, nombreConductor, puntoPartida, puntoLlegada, fechaTrasladoStr, observacionesTraslado, conformidadNombre, conformidadDni);
+
             } else if (!hayTraslado && ventaData.containsKey("conformidadTienda")) {
                 Map<String, Object> conformidadTienda = (Map<String, Object>) ventaData.get("conformidadTienda");
                 ventaController.registrarConformidadTienda(con, idVenta, (String) conformidadTienda.getOrDefault("nombre", ""), (String) conformidadTienda.getOrDefault("dni", ""));
@@ -176,17 +198,17 @@ public class VentaServlet extends HttpServlet {
 
         } catch (JsonSyntaxException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print(gson.toJson(Map.of("success", false, "message", "Error en el formato JSON de la solicitud.")));
+            out.print(gson.toJson(Map.of("success", false, "message", "Error en el formato JSON de la solicitud: " + e.getMessage())));
         } catch (SQLException e) {
             try {
-                if (con != null) con.rollback();
+                con.rollback();
             } catch (SQLException ex) {}
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print(gson.toJson(Map.of("success", false, "message", "Error de base de datos: " + e.getMessage())));
         } catch (Exception e) {
             try {
                 if (con != null) con.rollback();
-            } catch (SQLException ex) {}
+            } catch (SQLException ignored) {}
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print(gson.toJson(Map.of("success", false, "message", "Error interno del servidor: " + e.getMessage())));
         } finally {

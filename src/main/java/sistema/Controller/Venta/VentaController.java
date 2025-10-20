@@ -26,7 +26,13 @@ public class VentaController {
             cs.setInt(2, idTipoComprobante);
             cs.setInt(3, idMoneda);
             cs.setString(4, fechaEmision);
-            cs.setString(5, fechaVencimiento);
+
+            if (fechaVencimiento == null || fechaVencimiento.isEmpty()) {
+                cs.setNull(5, Types.DATE);
+            } else {
+                cs.setString(5, fechaVencimiento);
+            }
+
             cs.setInt(6, idTipoPago);
             cs.setString(7, estadoVenta);
             cs.setString(8, tipoDescuento);
@@ -51,23 +57,24 @@ public class VentaController {
         return idVenta;
     }
 
-    public int agregarDetalleVenta(Connection con, int idVenta, int idArticulo, String descripcion, double cantidad, double pesoUnitario, double precioUnitario, double descuentoMonto, double subtotal, double total) throws SQLException {
+    public int agregarDetalleVenta(Connection con, int idVenta, int idArticulo, int idUnidad, String descripcion, double cantidad, double pesoUnitario, double precioUnitario, double descuentoMonto, double subtotal, double total) throws SQLException {
         CallableStatement cs = null;
         int idDetalleVenta = 0;
         try {
-            cs = con.prepareCall("{CALL sp_agregar_detalle_venta(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
+            cs = con.prepareCall("{CALL sp_agregar_detalle_venta(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
             cs.setInt(1, idVenta);
             cs.setInt(2, idArticulo);
-            cs.setString(3, descripcion);
-            cs.setDouble(4, cantidad);
-            cs.setDouble(5, pesoUnitario);
-            cs.setDouble(6, precioUnitario);
-            cs.setDouble(7, descuentoMonto);
-            cs.setDouble(8, subtotal);
-            cs.setDouble(9, total);
-            cs.registerOutParameter(10, Types.INTEGER);
+            cs.setInt(3, idUnidad);
+            cs.setString(4, descripcion);
+            cs.setDouble(5, cantidad);
+            cs.setDouble(6, pesoUnitario);
+            cs.setDouble(7, precioUnitario);
+            cs.setDouble(8, descuentoMonto);
+            cs.setDouble(9, subtotal);
+            cs.setDouble(10, total);
+            cs.registerOutParameter(11, Types.INTEGER);
             cs.execute();
-            idDetalleVenta = cs.getInt(10);
+            idDetalleVenta = cs.getInt(11);
         } catch (SQLException e) {
             throw e;
         } finally {
@@ -113,7 +120,7 @@ public class VentaController {
     public void registrarGuiaTransporteVenta(Connection con, int idVenta, String modalidadTransporte, double peso, String rucEmpresa, String razonSocialEmpresa, String marcaVehiculo, String dniConductor, String nombreConductor, String puntoPartida, String puntoLlegada, String fechaTraslado, String observaciones, String conformidadNombre, String conformidadDni) throws SQLException {
         CallableStatement cs = null;
         try {
-            cs = con.prepareCall("{CALL sp_registrar_guia_transporte_venta(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
+            cs = con.prepareCall("{CALL sp_registrar_guia_transporte_venta(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
             cs.setInt(1, idVenta);
             cs.setString(2, modalidadTransporte);
             cs.setDouble(3, peso);
