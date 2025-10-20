@@ -115,16 +115,26 @@ public class CompraController implements CompraRepository {
                     compra.put("fecha_emision", fechaEmision != null ? DATE_FORMATTER.format(fechaEmision) : null);
                     java.sql.Date fechaVencimiento = rs.getDate("fecha_vencimiento");
                     compra.put("fecha_vencimiento", fechaVencimiento != null ? DATE_FORMATTER.format(fechaVencimiento) : null);
+                    compra.put("id_tipo_comprobante", rs.getInt("id_tipo_comprobante"));
                     compra.put("tipo_comprobante", rs.getString("tipo_comprobante"));
                     compra.put("serie", rs.getString("serie"));
                     compra.put("correlativo", rs.getString("correlativo"));
+                    compra.put("id_moneda", rs.getInt("id_moneda"));
                     compra.put("moneda", rs.getString("moneda"));
-                    compra.put("total", rs.getBigDecimal("total"));
+                    compra.put("tipo_cambio", rs.getBigDecimal("tipo_cambio"));
+                    compra.put("incluye_igv", rs.getBoolean("incluye_igv"));
+                    compra.put("hay_bonificacion", rs.getBoolean("hay_bonificacion"));
+                    compra.put("hay_traslado", rs.getBoolean("hay_traslado"));
+                    compra.put("observacion", rs.getString("observacion"));
+                    compra.put("id_tipo_pago", rs.getInt("id_tipo_pago"));
+                    compra.put("tipo_pago", rs.getString("tipo_pago"));
+                    compra.put("id_forma_pago", rs.getInt("id_forma_pago"));
+                    compra.put("forma_pago", rs.getString("forma_pago"));
                     compra.put("subtotal", rs.getBigDecimal("subtotal"));
                     compra.put("igv", rs.getBigDecimal("igv"));
-                    compra.put("coste_transporte", rs.getBigDecimal("coste_transporte"));
+                    compra.put("total", rs.getBigDecimal("total"));
                     compra.put("total_peso", rs.getBigDecimal("total_peso"));
-                    compra.put("observacion", rs.getString("observacion"));
+                    compra.put("coste_transporte", rs.getBigDecimal("coste_transporte"));
 
                     Map<String, Object> proveedor = new HashMap<>();
                     proveedor.put("id", rs.getInt("id_proveedor"));
@@ -140,6 +150,7 @@ public class CompraController implements CompraRepository {
                     compra.put("cajas_compra", new ArrayList<>());
                     compra.put("guia", null);
                     compra.put("referencia", null);
+                    compra.put("regla_aplicada", null);
 
                     compraMap.put(idCompra, compra);
                     detalleTracker.put(idCompra, new LinkedHashMap<>());
@@ -152,15 +163,17 @@ public class CompraController implements CompraRepository {
                 int idDetalle = rs.getInt("id_detalle");
                 if (idDetalle > 0) {
                     Map<String, Object> detalle = currentDetalleMap.get(idDetalle);
-
                     if (detalle == null) {
                         detalle = new LinkedHashMap<>();
                         detalle.put("id_detalle", idDetalle);
                         detalle.put("id_articulo", rs.getInt("id_articulo"));
                         detalle.put("codigo_articulo", rs.getString("codigo_articulo"));
                         detalle.put("descripcion_articulo", rs.getString("descripcion_articulo"));
+                        detalle.put("id_unidad_articulo", rs.getInt("id_unidad_articulo"));
+                        detalle.put("unidad_medida_articulo", rs.getString("unidad_medida_articulo"));
                         detalle.put("cantidad", rs.getBigDecimal("cantidad"));
                         detalle.put("precio_unitario", rs.getBigDecimal("precio_unitario"));
+                        detalle.put("bonificacion", rs.getBigDecimal("bonificacion"));
                         detalle.put("peso_total", rs.getBigDecimal("peso_total"));
                         detalle.put("precio_con_descuento", rs.getBigDecimal("precio_con_descuento"));
                         detalle.put("igv_insumo", rs.getBigDecimal("igv_insumo"));
@@ -168,7 +181,6 @@ public class CompraController implements CompraRepository {
                         detalle.put("coste_unitario_transporte", rs.getBigDecimal("coste_unitario_transporte"));
                         detalle.put("coste_total_transporte", rs.getBigDecimal("coste_total_transporte"));
                         detalle.put("lotes", new ArrayList<>());
-
                         ((List<Map<String, Object>>) compra.get("detalles")).add(detalle);
                         currentDetalleMap.put(idDetalle, detalle);
                     }
@@ -176,7 +188,6 @@ public class CompraController implements CompraRepository {
                     int idLote = rs.getInt("id_lote");
                     if (idLote > 0) {
                         List<Map<String, Object>> lotesList = (List<Map<String, Object>>) detalle.get("lotes");
-
                         if (lotesList.stream().noneMatch(l -> l.get("id_lote").equals(idLote))) {
                             Map<String, Object> lote = new LinkedHashMap<>();
                             lote.put("id_lote", idLote);
@@ -192,23 +203,19 @@ public class CompraController implements CompraRepository {
                 int idCaja = rs.getInt("id_caja_compra");
                 if (idCaja > 0) {
                     Map<String, Object> caja = currentCajaMap.get(idCaja);
-
                     if (caja == null) {
                         caja = new LinkedHashMap<>();
                         caja.put("id_caja_compra", idCaja);
                         caja.put("nombre_caja", rs.getString("nombre_caja"));
-                        caja.put("cantidad", rs.getBigDecimal("cantidad_total_articulos_caja"));
+                        caja.put("cantidad_total_articulos_caja", rs.getBigDecimal("cantidad_total_articulos_caja"));
                         caja.put("costo_caja", rs.getBigDecimal("costo_caja"));
                         caja.put("detalles", new ArrayList<>());
-
                         ((List<Map<String, Object>>) compra.get("cajas_compra")).add(caja);
                         currentCajaMap.put(idCaja, caja);
                     }
-
                     int idDetalleCaja = rs.getInt("id_detalle_caja");
                     if (idDetalleCaja > 0) {
                         List<Map<String, Object>> detallesCajaList = (List<Map<String, Object>>) caja.get("detalles");
-
                         if (detallesCajaList.stream().noneMatch(d -> d.get("id_detalle_caja").equals(idDetalleCaja))) {
                             Map<String, Object> detalleCaja = new LinkedHashMap<>();
                             detalleCaja.put("id_detalle_caja", idDetalleCaja);
@@ -224,6 +231,7 @@ public class CompraController implements CompraRepository {
                     guiaMap.put("id_guia", rs.getInt("id_guia"));
                     guiaMap.put("ruc_guia", rs.getString("ruc_guia"));
                     guiaMap.put("razon_social_guia", rs.getString("razon_social_guia"));
+                    guiaMap.put("tipo_documento_ref", rs.getString("tipo_documento_ref"));
                     java.sql.Date fechaEmisionGuia = rs.getDate("fecha_emision_guia");
                     guiaMap.put("fecha_emision_guia", fechaEmisionGuia != null ? DATE_FORMATTER.format(fechaEmisionGuia) : null);
                     java.sql.Date fechaPedido = rs.getDate("fecha_pedido");
@@ -236,11 +244,20 @@ public class CompraController implements CompraRepository {
                     guiaMap.put("serie_guia_transporte", rs.getString("serie_guia_transporte"));
                     guiaMap.put("correlativo_guia_transporte", rs.getString("correlativo_guia_transporte"));
                     guiaMap.put("ciudad_traslado", rs.getString("ciudad_traslado"));
+                    guiaMap.put("punto_partida", rs.getString("punto_partida"));
+                    guiaMap.put("punto_llegada", rs.getString("punto_llegada"));
                     guiaMap.put("coste_transporte_guia", rs.getBigDecimal("coste_transporte_guia"));
                     guiaMap.put("peso_guia", rs.getBigDecimal("peso_guia"));
-                    guiaMap.put("puntoPartida", rs.getString("punto_partida"));
-                    guiaMap.put("puntoLlegada", rs.getString("punto_llegada"));
                     compra.put("guia", guiaMap);
+                }
+
+                if (rs.getInt("id_regla_compra") > 0 && compra.get("regla_aplicada") == null) {
+                    Map<String, Object> reglaMap = new HashMap<>();
+                    reglaMap.put("id_regla_compra", rs.getInt("id_regla_compra"));
+                    reglaMap.put("aplica_costo_adicional", rs.getBoolean("aplica_costo_adicional"));
+                    reglaMap.put("monto_minimo_condicion", rs.getBigDecimal("monto_minimo_condicion"));
+                    reglaMap.put("costo_adicional_aplicado", rs.getBigDecimal("costo_adicional_aplicado"));
+                    compra.put("regla_aplicada", reglaMap);
                 }
 
                 if (rs.getInt("id_referencia") > 0 && compra.get("referencia") == null) {

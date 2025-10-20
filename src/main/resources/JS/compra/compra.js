@@ -597,199 +597,197 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function actualizarTotales() {
-        const moneda = selectMoneda.value;
-        const incluyeIgv = igvSi.checked;
-        const hayBonificacion = bonifSi.checked;
-        const hayTraslado = trasladoSi.checked;
-        const hayDescuento = descuentoSi.checked;
-        const tipoDescuento = hayDescuento ? tipoDescuentoSelect.value : '';
+            const moneda = selectMoneda.value;
+            const incluyeIgv = igvSi.checked;
+            const hayBonificacion = bonifSi.checked;
+            const hayTraslado = trasladoSi.checked;
+            const hayDescuento = descuentoSi.checked;
+            const tipoDescuento = hayDescuento ? tipoDescuentoSelect.value : '';
 
-        if (monedaLabel) monedaLabel.textContent = moneda;
-        toggleBonificacionColumn(hayBonificacion);
-        togglePrecioConvertidoColumn(moneda !== 'Soles');
-        toggleDescuentoItemColumn(hayDescuento && tipoDescuento === 'por_item');
+            if (monedaLabel) monedaLabel.textContent = moneda;
+            toggleBonificacionColumn(hayBonificacion);
+            togglePrecioConvertidoColumn(moneda !== 'Soles');
+            toggleDescuentoItemColumn(hayDescuento && tipoDescuento === 'por_item');
 
-        let subtotal = 0;
-        let pesoTotalProductos = 0;
-        let descuentoTotalGlobal = 0;
-        let costeTransporteProductos = 0;
-        let totalIgvPorItem = 0;
-        let tipoCambioValor = 1;
+            let subtotal = 0;
+            let pesoTotalProductos = 0;
+            let costeTransporteProductos = 0;
+            let totalIgvPorItem = 0;
+            let tipoCambioValor = 1;
 
-        if (moneda !== 'Soles' && inputTipoCambio) {
-            tipoCambioValor = parseFloat(inputTipoCambio.value);
-            if (isNaN(tipoCambioValor) || tipoCambioValor <= 0) tipoCambioValor = 1;
-        }
+            if (moneda !== 'Soles' && inputTipoCambio) {
+                tipoCambioValor = parseFloat(inputTipoCambio.value);
+                if (isNaN(tipoCambioValor) || tipoCambioValor <= 0) tipoCambioValor = 1;
+            }
 
-        const costosTransporteGlobales = {};
-        cajas.forEach(caja => {
-            const cantidadTotalEnCaja = caja.productos.reduce((sum, prod) => sum + prod.cantidad, 0);
-            const costoUnitarioDistribucion = cantidadTotalEnCaja > 0 ? caja.fleteTotal / cantidadTotalEnCaja : 0;
-            caja.productos.forEach(prod => {
-                const costoTransporteProducto = costoUnitarioDistribucion * prod.cantidad;
-                if (!costosTransporteGlobales[prod.filaId]) {
-                    costosTransporteGlobales[prod.filaId] = { costoAcumulado: 0, cantidadAcumulada: 0 };
-                }
-                costosTransporteGlobales[prod.filaId].costoAcumulado += costoTransporteProducto;
-                costosTransporteGlobales[prod.filaId].cantidadAcumulada += prod.cantidad;
+            const costosTransporteGlobales = {};
+            cajas.forEach(caja => {
+                const cantidadTotalEnCaja = caja.productos.reduce((sum, prod) => sum + prod.cantidad, 0);
+                const costoUnitarioDistribucion = cantidadTotalEnCaja > 0 ? caja.fleteTotal / cantidadTotalEnCaja : 0;
+                caja.productos.forEach(prod => {
+                    const costoTransporteProducto = costoUnitarioDistribucion * prod.cantidad;
+                    if (!costosTransporteGlobales[prod.filaId]) {
+                        costosTransporteGlobales[prod.filaId] = { costoAcumulado: 0, cantidadAcumulada: 0 };
+                    }
+                    costosTransporteGlobales[prod.filaId].costoAcumulado += costoTransporteProducto;
+                    costosTransporteGlobales[prod.filaId].cantidadAcumulada += prod.cantidad;
+                });
             });
-        });
 
-        $$('#tablaProductosGeneral tr[data-fila-id]').forEach(trGeneral => {
-            const filaId = trGeneral.dataset.filaId;
-            const trFinanciero = $(`#tablaProductosFinanciero tr[data-fila-id="${filaId}"]`);
-            const trGuiaTransporte = $(`#tablaProductosGuiaTransporte tr[data-fila-id="${filaId}"]`);
-            const trTotales = $(`#tablaProductosTotales tr[data-fila-id="${filaId}"]`);
-            const cantidad = parseFloat(trGeneral.querySelector('.cantidad')?.value) || 0;
-            const precioUnitario = parseFloat(trGeneral.querySelector('.precioUnitario')?.value) || 0;
-            const pesoUnitario = parseFloat(trGeneral.dataset.pesoUnitario) || 0;
-            const pesoTotalFila = pesoUnitario * cantidad;
-            const costoUnitarioTransporteGlobal = costosTransporteGlobales[filaId] ? (costosTransporteGlobales[filaId].costoAcumulado / costosTransporteGlobales[filaId].cantidadAcumulada) : 0;
-            const costeTransporteFila = cantidad * costoUnitarioTransporteGlobal;
-            const codigoProducto = trGeneral.querySelector('.codigo').value;
-            const descripcionProducto = trGeneral.querySelector('.descripcion').value;
-            const bonificacion = trFinanciero.querySelector('.bonificacion')?.checked ?? false;
+            $$('#tablaProductosGeneral tr[data-fila-id]').forEach(trGeneral => {
+                const filaId = trGeneral.dataset.filaId;
+                const trFinanciero = $(`#tablaProductosFinanciero tr[data-fila-id="${filaId}"]`);
+                const trGuiaTransporte = $(`#tablaProductosGuiaTransporte tr[data-fila-id="${filaId}"]`);
+                const trTotales = $(`#tablaProductosTotales tr[data-fila-id="${filaId}"]`);
+                const cantidad = parseFloat(trGeneral.querySelector('.cantidad')?.value) || 0;
+                const precioUnitario = parseFloat(trGeneral.querySelector('.precioUnitario')?.value) || 0;
+                const pesoUnitario = parseFloat(trGeneral.dataset.pesoUnitario) || 0;
+                const pesoTotalFila = pesoUnitario * cantidad;
+                const costoUnitarioTransporteGlobal = costosTransporteGlobales[filaId] ? (costosTransporteGlobales[filaId].costoAcumulado / costosTransporteGlobales[filaId].cantidadAcumulada) : 0;
+                const costeTransporteFila = cantidad * costoUnitarioTransporteGlobal;
+                const codigoProducto = trGeneral.querySelector('.codigo').value;
+                const descripcionProducto = trGeneral.querySelector('.descripcion').value;
+                const bonificacion = trFinanciero.querySelector('.bonificacion')?.checked ?? false;
 
-            let precioBaseUnitario = (hayBonificacion && bonificacion) ? 0 : precioUnitario;
-            let precioBaseUnitarioSoles = precioBaseUnitario * tipoCambioValor;
-            let precioVentaTotal = precioBaseUnitarioSoles * cantidad;
-            let igvTasa = IGV_RATE;
-            let descuentoValor = 0;
-            let descuentoTipo = 'porcentaje';
+                let precioBaseUnitario = (hayBonificacion && bonificacion) ? 0 : precioUnitario;
+                let precioBaseUnitarioSoles = precioBaseUnitario * tipoCambioValor;
+                let precioVentaTotal = precioBaseUnitarioSoles * cantidad;
+                let igvTasa = IGV_RATE;
+                let descuentoValor = 0;
+                let descuentoTipo = 'porcentaje';
 
-            if (hayDescuento && tipoDescuento === 'por_item') {
-                descuentoValor = parseFloat(trFinanciero.dataset.descuentoItemValor) || 0;
-                descuentoTipo = trFinanciero.dataset.descuentoItemTipo;
-                igvTasa = parseFloat(trFinanciero.dataset.tasaIgvItem) || IGV_RATE;
-                if (descuentoTipo === 'porcentaje') {
-                    descuentoValor = precioVentaTotal * (descuentoValor / 100);
-                } else if (incluyeIgv) {
-                    descuentoValor = descuentoValor;
+                if (hayDescuento && tipoDescuento === 'por_item') {
+                    descuentoValor = parseFloat(trFinanciero.dataset.descuentoItemValor) || 0;
+                    descuentoTipo = trFinanciero.dataset.descuentoItemTipo;
+                    igvTasa = parseFloat(trFinanciero.dataset.tasaIgvItem) || IGV_RATE;
+                    if (descuentoTipo === 'porcentaje') {
+                        descuentoValor = precioVentaTotal * (descuentoValor / 100);
+                    } else if (incluyeIgv) {
+                        descuentoValor = descuentoValor;
+                    }
+                }
+
+                const precioVentaConDescuento = Math.max(0, precioVentaTotal - descuentoValor);
+                const precioConDescuentoItemEl = trFinanciero.querySelector('.precio-con-descuento-item');
+                if (precioConDescuentoItemEl) precioConDescuentoItemEl.textContent = formatCurrency(precioVentaConDescuento, 'PEN');
+
+                let subtotalProducto = incluyeIgv ? precioVentaConDescuento / (1 + igvTasa) : precioVentaConDescuento;
+                let igvProducto = subtotalProducto * igvTasa;
+                totalIgvPorItem += igvProducto;
+                const unidad = trGeneral.querySelector('.unidadMedida')?.value;
+                const unidadShort = unidadAbreviatura(unidad);
+
+                if (trTotales.querySelector('.unidadMedida-readonly')) trTotales.querySelector('.unidadMedida-readonly').textContent = unidadShort;
+                if (trGuiaTransporte.querySelector('.descripcion-readonly')) trGuiaTransporte.querySelector('.descripcion-readonly').textContent = descripcionProducto;
+                if (trFinanciero.querySelector('.descripcion-readonly')) trFinanciero.querySelector('.descripcion-readonly').textContent = descripcionProducto;
+                if (trTotales.querySelector('.descripcion-readonly')) trTotales.querySelector('.descripcion-readonly').textContent = descripcionProducto;
+                if (trGuiaTransporte.querySelector('.codigo-readonly')) trGuiaTransporte.querySelector('.codigo-readonly').textContent = codigoProducto;
+                if (trGuiaTransporte.querySelector('.cantidad-readonly')) trGuiaTransporte.querySelector('.cantidad-readonly').textContent = cantidad;
+                if (trGuiaTransporte.querySelector('.costoUnitTransporte')) trGuiaTransporte.querySelector('.costoUnitTransporte').value = costoUnitarioTransporteGlobal.toFixed(4);
+                if (trGuiaTransporte.querySelector('.peso-readonly')) trGuiaTransporte.querySelector('.peso-readonly').textContent = `${pesoTotalFila.toFixed(3)} kg`;
+
+                const precioConvertidoCell = trFinanciero.querySelector('.precio-convertido-cell');
+                if (precioConvertidoCell) precioConvertidoCell.textContent = moneda !== 'Soles' ? formatCurrency(precioBaseUnitarioSoles, 'PEN') : '';
+                if (trGuiaTransporte.querySelector('.costeTransporte')) trGuiaTransporte.querySelector('.costeTransporte').textContent = formatCurrency(costeTransporteFila, 'PEN');
+
+                const precioUnitarioVenta = cantidad > 0 ? subtotalProducto / cantidad : 0;
+                const igvUnitario = precioUnitarioVenta * igvTasa;
+                const totalUnitario = precioUnitarioVenta + igvUnitario + costoUnitarioTransporteGlobal;
+                const totalFila = subtotalProducto + igvProducto + costeTransporteFila;
+
+                if (trTotales.querySelector('.precioUnitario-total')) trTotales.querySelector('.precioUnitario-total').textContent = formatCurrency(precioUnitarioVenta, 'PEN');
+                if (trTotales.querySelector('.precioTotal-total')) trTotales.querySelector('.precioTotal-total').textContent = formatCurrency(subtotalProducto, 'PEN');
+                if (trTotales.querySelector('.igvUnitario-total')) trTotales.querySelector('.igvUnitario-total').textContent = formatCurrency(igvUnitario, 'PEN');
+                if (trTotales.querySelector('.igvTotal-total')) trTotales.querySelector('.igvTotal-total').textContent = formatCurrency(igvProducto, 'PEN');
+                if (trTotales.querySelector('.pesoUnitario-total')) trTotales.querySelector('.pesoUnitario-total').textContent = `${pesoUnitario.toFixed(3)} kg`;
+                if (trTotales.querySelector('.pesoTotal-total')) trTotales.querySelector('.pesoTotal-total').textContent = `${pesoTotalFila.toFixed(3)} kg`;
+                if (trTotales.querySelector('.costoUnitarioTransporte-total')) trTotales.querySelector('.costoUnitarioTransporte-total').textContent = formatCurrency(costoUnitarioTransporteGlobal, 'PEN');
+                if (trTotales.querySelector('.costeTransporte-total')) trTotales.querySelector('.costeTransporte-total').textContent = formatCurrency(costeTransporteFila, 'PEN');
+                if (trTotales.querySelector('.totalUnitario-total')) trTotales.querySelector('.totalUnitario-total').textContent = formatCurrency(totalUnitario, 'PEN');
+                if (trTotales.querySelector('.totalTotal-total')) trTotales.querySelector('.totalTotal-total').textContent = formatCurrency(totalFila, 'PEN');
+
+                trGeneral.dataset.precioConDescuento = precioVentaConDescuento.toFixed(2);
+                trGeneral.dataset.igvProducto = igvProducto.toFixed(2);
+                trGeneral.dataset.totalProducto = totalFila.toFixed(2);
+                trGeneral.dataset.pesoTotal = pesoTotalFila.toFixed(3);
+                trGeneral.dataset.costeUnitarioTransporte = costoUnitarioTransporteGlobal.toFixed(4);
+                trGeneral.dataset.costeTotalTransporte = costeTransporteFila.toFixed(2);
+
+                if (trGeneral.querySelector('.totalProducto')) trGeneral.querySelector('.totalProducto').textContent = formatCurrency(precioUnitario * cantidad, 'PEN');
+
+                subtotal += subtotalProducto;
+                pesoTotalProductos += pesoTotalFila;
+                costeTransporteProductos += costeTransporteFila;
+            });
+
+            const aplicaCostoAdicionalGeneral = $('#reglaAplicaCostoAdicional')?.checked || false;
+            const montoMinimo = parseFloat($('#reglaMontoMinimo')?.value) || 0;
+            const costoAdicional = parseFloat($('#reglaCostoAdicional')?.value) || 0;
+            let costoAdicionalAplicado = 0;
+
+            if (aplicaCostoAdicionalGeneral && subtotal > montoMinimo) {
+                costoAdicionalAplicado = costoAdicional;
+            }
+
+            const subtotalSinIgvCalculado = subtotal;
+            const totalIgvCalculado = totalIgvPorItem;
+            const costeTransporteCalculado = costeTransporteProductos;
+
+            const totalCompraFinalCalculado = subtotalSinIgvCalculado + totalIgvCalculado;
+
+            let totalAPagarSinDescuento = totalCompraFinalCalculado + costeTransporteCalculado + costoAdicionalAplicado;
+            let descuentoGlobalMonto = 0;
+
+            if (hayDescuento && tipoDescuento === 'global' && tipoValorDescuentoSelect && valorDescuentoInput) {
+                const tipoValor = tipoValorDescuentoSelect.value;
+                const valorDescuentoInputVal = valorDescuentoInput.value.trim();
+                let valorDescuento = parseFloat(valorDescuentoInputVal.replace('%', '')) || 0;
+
+                if (tipoValor === 'porcentaje') {
+                    descuentoGlobalMonto = totalAPagarSinDescuento * (valorDescuento / 100);
+                } else {
+                    descuentoGlobalMonto = valorDescuento;
                 }
             }
 
-            const precioVentaConDescuento = Math.max(0, precioVentaTotal - descuentoValor);
-            const precioConDescuentoItemEl = trFinanciero.querySelector('.precio-con-descuento-item');
-            if (precioConDescuentoItemEl) precioConDescuentoItemEl.textContent = formatCurrency(precioVentaConDescuento, 'PEN');
+            descuentoGlobalMonto = Math.min(descuentoGlobalMonto, totalAPagarSinDescuento);
 
-            let subtotalProducto = incluyeIgv ? precioVentaConDescuento / (1 + igvTasa) : precioVentaConDescuento;
-            let igvProducto = subtotalProducto * igvTasa;
-            totalIgvPorItem += igvProducto;
-            const unidad = trGeneral.querySelector('.unidadMedida')?.value;
-            const unidadShort = unidadAbreviatura(unidad);
+            const totalAPagarCalculado = totalAPagarSinDescuento - descuentoGlobalMonto;
 
-            if (trTotales.querySelector('.unidadMedida-readonly')) trTotales.querySelector('.unidadMedida-readonly').textContent = unidadShort;
-            if (trGuiaTransporte.querySelector('.descripcion-readonly')) trGuiaTransporte.querySelector('.descripcion-readonly').textContent = descripcionProducto;
-            if (trFinanciero.querySelector('.descripcion-readonly')) trFinanciero.querySelector('.descripcion-readonly').textContent = descripcionProducto;
-            if (trTotales.querySelector('.descripcion-readonly')) trTotales.querySelector('.descripcion-readonly').textContent = descripcionProducto;
-            if (trGuiaTransporte.querySelector('.codigo-readonly')) trGuiaTransporte.querySelector('.codigo-readonly').textContent = codigoProducto;
-            if (trGuiaTransporte.querySelector('.cantidad-readonly')) trGuiaTransporte.querySelector('.cantidad-readonly').textContent = cantidad;
-            if (trGuiaTransporte.querySelector('.costoUnitTransporte')) trGuiaTransporte.querySelector('.costoUnitTransporte').value = costoUnitarioTransporteGlobal.toFixed(4);
-            if (trGuiaTransporte.querySelector('.peso-readonly')) trGuiaTransporte.querySelector('.peso-readonly').textContent = `${pesoTotalFila.toFixed(3)} kg`;
+            const resumenCostoAdicional = $('#resumenCostoAdicional');
+            const filaCostoAdicional = $('#filaCostoAdicional');
 
-            const precioConvertidoCell = trFinanciero.querySelector('.precio-convertido-cell');
-            if (precioConvertidoCell) precioConvertidoCell.textContent = moneda !== 'Soles' ? formatCurrency(precioBaseUnitarioSoles, 'PEN') : '';
-            if (trGuiaTransporte.querySelector('.costeTransporte')) trGuiaTransporte.querySelector('.costeTransporte').textContent = formatCurrency(costeTransporteFila, 'PEN');
-
-            const precioUnitarioVenta = cantidad > 0 ? subtotalProducto / cantidad : 0;
-            const igvUnitario = precioUnitarioVenta * igvTasa;
-            const totalUnitario = precioUnitarioVenta + igvUnitario + costoUnitarioTransporteGlobal;
-            const totalFila = subtotalProducto + igvProducto + costeTransporteFila;
-
-            if (trTotales.querySelector('.precioUnitario-total')) trTotales.querySelector('.precioUnitario-total').textContent = formatCurrency(precioUnitarioVenta, 'PEN');
-            if (trTotales.querySelector('.precioTotal-total')) trTotales.querySelector('.precioTotal-total').textContent = formatCurrency(subtotalProducto, 'PEN');
-            if (trTotales.querySelector('.igvUnitario-total')) trTotales.querySelector('.igvUnitario-total').textContent = formatCurrency(igvUnitario, 'PEN');
-            if (trTotales.querySelector('.igvTotal-total')) trTotales.querySelector('.igvTotal-total').textContent = formatCurrency(igvProducto, 'PEN');
-            if (trTotales.querySelector('.pesoUnitario-total')) trTotales.querySelector('.pesoUnitario-total').textContent = `${pesoUnitario.toFixed(3)} kg`;
-            if (trTotales.querySelector('.pesoTotal-total')) trTotales.querySelector('.pesoTotal-total').textContent = `${pesoTotalFila.toFixed(3)} kg`;
-            if (trTotales.querySelector('.costoUnitarioTransporte-total')) trTotales.querySelector('.costoUnitarioTransporte-total').textContent = formatCurrency(costoUnitarioTransporteGlobal, 'PEN');
-            if (trTotales.querySelector('.costeTransporte-total')) trTotales.querySelector('.costeTransporte-total').textContent = formatCurrency(costeTransporteFila, 'PEN');
-            if (trTotales.querySelector('.totalUnitario-total')) trTotales.querySelector('.totalUnitario-total').textContent = formatCurrency(totalUnitario, 'PEN');
-            if (trTotales.querySelector('.totalTotal-total')) trTotales.querySelector('.totalTotal-total').textContent = formatCurrency(totalFila, 'PEN');
-
-            trGeneral.dataset.precioConDescuento = precioVentaConDescuento.toFixed(2);
-            trGeneral.dataset.igvProducto = igvProducto.toFixed(2);
-            trGeneral.dataset.totalProducto = totalFila.toFixed(2);
-            trGeneral.dataset.pesoTotal = pesoTotalFila.toFixed(3);
-            trGeneral.dataset.costeUnitarioTransporte = costoUnitarioTransporteGlobal.toFixed(4);
-            trGeneral.dataset.costeTotalTransporte = costeTransporteFila.toFixed(2);
-
-            if (trGeneral.querySelector('.totalProducto')) trGeneral.querySelector('.totalProducto').textContent = formatCurrency(precioUnitario * cantidad, 'PEN');
-
-            subtotal += subtotalProducto;
-            pesoTotalProductos += pesoTotalFila;
-            costeTransporteProductos += costeTransporteFila;
-        });
-
-        if (hayDescuento && tipoDescuento === 'global' && tipoValorDescuentoSelect && valorDescuentoInput) {
-            const tipoValor = tipoValorDescuentoSelect.value;
-            const valorDescuentoInputVal = valorDescuentoInput.value.trim();
-            const esPorcentaje = tipoValor === 'porcentaje';
-            let valorDescuento = parseFloat(valorDescuentoInputVal.replace('%', '')) || 0;
-            if (esPorcentaje) {
-                descuentoTotalGlobal = subtotal * (valorDescuento / 100);
-            } else {
-                descuentoTotalGlobal = valorDescuento;
+            if (resumenCostoAdicional) {
+                resumenCostoAdicional.textContent = formatCurrency(costoAdicionalAplicado, 'PEN');
             }
-        }
 
-        const subtotalConDescuentoGlobal = subtotal - descuentoTotalGlobal;
-        subtotalSinIgvCalculado = subtotalConDescuentoGlobal;
-        totalIgvCalculado = totalIgvPorItem;
-
-        if(tipoDescuento === 'global' || !hayDescuento) {
-            totalIgvCalculado = subtotalConDescuentoGlobal * IGV_RATE;
-        }
-
-        totalCompraFinalCalculado = subtotalSinIgvCalculado + totalIgvCalculado;
-
-        const aplicaCostoAdicionalGeneral = $('#reglaAplicaCostoAdicional')?.checked || false;
-        const montoMinimo = parseFloat($('#reglaMontoMinimo')?.value) || 0;
-        const costoAdicional = parseFloat($('#reglaCostoAdicional')?.value) || 0;
-        let costoAdicionalAplicado = 0;
-
-        if (aplicaCostoAdicionalGeneral && subtotalSinIgvCalculado > montoMinimo) {
-            costoAdicionalAplicado = costoAdicional;
-        }
-
-        costeTransporteCalculado = costeTransporteProductos;
-
-        totalAPagarCalculado = totalCompraFinalCalculado + costeTransporteCalculado + costoAdicionalAplicado;
-
-        const resumenCostoAdicional = $('#resumenCostoAdicional');
-        const filaCostoAdicional = $('#filaCostoAdicional');
-
-        if (resumenCostoAdicional) {
-            resumenCostoAdicional.textContent = formatCurrency(costoAdicionalAplicado, 'PEN');
-        }
-
-        if (filaCostoAdicional) {
-            if (costoAdicionalAplicado > 0) {
-                filaCostoAdicional.style.display = 'flex';
-            } else {
-                filaCostoAdicional.style.display = 'none';
+            if (filaCostoAdicional) {
+                if (costoAdicionalAplicado > 0) {
+                    filaCostoAdicional.style.display = 'flex';
+                } else {
+                    filaCostoAdicional.style.display = 'none';
+                }
             }
+
+            totalPesoProductosCalculado = pesoTotalProductos;
+            const costeTotalIngresado = parseFloat(guia.costeTotalTransporte) || 0;
+            const tolerancia = 0.01;
+
+            if (hayTraslado && Math.abs(costeTransporteCalculado - costeTotalIngresado) > tolerancia) {
+                if (costeTransporteLabel) costeTransporteLabel.classList.add('text-danger');
+                if (mensajeAlertaTransporte) mensajeAlertaTransporte.classList.remove('d-none');
+            } else {
+                if (costeTransporteLabel) costeTransporteLabel.classList.remove('text-danger');
+                if (mensajeAlertaTransporte) mensajeAlertaTransporte.classList.add('d-none');
+            }
+
+            if (costeTransporteLabel) costeTransporteLabel.textContent = formatCurrency(costeTransporteCalculado, 'PEN');
+            if (subtotalSinIgvEl) subtotalSinIgvEl.textContent = formatCurrency(subtotalSinIgvCalculado, 'PEN');
+            if (totalIgvEl) totalIgvEl.textContent = formatCurrency(totalIgvCalculado, 'PEN');
+            if (totalCompraFinalEl) totalCompraFinalEl.textContent = formatCurrency(totalCompraFinalCalculado, 'PEN');
+            if (totalAPagarEl) totalAPagarEl.textContent = formatCurrency(totalAPagarCalculado, 'PEN');
+            if (totalPesoProductosEl) totalPesoProductosEl.textContent = `${totalPesoProductosCalculado.toFixed(3)} kg`;
         }
-
-        totalPesoProductosCalculado = pesoTotalProductos;
-        const costeTotalIngresado = parseFloat(guia.costeTotalTransporte) || 0;
-        const tolerancia = 0.01;
-
-        if (hayTraslado && Math.abs(costeTransporteCalculado - costeTotalIngresado) > tolerancia) {
-            if (costeTransporteLabel) costeTransporteLabel.classList.add('text-danger');
-            if (mensajeAlertaTransporte) mensajeAlertaTransporte.classList.remove('d-none');
-        } else {
-            if (costeTransporteLabel) costeTransporteLabel.classList.remove('text-danger');
-            if (mensajeAlertaTransporte) mensajeAlertaTransporte.classList.add('d-none');
-        }
-
-        if (costeTransporteLabel) costeTransporteLabel.textContent = formatCurrency(costeTransporteCalculado, 'PEN');
-        if (subtotalSinIgvEl) subtotalSinIgvEl.textContent = formatCurrency(subtotalSinIgvCalculado, 'PEN');
-        if (totalIgvEl) totalIgvEl.textContent = formatCurrency(totalIgvCalculado, 'PEN');
-        if (totalCompraFinalEl) totalCompraFinalEl.textContent = formatCurrency(totalCompraFinalCalculado, 'PEN');
-        if (totalAPagarEl) totalAPagarEl.textContent = formatCurrency(totalAPagarCalculado, 'PEN');
-        if (totalPesoProductosEl) totalPesoProductosEl.textContent = `${totalPesoProductosCalculado.toFixed(3)} kg`;
-    }
 
     function toggleBonificacionColumn(show) { $$('.col-bonif').forEach(el => el.classList.toggle('d-none', !show)); }
     function toggleDescuentoItemColumn(show) { $$('.col-descuento-item').forEach(el => el.classList.toggle('d-none', !show)); $$('.btn-descuento-item').forEach(btn => btn.style.display = show ? 'block' : 'none'); }
