@@ -110,6 +110,14 @@ function verDetalles(compra) {
     document.getElementById('coste-transporte-display').textContent = mostrarValor(compra.coste_transporte, 'S/ ');
     document.getElementById('total-peso-display').textContent = mostrarValor(compra.total_peso, '', ' kg');
     document.getElementById('observacion-display').textContent = mostrarValor(compra.observacion) || 'N/A';
+
+    document.getElementById('tipo-pago-display').textContent = mostrarValor(compra.tipo_pago);
+    document.getElementById('forma-pago-display').textContent = mostrarValor(compra.forma_pago);
+
+    const regla = compra.regla_aplicada || {};
+    const costoAdicional = regla.costo_adicional_aplicado;
+    document.getElementById('costo-adicional-display').textContent = mostrarValor(costoAdicional, 'S/ ');
+
     const tbodyProducto = document.getElementById("tabla-producto");
     tbodyProducto.innerHTML = "";
     const lotesResumenBody = document.getElementById("tabla-lotes-resumen");
