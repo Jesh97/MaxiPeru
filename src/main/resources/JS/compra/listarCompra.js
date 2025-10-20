@@ -394,6 +394,22 @@ function descargarFactura() {
         tbodyDoc.innerHTML = '<tr><td colspan="4" class="text-gray-500 italic p-4 text-center text-sm">Sin detalles de productos registrados.</td></tr>';
     }
 
+    // INICIO: Lógica para incluir el Costo Adicional/Movilidad
+    const costoAdicional = compraActual.regla_aplicada ? (parseFloat(compraActual.regla_aplicada.costo_adicional_aplicado) || 0) : 0;
+
+    if (costoAdicional > 0) {
+        // Se añade una fila especial para el costo adicional
+        const rowIndex = compraActual.detalles ? compraActual.detalles.length : 0;
+        tbodyDoc.innerHTML += `
+            <tr class="h-8 ${rowIndex % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-gray-100 text-sm font-extrabold text-blue-700">
+                <td class="border border-gray-400 px-2 py-1 text-center">1</td>
+                <td class="border border-gray-400 px-2 py-1">Costo de Movilidad Adicional</td>
+                <td class="border border-gray-400 px-2 py-1 text-right">${mostrarValor(costoAdicional, 'S/ ')}</td>
+                <td class="border border-gray-400 px-2 py-1 text-right font-bold text-blue-700">${mostrarValor(costoAdicional, 'S/ ')}</td>
+            </tr>`;
+    }
+    // FIN: Lógica para incluir el Costo Adicional/Movilidad
+
     document.getElementById('letras-doc').textContent = numeroALetras(compraActual.total);
     document.getElementById('observacion-doc').textContent = mostrarValor(compraActual.observacion) || 'N/A';
     document.getElementById('op-gravadas-doc').textContent = mostrarValor(compraActual.subtotal, 'S/ ');
