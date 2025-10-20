@@ -130,7 +130,6 @@ function verDetalles(compra) {
             const productoData = productoMap[idArticulo];
             const lotesCount = productoData.lotes.length;
 
-            // Usar unidad_medida_articulo (corregido en el paso anterior)
             const unidad = unidadAbreviatura(d.unidad_medida_articulo);
 
             const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
@@ -156,7 +155,6 @@ function verDetalles(compra) {
                 ? `<button class="bg-gray-700 hover:bg-gray-800 text-white font-semibold py-1.5 px-3 rounded-xl shadow-md transition duration-200 text-xs" onclick='mostrarDetallesLote(${idArticulo}, "${mostrarValor(d.descripcion_articulo)}")'><i class="bi bi-eye mr-1"></i> Ver Lotes</button>`
                 : `<button class="bg-red-400 text-white font-semibold py-1.5 px-3 rounded-xl shadow-md text-xs cursor-not-allowed" disabled><i class="bi bi-x-circle mr-1"></i> No Aplica</button>`;
 
-            // Usar unidad_medida_articulo (corregido en el paso anterior)
             const cantidadGeneral = `${mostrarValor(d.cantidad)} ${unidadAbreviatura(d.unidad_medida_articulo)}`;
 
 
@@ -190,16 +188,19 @@ function verDetalles(compra) {
             const costoCaja = parseFloat(caja.costo_caja) || 0;
             totalCostoCajas += costoCaja;
 
+            const totalArticulosCaja = (caja.detalles || []).reduce((sum, item) => sum + (parseFloat(item.cantidad) || 0), 0);
+
             cajaMap[idCaja] = {
                 caja: caja,
-                contenido: caja.detalles || []
+                contenido: caja.detalles || [],
+                total_articulos: totalArticulosCaja
             };
 
             const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
             cajasResumenBody.innerHTML += `
                 <tr class="${rowClass} hover:bg-blue-50 transition duration-100 border-b border-gray-100 text-center">
                     <td class="px-4 py-3 border-r border-gray-100 text-left font-medium text-gray-700">${mostrarValor(caja.nombre_caja)}</td>
-                    <td class="px-4 py-3 border-r border-gray-100 font-extrabold">${mostrarValor(caja.cantidad)}</td>
+                    <td class="px-4 py-3 border-r border-gray-100 font-extrabold">${mostrarValor(totalArticulosCaja)}</td>
                     <td class="px-4 py-3 border-r border-gray-100 font-extrabold text-blue-700 bg-blue-100">${mostrarValor(costoCaja, 'S/ ')}</td>
                     <td class="px-4 py-3">
                         <button class="bg-blue-700 hover:bg-blue-800 text-white font-semibold py-1.5 px-3 rounded-xl shadow-md transition duration-200 text-xs" onclick='mostrarContenidoCaja(${idCaja}, "${mostrarValor(caja.nombre_caja)}")'><i class="bi bi-box mr-1"></i> Ver Contenido</button>
@@ -321,7 +322,10 @@ function mostrarContenidoCaja(idCaja, nombreCaja) {
     const data = cajaMap[idCaja];
     const tbodyDetalle = document.getElementById("tabla-cajas-detalle");
     tbodyDetalle.innerHTML = "";
-    document.getElementById('caja-nombre-titulo').textContent = nombreCaja || idCaja;
+
+    let totalArticulosEnCaja = (data && data.total_articulos) ? data.total_articulos : 0;
+
+    document.getElementById('caja-nombre-titulo').textContent = `${nombreCaja || idCaja} (Total Artículos: ${mostrarValor(totalArticulosEnCaja)})`;
 
     if (data && data.contenido.length > 0) {
         data.contenido.forEach((item, index) => {
@@ -368,20 +372,18 @@ function descargarFactura() {
             const precioUnitarioRaw = parseFloat(d.precio_unitario) || 0;
             const precioConDescuentoRaw = parseFloat(d.precio_con_descuento) || precioUnitarioRaw;
             const precioBase = precioConDescuentoRaw;
-            const valorUnitario = (precioBase / (1 + 0.18));
             const importeTotal = parseFloat(d.total_detalle) || 0;
 
             tbodyDoc.innerHTML += `
                 <tr class="h-8 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-gray-100 text-sm">
                     <td class="border border-gray-400 px-2 py-1 text-center">${mostrarValor(d.cantidad)}</td>
                     <td class="border border-gray-400 px-2 py-1">${mostrarValor(d.descripcion_articulo)}</td>
-                    <td class="border border-gray-400 px-2 py-1 text-right">${mostrarValor(valorUnitario, 'S/ ')}</td>
                     <td class="border border-gray-400 px-2 py-1 text-right">${mostrarValor(precioBase, 'S/ ')}</td>
                     <td class="border border-gray-400 px-2 py-1 text-right font-bold text-indigo-700">${mostrarValor(importeTotal, 'S/ ')}</td>
                 </tr>`;
         });
     } else {
-        tbodyDoc.innerHTML = '<tr><td colspan="5" class="text-gray-500 italic p-4 text-center text-sm">Sin detalles de productos registrados.</td></tr>';
+        tbodyDoc.innerHTML = '<tr><td colspan="4" class="text-gray-500 italic p-4 text-center text-sm">Sin detalles de productos registrados.</td></tr>';
     }
 
     document.getElementById('letras-doc').textContent = numeroALetras(compraActual.total);
@@ -477,7 +479,6 @@ function descargarGuiaTransporte() {
             const cantidad = parseFloat(d.cantidad) || 0;
             cantidadTotal += cantidad;
 
-            // Usar unidad_medida_articulo (corregido en el paso anterior)
             const unidad = unidadAbreviatura(d.unidad_medida_articulo);
 
             tbodyDoc.innerHTML += `
