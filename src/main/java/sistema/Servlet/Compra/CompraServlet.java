@@ -273,10 +273,12 @@ public class CompraServlet extends HttpServlet {
                             detCaja.setIdCajaCompra(tempIdCaja);
                             detCaja.setIdArticulo(dc.path("idArticulo").asInt(0));
 
-                            int cantidadDetalle = dc.path("cantidad").asInt(0);
-                            detCaja.setCantidad(BigDecimal.valueOf(cantidadDetalle));
+                            double cantidadDetalleDouble = dc.path("cantidad").asDouble(0.0);
+                            detCaja.setCantidad(BigDecimal.valueOf(cantidadDetalleDouble));
 
-                            cantidadTotalCaja += cantidadDetalle;
+                            int cantidadDetalleInt = (int) cantidadDetalleDouble;
+
+                            cantidadTotalCaja += cantidadDetalleInt;
                             listaDetalles.add(detCaja);
                         }
                     }

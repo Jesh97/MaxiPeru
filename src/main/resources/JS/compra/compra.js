@@ -873,12 +873,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const detalles = [];
+            const filaIdToArticuloId = {};
             $$('#tablaProductosGeneral tr[data-fila-id]').forEach(tr => {
                 const filaId = tr.dataset.filaId;
                 const trFinanciero = $(`#tablaProductosFinanciero tr[data-fila-id="${filaId}"]`);
                 const trGuiaTransporte = $(`#tablaProductosGuiaTransporte tr[data-fila-id="${filaId}"]`);
 
                 const idArticulo = tr.querySelector('.idProducto')?.value;
+                const idArticuloInt = parseInt(idArticulo, 10) || 0;
+
+                filaIdToArticuloId[filaId] = idArticuloInt;
+
                 const cantidad = parseFloat(tr.querySelector('.cantidad')?.value) || 0;
                 const precioUnitario = parseFloat(tr.querySelector('.precioUnitario')?.value) || 0;
                 const costoUnitarioTransporte = parseFloat(trGuiaTransporte.querySelector('.costoUnitTransporte')?.value) || 0;
@@ -904,7 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const bonificacion = parseFloat(trFinanciero.dataset.bonificacionValor) || 0;
 
                 detalles.push({
-                    idArticulo: parseInt(idArticulo, 10) || 0,
+                    idArticulo: idArticuloInt,
                     idUnidad: idUnidad,
                     cantidad: cantidad,
                     precioUnitario: precioUnitario,
@@ -942,6 +947,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 descuentosGlobales.push({ motivo: 'Descuento Global', tipoValor: tipoValor, valor: valor, tasaIgv: 0.18 });
             }
 
+            const cajasCompraFinal = cajas.map(cajaLocal => {
+                let cantidadTotalCaja = 0;
+
+                const detallesCajaFinal = cajaLocal.productos.map(productoLocal => {
+                    const idArticulo = filaIdToArticuloId[productoLocal.filaId] || 0;
+                    const cantidad = parseFloat(productoLocal.cantidad) || 0;
+
+                    if (idArticulo > 0 && cantidad > 0) {
+                        cantidadTotalCaja += cantidad;
+                    }
+
+                    return {
+                        idArticulo: idArticulo,
+                        cantidad: cantidad,
+                    };
+                }).filter(d => d.idArticulo > 0 && d.cantidad > 0);
+
+                if (detallesCajaFinal.length === 0) {
+                    return null;
+                }
+
+                return {
+                    idCajaCompra: cajaLocal.idCaja,
+                    nombreCaja: cajaLocal.numeroBulto,
+                    cantidad: cantidadTotalCaja,
+                    costoCaja: cajaLocal.fleteTotal,
+                    detalles: detallesCajaFinal
+                };
+            }).filter(c => c !== null);
+
             const aplicaCostoAdicional = $('#reglaAplicaCostoAdicional')?.checked || false;
             const montoMinimo = parseFloat($('#reglaMontoMinimo')?.value) || 0;
             const costoAdicional = parseFloat($('#reglaCostoAdicional')?.value) || 0;
@@ -970,7 +1005,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 referencia: referencia,
                 guiaTransporte: guia,
                 descuentosGlobales: descuentosGlobales,
-                cajasCompra: cajas,
+                cajasCompra: cajasCompraFinal,
                 reglaAplicada: {
                     aplicaCostoAdicional: aplicaCostoAdicional,
                     montoMinimo: montoMinimo,
