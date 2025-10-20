@@ -45,9 +45,17 @@ public class CompraServlet extends HttpServlet {
             Auditoria.registrar(request, "LECTURA", descripcion);
 
             out.print(gson.toJson(lista));
+        } else if (request.getParameter("listarCompras") != null) {
+            try {
+                List<Map<String, Object>> compras = compraController.listarComprasConDetalles();
+                out.print(gson.toJson(compras));
+            } catch (SQLException e) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.print(gson.toJson(Map.of("success", false, "message", "Error al listar compras: " + e.getMessage())));
+            }
         } else {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print(gson.toJson(Map.of("error","Parámetro 'buscarArticulo' es requerido.")));
+            out.print(gson.toJson(Map.of("error","Parámetro 'buscarArticulo' o 'listarCompras' es requerido.")));
         }
         out.flush();
     }
@@ -146,9 +154,6 @@ public class CompraServlet extends HttpServlet {
                 regla.setAplicaCostoAdicional(ra.path("aplicaCostoAdicional").asBoolean(false));
                 regla.setMontoMinimo(BigDecimal.valueOf(ra.path("montoMinimo").asDouble(0)));
                 regla.setCostoAdicional(BigDecimal.valueOf(ra.path("costoAdicional").asDouble(0)));
-                compra.setCostoAdicional(regla.getCostoAdicional());
-            } else {
-                compra.setCostoAdicional(BigDecimal.ZERO);
             }
 
             if (root.has("referencia") && root.get("referencia").isObject()) {

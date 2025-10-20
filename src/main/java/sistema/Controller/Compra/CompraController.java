@@ -8,6 +8,8 @@ import java.sql.Date;
 import java.util.*;
 import java.text.SimpleDateFormat;
 import java.math.BigDecimal;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class CompraController implements CompraRepository {
 
@@ -35,7 +37,7 @@ public class CompraController implements CompraRepository {
 
                 Map<Integer, Integer> tempIdToRealIdMap = new HashMap<>();
 
-                if (regla != null) {
+                if (regla != null && regla.isAplicaCostoAdicional()) {
                     registrarReglaAplicada(conn, idCompra, regla);
                 }
 
@@ -302,16 +304,18 @@ public class CompraController implements CompraRepository {
             cs.setInt(i++, compra.getIdTipoPago());
             cs.setInt(i++, compra.getIdFormaPago());
             cs.setInt(i++, compra.getIdMoneda());
-            cs.setBigDecimal(i++, compra.getTipoCambio());
+            cs.setBigDecimal(i++, compra.getTipoCambio() != null ? compra.getTipoCambio() : BigDecimal.ZERO);
             cs.setBoolean(i++, compra.isIncluyeIgv());
             cs.setBoolean(i++, compra.isHayBonificacion());
             cs.setBoolean(i++, compra.isHayTraslado());
             cs.setString(i++, compra.getObservacion());
-            cs.setBigDecimal(i++, compra.getSubtotal());
-            cs.setBigDecimal(i++, compra.getIgv());
-            cs.setBigDecimal(i++, compra.getTotal());
-            cs.setBigDecimal(i++, compra.getTotalPeso());
-            cs.setBigDecimal(i++, compra.getCosteTransporte());
+
+            cs.setBigDecimal(i++, compra.getSubtotal() != null ? compra.getSubtotal() : BigDecimal.ZERO);
+            cs.setBigDecimal(i++, compra.getIgv() != null ? compra.getIgv() : BigDecimal.ZERO);
+            cs.setBigDecimal(i++, compra.getTotal() != null ? compra.getTotal() : BigDecimal.ZERO);
+            cs.setBigDecimal(i++, compra.getTotalPeso() != null ? compra.getTotalPeso() : BigDecimal.ZERO);
+            cs.setBigDecimal(i++, compra.getCosteTransporte() != null ? compra.getCosteTransporte() : BigDecimal.ZERO);
+
             cs.execute();
         }
     }
@@ -381,16 +385,17 @@ public class CompraController implements CompraRepository {
             cs.setInt(i++, compra.getIdTipoPago());
             cs.setInt(i++, compra.getIdFormaPago());
             cs.setInt(i++, compra.getIdMoneda());
-            cs.setBigDecimal(i++, compra.getTipoCambio());
+            cs.setBigDecimal(i++, compra.getTipoCambio() != null ? compra.getTipoCambio() : BigDecimal.ZERO);
             cs.setBoolean(i++, compra.isIncluyeIgv());
             cs.setBoolean(i++, compra.isHayBonificacion());
             cs.setBoolean(i++, compra.isHayTraslado());
             cs.setString(i++, compra.getObservacion());
-            cs.setBigDecimal(i++, compra.getSubtotal());
-            cs.setBigDecimal(i++, compra.getIgv());
-            cs.setBigDecimal(i++, compra.getTotal());
-            cs.setBigDecimal(i++, compra.getTotalPeso());
-            cs.setBigDecimal(i++, compra.getCosteTransporte());
+
+            cs.setBigDecimal(i++, compra.getSubtotal() != null ? compra.getSubtotal() : BigDecimal.ZERO);
+            cs.setBigDecimal(i++, compra.getIgv() != null ? compra.getIgv() : BigDecimal.ZERO);
+            cs.setBigDecimal(i++, compra.getTotal() != null ? compra.getTotal() : BigDecimal.ZERO);
+            cs.setBigDecimal(i++, compra.getTotalPeso() != null ? compra.getTotalPeso() : BigDecimal.ZERO);
+            cs.setBigDecimal(i++, compra.getCosteTransporte() != null ? compra.getCosteTransporte() : BigDecimal.ZERO);
 
             cs.registerOutParameter(i, Types.INTEGER);
             cs.execute();
@@ -474,7 +479,7 @@ public class CompraController implements CompraRepository {
     }
 
     private void registrarGuia(Connection conn, int idCompra, GuiaTransporte guia) throws SQLException {
-        String sql = "{call sp_agregar_guia_transporte_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        String sql = "{call sp_agregar_guia_transporte_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         try (CallableStatement cs = conn.prepareCall(sql)) {
             int i = 1;
             cs.setInt(i++, idCompra);
