@@ -3,105 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Registro de Ventas Ultra Premium</title>
+    <title>Sistema de Ventas Premium</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../../CSS/venta/ventas.css">
-    <style>
-        .product-search-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            border: 1px solid #ccc;
-            position: absolute;
-            z-index: 1000;
-            width: 100%;
-            background-color: white;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        .product-search-item {
-            padding: 10px;
-            cursor: pointer;
-            border-bottom: 1px solid #eee;
-        }
-        .product-search-item:hover {
-            background-color: #f0f0f0;
-        }
-        .card-section {
-            background-color: #fff;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            margin-bottom: 2rem;
-        }
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--primary-color, #007bff);
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 0.5rem;
-        }
-        .btn-custom {
-            padding: 10px 20px;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        .btn-save {
-            background-color: #28a745;
-            color: white;
-        }
-        .btn-list {
-            background-color: #6c757d;
-            color: white;
-        }
-        .bottom-row-flex {
-            display: flex;
-            gap: 2rem;
-            align-items: flex-start;
-        }
-        .bottom-row-flex section {
-            flex: 1;
-        }
-        .bottom-row-flex .totals {
-            flex: 0 0 350px;
-            max-width: 350px;
-        }
-        .totals .line {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem 0;
-        }
-        .totals .line.bold {
-            font-size: 1.1rem;
-            border-top: 1px solid #ccc;
-            margin-top: 1rem;
-            padding-top: 1rem;
-        }
-        .table-description-col {
-            min-width: 250px;
-        }
-        .btn-table {
-            border: none;
-            background: none;
-            color: #007bff;
-            padding: 0 5px;
-        }
-        .btn-delete-item {
-            color: #dc3545;
-        }
-    </style>
 </head>
 <body>
 <header class="site-header">
     <div class="container text-center">
         <div class="d-flex align-items-center justify-content-center">
-            <i class="bi bi-cart-plus-fill fs-1 me-3" style="color: var(--primary-color);"></i>
+            <i class="bi bi-cart-plus-fill fs-1 me-3"></i>
             <h1>Sistema de Gestión de Ventas</h1>
         </div>
     </div>
@@ -111,42 +24,58 @@
     <form id="formVenta" novalidate>
         <div class="row">
             <div class="col-12">
+
                 <section class="card-section">
-                    <div class="section-title"><i class="bi bi-info-circle"></i> Datos Generales de la Venta</div>
+                    <div class="section-title"><i class="bi bi-info-circle"></i> Datos Generales y Cliente</div>
                     <div class="row g-4">
-                        <div class="col-md-6 col-lg-6" style="position: relative;">
-                            <label class="form-label small-muted">Cliente</label>
-                            <input type="text" id="busquedaCliente" class="form-control" placeholder="RUC o Razón Social" required>
+
+                        <div class="col-12 col-lg-6" style="position: relative;">
+                            <label class="form-label">Cliente</label>
+                            <input type="text" id="busquedaCliente" class="form-control" placeholder="Buscar RUC o Razón Social" required>
                             <ul id="listaResultadosClientes" class="product-search-list"></ul>
                             <input type="hidden" id="idCliente" value="101">
                             <small class="text-muted d-block mt-1" id="spanClienteSeleccionado">ID 101: Cliente por defecto</small>
                         </div>
 
                         <div class="col-md-6 col-lg-3">
-                            <label for="idTipoComprobante" class="form-label small-muted">Tipo Comprobante</label>
+                            <label for="idTipoComprobante" class="form-label">Tipo Comprobante</label>
                             <select id="idTipoComprobante" name="tipo_comprobante" class="form-select" required>
                                 <option value="0">Seleccione</option>
                                 <option value="1">Boleta</option>
                                 <option value="2">Factura</option>
+                                <option value="3">Nota de Pedido</option>
+                                <option value="4">Nota de Crédito</option>
+                                <option value="5">Nota de Débito</option>
                             </select>
                         </div>
-                        <div class="col-md-6 col-lg-2">
-                            <label class="form-label small-muted">Moneda</label>
+
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label">Moneda</label>
                             <select id="idMoneda" class="form-select">
-                                <option value="1">Soles</option>
-                                <option value="2">Dólares</option>
+                                <option value="1">Soles (S/)</option>
+                                <option value="2">Dólares ($)</option>
                             </select>
                         </div>
-                        <div class="col-md-6 col-lg-2">
-                            <label for="fechaEmision" class="form-label small-muted">Fecha Emisión</label>
-                            <input type="date" id="fechaEmision" name="fecha_emision" class="form-control" required>
-                        </div>
-                        <div class="col-md-6 col-lg-2">
-                            <label for="fechaVencimiento" class="form-label small-muted">Fecha Vencimiento</label>
-                            <input type="date" id="fechaVencimiento" name="fecha_vencimiento" class="form-control">
+
+                        <div class="col-md-6 col-lg-3">
+                            <label for="serieComprobante" class="form-label">Serie</label>
+                            <input type="text" id="serieComprobante" class="form-control" placeholder="Ej: F001" required>
                         </div>
                         <div class="col-md-6 col-lg-3">
-                            <label class="form-label small-muted">Tipo de Pago</label>
+                            <label for="correlativoComprobante" class="form-label">Correlativo</label>
+                            <input type="text" id="correlativoComprobante" class="form-control" placeholder="Ej: 0000001" required>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <label for="fechaEmision" class="form-label">Fecha Emisión</label>
+                            <input type="date" id="fechaEmision" name="fecha_emision" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <label for="fechaVencimiento" class="form-label">Fecha Vencimiento</label>
+                            <input type="date" id="fechaVencimiento" name="fecha_vencimiento" class="form-control">
+                        </div>
+
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label">Tipo de Pago</label>
                             <select id="idTipoPago" name="tipo_pago" class="form-select">
                                 <option value="0">Seleccione</option>
                                 <option value="1">Contado</option>
@@ -154,27 +83,28 @@
                             </select>
                         </div>
                         <div class="col-md-6 col-lg-3">
-                            <label class="form-label small-muted">Estado</label>
+                            <label class="form-label">Estado</label>
                             <select id="estadoVenta" class="form-select">
                                 <option value="Pagada">Pagada</option>
                                 <option value="Pendiente">Pendiente de Pago</option>
                             </select>
                         </div>
+
                         <div class="col-md-6 col-lg-3">
-                            <label class="form-label small-muted">Tipo de Descuento</label>
+                            <label class="form-label">Tipo de Descuento</label>
                             <div class="d-flex gap-3 pt-2">
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input" type="radio" name="tipoDescuento" id="descuentoGlobal" value="global" checked>
-                                    <label class="form-check-label small-muted" for="descuentoGlobal">Global</label>
+                                    <label class="form-check-label" for="descuentoGlobal">Global</label>
                                 </div>
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input" type="radio" name="tipoDescuento" id="descuentoPorItem" value="porItem">
-                                    <label class="form-check-label small-muted" for="descuentoPorItem">Por Ítem</label>
+                                    <label class="form-check-label" for="descuentoPorItem">Por Ítem</label>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3">
-                            <label class="form-label small-muted">¿Hay traslado?</label>
+                            <label class="form-label">¿Hay traslado?</label>
                             <select id="opcionTraslado" class="form-select">
                                 <option value="no">No (Entrega en Tienda)</option>
                                 <option value="si">Sí (Guía de Remisión)</option>
@@ -185,16 +115,16 @@
 
                 <section class="card-section">
                     <div class="section-title"><i class="bi bi-list-check"></i> Detalle de Productos/Servicios</div>
-                    <div class="mb-4 row g-3">
-                        <div class="col-lg-6">
-                            <label class="form-label small-muted">Buscar y Agregar Productos</label>
+                    <div class="mb-4 row g-3 align-items-end">
+                        <div class="col-lg-8">
+                            <label class="form-label">Buscar y Agregar Productos</label>
                             <input type="text" id="busquedaProductos" class="form-control" placeholder="Buscar por código o descripción">
                             <ul id="listaResultadosBusqueda" class="product-search-list"></ul>
                         </div>
-                        <div class="col-lg-6 d-flex align-items-end">
-                            <div class="d-grid gap-2 w-100">
-                                <button type="button" class="btn" id="agregarItemVentaBtn">
-                                    <i class="bi bi-plus-lg"></i> Agregar Ítem Manualmente
+                        <div class="col-lg-4">
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-custom" id="agregarItemVentaBtn">
+                                    <i class="bi bi-plus-lg me-1"></i> Agregar Ítem Manualmente
                                 </button>
                             </div>
                         </div>
@@ -222,18 +152,18 @@
                 </section>
 
                 <section class="card-section" id="descuentoGlobalContainer">
-                    <div class="section-title"><i class="bi bi-percent"></i> Descuento Global</div>
+                    <div class="section-title"><i class="bi bi-percent"></i> Aplicar Descuento Global</div>
                     <div class="row g-4">
-                        <div class="col-md-6">
-                            <label class="form-label small-muted">Motivo Descuento</label>
+                        <div class="col-md-4">
+                            <label class="form-label">Motivo Descuento</label>
                             <input type="text" id="motivoDescuentoGlobal" class="form-control" placeholder="Motivo del descuento (opcional)">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small-muted">Valor Descuento</label>
+                        <div class="col-md-4">
+                            <label class="form-label">Valor Descuento</label>
                             <input type="number" id="valorDescuentoGlobal" class="form-control" min="0" step="0.01" value="0.00" placeholder="Ej: 0.00">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small-muted">Tipo</label>
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo</label>
                             <select id="tipoDescuentoGlobal" class="form-select">
                                 <option value="monto">Monto (S/)</option>
                                 <option value="porcentaje">Porcentaje (%)</option>
@@ -249,8 +179,8 @@
                     </section>
 
                     <section class="card-section totals">
-                        <div class="section-title" style="border-bottom: 3px solid var(--primary-color); padding-bottom: 1rem;">
-                            <i class="bi bi-calculator" style="color: var(--primary-color);"></i> Resumen Financiero
+                        <div class="section-title">
+                            <i class="bi bi-calculator"></i> Resumen Financiero
                         </div>
 
                         <div class="form-check form-switch mb-3">
@@ -258,15 +188,15 @@
                             <label class="form-check-label" for="aplicaIgv">Incluir IGV (18%)</label>
                         </div>
 
-                        <div class="line"><span class="text-muted">Subtotal</span><span id="subtotalSinIgv" class="fw-bold">S/ 0.00</span></div>
-                        <div class="line"><span class="text-muted text-danger">Descuento</span><span id="descuentoVenta" class="text-danger fw-bold">S/ 0.00</span></div>
+                        <div class="line"><span class="text-muted">Subtotal (Neto)</span><span id="subtotalSinIgv" class="fw-bold">S/ 0.00</span></div>
+                        <div class="line"><span class="text-muted text-danger">Descuento Total</span><span id="descuentoVenta" class="text-danger fw-bold">S/ 0.00</span></div>
                         <div class="line"><span class="text-muted">IGV (18%)</span><span id="igvVenta" class="fw-bold">S/ 0.00</span></div>
 
                         <div class="line bold">
                             <span>TOTAL FINAL</span><span id="totalVenta">S/ 0.00</span>
                         </div>
 
-                        <div class="line bold mt-3" style="font-size: 1.2rem; border-top: 1px dotted var(--border-color); padding-top: 1rem;">
+                        <div class="line bold mt-3">
                             <span class="text-dark fw-bold">PESO TOTAL</span><span id="pesoTotalVenta" class="fw-bold text-success">0.00 Kg</span>
                         </div>
                         <div class="d-grid gap-3 mt-4">
@@ -288,21 +218,21 @@
 <div class="modal fade" id="modalDescuentoItem" tabindex="-1" aria-labelledby="modalDescuentoItemLabel" aria-hidden="true">
     <div class="modal-dialog modal-md">
         <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
+            <div class="modal-header">
                 <h5 class="modal-title" id="modalDescuentoItemLabel"><i class="bi bi-tag-fill me-2"></i> Aplicar Descuento al Ítem</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="itemDescripcionModal" class="form-label small-muted">Ítem:</label>
+                    <label for="itemDescripcionModal" class="form-label">Ítem:</label>
                     <input type="text" class="form-control" id="itemDescripcionModal" readonly>
                 </div>
                 <div class="mb-3">
-                    <label for="valorDescuentoItem" class="form-label small-muted">Valor del Descuento</label>
+                    <label for="valorDescuentoItem" class="form-label">Valor del Descuento</label>
                     <input type="number" id="valorDescuentoItem" class="form-control" min="0" step="0.01" placeholder="Ej: 0.00">
                 </div>
                 <div class="mb-2">
-                    <label for="tipoDescuentoItem" class="form-label small-muted">Tipo de Descuento</label>
+                    <label for="tipoDescuentoItem" class="form-label">Tipo de Descuento</label>
                     <select id="tipoDescuentoItem" class="form-select">
                         <option value="monto">Monto (S/)</option>
                         <option value="porcentaje">Porcentaje (%)</option>
@@ -320,7 +250,7 @@
 <div class="modal fade" id="modalLotesVencimiento" tabindex="-1" aria-labelledby="modalLotesVencimientoLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header">
                 <h5 class="modal-title" id="modalLotesVencimientoLabel"><i class="bi bi-box-seam-fill me-2"></i> Lotes Disponibles (Solo Informativo)</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -359,7 +289,7 @@
 <div class="modal fade" id="modalTraslado" tabindex="-1" aria-labelledby="modalTrasladoLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header text-white">
+            <div class="modal-header">
                 <h5 class="modal-title" id="modalTrasladoLabel"><i class="bi bi-truck me-2"></i> Datos de Traslado (Guía de Remisión)</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -369,7 +299,7 @@
                         <h6 class="section-heading">Información del Transporte</h6>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small-muted">Modalidad de Transporte</label>
+                                <label class="form-label">Modalidad de Transporte</label>
                                 <select id="modalidadTransporte" class="form-select">
                                     <option value="">Seleccione...</option>
                                     <option value="publico">Transporte Público</option>
@@ -377,31 +307,31 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small-muted">Peso (Kg)</label>
+                                <label class="form-label">Peso (Kg)</label>
                                 <input type="number" class="form-control" placeholder="Peso total (automático)" readonly>
                             </div>
                         </div>
                         <div id="transportePublicoContainer" class="row g-3 mt-3" style="display:none;">
                             <div class="col-md-6">
-                                <label class="form-label small-muted">RUC de la Empresa</label>
+                                <label class="form-label">RUC de la Empresa</label>
                                 <input type="text" id="rucEmpresa" class="form-control" placeholder="RUC de la Empresa">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small-muted">Razón Social</label>
+                                <label class="form-label">Razón Social</label>
                                 <input type="text" id="razonSocialEmpresa" class="form-control" placeholder="Razón Social">
                             </div>
                         </div>
                         <div id="transportePrivadoContainer" class="row g-3 mt-3" style="display:none;">
                             <div class="col-md-4">
-                                <label class="form-label small-muted">Marca del Vehículo</label>
-                                <input type="text" id="marcaVehiculo" class="form-control" placeholder="Marca del Vehículo">
+                                <label class="form-label">Placa del Vehículo</label>
+                                <input type="text" id="placaVehiculo" class="form-control" placeholder="Placa del Vehículo">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small-muted">DNI del Conductor</label>
+                                <label class="form-label">DNI del Conductor</label>
                                 <input type="text" id="dniConductor" class="form-control" placeholder="DNI del Conductor">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small-muted">Nombre del Conductor</label>
+                                <label class="form-label">Nombre del Conductor</label>
                                 <input type="text" id="nombreConductor" class="form-control" placeholder="Nombre del Conductor">
                             </div>
                         </div>
@@ -411,15 +341,15 @@
                         <h6 class="section-heading">Rutas y Fechas</h6>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small-muted">Punto de Partida</label>
+                                <label class="form-label">Punto de Partida</label>
                                 <input type="text" id="puntoPartida" class="form-control" placeholder="Dirección de Partida">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small-muted">Punto de Llegada</label>
+                                <label class="form-label">Punto de Llegada</label>
                                 <input type="text" id="puntoLlegada" class="form-control" placeholder="Dirección de Llegada">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small-muted">Fecha de Traslado</label>
+                                <label class="form-label">Fecha de Traslado</label>
                                 <input type="date" id="fechaTraslado" class="form-control">
                             </div>
                         </div>
@@ -436,11 +366,11 @@
                         <h6 class="section-heading">Conformidad del Cliente</h6>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small-muted">Nombre y Apellido</label>
+                                <label class="form-label">Nombre y Apellido</label>
                                 <input type="text" id="nombreConformidadTraslado" class="form-control" placeholder="Nombre y Apellido del cliente">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small-muted">DNI</label>
+                                <label class="form-label">DNI</label>
                                 <input type="text" id="dniConformidadTraslado" class="form-control" placeholder="DNI del cliente">
                             </div>
                         </div>
@@ -458,18 +388,18 @@
 <div class="modal fade" id="modalConformidadCliente" tabindex="-1" aria-labelledby="modalConformidadClienteLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header text-white">
+            <div class="modal-header">
                 <h5 class="modal-title" id="modalConformidadClienteLabel"><i class="bi bi-person-check-fill me-2"></i> Confirmación de Entrega en Tienda</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="row g-4">
                     <div class="col-md-6">
-                        <label class="form-label small-muted">Nombre y Apellido</label>
+                        <label class="form-label">Nombre y Apellido</label>
                         <input type="text" id="nombreConformidadTienda" class="form-control" placeholder="Nombre y Apellido del cliente">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small-muted">DNI</label>
+                        <label class="form-label">DNI</label>
                         <input type="text" id="dniConformidadTienda" class="form-control" placeholder="DNI del cliente">
                     </div>
                 </div>

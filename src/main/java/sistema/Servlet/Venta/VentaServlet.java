@@ -10,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sistema.Controller.Venta.VentaController;
 import sistema.Ejecucion.Conexion;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -116,8 +115,11 @@ public class VentaServlet extends HttpServlet {
             double totalFinal = (Double) ventaData.getOrDefault("totalFinal", 0.0);
             double totalPeso = (Double) ventaData.getOrDefault("totalPeso", 0.0);
             boolean hayTraslado = (Boolean) ventaData.getOrDefault("hayTraslado", false);
+            String serie = (String) ventaData.getOrDefault("serie", "");
+            String correlativo = (String) ventaData.getOrDefault("correlativo", "");
 
-            idVenta = ventaController.registrarVenta(con, idCliente, idTipoComprobante, idMoneda, fechaEmision, fechaVencimiento, idTipoPago, estadoVenta, tipoDescuento, aplicaIgv, observaciones, subtotal, igv, descuentoTotal, totalFinal, totalPeso, hayTraslado);
+
+            idVenta = ventaController.registrarVenta(con, idCliente, idTipoComprobante, idMoneda, fechaEmision, fechaVencimiento, idTipoPago, estadoVenta, tipoDescuento, aplicaIgv, observaciones, subtotal, igv, descuentoTotal, totalFinal, totalPeso, hayTraslado, serie, correlativo);
 
             if (idVenta == 0) throw new SQLException("Fallo al obtener ID de Venta.");
 

@@ -37,6 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputIdCliente = document.getElementById('idCliente');
     const spanClienteSeleccionado = document.getElementById('spanClienteSeleccionado');
 
+    // NUEVOS CAMPOS AGREGADOS: SERIE Y CORRELATIVO
+    const serieComprobanteInput = document.getElementById('serieComprobante');
+    const correlativoComprobanteInput = document.getElementById('correlativoComprobante');
+
     let debounceTimerClientes;
 
     if (busquedaClienteInput) {
@@ -314,6 +318,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             idCliente: parseFloat(document.getElementById('idCliente')?.value) || 0,
             idTipoComprobante: parseFloat(document.getElementById('idTipoComprobante')?.value) || 0,
+            // CAPTURA DE SERIE Y CORRELATIVO
+            serieComprobante: serieComprobanteInput?.value || '',
+            correlativoComprobante: correlativoComprobanteInput?.value || '',
+            // FIN DE CAPTURA
             idMoneda: parseFloat(document.getElementById('idMoneda')?.value) || 0,
             fechaEmision: document.getElementById('fechaEmision')?.value || new Date().toISOString().split('T')[0],
             fechaVencimiento: document.getElementById('fechaVencimiento')?.value || null,
@@ -411,6 +419,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (ventaData.detalles.length === 0) {
                 alert("Debe agregar al menos un ítem a la venta.");
+                return;
+            }
+
+            // Validar campos de serie y correlativo
+            if (!ventaData.serieComprobante || !ventaData.correlativoComprobante) {
+                alert("Los campos de Serie y Correlativo son obligatorios.");
                 return;
             }
 

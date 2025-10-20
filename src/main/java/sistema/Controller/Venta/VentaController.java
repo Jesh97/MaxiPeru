@@ -12,11 +12,16 @@ import java.util.Map;
 
 public class VentaController {
 
-    public int registrarVenta(Connection con, int idCliente, int idTipoComprobante, int idMoneda, String fechaEmision, String fechaVencimiento, int idTipoPago, String estadoVenta, String tipoDescuento, boolean aplicaIgv, String observaciones, double subtotal, double igv, double descuentoTotal, double totalFinal, double totalPeso, boolean hayTraslado) throws SQLException {
+    public int registrarVenta(Connection con, int idCliente, int idTipoComprobante, int idMoneda, String fechaEmision,
+                              String fechaVencimiento, int idTipoPago, String estadoVenta, String tipoDescuento,
+                              boolean aplicaIgv, String observaciones, double subtotal, double igv,
+                              double descuentoTotal, double totalFinal, double totalPeso, boolean hayTraslado,
+                              String serie, String correlativo)
+            throws SQLException {
         CallableStatement cs = null;
         int idVenta = 0;
         try {
-            cs = con.prepareCall("{CALL sp_registrar_venta(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
+            cs = con.prepareCall("{CALL sp_registrar_venta(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
             cs.setInt(1, idCliente);
             cs.setInt(2, idTipoComprobante);
             cs.setInt(3, idMoneda);
@@ -33,9 +38,11 @@ public class VentaController {
             cs.setDouble(14, totalFinal);
             cs.setDouble(15, totalPeso);
             cs.setBoolean(16, hayTraslado);
-            cs.registerOutParameter(17, Types.INTEGER);
+            cs.setString(17, serie);
+            cs.setString(18, correlativo);
+            cs.registerOutParameter(19, Types.INTEGER);
             cs.execute();
-            idVenta = cs.getInt(17);
+            idVenta = cs.getInt(19);
         } catch (SQLException e) {
             throw e;
         } finally {
