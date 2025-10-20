@@ -37,25 +37,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputIdCliente = document.getElementById('idCliente');
     const spanClienteSeleccionado = document.getElementById('spanClienteSeleccionado');
 
-    const buscarClientes = async (query) => {
-        if (query.length < 3) {
-            listaResultadosClientes.innerHTML = '';
-            return;
-        }
+    let debounceTimerClientes;
 
-        const url = `${VENTA_SERVLET_URL}?action=buscarCliente&query=${encodeURIComponent(query)}`;
+    if (busquedaClienteInput) {
+        busquedaClienteInput.addEventListener('input', () => {
+            clearTimeout(debounceTimerClientes);
+            const q = busquedaClienteInput.value.trim();
 
-        try {
-            const response = await fetch(url);
-            const clientes = await response.json();
-            mostrarResultadosClientes(clientes);
-        } catch (error) {
-            listaResultadosClientes.innerHTML = `<li class="list-group-item list-group-item-danger">Error al buscar clientes.</li>`;
-        }
-    };
+            if (q.length < 3) {
+                listaResultadosClientes.innerHTML = '';
+                return;
+            }
+
+            debounceTimerClientes = setTimeout(async () => {
+                const url = `${VENTA_SERVLET_URL}?action=buscarCliente&query=${encodeURIComponent(q)}`;
+
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP! estado: ${response.status}`);
+                    }
+                    const clientes = await response.json();
+                    mostrarResultadosClientes(clientes);
+                } catch (error) {
+                    console.error("Error al buscar clientes:", error);
+                    listaResultadosClientes.innerHTML = `<li class="list-group-item list-group-item-danger">Error al buscar clientes.</li>`;
+                }
+            }, 300);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!busquedaClienteInput.contains(e.target) && !listaResultadosClientes.contains(e.target)) {
+                listaResultadosClientes.innerHTML = '';
+            }
+        });
+    }
 
     const mostrarResultadosClientes = (clientes) => {
         listaResultadosClientes.innerHTML = '';
+
         if (clientes.length === 0) {
             listaResultadosClientes.innerHTML = `<li class="list-group-item">No se encontraron clientes.</li>`;
             return;
@@ -63,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         clientes.slice(0, 10).forEach(cliente => {
             const li = document.createElement('li');
-            li.className = 'client-search-item';
+            li.className = 'client-search-item list-group-item list-group-item-action';
             li.textContent = `${cliente.n_Documento} - ${cliente.razonSocial}`;
             li.dataset.client = JSON.stringify({
                 id: cliente.id,
