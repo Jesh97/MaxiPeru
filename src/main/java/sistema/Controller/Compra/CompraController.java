@@ -319,17 +319,16 @@ public class CompraController implements CompraRepository {
             cs.setInt(i++, compra.getIdTipoPago());
             cs.setInt(i++, compra.getIdFormaPago());
             cs.setInt(i++, compra.getIdMoneda());
-            cs.setBigDecimal(i++, compra.getTipoCambio() != null ? compra.getTipoCambio() : BigDecimal.ZERO);
+            cs.setObject(i++, compra.getTipoCambio(), Types.DECIMAL);
             cs.setBoolean(i++, compra.isIncluyeIgv());
             cs.setBoolean(i++, compra.isHayBonificacion());
             cs.setBoolean(i++, compra.isHayTraslado());
             cs.setString(i++, compra.getObservacion());
-
-            cs.setBigDecimal(i++, compra.getSubtotal() != null ? compra.getSubtotal() : BigDecimal.ZERO);
-            cs.setBigDecimal(i++, compra.getIgv() != null ? compra.getIgv() : BigDecimal.ZERO);
-            cs.setBigDecimal(i++, compra.getTotal() != null ? compra.getTotal() : BigDecimal.ZERO);
-            cs.setBigDecimal(i++, compra.getTotalPeso() != null ? compra.getTotalPeso() : BigDecimal.ZERO);
-            cs.setBigDecimal(i++, compra.getCosteTransporte() != null ? compra.getCosteTransporte() : BigDecimal.ZERO);
+            cs.setObject(i++, compra.getSubtotal(), Types.DECIMAL);
+            cs.setObject(i++, compra.getIgv(), Types.DECIMAL);
+            cs.setObject(i++, compra.getTotal(), Types.DECIMAL);
+            cs.setObject(i++, compra.getTotalPeso(), Types.DECIMAL);
+            cs.setObject(i++, compra.getCosteTransporte(), Types.DECIMAL);
 
             cs.execute();
         }
@@ -388,9 +387,11 @@ public class CompraController implements CompraRepository {
 
     private int registrarCompraCabecera(Connection conn, Compra compra) throws SQLException {
         int idCompra = -1;
-        String sql = "{call sp_registrar_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        String sql = "{call sp_registrar_compra(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+
         try (CallableStatement cs = conn.prepareCall(sql)) {
             int i = 1;
+
             cs.setInt(i++, compra.getIdProveedor());
             cs.setInt(i++, compra.getIdTipoComprobante());
             cs.setString(i++, compra.getSerie());
@@ -400,21 +401,22 @@ public class CompraController implements CompraRepository {
             cs.setInt(i++, compra.getIdTipoPago());
             cs.setInt(i++, compra.getIdFormaPago());
             cs.setInt(i++, compra.getIdMoneda());
-            cs.setBigDecimal(i++, compra.getTipoCambio() != null ? compra.getTipoCambio() : BigDecimal.ZERO);
+            cs.setObject(i++, compra.getTipoCambio(), Types.DECIMAL);
             cs.setBoolean(i++, compra.isIncluyeIgv());
             cs.setBoolean(i++, compra.isHayBonificacion());
             cs.setBoolean(i++, compra.isHayTraslado());
             cs.setString(i++, compra.getObservacion());
+            cs.setObject(i++, compra.getSubtotal(), Types.DECIMAL);
+            cs.setObject(i++, compra.getIgv(), Types.DECIMAL);
+            cs.setObject(i++, compra.getTotal(), Types.DECIMAL);
+            cs.setObject(i++, compra.getTotalPeso(), Types.DECIMAL);
+            cs.setObject(i++, compra.getCosteTransporte(), Types.DECIMAL);
 
-            cs.setBigDecimal(i++, compra.getSubtotal() != null ? compra.getSubtotal() : BigDecimal.ZERO);
-            cs.setBigDecimal(i++, compra.getIgv() != null ? compra.getIgv() : BigDecimal.ZERO);
-            cs.setBigDecimal(i++, compra.getTotal() != null ? compra.getTotal() : BigDecimal.ZERO);
-            cs.setBigDecimal(i++, compra.getTotalPeso() != null ? compra.getTotalPeso() : BigDecimal.ZERO);
-            cs.setBigDecimal(i++, compra.getCosteTransporte() != null ? compra.getCosteTransporte() : BigDecimal.ZERO);
-
-            cs.registerOutParameter(i, Types.INTEGER);
-            cs.execute();
-            idCompra = cs.getInt(i);
+            try (ResultSet rs = cs.executeQuery()) {
+                if (rs.next()) {
+                    idCompra = rs.getInt(1);
+                }
+            }
         }
         return idCompra;
     }

@@ -141,6 +141,8 @@ public class CompraServlet extends HttpServlet {
             compra.setHayTraslado(hayTraslado);
 
             compra.setObservacion(root.path("observation").asText("").trim());
+
+            // Mapeo de Totales (Nombres en JS: subtotalSinIgv, totalIgv, totalAPagar)
             compra.setSubtotal(BigDecimal.valueOf(root.path("subtotalSinIgv").asDouble(0)));
             compra.setIgv(BigDecimal.valueOf(root.path("totalIgv").asDouble(0)));
             compra.setTotal(BigDecimal.valueOf(root.path("totalAPagar").asDouble(0)));

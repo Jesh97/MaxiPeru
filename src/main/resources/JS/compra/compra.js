@@ -862,6 +862,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const limpiarYConvertir = (selector, removeStr = '') => {
+        const text = $(selector)?.textContent || '0';
+        let cleaned = text.replace(removeStr, '').trim();
+        cleaned = cleaned.replace(/[^0-9.]/g, '');
+        return parseFloat(cleaned) || 0;
+    };
+
     if (guardarCompraBtn) {
         guardarCompraBtn.addEventListener('click', async (e) => {
             e.preventDefault();
@@ -938,6 +945,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (monedaId <= 0) { alert('Debe seleccionar una moneda válida.'); return; }
 
             const descuentosGlobales = [];
+            const descuentoSi = $('#descuentoSi');
+            const tipoDescuentoSelect = $('#tipoDescuento');
+            const tipoValorDescuentoSelect = $('#tipoValorDescuento');
+            const valorDescuentoInput = $('#valorDescuento');
+            const igvSi = $('#igvSi');
+            const bonifSi = $('#bonifSi');
+            const trasladoSi = $('#trasladoSi');
+
             if (descuentoSi?.checked && tipoDescuentoSelect?.value === 'global') {
                 const tipoValor = tipoValorDescuentoSelect.value;
                 const valorDescuentoInputVal = valorDescuentoInput.value.trim();
@@ -994,11 +1009,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 hayBonificacion: bonifSi?.checked,
                 hayTraslado: trasladoSi?.checked,
                 observation: $('#observacionesGenerales')?.value,
-                subtotalSinIgv: subtotalSinIgvCalculado,
-                totalIgv: totalIgvCalculado,
-                totalAPagar: totalCompraFinalCalculado,
-                totalPeso: totalPesoProductosCalculado,
-                costeTransporte: costeTransporteCalculado,
+
+                // Usamos la función de limpieza para que se envíe el valor numérico puro.
+                subtotalSinIgv: limpiarYConvertir('#subtotalSinIgv', 'S/'),
+                totalIgv: limpiarYConvertir('#totalIgv', 'S/'),
+                totalAPagar: limpiarYConvertir('#totalAPagar', 'S/'),
+                totalPeso: limpiarYConvertir('#totalPesoProductos', 'kg'),
+                costeTransporte: limpiarYConvertir('#costeTransporteLabel', 'S/'),
+
                 detalles: detalles,
                 referencia: referencia,
                 guiaTransporte: guia,
@@ -1025,7 +1043,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 modalConfirm.show();
 
                 if (response.ok) {
-                    if (formCompra) formCompra.reset();
+                    if ($('#formCompra')) $('#formCompra').reset();
                     $$('tbody').forEach(tbody => tbody.innerHTML = '');
                     crearFilaProducto();
                     actualizarTotales();
