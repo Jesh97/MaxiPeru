@@ -123,7 +123,10 @@ public class VentaServlet extends HttpServlet {
             String serie = (String) ventaData.getOrDefault("serie", "");
             String correlativo = (String) ventaData.getOrDefault("correlativo", "");
 
-            idVenta = ventaController.registrarVenta(con, idCliente, idTipoComprobante, idMoneda, fechaEmision, fechaVencimiento, idTipoPago, estadoVenta, tipoDescuento, aplicaIgv, observaciones, subtotal, igv, descuentoTotal, totalFinal, totalPeso, hayTraslado, serie, correlativo);
+            Double tasaIgvDescGlobal = (Double) ventaData.getOrDefault("tasaIgvDescGlobal", null);
+            Double tasaIgvDescItem = (Double) ventaData.getOrDefault("tasaIgvDescItem", null);
+
+            idVenta = ventaController.registrarVenta(con, idCliente, idTipoComprobante, serie, correlativo, idMoneda, fechaEmision, fechaVencimiento, idTipoPago, estadoVenta, tipoDescuento, aplicaIgv, observaciones, subtotal, igv, descuentoTotal, totalFinal, totalPeso, hayTraslado);
 
             if (idVenta == 0) throw new SQLException("Fallo al obtener ID de Venta.");
 
@@ -134,7 +137,7 @@ public class VentaServlet extends HttpServlet {
                 double valor = (Double) descGlobal.getOrDefault("valor", 0.0);
 
                 String tipoValorSP = tipoValor.equals("monto") ? "soles" : "porcentaje";
-                ventaController.agregarDescuentoGlobalVenta(con, idVenta, motivo, tipoValorSP, valor);
+                ventaController.agregarDescuentoGlobalVenta(con, idVenta, motivo, tipoValorSP, valor, tasaIgvDescGlobal);
             }
 
             Type detalleListType = new TypeToken<List<Map<String, Object>>>(){}.getType();
@@ -156,7 +159,7 @@ public class VentaServlet extends HttpServlet {
                 if (idDetalleVenta == 0) throw new SQLException("Fallo al obtener ID de Detalle Venta.");
 
                 double cantidadConsumir = (Double) detalle.getOrDefault("cantidad", 0.0);
-                ventaController.registrarConsumoLoteVenta(con, idDetalleVenta, idArticulo, cantidadConsumir);
+                ventaController.gestionarConsumoStockVenta(con, idDetalleVenta, idArticulo, cantidadConsumir);
 
                 if ("porItem".equals(tipoDescuento) && detalle.containsKey("detalleDescuento")) {
                     Map<String, Object> descItem = (Map<String, Object>) detalle.get("detalleDescuento");
@@ -165,7 +168,7 @@ public class VentaServlet extends HttpServlet {
                     double valor = (Double) descItem.getOrDefault("valor", 0.0);
 
                     String tipoValorSP = tipoValor.equals("monto") ? "soles" : "porcentaje";
-                    ventaController.agregarDescuentoItemVenta(con, idDetalleVenta, motivo, tipoValorSP, valor);
+                    ventaController.agregarDescuentoItemVenta(con, idDetalleVenta, motivo, tipoValorSP, valor, tasaIgvDescItem);
                 }
             }
 
@@ -201,7 +204,7 @@ public class VentaServlet extends HttpServlet {
             out.print(gson.toJson(Map.of("success", false, "message", "Error en el formato JSON de la solicitud: " + e.getMessage())));
         } catch (SQLException e) {
             try {
-                con.rollback();
+                if (con != null) con.rollback();
             } catch (SQLException ex) {}
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print(gson.toJson(Map.of("success", false, "message", "Error de base de datos: " + e.getMessage())));

@@ -24,11 +24,10 @@ public class VentaController {
         return conn;
     }
 
-    public int registrarVenta(Connection con, int idCliente, int idTipoComprobante, int idMoneda, String fechaEmision,
-                              String fechaVencimiento, int idTipoPago, String estadoVenta, String tipoDescuento,
-                              boolean aplicaIgv, String observaciones, double subtotal, double igv,
-                              double descuentoTotal, double totalFinal, double totalPeso, boolean hayTraslado,
-                              String serie, String correlativo)
+    public int registrarVenta(Connection con, int idCliente, int idTipoComprobante, String serie, String correlativo, int idMoneda,
+                              String fechaEmision, String fechaVencimiento, int idTipoPago, String estadoVenta,
+                              String tipoDescuento, boolean aplicaIgv, String observaciones, double subtotal,
+                              double igv, double descuentoTotal, double totalFinal, double totalPeso, boolean hayTraslado)
             throws SQLException {
         CallableStatement cs = null;
         int idVenta = 0;
@@ -36,26 +35,26 @@ public class VentaController {
             cs = con.prepareCall("{CALL sp_registrar_venta(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}");
             cs.setInt(1, idCliente);
             cs.setInt(2, idTipoComprobante);
-            cs.setInt(3, idMoneda);
-            cs.setString(4, fechaEmision);
+            cs.setString(3, serie);
+            cs.setString(4, correlativo);
+            cs.setInt(5, idMoneda);
+            cs.setString(6, fechaEmision);
             if (fechaVencimiento == null || fechaVencimiento.isEmpty()) {
-                cs.setNull(5, Types.DATE);
+                cs.setNull(7, Types.DATE);
             } else {
-                cs.setString(5, fechaVencimiento);
+                cs.setString(7, fechaVencimiento);
             }
-            cs.setInt(6, idTipoPago);
-            cs.setString(7, estadoVenta);
-            cs.setString(8, tipoDescuento);
-            cs.setBoolean(9, aplicaIgv);
-            cs.setString(10, observaciones);
-            cs.setDouble(11, subtotal);
-            cs.setDouble(12, igv);
-            cs.setDouble(13, descuentoTotal);
-            cs.setDouble(14, totalFinal);
-            cs.setDouble(15, totalPeso);
-            cs.setBoolean(16, hayTraslado);
-            cs.setString(17, serie);
-            cs.setString(18, correlativo);
+            cs.setInt(8, idTipoPago);
+            cs.setString(9, estadoVenta);
+            cs.setString(10, tipoDescuento);
+            cs.setBoolean(11, aplicaIgv);
+            cs.setString(12, observaciones);
+            cs.setDouble(13, subtotal);
+            cs.setDouble(14, igv);
+            cs.setDouble(15, descuentoTotal);
+            cs.setDouble(16, totalFinal);
+            cs.setDouble(17, totalPeso);
+            cs.setBoolean(18, hayTraslado);
             cs.registerOutParameter(19, Types.INTEGER);
             cs.execute();
             idVenta = cs.getInt(19);
@@ -93,7 +92,7 @@ public class VentaController {
         return idDetalleVenta;
     }
 
-    public void agregarDescuentoGlobalVenta(Connection con, int idVenta, String motivo, String tipoValor, double valor) throws SQLException {
+    public void agregarDescuentoGlobalVenta(Connection con, int idVenta, String motivo, String tipoValor, double valor, Double tasaIgv) throws SQLException {
         CallableStatement cs = null;
         try {
             cs = con.prepareCall("{CALL sp_agregar_descuento_global_venta(?, ?, ?, ?, ?)}");
@@ -101,7 +100,11 @@ public class VentaController {
             cs.setString(2, motivo);
             cs.setString(3, tipoValor);
             cs.setDouble(4, valor);
-            cs.setNull(5, Types.DECIMAL);
+            if (tasaIgv == null) {
+                cs.setNull(5, Types.DECIMAL);
+            } else {
+                cs.setDouble(5, tasaIgv);
+            }
             cs.execute();
         } catch (SQLException e) {
             throw e;
@@ -110,7 +113,7 @@ public class VentaController {
         }
     }
 
-    public void agregarDescuentoItemVenta(Connection con, int idDetalleVenta, String motivo, String tipoValor, double valor) throws SQLException {
+    public void agregarDescuentoItemVenta(Connection con, int idDetalleVenta, String motivo, String tipoValor, double valor, Double tasaIgv) throws SQLException {
         CallableStatement cs = null;
         try {
             cs = con.prepareCall("{CALL sp_agregar_descuento_item_venta(?, ?, ?, ?, ?)}");
@@ -118,7 +121,26 @@ public class VentaController {
             cs.setString(2, motivo);
             cs.setString(3, tipoValor);
             cs.setDouble(4, valor);
-            cs.setNull(5, Types.DECIMAL);
+            if (tasaIgv == null) {
+                cs.setNull(5, Types.DECIMAL);
+            } else {
+                cs.setDouble(5, tasaIgv);
+            }
+            cs.execute();
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            if (cs != null) cs.close();
+        }
+    }
+
+    public void gestionarConsumoStockVenta(Connection con, int idDetalleVenta, int idArticulo, double cantidadAConsumir) throws SQLException {
+        CallableStatement cs = null;
+        try {
+            cs = con.prepareCall("{CALL sp_gestionar_consumo_stock_venta(?, ?, ?)}");
+            cs.setInt(1, idDetalleVenta);
+            cs.setInt(2, idArticulo);
+            cs.setDouble(3, cantidadAConsumir);
             cs.execute();
         } catch (SQLException e) {
             throw e;
@@ -248,21 +270,6 @@ public class VentaController {
         return lotes;
     }
 
-    public void registrarConsumoLoteVenta(Connection con, int idDetalleVenta, int idArticulo, double cantidadAConsumir) throws SQLException {
-        CallableStatement cs = null;
-        try {
-            cs = con.prepareCall("{CALL sp_gestionar_consumo_stock_venta(?, ?, ?)}");
-            cs.setInt(1, idDetalleVenta);
-            cs.setInt(2, idArticulo);
-            cs.setDouble(3, cantidadAConsumir);
-            cs.execute();
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            if (cs != null) cs.close();
-        }
-    }
-
     public List<Map<String, Object>> listarVentasConDetalles() throws SQLException {
         List<Map<String, Object>> ventas = new ArrayList<>();
         String sql = "{CALL sp_listar_ventas_final()}";
@@ -290,27 +297,24 @@ public class VentaController {
                     venta.put("serie", rs.getString("serie"));
                     venta.put("correlativo", rs.getString("correlativo"));
                     venta.put("estado_venta", rs.getString("estado_venta"));
-                    venta.put("tipo_descuento_cabecera", rs.getString("tipo_descuento_cabecera"));
+                    venta.put("tipo_descuento_cabecera", rs.getString("venta_tipo_descuento"));
                     venta.put("aplica_igv", rs.getBoolean("aplica_igv"));
                     venta.put("hay_traslado", rs.getBoolean("hay_traslado"));
-                    venta.put("observaciones", rs.getString("observaciones"));
-                    venta.put("subtotal", rs.getBigDecimal("subtotal"));
-                    venta.put("igv", rs.getBigDecimal("igv"));
-                    venta.put("descuento_total", rs.getBigDecimal("descuento_total"));
+                    venta.put("observaciones", rs.getString("venta_observaciones"));
+                    venta.put("subtotal", rs.getBigDecimal("venta_subtotal"));
+                    venta.put("igv", rs.getBigDecimal("venta_igv"));
+                    venta.put("descuento_total", rs.getBigDecimal("venta_descuento_total"));
                     venta.put("total_final", rs.getBigDecimal("total_final"));
-                    venta.put("total_peso", rs.getBigDecimal("total_peso"));
-                    venta.put("id_tipo_comprobante", rs.getInt("id_tipo_comprobante"));
+                    venta.put("total_peso", rs.getBigDecimal("venta_total_peso"));
                     venta.put("tipo_comprobante", rs.getString("tipo_comprobante"));
-                    venta.put("id_moneda", rs.getInt("id_moneda"));
-                    venta.put("moneda", rs.getString("moneda"));
-                    venta.put("id_tipo_pago", rs.getInt("id_tipo_pago"));
-                    venta.put("tipo_pago", rs.getString("tipo_pago"));
+                    venta.put("moneda_nombre", rs.getString("moneda_nombre"));
+                    venta.put("moneda_simbolo", rs.getString("moneda_simbolo"));
+                    venta.put("tipo_pago_nombre", rs.getString("tipo_pago_nombre"));
 
                     Map<String, Object> cliente = new HashMap<>();
                     cliente.put("id", rs.getInt("id_cliente"));
                     cliente.put("n_documento", rs.getString("cliente_documento"));
                     cliente.put("razon_social", rs.getString("cliente_razon_social"));
-                    cliente.put("tipo_documento", rs.getString("cliente_tipo_documento"));
                     cliente.put("direccion", rs.getString("cliente_direccion"));
                     cliente.put("telefono", rs.getString("cliente_telefono"));
                     venta.put("cliente", cliente);
@@ -330,24 +334,24 @@ public class VentaController {
                 Map<Integer, Map<String, Object>> currentDescuentoGlobalMap = descuentoGlobalTracker.get(idVenta);
                 Map<Integer, Map<String, Object>> currentDescuentoItemMap = descuentoItemTracker.get(idVenta);
 
-                int idDetalle = rs.getInt("id_detalle");
+                int idDetalle = rs.getInt("id_detalle_venta");
                 if (idDetalle > 0) {
                     Map<String, Object> detalle = currentDetalleMap.get(idDetalle);
                     if (detalle == null) {
                         detalle = new LinkedHashMap<>();
                         detalle.put("id_detalle", idDetalle);
-                        detalle.put("cantidad", rs.getBigDecimal("cantidad_detalle"));
-                        detalle.put("precio_unitario", rs.getBigDecimal("precio_unitario"));
-                        detalle.put("descuento_monto_item", rs.getBigDecimal("descuento_monto_item"));
-                        detalle.put("subtotal_detalle", rs.getBigDecimal("subtotal_detalle"));
-                        detalle.put("total_detalle", rs.getBigDecimal("total_detalle"));
+                        detalle.put("descripcion", rs.getString("detalle_descripcion"));
+                        detalle.put("cantidad", rs.getBigDecimal("detalle_cantidad"));
+                        detalle.put("peso_unitario", rs.getBigDecimal("detalle_peso_unitario"));
+                        detalle.put("precio_unitario", rs.getBigDecimal("detalle_precio_unitario"));
+                        detalle.put("descuento_monto", rs.getBigDecimal("detalle_descuento_monto"));
+                        detalle.put("subtotal", rs.getBigDecimal("detalle_subtotal"));
+                        detalle.put("total", rs.getBigDecimal("detalle_total"));
 
                         Map<String, Object> articulo = new HashMap<>();
                         articulo.put("id", rs.getInt("id_articulo"));
-                        articulo.put("codigo", rs.getString("codigo_articulo"));
-                        articulo.put("descripcion", rs.getString("descripcion_articulo"));
-                        articulo.put("id_unidad", rs.getInt("id_unidad_medida"));
-                        articulo.put("unidad_medida", rs.getString("unidad_medida"));
+                        articulo.put("codigo", rs.getString("articulo_codigo"));
+                        articulo.put("unidad_medida_nombre", rs.getString("unidad_medida_nombre"));
                         detalle.put("articulo", articulo);
 
                         detalle.put("lotes_consumidos", new ArrayList<>());
@@ -360,13 +364,13 @@ public class VentaController {
                     int idLoteVenta = rs.getInt("id_lote_venta");
                     if (idLoteVenta > 0) {
                         List<Map<String, Object>> lotesList = (List<Map<String, Object>>) detalle.get("lotes_consumidos");
-                        if (lotesList.stream().noneMatch(l -> l.get("id_lote_venta").equals(idLoteVenta))) {
+                        if (lotesList.stream().noneMatch(l -> ((Integer) l.get("id_lote_venta")).equals(idLoteVenta))) {
                             Map<String, Object> lote = new LinkedHashMap<>();
                             lote.put("id_lote_venta", idLoteVenta);
                             lote.put("id_lote_inventario", rs.getInt("id_lote"));
                             lote.put("codigo_lote", rs.getString("codigo_lote"));
-                            lote.put("cantidad_consumida", rs.getBigDecimal("cantidad_consumida_lote"));
-                            java.sql.Date fechaVencimientoLote = rs.getDate("fecha_vencimiento_lote");
+                            lote.put("cantidad_consumida", rs.getBigDecimal("lote_cantidad_consumida"));
+                            java.sql.Date fechaVencimientoLote = rs.getDate("lote_fecha_vencimiento");
                             lote.put("fecha_vencimiento", fechaVencimientoLote != null ? DATE_FORMATTER.format(fechaVencimientoLote) : null);
                             lotesList.add(lote);
                         }
@@ -374,14 +378,14 @@ public class VentaController {
                 }
 
                 int idDescuento = rs.getInt("id_descuento");
-                String tipoAplicacion = rs.getString("tipo_aplicacion");
+                String tipoAplicacion = rs.getString("descuento_aplicacion");
                 if (idDescuento > 0 && tipoAplicacion != null) {
                     Map<String, Object> descuento = new LinkedHashMap<>();
                     descuento.put("id_descuento", idDescuento);
-                    descuento.put("motivo", rs.getString("motivo_descuento"));
-                    descuento.put("tipo_valor", rs.getString("tipo_valor_descuento"));
-                    descuento.put("valor", rs.getBigDecimal("valor_descuento"));
-                    descuento.put("tasa_igv", rs.getBigDecimal("tasa_igv_descuento"));
+                    descuento.put("motivo", rs.getString("descuento_motivo"));
+                    descuento.put("tipo_valor", rs.getString("descuento_tipo_valor"));
+                    descuento.put("valor", rs.getBigDecimal("descuento_valor"));
+                    descuento.put("tasa_igv", rs.getBigDecimal("descuento_tasa_igv"));
 
                     if ("global".equals(tipoAplicacion)) {
                         if (currentDescuentoGlobalMap.get(idDescuento) == null) {
@@ -400,28 +404,26 @@ public class VentaController {
                     }
                 }
 
-                String serieGuia = rs.getString("serie_guia_transporte");
-                if (serieGuia != null && !serieGuia.trim().isEmpty() && venta.get("guia_transporte") == null) {
+                int idGuia = rs.getInt("id_guia");
+                if (idGuia > 0 && venta.get("guia_transporte") == null) {
                     Map<String, Object> guiaMap = new HashMap<>();
-                    guiaMap.put("serie_guia_transporte", serieGuia);
-                    guiaMap.put("correlativo_guia_transporte", rs.getString("correlativo_guia_transporte"));
+                    guiaMap.put("id_guia", idGuia);
                     guiaMap.put("modalidad_transporte", rs.getString("modalidad_transporte"));
-                    guiaMap.put("ruc_empresa", rs.getString("ruc_empresa"));
-                    guiaMap.put("razon_social_empresa", rs.getString("razon_social_empresa"));
-                    guiaMap.put("dni_conductor", rs.getString("dni_conductor"));
-                    guiaMap.put("nombre_conductor", rs.getString("nombre_conductor"));
+                    guiaMap.put("ruc_empresa", rs.getString("transporte_ruc_empresa"));
+                    guiaMap.put("razon_social_empresa", rs.getString("transporte_razon_social"));
+                    guiaMap.put("dni_conductor", rs.getString("transporte_dni_conductor"));
+                    guiaMap.put("nombre_conductor", rs.getString("transporte_nombre_conductor"));
                     guiaMap.put("punto_partida", rs.getString("punto_partida"));
                     guiaMap.put("punto_llegada", rs.getString("punto_llegada"));
                     java.sql.Date fechaTraslado = rs.getDate("fecha_traslado");
                     guiaMap.put("fecha_traslado", fechaTraslado != null ? DATE_FORMATTER.format(fechaTraslado) : null);
-                    guiaMap.put("peso_guia", rs.getBigDecimal("peso_guia"));
                     venta.put("guia_transporte", guiaMap);
                 }
 
-                if (rs.getInt("id_conformidad") > 0 && venta.get("conformidad") == null) {
+                String nombreConformidad = rs.getString("nombre_cliente_confirma");
+                if (nombreConformidad != null && venta.get("conformidad") == null) {
                     Map<String, Object> conformidadMap = new HashMap<>();
-                    conformidadMap.put("id_conformidad", rs.getInt("id_conformidad"));
-                    conformidadMap.put("nombre_cliente_confirma", rs.getString("nombre_cliente_confirma"));
+                    conformidadMap.put("nombre_cliente_confirma", nombreConformidad);
                     conformidadMap.put("dni_cliente_confirma", rs.getString("dni_cliente_confirma"));
                     conformidadMap.put("tipo_entrega", rs.getString("tipo_entrega"));
                     venta.put("conformidad", conformidadMap);

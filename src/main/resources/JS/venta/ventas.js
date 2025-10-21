@@ -50,18 +50,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const tablaLotesDisponiblesBody = document.getElementById('bodyLotes');
     const itemLoteDescripcion = document.getElementById('itemLoteDescripcion');
     const itemLoteCantidadTotal = document.getElementById('itemLoteCantidadTotal');
-    let currentRow = null;
     const busquedaProductosInput = document.getElementById('busquedaProductos');
     const listaResultadosBusqueda = document.getElementById('listaResultadosBusqueda');
-    let busquedaTimeout;
     const busquedaClienteInput = document.getElementById('busquedaCliente');
     const listaResultadosClientes = document.getElementById('listaResultadosClientes');
     const inputIdCliente = document.getElementById('idCliente');
     const spanClienteSeleccionado = document.getElementById('spanClienteSeleccionado');
     const serieComprobanteInput = document.getElementById('serieComprobante');
     const correlativoComprobanteInput = document.getElementById('correlativoComprobante');
-    let debounceTimerClientes;
     const pesoTotalTrasladoInput = document.getElementById('pesoTotalTraslado');
+    const opcionTipoDescuentoContainer = document.getElementById('opcionTipoDescuentoContainer');
+    const inputTasaIgvDescGlobal = document.getElementById('tasaIgvDescGlobal');
+    const inputTasaIgvDescItem = document.getElementById('tasaIgvDescItem');
+
+    let currentRow = null;
+    let busquedaTimeout;
+    let debounceTimerClientes;
 
     const buscarClientes = async (q) => {
         if (q.length < 1) {
@@ -359,6 +363,11 @@ document.addEventListener('DOMContentLoaded', () => {
             hayTraslado: opcionTrasladoSelect.value === 'si'
         };
 
+        const tasaIgvGlobal = inputTasaIgvDescGlobal ? parseFloat(inputTasaIgvDescGlobal.value) : null;
+        if (tasaIgvGlobal !== null && !isNaN(tasaIgvGlobal)) {
+             data.tasaIgvDescGlobal = tasaIgvGlobal;
+        }
+
         if (tipoDescuento === 'global' && document.getElementById('aplicaDescuentoSi').checked) {
             data.descuentoGlobal = {
                 motivo: document.getElementById('motivoDescuentoGlobal')?.value || 'Descuento General',
@@ -366,6 +375,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 valor: parseFloat(document.getElementById('valorDescuentoGlobal')?.value) || 0
             };
         }
+
+        const tasaIgvItem = inputTasaIgvDescItem ? parseFloat(inputTasaIgvDescItem.value) : null;
+        if (tasaIgvItem !== null && !isNaN(tasaIgvItem)) {
+             data.tasaIgvDescItem = tasaIgvItem;
+        }
+
         return data;
     };
 
@@ -525,8 +540,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     agregarItemVentaBtn.addEventListener('click', () => createItemRow());
-
     aplicaIgvCheckbox.addEventListener('change', updateTotals);
+
+    if (inputTasaIgvDescGlobal) {
+        inputTasaIgvDescGlobal.addEventListener('input', updateTotals);
+    }
+
+    if (inputTasaIgvDescItem) {
+        inputTasaIgvDescItem.addEventListener('input', updateTotals);
+    }
 
     tipoDescuentoRadios.forEach(radio => {
         radio.addEventListener('change', () => {
@@ -544,8 +566,10 @@ document.addEventListener('DOMContentLoaded', () => {
         radio.addEventListener('change', () => {
             const aplica = document.getElementById('aplicaDescuentoSi').checked;
             const tipoDesc = document.querySelector('input[name="tipoDescuento"]:checked').value;
+            if (opcionTipoDescuentoContainer) {
+                 opcionTipoDescuentoContainer.style.display = aplica ? 'block' : 'none';
+            }
 
-            opcionTipoDescuentoContainer.style.display = aplica ? 'block' : 'none';
             descuentoGlobalContainer.style.display = (aplica && tipoDesc === 'global') ? 'block' : 'none';
             if (descuentoHeader) descuentoHeader.style.display = (aplica && tipoDesc === 'porItem') ? 'table-cell' : 'none';
             bodyItemsVenta.querySelectorAll('.discount-column').forEach(col => col.style.display = (aplica && tipoDesc === 'porItem') ? '' : 'none');
