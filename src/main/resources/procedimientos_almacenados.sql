@@ -419,14 +419,21 @@ CREATE PROCEDURE `sp_consumir_stock_general_venta`(
     IN p_id_articulo INT, IN p_cantidad_a_consumir DECIMAL(12,2)
 )
 BEGIN
-    DECLARE v_stock_actual DECIMAL(12,2);
+    DECLARE v_stock_actual INT;
+    DECLARE v_cantidad_entera_consumir INT;
+
+    SET v_cantidad_entera_consumir = CAST(p_cantidad_a_consumir AS UNSIGNED);
+
+    IF p_cantidad_a_consumir != v_cantidad_entera_consumir THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: La cantidad a consumir en stock general debe ser un número entero para este artículo.';
+    END IF;
 
     SELECT cantidad INTO v_stock_actual FROM articulo WHERE id = p_id_articulo;
 
-    IF v_stock_actual < p_cantidad_a_consumir THEN
+    IF v_stock_actual < v_cantidad_entera_consumir THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Stock insuficiente en inventario general.';
     ELSE
-        UPDATE articulo SET cantidad = cantidad - p_cantidad_a_consumir WHERE id = p_id_articulo;
+        UPDATE articulo SET cantidad = cantidad - v_cantidad_entera_consumir WHERE id = p_id_articulo;
     END IF;
 END$$
 
@@ -454,13 +461,18 @@ BEGIN
         SET v_cantidad_consumida = LEAST(v_cantidad_restante, v_disponible_lote);
         UPDATE inventario_lote SET cantidad_disponible = cantidad_disponible - v_cantidad_consumida WHERE id_lote = v_id_lote_actual;
         INSERT INTO lote_venta (id_detalle_venta, id_lote, cantidad) VALUES (p_id_detalle_venta, v_id_lote_actual, v_cantidad_consumida);
-        UPDATE articulo SET cantidad = cantidad - v_cantidad_consumida WHERE id = p_id_articulo;
         SET v_cantidad_restante = v_cantidad_restante - v_cantidad_consumida;
     END LOOP;
     CLOSE cur_lotes;
 
     IF v_cantidad_restante > 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Stock insuficiente en lotes disponibles.';
+    END IF;
+
+    IF v_cantidad_restante = 0 AND MOD(p_cantidad_a_consumir, 1) = 0 THEN
+        UPDATE articulo SET cantidad = cantidad - CAST(p_cantidad_a_consumir AS UNSIGNED) WHERE id = p_id_articulo;
+    ELSEIF v_cantidad_restante = 0 AND MOD(p_cantidad_a_consumir, 1) != 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: La cantidad consumida de lotes no fue un número entero, lo cual es requerido para actualizar el stock general del artículo.';
     END IF;
 END$$
 
@@ -478,6 +490,9 @@ BEGIN
     ) INTO v_usa_lotes;
 
     IF v_usa_lotes THEN
+        IF MOD(p_cantidad_a_consumir, 1) != 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: No se pueden consumir cantidades decimales si el artículo tiene stock entero y se gestiona por lotes.';
+        END IF;
         CALL `sp_consumir_stock_lote_venta`(p_id_detalle_venta, p_id_articulo, p_cantidad_a_consumir);
     ELSE
         CALL `sp_consumir_stock_general_venta`(p_id_articulo, p_cantidad_a_consumir);
