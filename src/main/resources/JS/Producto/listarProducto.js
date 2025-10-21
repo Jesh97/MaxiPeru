@@ -179,16 +179,28 @@ async function verLotes(idArticulo, descripcionArticulo) {
     }
 }
 
-function abrirFormulario(id = 0) {
+async function abrirFormulario(id = 0) {
     const modal = document.getElementById('articuloModal');
     const form = document.getElementById('articuloForm');
     form.reset();
     document.getElementById('idProducto').value = 0;
     document.getElementById('articuloModalHeader').querySelector('h2').textContent = 'Nuevo Artículo';
 
+    // Restablecer Selects del Formulario a sus valores predeterminados (todos los catálogos)
+    await cargarFormularioSelects();
+
+    // Almacenar los valores originales del artículo, si existe
+    let idMarcaOriginal = '';
+    let idCategoriaOriginal = '';
+    let idTipoArticuloOriginal = '';
+
     if (id > 0) {
         const articulo = articulos.find(a => a.idProducto === id);
         if (articulo) {
+            idMarcaOriginal = String(articulo.marca?.idMarca || articulo.idMarca || '');
+            idCategoriaOriginal = String(articulo.categoria?.idCategoria || articulo.idCategoria || '');
+            idTipoArticuloOriginal = String(articulo.tipoArticulo?.id || articulo.idTipoArticulo || '');
+
             document.getElementById('idProducto').value = articulo.idProducto;
             document.getElementById('codigo').value = articulo.codigo;
             document.getElementById('descripcion').value = articulo.descripcion;
@@ -199,16 +211,48 @@ function abrirFormulario(id = 0) {
             document.getElementById('densidad').value = articulo.densidad;
             document.getElementById('aroma').value = articulo.aroma || '';
             document.getElementById('color').value = articulo.color || '';
-
-            document.getElementById('idMarca').value = String(articulo.marca?.idMarca || articulo.idMarca || '');
-            document.getElementById('idCategoria').value = String(articulo.categoria?.idCategoria || articulo.idCategoria || '');
             document.getElementById('idUnidad').value = String(articulo.unidad?.idUnidad || articulo.idUnidad || '');
-            document.getElementById('idTipoArticulo').value = String(articulo.tipoArticulo?.id || articulo.idTipoArticulo || '');
 
             document.getElementById('articuloModalHeader').querySelector('h2').textContent = 'Editar Artículo';
         }
     }
+
+    // Configurar los selects en cascada para el formulario, manteniendo la selección original si existe
+    await manejarCambioFormulario(document.getElementById('idMarca'), idMarcaOriginal);
+    await manejarCambioFormulario(document.getElementById('idCategoria'), idCategoriaOriginal);
+    await manejarCambioFormulario(document.getElementById('idTipoArticulo'), idTipoArticuloOriginal);
+
     modal.style.display = 'flex';
+}
+
+async function cargarFormularioSelects() {
+    const selects = [
+        { id: 'idMarca', entidad: 'marca', keyId: 'idMarca', keyNombre: 'nombre', keyAbrev: null },
+        { id: 'idCategoria', entidad: 'categoria', keyId: 'idCategoria', keyNombre: 'nombre', keyAbrev: null },
+        { id: 'idUnidad', entidad: 'unidad', keyId: 'idUnidad', keyNombre: 'nombre', keyAbrev: 'abreviatura' },
+        { id: 'idTipoArticulo', entidad: 'tipo', keyId: 'id', keyNombre: 'nombre', keyAbrev: null }
+    ];
+
+    for (const end of selects) {
+        const selectForm = document.getElementById(end.id);
+        if (!catalogos[end.entidad]) continue; // Asegurarse de que el catálogo base fue cargado
+
+        selectForm.innerHTML = `<option value="">-- Seleccione --</option>`;
+
+        catalogos[end.entidad].forEach(item => {
+            let optionText;
+
+            if (end.entidad === 'unidad' && item.abreviatura) {
+                optionText = `${item[end.keyNombre]} - ${item[end.keyAbrev]}`;
+            } else {
+                optionText = item[end.keyNombre];
+            }
+
+            const optionValue = item[end.keyId];
+            const option = `<option value="${optionValue}">${optionText}</option>`;
+            selectForm.innerHTML += option;
+        });
+    }
 }
 
 async function cargarCatalogos() {
@@ -234,35 +278,18 @@ async function cargarCatalogos() {
 
             catalogos[end.entidad] = data;
 
+            // Llenar selects de formulario (serán sobreescritos al abrir el modal, pero se cargan los datos base)
             const selectForm = document.getElementById(end.id);
             selectForm.innerHTML = `<option value="">-- Seleccione --</option>`;
 
+            // Llenar selects de filtro (estos no son dinámicos en la carga inicial)
             if (end.filtro) {
                 const selectFiltro = document.getElementById(end.filtro);
                 selectFiltro.innerHTML = '<option value="">Todas</option>';
+                data.forEach(item => {
+                    selectFiltro.innerHTML += `<option value="${item[end.keyId]}">${item[end.keyNombre]}</option>`;
+                });
             }
-
-            data.forEach(item => {
-                let optionText;
-
-                if (end.entidad === 'unidad' && item.abreviatura) {
-                    optionText = `${item[end.keyNombre]} - ${item[end.keyAbrev]}`;
-                } else if (end.keyAbrev) {
-                    optionText = `${item[end.keyNombre]} (${item[end.keyAbrev] || 's/a'})`;
-                } else {
-                    optionText = item[end.keyNombre];
-                }
-
-                const optionValue = item[end.keyId];
-
-                const option = `<option value="${optionValue}">${optionText}</option>`;
-                selectForm.innerHTML += option;
-
-                if (end.filtro) {
-                    const selectFiltro = document.getElementById(end.filtro);
-                    selectFiltro.innerHTML += `<option value="${optionValue}">${item[end.keyNombre]}</option>`;
-                }
-            });
         } catch (error) {
             console.error(`Error al cargar ${end.entidad}:`, error);
             showCustomAlert('Error de Catálogo', `No se pudo cargar la lista de ${end.entidad}. Verifica el Servlet: ${error.message}`);
@@ -270,6 +297,132 @@ async function cargarCatalogos() {
     }
     showLoading(false);
 }
+
+// --- Nuevas Funciones para Filtros Dinámicos (APLICABLES A FILTRO Y FORMULARIO) ---
+
+async function manejarCambioFiltro(changedSelect) {
+    showLoading(true);
+    const idMarca = document.getElementById('filtroMarca').value || null;
+    const idCategoria = document.getElementById('filtroCategoria').value || null;
+    const idTipoArticulo = document.getElementById('filtroTipo').value || null;
+
+    if (changedSelect.id === 'filtroMarca' || changedSelect.id === 'filtroTipo') {
+        await cargarFiltroDinamico('Categoria', 'filtroCategoria', 'listar_categorias_dinamicas', { idMarca, idTipoArticulo });
+    }
+
+    if (changedSelect.id === 'filtroCategoria' || changedSelect.id === 'filtroTipo') {
+        await cargarFiltroDinamico('Marca', 'filtroMarca', 'listar_marcas_dinamicas', { idCategoria, idTipoArticulo });
+    }
+
+    if (changedSelect.id === 'filtroMarca' || changedSelect.id === 'filtroCategoria') {
+        await cargarFiltroDinamico('Tipo', 'filtroTipo', 'listar_tipos_dinamicos', { idMarca, idCategoria });
+    }
+
+    showLoading(false);
+    aplicarFiltros();
+}
+
+async function manejarCambioFormulario(changedSelect, valorPreseleccionado = null) {
+    showLoading(true);
+    const idMarca = document.getElementById('idMarca').value || null;
+    const idCategoria = document.getElementById('idCategoria').value || null;
+    const idTipoArticulo = document.getElementById('idTipoArticulo').value || null;
+
+    // Si se pasa un valor preseleccionado, significa que se está cargando el formulario para edición
+    const isEdit = valorPreseleccionado !== null;
+
+    if (changedSelect.id === 'idMarca' || changedSelect.id === 'idTipoArticulo' || isEdit) {
+        if (changedSelect.id !== 'idCategoria' || isEdit) { // No actualizar el que dispara el cambio, a menos que sea edición
+            await cargarFiltroDinamico('Categoria', 'idCategoria', 'listar_categorias_dinamicas', { idMarca, idTipoArticulo }, idCategoria);
+        }
+    }
+
+    if (changedSelect.id === 'idCategoria' || changedSelect.id === 'idTipoArticulo' || isEdit) {
+        if (changedSelect.id !== 'idMarca' || isEdit) {
+            await cargarFiltroDinamico('Marca', 'idMarca', 'listar_marcas_dinamicas', { idCategoria, idTipoArticulo }, idMarca);
+        }
+    }
+
+    if (changedSelect.id === 'idMarca' || changedSelect.id === 'idCategoria' || isEdit) {
+        if (changedSelect.id !== 'idTipoArticulo' || isEdit) {
+            await cargarFiltroDinamico('Tipo', 'idTipoArticulo', 'listar_tipos_dinamicos', { idMarca, idCategoria }, idTipoArticulo);
+        }
+    }
+
+    // Si es edición, restaurar los valores originales
+    if (isEdit) {
+        document.getElementById('idMarca').value = idMarca;
+        document.getElementById('idCategoria').value = idCategoria;
+        document.getElementById('idTipoArticulo').value = idTipoArticulo;
+    }
+
+    showLoading(false);
+}
+
+
+async function cargarFiltroDinamico(entidadNombre, selectId, accion, parametros, valorPreseleccionado = null) {
+    const select = document.getElementById(selectId);
+    let idKey;
+    let nombreKey;
+    let optionPrefix = (selectId.includes('filtro')) ? 'Todas' : '-- Seleccione --';
+
+    switch (entidadNombre) {
+        case 'Marca':
+            idKey = 'idMarca';
+            nombreKey = 'nombre';
+            break;
+        case 'Categoria':
+            idKey = 'idCategoria';
+            nombreKey = 'nombre';
+            break;
+        case 'Tipo':
+            idKey = 'id';
+            nombreKey = 'nombre';
+            break;
+        default:
+            return;
+    }
+
+    const currentSelectedId = valorPreseleccionado || select.value;
+    select.innerHTML = `<option value="">${optionPrefix}</option>`;
+    select.disabled = true;
+
+    const queryParams = new URLSearchParams({ accion: accion });
+
+    if (parametros.idMarca) queryParams.append('id_marca', parametros.idMarca);
+    if (parametros.idCategoria) queryParams.append('id_categoria', parametros.idCategoria);
+    if (parametros.idTipoArticulo) queryParams.append('id_tipo_articulo', parametros.idTipoArticulo);
+
+    try {
+        const res = await fetch(`${API_ARTICULOS}?${queryParams.toString()}`);
+
+        if (!res.ok) {
+            console.error(`Error HTTP ${res.status} al cargar filtro ${entidadNombre}`);
+            select.disabled = false;
+            return;
+        }
+
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item[idKey];
+                option.textContent = item[nombreKey];
+                select.appendChild(option);
+            });
+            select.value = currentSelectedId;
+        }
+
+    } catch (error) {
+        console.error(`Error al cargar datos dinámicos para ${entidadNombre}:`, error);
+    } finally {
+        select.disabled = false;
+    }
+}
+
+// --- Fin Nuevas Funciones para Filtros Dinámicos ---
+
 
 async function listarArticulos() {
     showLoading(true);
@@ -721,6 +874,11 @@ function exportarDatos(format) {
 
 document.getElementById('articuloForm').addEventListener('submit', guardarArticulo);
 
+document.getElementById('idMarca').addEventListener('change', () => manejarCambioFormulario(document.getElementById('idMarca')));
+document.getElementById('idCategoria').addEventListener('change', () => manejarCambioFormulario(document.getElementById('idCategoria')));
+document.getElementById('idTipoArticulo').addEventListener('change', () => manejarCambioFormulario(document.getElementById('idTipoArticulo')));
+
+
 window.onload = async () => {
     window.abrirFormulario = abrirFormulario;
     window.cerrarFormulario = cerrarFormulario;
@@ -730,6 +888,7 @@ window.onload = async () => {
     window.listarArticulos = listarArticulos;
     window.renderSugerencias = renderSugerencias;
     window.verLotes = verLotes;
+    window.manejarCambioFiltro = manejarCambioFiltro;
 
     window.abrirModalMarca = abrirModalMarca;
     window.cerrarModalMarca = cerrarModalMarca;

@@ -3,7 +3,6 @@ package sistema.Servlet.Producto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
-import java.util.List;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -40,6 +39,18 @@ public class ProductoServlet extends HttpServlet {
         }
     }
 
+    private Integer parseIdParam(HttpServletRequest request, String paramName) {
+        String param = request.getParameter(paramName);
+        if (param != null && !param.trim().isEmpty() && !param.trim().equals("0")) {
+            try {
+                return Integer.parseInt(param);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -50,7 +61,7 @@ public class ProductoServlet extends HttpServlet {
         String accion = request.getParameter("accion");
         if (accion == null) accion = "listar";
 
-        List<Articulo> resultadosArticulos = null;
+        Object resultados = null;
         String busqueda = request.getParameter("busqueda");
 
         String tipoAccionAuditoria = "PRODUCTO_CONSULTA";
@@ -59,21 +70,48 @@ public class ProductoServlet extends HttpServlet {
         try {
             switch (accion) {
                 case "listar":
-                    resultadosArticulos = articuloDAO.listarArticulos();
+                    resultados = articuloDAO.listarArticulos();
                     descripcionAuditoria = "Consulta realizada: Acceso al listado completo de todos los Artículos del Catálogo.";
                     break;
                 case "buscar_compra":
-                    resultadosArticulos = articuloDAO.buscarArticulosParaCompra(busqueda);
+                    resultados = articuloDAO.buscarArticulosParaCompra(busqueda);
                     descripcionAuditoria = "Búsqueda de Artículos para Compra con filtro: '" + (busqueda != null ? busqueda : "N/A") + "'.";
                     break;
                 case "buscar_venta":
-                    resultadosArticulos = articuloDAO.buscarArticulosParaVenta(busqueda);
+                    resultados = articuloDAO.buscarArticulosParaVenta(busqueda);
                     descripcionAuditoria = "Búsqueda de Artículos para Venta con filtro: '" + (busqueda != null ? busqueda : "N/A") + "'.";
                     break;
                 case "buscar_insumos":
-                    resultadosArticulos = articuloDAO.buscarInsumos(busqueda);
+                    resultados = articuloDAO.buscarInsumos(busqueda);
                     descripcionAuditoria = "Búsqueda de Insumos con filtro: '" + (busqueda != null ? busqueda : "N/A") + "'.";
                     break;
+                case "listar_categorias_dinamicas":
+                    Integer idMarcaCat = parseIdParam(request, "id_marca");
+                    Integer idTipoArticuloCat = parseIdParam(request, "id_tipo_articulo");
+
+                    resultados = articuloDAO.listarCategoriasDinamicas(idMarcaCat, idTipoArticuloCat);
+                    descripcionAuditoria = "Consulta dinámica de Categorías (Marca:" + idMarcaCat + ", Tipo:" + idTipoArticuloCat + ").";
+                    tipoAccionAuditoria = "FILTRO_CATEGORIA_CONSULTA";
+                    break;
+
+                case "listar_marcas_dinamicas":
+                    Integer idCategoriaMar = parseIdParam(request, "id_categoria");
+                    Integer idTipoArticuloMar = parseIdParam(request, "id_tipo_articulo");
+
+                    resultados = articuloDAO.listarMarcasDinamicas(idCategoriaMar, idTipoArticuloMar);
+                    descripcionAuditoria = "Consulta dinámica de Marcas (Categoría:" + idCategoriaMar + ", Tipo:" + idTipoArticuloMar + ").";
+                    tipoAccionAuditoria = "FILTRO_MARCA_CONSULTA";
+                    break;
+
+                case "listar_tipos_dinamicos":
+                    Integer idMarcaTipo = parseIdParam(request, "id_marca");
+                    Integer idCategoriaTipo = parseIdParam(request, "id_categoria");
+
+                    resultados = articuloDAO.listarTiposArticulosDinamicos(idMarcaTipo, idCategoriaTipo);
+                    descripcionAuditoria = "Consulta dinámica de Tipos de Artículo (Marca:" + idMarcaTipo + ", Categoría:" + idCategoriaTipo + ").";
+                    tipoAccionAuditoria = "FILTRO_TIPO_CONSULTA";
+                    break;
+
                 case "ver_lotes":
                     String idArticuloParam = request.getParameter("id_articulo");
                     if (idArticuloParam == null) {
@@ -86,13 +124,11 @@ public class ProductoServlet extends HttpServlet {
                     }
                     int idArticulo = Integer.parseInt(idArticuloParam);
 
-                    List<Lote> lotes = articuloDAO.verLotesPorArticulo(idArticulo);
-
+                    resultados = articuloDAO.verLotesPorArticulo(idArticulo);
                     descripcionAuditoria = "Consulta realizada: Se listan los lotes del Artículo ID: " + idArticulo;
-                    Auditoria.registrar(request, "LOTE_CONSULTA", descripcionAuditoria);
+                    tipoAccionAuditoria = "LOTE_CONSULTA";
+                    break;
 
-                    response.getWriter().write(mapper.writeValueAsString(lotes));
-                    return;
                 default:
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     response.getWriter().write(mapper.writeValueAsString(new Respuesta(false, "Acción no válida.")));
@@ -104,7 +140,7 @@ public class ProductoServlet extends HttpServlet {
 
             Auditoria.registrar(request, tipoAccionAuditoria, descripcionAuditoria);
 
-            response.getWriter().write(mapper.writeValueAsString(resultadosArticulos));
+            response.getWriter().write(mapper.writeValueAsString(resultados));
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(mapper.writeValueAsString(new Respuesta(false, "ID de artículo inválido: " + e.getMessage())));
@@ -112,7 +148,6 @@ public class ProductoServlet extends HttpServlet {
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(mapper.writeValueAsString(new Respuesta(false, "Error al procesar la solicitud: " + e.getMessage())));
-
             Auditoria.registrar(request, "PRODUCTO_CONSULTA_EXCEPTION", "ERROR INESPERADO: Fallo al consultar artículos. Detalle: " + e.getMessage());
         }
     }

@@ -258,4 +258,79 @@ public class ArticuloController implements ArticuloRepository {
         }
         return lotes;
     }
+
+    @Override
+    public List<Categoria> listarCategoriasDinamicas(Integer idMarca, Integer idTipoArticulo) {
+        List<Categoria> categorias = new ArrayList<>();
+        Connection conn = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+        try {
+            conn = Conexion.obtenerConexion();
+            cs = conn.prepareCall("{CALL SP_GetOpcionesCategorias(?, ?)}");
+            cs.setObject(1, idMarca, java.sql.Types.INTEGER);
+            cs.setObject(2, idTipoArticulo, java.sql.Types.INTEGER);
+            rs = cs.executeQuery();
+            while (rs.next()) {
+                categorias.add(new Categoria(rs.getInt("id_categoria"), rs.getString("nombre")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al listar categorías dinámicas: " + e.getMessage());
+        } finally {
+            try { if (rs != null) rs.close(); } catch (SQLException e) { }
+            try { if (cs != null) cs.close(); } catch (SQLException e) { }
+            Conexion.cerrarConexion(conn);
+        }
+        return categorias;
+    }
+
+    @Override
+    public List<Marca> listarMarcasDinamicas(Integer idCategoria, Integer idTipoArticulo) {
+        List<Marca> marcas = new ArrayList<>();
+        Connection conn = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+        try {
+            conn = Conexion.obtenerConexion();
+            cs = conn.prepareCall("{CALL SP_GetOpcionesMarcas(?, ?)}");
+            cs.setObject(1, idCategoria, java.sql.Types.INTEGER);
+            cs.setObject(2, idTipoArticulo, java.sql.Types.INTEGER);
+            rs = cs.executeQuery();
+            while (rs.next()) {
+                marcas.add(new Marca(rs.getInt("id_marca"), rs.getString("nombre")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al listar marcas dinámicas: " + e.getMessage());
+        } finally {
+            try { if (rs != null) rs.close(); } catch (SQLException e) { }
+            try { if (cs != null) cs.close(); } catch (SQLException e) { }
+            Conexion.cerrarConexion(conn);
+        }
+        return marcas;
+    }
+
+    @Override
+    public List<TipoArticulo> listarTiposArticulosDinamicos(Integer idMarca, Integer idCategoria) {
+        List<TipoArticulo> tipos = new ArrayList<>();
+        Connection conn = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+        try {
+            conn = Conexion.obtenerConexion();
+            cs = conn.prepareCall("{CALL SP_GetOpcionesTipoArticulo(?, ?)}");
+            cs.setObject(1, idMarca, java.sql.Types.INTEGER);
+            cs.setObject(2, idCategoria, java.sql.Types.INTEGER);
+            rs = cs.executeQuery();
+            while (rs.next()) {
+                tipos.add(new TipoArticulo(rs.getInt("id"), rs.getString("nombre")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al listar tipos de artículo dinámicos: " + e.getMessage());
+        } finally {
+            try { if (rs != null) rs.close(); } catch (SQLException e) { }
+            try { if (cs != null) cs.close(); } catch (SQLException e) { }
+            Conexion.cerrarConexion(conn);
+        }
+        return tipos;
+    }
 }

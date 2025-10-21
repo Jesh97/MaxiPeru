@@ -50,6 +50,30 @@ BEGIN
     LEFT JOIN tipo_articulo t ON a.id_tipo_articulo = t.id;
 END$$
 
+DROP PROCEDURE IF EXISTS SP_GetOpcionesCategorias$$
+CREATE PROCEDURE SP_GetOpcionesCategorias(IN p_id_marca INT, IN p_id_tipo_articulo INT)
+BEGIN
+    SELECT DISTINCT c.id_categoria, c.nombre FROM categoria c JOIN articulo a ON c.id_categoria = a.id_categoria
+    WHERE (a.id_marca = p_id_marca OR p_id_marca IS NULL) AND (a.id_tipo_articulo = p_id_tipo_articulo OR p_id_tipo_articulo IS NULL)
+    ORDER BY c.nombre;
+END$$
+
+DROP PROCEDURE IF EXISTS SP_GetOpcionesMarcas$$
+CREATE PROCEDURE SP_GetOpcionesMarcas(IN p_id_categoria INT, IN p_id_tipo_articulo INT)
+BEGIN
+    SELECT DISTINCT m.id_marca, m.nombre FROM marca m JOIN articulo a ON m.id_marca = a.id_marca
+    WHERE (a.id_categoria = p_id_categoria OR p_id_categoria IS NULL) AND (a.id_tipo_articulo = p_id_tipo_articulo OR p_id_tipo_articulo IS NULL)
+    ORDER BY m.nombre;
+END$$
+
+DROP PROCEDURE IF EXISTS SP_GetOpcionesTipoArticulo$$
+CREATE PROCEDURE SP_GetOpcionesTipoArticulo(IN p_id_marca INT, IN p_id_categoria INT)
+BEGIN
+    SELECT DISTINCT ta.id, ta.nombre FROM tipo_articulo ta JOIN articulo a ON ta.id = a.id_tipo_articulo
+    WHERE (a.id_marca = p_id_marca OR p_id_marca IS NULL) AND (a.id_categoria = p_id_categoria OR p_id_categoria IS NULL)
+    ORDER BY ta.nombre;
+END$$
+
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_para_compra`$$
 CREATE PROCEDURE `sp_buscar_articulos_para_compra`(IN p_busqueda VARCHAR(100))
 BEGIN

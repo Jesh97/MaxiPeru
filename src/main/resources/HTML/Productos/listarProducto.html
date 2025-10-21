@@ -34,21 +34,21 @@
     <div class="filters">
         <div class="filter-group">
             <label>Marca:
-                <select id="filtroMarca" onchange="aplicarFiltros()"><option value="">Todas</option></select>
+                <select id="filtroMarca" onchange="manejarCambioFiltro(this)"><option value="">Todas</option></select>
             </label>
             <button class="btn-add-catalog" title="Agregar Nueva Marca" onclick="abrirModalMarca()"><i class="fas fa-plus"></i></button>
         </div>
 
         <div class="filter-group">
             <label>Categoría:
-                <select id="filtroCategoria" onchange="aplicarFiltros()"><option value="">Todas</option></select>
+                <select id="filtroCategoria" onchange="manejarCambioFiltro(this)"><option value="">Todas</option></select>
             </label>
             <button class="btn-add-catalog" title="Agregar Nueva Categoría" onclick="abrirModalCategoria()"><i class="fas fa-plus"></i></button>
         </div>
 
         <div class="filter-group">
             <label>Tipo:
-                <select id="filtroTipo" onchange="aplicarFiltros()"><option value="">Todos</option></select>
+                <select id="filtroTipo" onchange="manejarCambioFiltro(this)"><option value="">Todos</option></select>
             </label>
             <button class="btn-add-catalog" title="Agregar Nuevo Tipo de Producto" onclick="abrirModalTipo()"><i class="fas fa-plus"></i></button>
         </div>
