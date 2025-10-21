@@ -209,26 +209,16 @@ CREATE PROCEDURE `sp_registrar_compra`(
     IN p_fecha_emision DATE, IN p_fecha_vencimiento DATE, IN p_id_tipo_pago INT, IN p_id_forma_pago INT,
     IN p_id_moneda INT, IN p_tipo_cambio DECIMAL(10,4), IN p_incluye_igv BOOLEAN, IN p_hay_bonificacion BOOLEAN,
     IN p_hay_traslado BOOLEAN, IN p_observacion TEXT, IN p_subtotal DECIMAL(12,2), IN p_igv DECIMAL(12,2),
-    IN p_total DECIMAL(12,2), IN p_total_peso DECIMAL(12,3), IN p_coste_transporte DECIMAL(12,2),
-    OUT p_id_compra INT
+    IN p_total DECIMAL(12,2), IN p_total_peso DECIMAL(12,3), IN p_coste_transporte DECIMAL(12,2)
+    -- Se elimina el parámetro OUT p_id_compra
 )
 BEGIN
+    -- 1. Insertar la compra
     INSERT INTO compra(id_proveedor, id_tipo_comprobante, serie, correlativo, fecha_emision, fecha_vencimiento, id_tipo_pago, id_forma_pago, id_moneda, tipo_cambio, incluye_igv, hay_bonificacion, hay_traslado, subtotal, igv, total, total_peso, coste_transporte, observacion)
     VALUES (p_id_proveedor, p_id_tipo_comprobante, p_serie, p_correlativo, p_fecha_emision, p_fecha_vencimiento, p_id_tipo_pago, p_id_forma_pago, p_id_moneda, p_tipo_cambio, p_incluye_igv, p_hay_bonificacion, p_hay_traslado, p_subtotal, p_igv, p_total, p_total_peso, p_coste_transporte, p_observacion);
-    SET p_id_compra = LAST_INSERT_ID();
-END$$
 
-DROP PROCEDURE IF EXISTS `sp_agregar_detalle_compra`$$
-CREATE PROCEDURE `sp_agregar_detalle_compra`(
-    IN p_id_compra INT, IN p_id_articulo INT, IN p_id_unidad INT, IN p_cantidad DECIMAL(12,2), IN p_precio_unitario DECIMAL(12,2),
-    IN p_bonificacion DECIMAL(12,2), IN p_coste_unitario_transporte DECIMAL(12,2), IN p_coste_total_transporte DECIMAL(12,2),
-    IN p_precio_con_descuento DECIMAL(12,2), IN p_igv_insumo DECIMAL(12,2), IN p_total DECIMAL(12,2), IN p_peso_total DECIMAL(12,3),
-    OUT p_id_detalle INT
-)
-BEGIN
-    INSERT INTO detalle_compra(id_compra, id_articulo, id_unidad, cantidad, precio_unitario, bonificacion, coste_unitario_transporte, coste_total_transporte, precio_con_descuento, igv_insumo, total, peso_total)
-    VALUES (p_id_compra, p_id_articulo, p_id_unidad, p_cantidad, p_precio_unitario, p_bonificacion, p_coste_unitario_transporte, p_coste_total_transporte, p_precio_con_descuento, p_igv_insumo, p_total, p_peso_total);
-    SET p_id_detalle = LAST_INSERT_ID();
+    -- 2. Devolver el ID generado en un ResultSet que el Controller pueda leer
+    SELECT LAST_INSERT_ID();
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_regla_compra`$$
@@ -585,12 +575,17 @@ CREATE PROCEDURE `sp_listar_ventas_final`()
 BEGIN
     SELECT
         v.id_venta, v.serie, v.correlativo, v.fecha_emision, v.fecha_vencimiento, v.estado_venta, v.tipo_descuento AS venta_tipo_descuento, v.aplica_igv, v.observaciones AS venta_observaciones, v.subtotal AS venta_subtotal, v.igv AS venta_igv, v.descuento_total AS venta_descuento_total, v.total_final, v.total_peso AS venta_total_peso, v.hay_traslado,
-        tc.nombre AS tipo_comprobante, m.nombre AS moneda_nombre, m.simbolo AS moneda_simbolo, tp.nombre AS tipo_pago_nombre,
+        tc.nombre AS tipo_comprobante,
+        m.nombre AS moneda_nombre, m.simbolo AS moneda_simbolo,
+        tp.nombre AS tipo_pago_nombre,
         c.id AS id_cliente, c.razonSocial AS cliente_razon_social, c.n_documento AS cliente_documento, c.direccion AS cliente_direccion, c.telefono AS cliente_telefono, c.correo AS cliente_correo,
-        dv.id_detalle_venta, dv.descripcion AS detalle_descripcion, dv.cantidad AS detalle_cantidad, dv.peso_unitario AS detalle_peso_unitario, dv.precio_unitario AS detalle_precio_unitario, dv.descuento_monto AS detalle_descuento_monto, dv.subtotal AS detalle_subtotal, dv.total AS detalle_total,
-        a.id AS id_articulo, a.codigo AS articulo_codigo, u.nombre AS unidad_medida_nombre,
+        dv.id_detalle AS id_detalle_venta, dv.descripcion AS detalle_descripcion, dv.cantidad AS detalle_cantidad, dv.peso_unitario AS detalle_peso_unitario, dv.precio_unitario AS detalle_precio_unitario, dv.descuento_monto AS detalle_descuento_monto, dv.subtotal AS detalle_subtotal, dv.total AS detalle_total,
+        a.id AS id_articulo, a.codigo AS articulo_codigo,
+        u.nombre AS unidad_medida_nombre,
         d.id_descuento, d.motivo AS descuento_motivo, d.tipo_aplicacion AS descuento_aplicacion, d.tipo_valor AS descuento_tipo_valor, d.valor AS descuento_valor, d.tasa_igv AS descuento_tasa_igv,
-        lv.id_lote_venta, il.id_lote, il.codigo_lote, il.fecha_vencimiento AS lote_fecha_vencimiento, lv.cantidad AS lote_cantidad_consumida,
+        lv.id_lote_venta,
+        il.id_lote, il.codigo_lote, il.fecha_vencimiento AS lote_fecha_vencimiento,
+        lv.cantidad AS lote_cantidad_consumida,
         gt.id_guia, gt.fecha_traslado, gt.modalidad_transporte, gt.ruc_empresa AS transporte_ruc_empresa, gt.razon_social_empresa AS transporte_razon_social, gt.dni_conductor AS transporte_dni_conductor, gt.nombre_conductor AS transporte_nombre_conductor, gt.punto_partida, gt.punto_llegada,
         cc.nombre_cliente_confirma, cc.dni_cliente_confirma, cc.tipo_entrega
     FROM venta v
@@ -601,13 +596,13 @@ BEGIN
     LEFT JOIN detalle_venta dv ON v.id_venta = dv.id_venta
     LEFT JOIN articulo a ON dv.id_articulo = a.id
     LEFT JOIN unidad_medida u ON dv.id_unidad = u.id_unidad
-    LEFT JOIN descuento d ON v.id_venta = d.id_venta OR dv.id_detalle_venta = d.id_detalle_venta
-    LEFT JOIN lote_venta lv ON dv.id_detalle_venta = lv.id_detalle_venta
+    LEFT JOIN descuento d ON v.id_venta = d.id_venta OR dv.id_detalle = d.id_detalle_venta
+    LEFT JOIN lote_venta lv ON dv.id_detalle = lv.id_detalle_venta
     LEFT JOIN inventario_lote il ON lv.id_lote = il.id_lote
     LEFT JOIN guia_transporte gt ON v.id_venta = gt.id_venta AND gt.tipo_documento_ref = 'venta'
     LEFT JOIN conformidad_cliente cc ON v.id_venta = cc.id_venta
     ORDER BY
-        v.id_venta DESC, dv.id_detalle_venta ASC;
+        v.id_venta DESC, dv.id_detalle ASC;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_registrar_gasto`$$
