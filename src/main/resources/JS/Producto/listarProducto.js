@@ -186,10 +186,8 @@ async function abrirFormulario(id = 0) {
     document.getElementById('idProducto').value = 0;
     document.getElementById('articuloModalHeader').querySelector('h2').textContent = 'Nuevo Artículo';
 
-    // Restablecer Selects del Formulario a sus valores predeterminados (todos los catálogos)
     await cargarFormularioSelects();
 
-    // Almacenar los valores originales del artículo, si existe
     let idMarcaOriginal = '';
     let idCategoriaOriginal = '';
     let idTipoArticuloOriginal = '';
@@ -217,7 +215,6 @@ async function abrirFormulario(id = 0) {
         }
     }
 
-    // Configurar los selects en cascada para el formulario, manteniendo la selección original si existe
     await manejarCambioFormulario(document.getElementById('idMarca'), idMarcaOriginal);
     await manejarCambioFormulario(document.getElementById('idCategoria'), idCategoriaOriginal);
     await manejarCambioFormulario(document.getElementById('idTipoArticulo'), idTipoArticuloOriginal);
@@ -235,7 +232,7 @@ async function cargarFormularioSelects() {
 
     for (const end of selects) {
         const selectForm = document.getElementById(end.id);
-        if (!catalogos[end.entidad]) continue; // Asegurarse de que el catálogo base fue cargado
+        if (!catalogos[end.entidad]) continue;
 
         selectForm.innerHTML = `<option value="">-- Seleccione --</option>`;
 
@@ -278,11 +275,9 @@ async function cargarCatalogos() {
 
             catalogos[end.entidad] = data;
 
-            // Llenar selects de formulario (serán sobreescritos al abrir el modal, pero se cargan los datos base)
             const selectForm = document.getElementById(end.id);
             selectForm.innerHTML = `<option value="">-- Seleccione --</option>`;
 
-            // Llenar selects de filtro (estos no son dinámicos en la carga inicial)
             if (end.filtro) {
                 const selectFiltro = document.getElementById(end.filtro);
                 selectFiltro.innerHTML = '<option value="">Todas</option>';
@@ -298,7 +293,6 @@ async function cargarCatalogos() {
     showLoading(false);
 }
 
-// --- Nuevas Funciones para Filtros Dinámicos (APLICABLES A FILTRO Y FORMULARIO) ---
 
 async function manejarCambioFiltro(changedSelect) {
     showLoading(true);
@@ -328,11 +322,10 @@ async function manejarCambioFormulario(changedSelect, valorPreseleccionado = nul
     const idCategoria = document.getElementById('idCategoria').value || null;
     const idTipoArticulo = document.getElementById('idTipoArticulo').value || null;
 
-    // Si se pasa un valor preseleccionado, significa que se está cargando el formulario para edición
     const isEdit = valorPreseleccionado !== null;
 
     if (changedSelect.id === 'idMarca' || changedSelect.id === 'idTipoArticulo' || isEdit) {
-        if (changedSelect.id !== 'idCategoria' || isEdit) { // No actualizar el que dispara el cambio, a menos que sea edición
+        if (changedSelect.id !== 'idCategoria' || isEdit) {
             await cargarFiltroDinamico('Categoria', 'idCategoria', 'listar_categorias_dinamicas', { idMarca, idTipoArticulo }, idCategoria);
         }
     }
@@ -349,7 +342,6 @@ async function manejarCambioFormulario(changedSelect, valorPreseleccionado = nul
         }
     }
 
-    // Si es edición, restaurar los valores originales
     if (isEdit) {
         document.getElementById('idMarca').value = idMarca;
         document.getElementById('idCategoria').value = idCategoria;
@@ -403,6 +395,7 @@ async function cargarFiltroDinamico(entidadNombre, selectId, accion, parametros,
         }
 
         const data = await res.json();
+        let validIds = [];
 
         if (Array.isArray(data)) {
             data.forEach(item => {
@@ -410,8 +403,17 @@ async function cargarFiltroDinamico(entidadNombre, selectId, accion, parametros,
                 option.value = item[idKey];
                 option.textContent = item[nombreKey];
                 select.appendChild(option);
+                validIds.push(String(item[idKey]));
             });
-            select.value = currentSelectedId;
+
+            // Corrección: Validar si el valor seleccionado previamente sigue siendo una opción válida
+            const isValidSelection = validIds.includes(String(currentSelectedId));
+
+            if (isValidSelection) {
+                select.value = currentSelectedId;
+            } else {
+                select.value = ""; // Reinicia el valor si ya no es una opción
+            }
         }
 
     } catch (error) {
@@ -420,8 +422,6 @@ async function cargarFiltroDinamico(entidadNombre, selectId, accion, parametros,
         select.disabled = false;
     }
 }
-
-// --- Fin Nuevas Funciones para Filtros Dinámicos ---
 
 
 async function listarArticulos() {
