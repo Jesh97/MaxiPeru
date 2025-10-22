@@ -234,14 +234,10 @@ CREATE PROCEDURE `sp_registrar_compra`(
     IN p_id_moneda INT, IN p_tipo_cambio DECIMAL(10,4), IN p_incluye_igv BOOLEAN, IN p_hay_bonificacion BOOLEAN,
     IN p_hay_traslado BOOLEAN, IN p_observacion TEXT, IN p_subtotal DECIMAL(12,2), IN p_igv DECIMAL(12,2),
     IN p_total DECIMAL(12,2), IN p_total_peso DECIMAL(12,3), IN p_coste_transporte DECIMAL(12,2)
-    -- Se elimina el parámetro OUT p_id_compra
 )
 BEGIN
-    -- 1. Insertar la compra
     INSERT INTO compra(id_proveedor, id_tipo_comprobante, serie, correlativo, fecha_emision, fecha_vencimiento, id_tipo_pago, id_forma_pago, id_moneda, tipo_cambio, incluye_igv, hay_bonificacion, hay_traslado, subtotal, igv, total, total_peso, coste_transporte, observacion)
     VALUES (p_id_proveedor, p_id_tipo_comprobante, p_serie, p_correlativo, p_fecha_emision, p_fecha_vencimiento, p_id_tipo_pago, p_id_forma_pago, p_id_moneda, p_tipo_cambio, p_incluye_igv, p_hay_bonificacion, p_hay_traslado, p_subtotal, p_igv, p_total, p_total_peso, p_coste_transporte, p_observacion);
-
-    -- 2. Devolver el ID generado en un ResultSet que el Controller pueda leer
     SELECT LAST_INSERT_ID();
 END$$
 

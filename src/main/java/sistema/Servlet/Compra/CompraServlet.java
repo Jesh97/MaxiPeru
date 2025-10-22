@@ -40,10 +40,6 @@ public class CompraServlet extends HttpServlet {
 
         if (busqueda != null && !busqueda.trim().isEmpty()) {
             List<Articulo> lista = articuloDAO.buscarArticulosParaCompra(busqueda);
-
-            String descripcion = "Búsqueda de artículos para compra: '" + busqueda + "'. Resultados: " + lista.size();
-            Auditoria.registrar(request, "LECTURA", descripcion);
-
             out.print(gson.toJson(lista));
         } else if (request.getParameter("listarCompras") != null) {
             try {

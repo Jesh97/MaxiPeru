@@ -28,7 +28,7 @@ public class App {
     public static void main(String[] args) throws Exception {
         String path = "src\\main\\resources\\";
 
-        JettyUTP webserver = new JettyUTP(8082, path);
+        JettyUTP webserver = new JettyUTP(8080, path);
         webserver.addServlet(LoginServlet.class,"/login");
         webserver.addServlet(RegistrarUsuario.class,"/registrarUsuario");
         webserver.addServlet(verificarSesion.class,"/verificarSesion");
@@ -50,7 +50,7 @@ public class App {
         webserver.addServlet(VentaServlet.class,"/VentaServlet");
         webserver.addServlet(ListarVentas.class,"/ListarVentas");
 
-        URL myURL = new URL("http://localhost:8082");
+        URL myURL = new URL("http://localhost:8080");
         System.out.println("*********************************************************");
         System.out.println("CLICK AQUI PARA ABRIR LA APLICACION:" + myURL);
         System.out.println("*********************************************************");
