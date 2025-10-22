@@ -189,11 +189,18 @@
                     </div>
                 </div>
 
-                <div id="contenedorBtnGuia" style="display:flex;">
-                    <button id="btnGuia" type="button" class="btn btn-outline-primary me-2">Guía de Transporte</button>
-                    <button type="button" id="btnReferencia" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Agregar datos de referencia">
-                        <i class="bi bi-file-earmark-text"></i> Documento de Referencia
-                    </button>
+                <div class="d-flex justify-content-start gap-3 mt-3">
+                    <div id="contenedorBtnReferencia">
+                        <button type="button" id="btnReferencia" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modalDocumentoReferencia">
+                            <i class="bi bi-file-earmark-text"></i> Documento de Referencia
+                        </button>
+                    </div>
+
+                    <div id="contenedorBtnGuia" style="display: none;">
+                        <button type="button" id="btnGuia" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalGuiaTransporte">
+                            <i class="bi bi-truck"></i> Guía de Transporte
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>

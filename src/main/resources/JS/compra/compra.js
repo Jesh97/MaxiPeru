@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const trasladoSi = $('#trasladoSi');
     const trasladoNo = $('#trasladoNo');
     const contenedorBtnGuia = $('#contenedorBtnGuia');
+    const contenedorBtnReferencia = $('#contenedorBtnReferencia');
     const btnGuia = $('#btnGuia');
     const fechaEmisionInput = $('#fechaEmision');
     const tipoPagoSelect = $('#tipoPago');
@@ -845,6 +846,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function actualizarVisibilidadTraslado() {
         const hayTraslado = trasladoSi.checked;
+
+        if (contenedorBtnReferencia) {
+            contenedorBtnReferencia.style.display = 'flex';
+        }
+
         const guiaTabItem = $('#guia-transporte-tab').closest('.nav-item');
         const guiaContent = $('#guia-transporte-pane');
 
