@@ -557,11 +557,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleProductTypeChange() {
         btnContainer.innerHTML = '';
         const wrapper = document.createElement('div');
-        wrapper.className = 'd-flex align-items-center position-relative';
+        wrapper.className = 'd-flex align-items-center position-relative w-100';
         wrapper.innerHTML = `
-                <input type="text" id="busquedaProductoInput" class="form-control form-control-sm me-2" placeholder="Buscar producto por código o descripción">
-                <div id="sugerenciasProducto" class="list-group d-none" role="listbox" style="position: absolute; z-index: 1050; width: 300px; right: 0; top: 100%; max-height: 250px; overflow-y: auto;"></div>
-                <button type="button" id="btnAgregarProducto" class="btn btn-primary btn-sm">
+                <input type="text" id="busquedaProductoInput" class="form-control me-3"
+                       placeholder="Buscar producto por código o descripción">
+
+                <div id="sugerenciasProducto" class="list-group d-none" role="listbox"
+                     style="position: absolute; z-index: 1050; width: 100%; top: 100%; max-height: 280px; overflow-y: auto; margin-top: 5px; box-shadow: var(--shadow-hover);"></div>
+
+                <button type="button" id="btnAgregarProducto" class="btn btn-primary text-nowrap">
                     <i class="bi bi-plus-lg"></i> Agregar Producto
                 </button>
             `;
@@ -572,12 +576,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         busquedaProductoInput.addEventListener('input', () => {
             const q = busquedaProductoInput.value.trim();
-            if (q) buscarProducto(q);
+            const sugerencias = $('#sugerenciasProducto', wrapper);
+            if (q) {
+                sugerencias.classList.remove('d-none');
+                buscarProducto(q);
+            } else {
+                 sugerencias.classList.add('d-none');
+            }
         });
 
         btnAgregarProducto.onclick = () => {
             crearFilaProducto();
-            const sugerencias = $('#sugerenciasProducto');
+            const sugerencias = $('#sugerenciasProducto', wrapper);
             if (sugerencias) sugerencias.classList.add('d-none');
         };
 
