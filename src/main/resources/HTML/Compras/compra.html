@@ -526,31 +526,31 @@
 
 <div class="modal fade" id="modalCajas" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content modal-cajas-content">
+            <div class="modal-header modal-cajas-header">
                 <h5 class="modal-title"><i class="bi bi-box-seam"></i> Asignar Productos a Cajas</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Productos disponibles</h6>
-                        <div class="list-group" id="productosDisponibles">
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6>Cajas</h6>
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="btnAgregarNuevaCaja"><i class="bi bi-plus"></i> Agregar Caja</button>
-                        </div>
-                        <div id="contenedorCajasModal">
-                        </div>
+
+                <div class="mb-4 productos-disponibles-container">
+                    <h6><i class="bi bi-check2-square text-success"></i> Productos disponibles para asignar</h6>
+                    <div class="list-group" id="productosDisponibles">
                     </div>
                 </div>
+
+                <hr class="my-4"> <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6><i class="bi bi-boxes text-primary"></i> Cajas existentes</h6>
+                    <button type="button" class="btn btn-sm btn-primary" id="btnAgregarNuevaCaja"><i class="bi bi-plus"></i> Agregar Nueva Caja</button>
+                </div>
+                <div id="contenedorCajasModal">
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-success" id="btnGuardarDistribucion" data-bs-dismiss="modal">Guardar Distribución</button>
+            </div>
+            <div class="modal-footer modal-cajas-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnGuardarDistribucion">Guardar Distribución</button>
             </div>
         </div>
     </div>
