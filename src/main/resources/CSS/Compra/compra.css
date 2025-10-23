@@ -318,10 +318,10 @@ main.container {
 .table tbody input, .table tbody .form-select {
     border: 1px solid var(--muted);
     border-radius: 8px;
-    padding: 6px 8px; /* Reducido para campos pequeños */
-    font-size: 0.85rem; /* Reducido para campos pequeños */
-    max-width: 120px; /* Ancho máximo para campos de Cantidad/Precio */
-    text-align: center; /* Centrar el texto para valores numéricos */
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    max-width: 120px;
+    text-align: center;
     background: var(--card-bg);
     transition: all 0.2s ease;
     font-weight: 500;
@@ -493,23 +493,18 @@ main.container {
     border-color: var(--danger-dark);
 }
 
-#contenedorBtnGuia {
-    margin-top: 25px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    width: 100%;
-}
-
+/* * RESTAURACIÓN DE BOTONES (De vuelta al ancho fijo de 350px)
+ * Se asegura que el botón de "Documento de Referencia" quepa en una línea y que el botón de
+ * "Guía de Transporte" tenga el mismo ancho.
+*/
 #btnGuia, #btnReferencia {
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    min-width: 150px;
-    padding: 10px 20px;
-    width: 250px;
+    padding: 6px 20px;
+    width: 350px; /* Ancho fijo para igualar botones */
     text-align: center;
 }
+
 #btnGuia {
     background: linear-gradient(45deg, var(--primary), var(--info-dark));
     box-shadow: 0 6px 18px rgba(29, 42, 55, 0.5);
@@ -531,8 +526,7 @@ main.container {
 }
 
 @media (max-width: 768px) {
-    #contenedorBtnGuia, #contenedorBtnReferencia {
-    }
+    /* Eliminada la media query incorrecta */
 
     #btnGuia, #btnReferencia {
         width: 100%;
@@ -599,10 +593,10 @@ main.container {
 .totals .line {
     display: flex;
     justify-content: space-between;
-    padding: 12px 0;
+    padding: 6px 0; /* AJUSTE: Reducción de padding vertical para compactar */
     font-weight: 700;
-    font-size: 1rem;
-    border-bottom: 2px solid var(--muted-light);
+    font-size: 0.95rem; /* AJUSTE: Reducción de tamaño de fuente */
+    border-bottom: 1px solid var(--muted-light); /* AJUSTE: Reducción de grosor de borde */
     color: var(--muted-dark);
     user-select: none;
 }
@@ -617,7 +611,7 @@ main.container {
 }
 
 #totalAPagar {
-    font-size: 1.6rem;
+    font-size: 1.4rem; /* AJUSTE: Reducción de tamaño de fuente */
     color: var(--accent-dark);
     font-weight: 900;
     text-shadow: 0 0 10px rgba(244, 81, 30, 0.6);
@@ -1072,7 +1066,7 @@ label {
 #modalDescuentoItem .form-control:focus,
 #modalDescuentoItem .form-select:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 5px rgba(255, 112, 67, 0.3), inset 0 1px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 0 5px rgba(255, 112, 67, 0.3);
     background-color: white;
 }
 
