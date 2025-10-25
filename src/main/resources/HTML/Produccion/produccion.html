@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Producción - MaxiPerú | DEMO CONVERSIÓN KG/L</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #1f3a93;
+            --primary-light: #3f5aa0;
+            --secondary-text: #5c677d;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #c0392b;
+            --info: #0d83a1;
+            --bg-page: #f9fbfd;
+            --bg-card: #ffffff;
+            --text-dark: #2c3e50;
+            --border-color: #e6ecf1;
+            --shadow-elevation: 0 6px 20px rgba(31, 58, 147, 0.05);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            line-height: 1.5;
+            font-size: 0.9em;
+        }
+
+        .header {
+            background-color: var(--primary-dark);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-size: 1.8em;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto 40px auto;
+            padding: 0 20px;
+        }
+
+        .card-panel {
+            background-color: var(--bg-card);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-elevation);
+            transition: all 0.4s ease-in-out;
+        }
+
+        h2 {
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            font-weight: 600;
+            font-size: 1.6em;
+        }
+
+        h3 {
+            color: var(--secondary-text);
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            font-size: 1.2em;
+        }
+
+        .tab-menu {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 12px 25px;
+            cursor: pointer;
+            border: none;
+            background: #eef2f7;
+            color: var(--secondary-text);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.9em;
+            flex-grow: 1;
+            min-width: 200px;
+            text-align: left;
+            border-left: 4px solid #d8e1e8;
+        }
+
+        .tab-button:hover {
+            background-color: #e0e5ea;
+            border-left-color: var(--primary-light);
+        }
+
+        .tab-button.active {
+            background: var(--primary-dark);
+            color: white;
+            box-shadow: 0 4px 10px rgba(31, 58, 147, 0.3);
+            border-left-color: var(--success);
+            transform: translateY(-1px);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1 1 280px;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9em;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: #fcfcfc;
+            font-size: 0.9em;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(31, 58, 147, 0.1);
+            background-color: white;
+            outline: none;
+        }
+
+        .input-readonly {
+            background-color: #eef2f7 !important;
+            color: var(--secondary-text);
+            font-weight: 500;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+            table-layout: fixed;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f0f3f6;
+            font-size: 0.85em;
+            vertical-align: top;
+            box-sizing: border-box;
+        }
+
+        th {
+            background-color: #f5f7fa;
+            font-weight: 600;
+            color: var(--primary-dark);
+            text-transform: uppercase;
+            font-size: 0.8em;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        #insumo_table thead th:nth-child(1) { width: 50%; text-align: left; padding-left: 15px; }
+        #insumo_table thead th:nth-child(2) { width: 20%; text-align: center; }
+        #insumo_table thead th:nth-child(3) { width: 10%; text-align: center; }
+        #insumo_table thead th:nth-child(4) { width: 20%; text-align: center; padding-right: 15px; }
+
+        #materiales_list tr td:nth-child(1) { text-align: left; padding-left: 15px; }
+        #materiales_list tr td:nth-child(2) { text-align: center; }
+        #materiales_list tr td:nth-child(3) { text-align: center; }
+        #materiales_list tr td:nth-child(4) { text-align: center; padding-right: 15px; }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background-color: #f0f7ff;
+        }
+
+        #materiales_list td .input-field {
+            display: inline-block;
+            padding: 10px 12px;
+            font-size: 1.0em;
+            min-height: 40px;
+            border: 1px solid #c8d1da;
+            border-radius: 6px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        #materiales_list td:nth-child(1) select {
+            width: 100%;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        #materiales_list td:nth-child(2) input[type="number"] {
+            width: 150px;
+            max-width: 100%;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        #materiales_list td:nth-child(3) select {
+            width: 80px;
+            max-width: 100%;
+            font-weight: 500;
+        }
+
+        .btn-delete {
+            background-color: var(--danger);
+            padding: 10px 12px;
+            min-height: 40px;
+            font-size: 0.9em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(192, 57, 43, 0.3);
+            text-transform: none;
+            font-weight: 500;
+        }
+
+        .table-empty-message {
+            text-align: center;
+            padding: 20px;
+            color: var(--secondary-text);
+            font-style: italic;
+            background-color: #ffffff;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-size: 0.9em;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-add {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-finish {
+            background-color: var(--success);
+        }
+
+        .btn-warn {
+            background-color: var(--warning);
+            color: var(--text-dark);
+        }
+
+        .btn-delete:active {
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            transform: translateY(1px);
+        }
+
+        .status-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: 500;
+            border-left: 5px solid;
+        }
+
+        .status-auto {
+            border-color: var(--success);
+            background-color: #e6f7ef;
+            color: var(--success);
+        }
+
+        .status-danger {
+            border-color: var(--danger);
+            background-color: #fdeeee;
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .status-info-calc {
+            background-color: #f0f6ff;
+            border-color: var(--info);
+            color: var(--info);
+        }
+
+        .param-label {
+            font-size: 0.8em;
+            color: var(--secondary-text);
+            display: block;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .param-group-readonly {
+            background-color: #f0f6ff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--info);
+            margin-bottom: 25px;
+        }
+
+        .param-group-readonly label {
+            color: var(--primary-dark);
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .divider {
+            border-top: 1px dashed var(--border-color);
+            margin: 30px 0;
+        }
+
+        .density-input {
+            background-color: #fff8e1;
+            border-color: var(--warning);
+        }
+
+        @media (max-width: 992px) {
+            .card-panel {
+                padding: 20px;
+            }
+            .header h1 {
+                font-size: 1.5em;
+            }
+            .tab-button {
+                min-width: 100%;
+                text-align: center;
+            }
+            .form-row {
+                gap: 15px;
+            }
+            body {
+                font-size: 0.85em;
+            }
+
+            #insumo_table thead th:nth-child(1), #materiales_list tr td:nth-child(1) { width: 40%; }
+            #insumo_table thead th:nth-child(2), #materiales_list tr td:nth-child(2) { width: 25%; }
+            #insumo_table thead th:nth-child(3), #materiales_list tr td:nth-child(3) { width: 15%; }
+            #insumo_table thead th:nth-child(4), #materiales_list tr td:nth-child(4) { width: 20%; }
+
+            #materiales_list td .input-field, .btn-delete {
+                padding: 8px 6px;
+                min-height: 35px;
+                font-size: 0.9em;
+            }
+            #materiales_list td:nth-child(2) input[type="number"] { width: 100%; max-width: 100px; }
+            #materiales_list td:nth-child(3) select { width: 100%; max-width: 60px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>SISTEMA DE GESTIÓN DE PRODUCCIÓN (DEMO CONVERSIÓN L/KG)</h1>
+</div>
+
+<div class="container">
+    <div class="card-panel">
+        <div class="tab-menu">
+            <button class="tab-button active" onclick="showTab('formulas')">1. Fórmulas (Receta Base)</button>
+            <button class="tab-button" onclick="showTab('ordenes')">2. Órdenes (Crear y Consumir MP)</button>
+            <button class="tab-button" onclick="showTab('envasado')">3. Definición de Envases y SKU Final</button>
+            <button class="tab-button" onclick="showTab('lote')">4. Asignación de Lote Final y Cierre</button>
+        </div>
+
+        <div id="formulas" class="tab-content" style="display: block;">
+            <h2>1. Gestión de Fórmulas / Recetas Base</h2>
+            <p style="font-weight: 500; color: var(--danger);">🛑 **El producto base siempre debe definirse con su DENSIDAD.**</p>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="producto_formula">Producto Base:</label>
+                    <select id="producto_formula" class="input-field">
+                        <option value="" selected>Seleccione Producto Base</option>
+                        <option value="P_A">Producto A</option>
+                        <option value="P_B">Producto B</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="densidad_litro">Densidad:</label>
+                    <input type="number" id="densidad_litro" value="" step="0.01" class="input-field density-input" placeholder="Ej: 1.05">
+                    <p class="param-label">Valor que relaciona Kilogramos y Litros.</p>
+                </div>
+                <div class="form-group">
+                    <label for="cantidad_base">Cantidad de Referencia:</label>
+                    <input type="number" id="cantidad_base" value="" step="0.01" class="input-field" placeholder="Ej: 1.00">
+                    <p class="param-label">La receta se define para esta cantidad en Kilogramos.</p>
+                </div>
+            </div>
+
+            <h3>Insumos Requeridos (Materia Prima)</h3>
+            <div class="table-responsive">
+                <table id="insumo_table">
+                    <thead><tr><th>Materia Prima</th><th>Cantidad Requerida (para X kg)</th><th>Unidad</th><th>Acción</th></tr></thead>
+                    <tbody id="materiales_list">
+
+                    <tr id="insumo_template_row" style="display: none;">
+                        <td><select class="input-field">
+                            <option value="">Seleccione Insumo</option>
+                            <option value="I_1">Insumo 1</option>
+                            <option value="I_2">Insumo 2</option>
+                            <option value="I_3">Insumo 3</option>
+                        </select></td>
+                        <td><input type="number" value="" step="0.001" placeholder="0.000" class="input-field"></td>
+                        <td><select class="input-field"><option value="kg" selected>kg</option><option value="L">L</option></select></td>
+                        <td><button class="btn btn-delete" type="button">Eliminar</button></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p class="table-empty-message" id="empty_list_message" style="display: block;">Añada insumos con el botón "Añadir Insumo".</p>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-add" id="btn-add-insumo" type="button">Añadir Insumo</button>
+                <button class="btn" type="button" style="background-color: var(--info);">Guardar Fórmula / Receta</button>
+            </div>
+        </div>
+
+        <div id="ordenes" class="tab-content" style="display: none;">
+            <h2>2. Órdenes de Producción (OP)</h2>
+            <h3>Crear Nueva Orden de Producción</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="op_formula">Fórmula a Usar:</label>
+                    <select id="op_formula" class="input-field">
+                        <option value="" selected>Seleccione Fórmula</option>
+                        <option value="F_P_A">Fórmula Producto A</option>
+                        <option value="F_P_B">Fórmula Producto B</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="op_cantidad_kg">Cantidad a Producir:</label>
+                    <input type="number" step="1.00" id="op_cantidad_kg" value="" placeholder="Kilogramos deseados" class="input-field">
+                    <p class="param-label">Se ingresa la cantidad en Kilogramos.</p>
+                </div>
+                <div class="form-group">
+                    <label for="op_cantidad_litros">Cantidad Convertida:</label>
+                    <input type="text" id="op_cantidad_litros" value="" readonly class="input-field input-readonly">
+                    <p class="param-label">Cálculo resultante en Litros.</p>
+                </div>
+            </div>
+            <button class="btn btn-add" type="button" onclick="alert('Generar OP no implementado.')">Generar Orden (Estado: Pendiente)</button>
+
+            <div class="divider"></div>
+
+            <h3>Consumo de Materia Prima por Lote</h3>
+            <div class="form-group">
+                <label for="op_consumir">Seleccione Orden Pendiente para Consumo:</label>
+                <select id="op_consumir" class="input-field">
+                    <option value="" selected>Órdenes con estado 'Pendiente'</option>
+                </select>
+            </div>
+            <div class="table-responsive">
+                <p class="param-label" style="margin-bottom: 5px;">Lotes de Materia Prima Requeridos por la OP:</p>
+                <table>
+                    <thead><tr><th>Materia Prima</th><th>Cant. Requerida</th><th>Lote a Consumir</th><th>Vencimiento Lote</th><th>Cant. Consumida</th></tr></thead>
+                    <tbody id="mp_consumir_lotes">
+                    <tr><td colspan="5" class="table-empty-message">Seleccione una Orden de Producción.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-warn" type="button">Ejecutar Consumo por Lote</button>
+                <button class="btn btn-finish" type="button" onclick="alert('Finalizar Consumo MP no implementado.')">Finalizar Consumo MP y Poner OP En Proceso</button>
+            </div>
+            <p class="status-box status-danger">Aquí aparecerá el stock de Producto Base listo para envasar.</p>
+        </div>
+
+        <div id="envasado" class="tab-content" style="display: none;">
+            <h2>3. Definición de Producto Terminado y Consumo de Envases</h2>
+            <h3>Definir Formato Final y Calcular Unidades</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="op_a_envasar">Seleccione OP (En Proceso):</label>
+                    <select id="op_a_envasar" class="input-field">
+                        <option value="" selected>Órdenes con Producto Base Disponible</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="formato_envase">Envase Primario:</label>
+                    <select id="formato_envase" class="input-field">
+                        <option value="" selected>Seleccione Envase Primario</option>
+                        <option value="E_A">Envase A (250 ml)</option>
+                        <option value="E_B">Envase B (500 ml)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="formato_embalaje">Embalaje Secundario:</label>
+                    <select id="formato_embalaje" class="input-field">
+                        <option value="" selected>Seleccione Embalaje</option>
+                        <option value="C_12">Caja (Para 12 unidades)</option>
+                        <option value="C_24">Caja (Para 24 unidades)</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-add" type="button" onclick="alert('Calcular Unidades Finales no implementado.')">Calcular Unidades Finales y Consumo</button>
+
+            <div class="divider"></div>
+
+            <h3>Consumo de Envases y Embalajes</h3>
+            <div id="resultado_calculo" class="status-box status-info-calc">
+                <p>Información del cálculo de unidades aparecerá aquí.</p>
+            </div>
+            <div class="table-responsive">
+                <p class="param-label" style="margin-bottom: 5px;">Lotes de Envases y Embalajes Requeridos:</p>
+                <table>
+                    <thead><tr><th>Envase/Embalaje Requerido</th><th>Stock Disponible</th><th>Cant. a Consumir (Automático)</th><th>Unidad</th></tr></thead>
+                    <tbody id="envases_consumir">
+                    <tr><td colspan="4" class="table-empty-message">Calcule las unidades finales.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-finish" type="button" style="margin-top: 25px;" onclick="alert('Confirmar Consumo de Envases no implementado.')">Confirmar Consumo de Envases y Preparar Unidades para Lotificación</button>
+            <p class="param-label" style="margin-top: 15px;">La OP pasa a **'Empacada'**.</p>
+        </div>
+
+        <div id="lote" class="tab-content" style="display: none;">
+            <h2>4. Asignación de Lote al Artículo Terminado y Cierre de OP</h2>
+            <div class="form-group">
+                <label for="op_finalizar">Seleccione OP (Estado: Empacada):</label>
+                <select id="op_finalizar" class="input-field">
+                    <option value="" selected>Órdenes con estado 'Empacada'</option>
+                </select>
+            </div>
+
+            <div class="param-group-readonly">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="sku_final_display">Artículo Terminado Final (SKU):</label>
+                        <input type="text" id="sku_final_display" value="" readonly class="input-field input-readonly">
+                    </div>
+                    <div class="form-group">
+                        <label for="cant_producida_real">Unidades Empacadas a Lotificar:</label>
+                        <input type="number" step="1" id="cant_producida_real" value="" readonly class="input-field input-readonly">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="fecha_vencimiento_lote">Fecha de Vencimiento del Lote:</label>
+                <input type="date" id="fecha_vencimiento_lote" value="" class="input-field">
+            </div>
+            <div class="form-group">
+                <label class="param-label">Código de Lote del Artículo Terminado:</label>
+                <div class="status-box status-auto">El código se genera al finalizar la OP.</div>
+            </div>
+            <button class="btn btn-finish" type="button" onclick="alert('Registro de Lote Final no implementado.')">Registrar Lote, Finalizar OP e Ingresar Stock Empacado</button>
+            <p class="param-label" style="margin-top: 15px;">Esta acción asigna el Lote y actualiza el stock final.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(content => { content.style.display = 'none'; });
+        document.querySelectorAll('.tab-button').forEach(button => { button.classList.remove('active'); });
+        document.getElementById(tabId).style.display = 'block';
+        document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
+    }
+
+    function addInsumoRow() {
+        const tableBody = document.getElementById('materiales_list');
+        const templateRow = document.getElementById('insumo_template_row');
+        const emptyMessage = document.getElementById('empty_list_message');
+
+        if (templateRow) {
+            // Clonamos la fila. true para clonar todo el contenido, incluyendo listeners.
+            const newRow = templateRow.cloneNode(true);
+            newRow.style.display = '';
+            newRow.removeAttribute('id');
+
+            // Corregimos el listener de 'Eliminar' para que funcione en la nueva fila
+            const deleteButton = newRow.querySelector('.btn-delete');
+            deleteButton.addEventListener('click', function() {
+                newRow.remove();
+                // Verificamos si la lista queda vacía (contamos filas que no tienen display: none)
+                if (tableBody.querySelectorAll('tr:not([style*="display: none"])').length === 0) {
+                    emptyMessage.style.display = 'block';
+                }
+            });
+
+            // Reestablecer los valores de la nueva fila clonada
+            newRow.querySelector('select').value = '';
+            newRow.querySelector('input[type="number"]').value = '';
+            // Aseguramos que 'kg' esté seleccionado por defecto
+            const unitSelect = newRow.querySelector('select[value="kg"]');
+            if (unitSelect) unitSelect.selected = true;
+
+            tableBody.appendChild(newRow);
+            emptyMessage.style.display = 'none';
+        }
+    }
+
+    function updateLitersFromKg() {
+        const kg = parseFloat(document.getElementById('op_cantidad_kg').value) || 0;
+        const density = parseFloat(document.getElementById('densidad_litro').value) || 0;
+
+        if (density > 0 && kg > 0) {
+            const liters = (kg / density).toFixed(2);
+            document.getElementById('op_cantidad_litros').value = liters + ' L';
+        } else {
+            document.getElementById('op_cantidad_litros').value = '';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Aseguramos que el botón "Añadir Insumo" esté enlazado a la función
+        document.getElementById('btn-add-insumo').addEventListener('click', addInsumoRow);
+
+        document.getElementById('op_cantidad_kg').addEventListener('input', updateLitersFromKg);
+        document.getElementById('densidad_litro').addEventListener('input', updateLitersFromKg);
+        updateLitersFromKg();
+
+        showTab('formulas');
+    });
+</script>
+</body>
+</html>

@@ -679,4 +679,126 @@ BEGIN
     VALUES (p_id_detalle_compra, p_id_detalle_venta, p_motivo, 'item', p_tipo_valor, p_valor, p_tasa_igv);
 END$$
 
+DROP PROCEDURE IF EXISTS `SP_CREAR_RECETA_ENCABEZADO`$$
+CREATE PROCEDURE `SP_CREAR_RECETA_ENCABEZADO` (
+IN p_id_articulo_terminado INT, IN p_descripcion VARCHAR(255),
+IN p_id_unidad_producir INT,
+IN p_estado ENUM('Activa', 'Inactiva', 'Borrador')
+)
+BEGIN
+    INSERT INTO receta_producto (id_articulo_terminado, descripcion, cantidad_producir, id_unidad_producir, estado)
+    VALUES (p_id_articulo_terminado, p_descripcion, 1, p_id_unidad_producir, p_estado);
+    SELECT LAST_INSERT_ID() AS id_receta;
+END$$
+
+-- SP_AGREGAR_DETALLE_RECETA
+DROP PROCEDURE IF EXISTS `SP_AGREGAR_DETALLE_RECETA`$$
+CREATE PROCEDURE `SP_AGREGAR_DETALLE_RECETA` (
+IN p_id_receta INT, IN p_id_articulo_insumo INT,
+IN p_cantidad_requerida DECIMAL(12,2), IN p_id_unidad_insumo INT
+)
+BEGIN
+    INSERT INTO detalle_receta (id_receta, id_articulo_insumo, cantidad_requerida, id_unidad_insumo)
+    VALUES (p_id_receta, p_id_articulo_insumo, p_cantidad_requerida, p_id_unidad_insumo);
+END$$
+
+-- SP_CREAR_ORDEN_PRODUCCION
+DROP PROCEDURE IF EXISTS `SP_CREAR_ORDEN_PRODUCCION`$$
+CREATE PROCEDURE `SP_CREAR_ORDEN_PRODUCCION` (
+IN p_receta INT, IN p_cantidad DECIMAL(12,2), IN p_fecha DATE, IN p_obs TEXT
+)
+BEGIN
+    DECLARE v_unidad INT;
+    SELECT id_unidad_producir INTO v_unidad FROM receta_producto WHERE id_receta = p_receta;
+    IF v_unidad IS NOT NULL THEN
+        INSERT INTO orden_produccion (id_receta, fecha_inicio_programada, cantidad_a_producir,
+        id_unidad_producir, estado, observaciones, cantidad_empacada_pendiente)
+        VALUES (p_receta, p_fecha, p_cantidad, v_unidad, 'Pendiente', p_obs, 0);
+    END IF;
+END$$
+
+-- SP_CONSUMIR_INSUMO_POR_LOTE_OP
+DROP PROCEDURE IF EXISTS `SP_CONSUMIR_INSUMO_POR_LOTE_OP`$$
+CREATE PROCEDURE `SP_CONSUMIR_INSUMO_POR_LOTE_OP` (
+IN p_orden INT, IN p_articulo INT, IN p_lote INT, IN p_cantidad DECIMAL(12,4)
+)
+BEGIN
+    INSERT INTO consumo_produccion (id_orden, id_articulo_consumido, id_lote_consumido, cantidad_consumida, id_unidad_consumida)
+    VALUES (p_orden, p_articulo, p_lote, p_cantidad, (SELECT id_unidad FROM articulo WHERE id = p_articulo));
+
+    UPDATE articulo
+    SET cantidad = cantidad - p_cantidad
+    WHERE id = p_articulo;
+
+    UPDATE inventario_lote
+    SET cantidad_disponible = cantidad_disponible - p_cantidad
+    WHERE id_lote = p_lote AND id_articulo = p_articulo;
+END$$
+
+-- SP_FINALIZAR_CONSUMO_MP_OP
+DROP PROCEDURE IF EXISTS `SP_FINALIZAR_CONSUMO_MP_OP`$$
+CREATE PROCEDURE `SP_FINALIZAR_CONSUMO_MP_OP` (IN p_orden INT)
+BEGIN
+    UPDATE orden_produccion SET estado = 'En Proceso' WHERE id_orden = p_orden AND estado = 'Pendiente';
+END$$
+
+-- SP_CALCULAR_Y_CONSUMIR_ENVASADO
+DROP PROCEDURE IF EXISTS `SP_CALCULAR_Y_CONSUMIR_ENVASADO`$$
+CREATE PROCEDURE `SP_CALCULAR_Y_CONSUMIR_ENVASADO` (
+IN p_orden INT, IN p_articulo_suelto INT, IN p_lote_suelto INT, IN p_articulo_final INT,
+IN p_consumo_suelto DECIMAL(12,4), IN p_unidades_prod INT, IN p_merma DECIMAL(12,4)
+)
+BEGIN
+    UPDATE inventario_lote
+    SET cantidad_disponible = cantidad_disponible - p_consumo_suelto
+    WHERE id_lote = p_lote_suelto AND id_articulo = p_articulo_suelto;
+
+    IF p_merma > 0 THEN
+        SELECT 'Merma registrada' AS Estado;
+    END IF;
+
+    INSERT INTO produccion_realizada (id_orden, id_articulo_terminado, cantidad_producida, id_unidad_producida)
+    VALUES (p_orden, p_articulo_final, p_unidades_prod, (SELECT id_unidad FROM articulo WHERE id = p_articulo_final));
+
+    INSERT INTO consumo_produccion (id_orden, id_articulo_consumido, cantidad_consumida, id_unidad_consumida, es_envase_embalaje)
+    SELECT p_orden, dac.id_articulo_envase, dac.cantidad_requerida * p_unidades_prod, dac.id_unidad_envase, 1
+    FROM detalle_articulo_componente dac
+    WHERE dac.id_articulo_terminado = p_articulo_final;
+
+    UPDATE orden_produccion
+    SET cantidad_empacada_pendiente = p_unidades_prod
+    WHERE id_orden = p_orden;
+END$$
+
+-- SP_REGISTRAR_PRODUCCION_FINAL
+DROP PROCEDURE IF EXISTS `SP_REGISTRAR_PRODUCCION_FINAL`$$
+CREATE PROCEDURE `SP_REGISTRAR_PRODUCCION_FINAL` (
+IN p_orden INT, IN p_codigo_lote VARCHAR(50), IN p_fecha_vencimiento DATE
+)
+BEGIN
+    DECLARE v_articulo_final INT;
+    DECLARE v_cantidad INT;
+
+    SELECT rp.id_articulo_terminado, op.cantidad_empacada_pendiente
+    INTO v_articulo_final, v_cantidad
+    FROM orden_produccion op
+    JOIN receta_producto rp ON op.id_receta = rp.id_receta
+    WHERE op.id_orden = p_orden AND op.estado = 'En Proceso';
+
+    IF v_cantidad IS NULL OR v_cantidad = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La orden no tiene cantidad pendiente de lotear.';
+    END IF;
+
+    UPDATE articulo
+    SET cantidad = cantidad + v_cantidad
+    WHERE id = v_articulo_final;
+
+    INSERT INTO inventario_lote (id_articulo, codigo_lote, fecha_vencimiento, cantidad_ingreso, cantidad_disponible)
+    VALUES (v_articulo_final, p_codigo_lote, p_fecha_vencimiento, v_cantidad, v_cantidad);
+
+    UPDATE orden_produccion
+    SET estado = 'Terminada', cantidad_empacada_pendiente = 0
+    WHERE id_orden = p_orden;
+END$$
+
 DELIMITER ;
