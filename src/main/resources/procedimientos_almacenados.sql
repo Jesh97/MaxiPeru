@@ -90,10 +90,23 @@ BEGIN
     AND a.cantidad > 0;
 END$$
 
-DROP PROCEDURE IF EXISTS `sp_buscar_articulos_para_produccion`$$
-CREATE PROCEDURE `sp_buscar_articulos_para_produccion`(IN p_busqueda VARCHAR(100))
+DROP PROCEDURE IF EXISTS `sp_buscar_articulos_terminados`$$
+CREATE PROCEDURE `sp_buscar_articulos_terminados`(IN p_busqueda VARCHAR(100))
 BEGIN
-SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario, a.aroma, a.color FROM articulo a WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%')) AND a.id_tipo_articulo IN (2, 4);
+    SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario, a.aroma, a.color
+    FROM articulo a
+    WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
+      AND a.id_tipo_articulo = 4;
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_buscar_articulos_insumos`$$
+CREATE PROCEDURE `sp_buscar_articulos_insumos`(IN p_busqueda VARCHAR(100))
+BEGIN
+    SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario, a.aroma, a.color
+    FROM articulo a
+    WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
+      AND a.id_tipo_articulo = 2
+      AND a.cantidad > 0;
 END$$
 
 DROP PROCEDURE IF EXISTS `SP_VerLotesPorArticulo`$$
@@ -239,6 +252,19 @@ BEGIN
     INSERT INTO compra(id_proveedor, id_tipo_comprobante, serie, correlativo, fecha_emision, fecha_vencimiento, id_tipo_pago, id_forma_pago, id_moneda, tipo_cambio, incluye_igv, hay_bonificacion, hay_traslado, subtotal, igv, total, total_peso, coste_transporte, observacion)
     VALUES (p_id_proveedor, p_id_tipo_comprobante, p_serie, p_correlativo, p_fecha_emision, p_fecha_vencimiento, p_id_tipo_pago, p_id_forma_pago, p_id_moneda, p_tipo_cambio, p_incluye_igv, p_hay_bonificacion, p_hay_traslado, p_subtotal, p_igv, p_total, p_total_peso, p_coste_transporte, p_observacion);
     SELECT LAST_INSERT_ID();
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_agregar_detalle_compra`$$
+CREATE PROCEDURE `sp_agregar_detalle_compra`(
+    IN p_id_compra INT, IN p_id_articulo INT, IN p_id_unidad INT, IN p_cantidad DECIMAL(12,2), IN p_precio_unitario DECIMAL(12,2),
+    IN p_bonificacion DECIMAL(12,2), IN p_coste_unitario_transporte DECIMAL(12,2), IN p_coste_total_transporte DECIMAL(12,2),
+    IN p_precio_con_descuento DECIMAL(12,2), IN p_igv_insumo DECIMAL(12,2), IN p_total DECIMAL(12,2), IN p_peso_total DECIMAL(12,3),
+    OUT p_id_detalle INT
+)
+BEGIN
+    INSERT INTO detalle_compra(id_compra, id_articulo, id_unidad, cantidad, precio_unitario, bonificacion, coste_unitario_transporte, coste_total_transporte, precio_con_descuento, igv_insumo, total, peso_total)
+    VALUES (p_id_compra, p_id_articulo, p_id_unidad, p_cantidad, p_precio_unitario, p_bonificacion, p_coste_unitario_transporte, p_coste_total_transporte, p_precio_con_descuento, p_igv_insumo, p_total, p_peso_total);
+    SET p_id_detalle = LAST_INSERT_ID();
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_regla_compra`$$

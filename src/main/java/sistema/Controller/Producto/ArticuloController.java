@@ -219,14 +219,37 @@ public class ArticuloController implements ArticuloRepository {
         ResultSet rs = null;
         try {
             conn = Conexion.obtenerConexion();
-            cs = conn.prepareCall("{CALL sp_buscar_articulos_para_produccion(?)}");
+            cs = conn.prepareCall("{CALL sp_buscar_articulos_insumos(?)}");
             cs.setString(1, busqueda);
             rs = cs.executeQuery();
             while (rs.next()) {
                 articulos.add(mapearArticuloSimple(rs));
             }
         } catch (SQLException e) {
-            System.err.println("Error al buscar insumos: " + e.getMessage());
+            System.err.println("Error al buscar insumos (Tipo 2): " + e.getMessage());
+        } finally {
+            try { if (rs != null) rs.close(); } catch (SQLException e) { }
+            try { if (cs != null) cs.close(); } catch (SQLException e) { }
+            Conexion.cerrarConexion(conn);
+        }
+        return articulos;
+    }
+
+    public List<Articulo> buscarArticulosTerminados(String busqueda) {
+        List<Articulo> articulos = new ArrayList<>();
+        Connection conn = null;
+        CallableStatement cs = null;
+        ResultSet rs = null;
+        try {
+            conn = Conexion.obtenerConexion();
+            cs = conn.prepareCall("{CALL sp_buscar_articulos_terminados(?)}");
+            cs.setString(1, busqueda);
+            rs = cs.executeQuery();
+            while (rs.next()) {
+                articulos.add(mapearArticuloSimple(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al buscar artículos (Tipo 4): " + e.getMessage());
         } finally {
             try { if (rs != null) rs.close(); } catch (SQLException e) { }
             try { if (cs != null) cs.close(); } catch (SQLException e) { }
