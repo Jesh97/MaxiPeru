@@ -6,482 +6,12 @@
     <title>Gestión de Producción - Diseño Plano y Completo</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <style>
-        :root {
-            --global-bg: #f4f6f9;
-            --container-bg: #ffffff;
-            --text-color-dark: #1f2937;
-            --text-color-medium: #6b7280;
-            --border-color-light: #d1d5db;
-            --accent-primary: #1e40af;
-            --accent-success: #059669;
-            --accent-warning: #d97706;
-            --accent-danger: #dc2626;
-            --spacing-large: 40px;
-        }
+    <link rel="stylesheet" href="../../CSS/Produccion/produccion.css">
 
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--global-bg);
-            color: var(--text-color-dark);
-            font-size: 15px;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .produccion-container {
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: var(--spacing-large) 20px;
-            box-sizing: border-box;
-        }
-
-        h1 {
-            color: var(--accent-primary);
-            padding: 0;
-            margin-bottom: 30px;
-            font-weight: 800;
-            font-size: 2.5em;
-            text-align: left;
-            border-bottom: 3px solid var(--border-color-light);
-            padding-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-
-        h1 i {
-            margin-right: 15px;
-            color: var(--accent-success);
-            font-size: 1.1em;
-        }
-
-        .section-header {
-            font-size: 1.5em;
-            font-weight: 700;
-            color: var(--accent-primary);
-            padding: 10px 0;
-            margin: 0 0 20px 0;
-            border-bottom: 1px solid var(--border-color-light);
-            display: flex;
-            align-items: center;
-        }
-        .section-header.danger-header {
-             color: var(--accent-danger);
-            border-bottom-color: var(--accent-danger);
-        }
-        .section-header.header-success {
-            color: var(--accent-success);
-            border-bottom-color: var(--accent-success);
-        }
-        .section-header.header-warning {
-            color: var(--accent-warning);
-            border-bottom-color: var(--accent-warning);
-        }
-        .section-header.header-primary {
-            color: var(--accent-primary);
-            border-bottom-color: var(--accent-primary);
-        }
-
-
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border-color-light);
-            margin-bottom: var(--spacing-large);
-            flex-wrap: wrap;
-            background-color: var(--container-bg);
-            border-radius: 8px;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .tab-button {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            cursor: pointer;
-            border: none;
-            background-color: transparent;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-color-medium);
-            transition: all 0.3s ease;
-            outline: none;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -1px;
-        }
-
-        .tab-button i {
-            margin-right: 8px;
-            font-size: 1em;
-        }
-
-        .tab-button:hover {
-            color: var(--text-color-dark);
-            background-color: var(--global-bg);
-        }
-
-        .tab-button.active {
-            color: var(--accent-primary);
-            font-weight: 700;
-            border-bottom: 3px solid var(--accent-primary);
-            background-color: var(--global-bg);
-        }
-        .tab-button.active-success {
-            color: var(--accent-success);
-            border-bottom: 3px solid var(--accent-success);
-        }
-        .tab-button.active-warning {
-            color: var(--accent-warning);
-            border-bottom: 3px solid var(--accent-warning);
-        }
-        .tab-button.active-primary {
-            color: var(--accent-primary);
-            border-bottom: 3px solid var(--accent-primary);
-        }
-        .tab-button.active-danger {
-            color: var(--accent-danger);
-            border-bottom: 3px solid var(--accent-danger);
-        }
-
-        .tab-content {
-            display: none;
-            padding: 0;
-        }
-
-        .tab-content.active {
-            display: block;
-            padding: 10px 0;
-        }
-
-        .form-group-section {
-            padding: 0;
-            margin-bottom: 30px;
-        }
-
-        .form-group-section form {
-            padding: 20px 0 0 0;
-            border-top: 1px solid var(--border-color-light);
-        }
-        .form-group-section form:first-of-type {
-            border-top: none;
-            padding-top: 0;
-        }
-
-        .form-group-section h2 {
-            font-size: 1.3em;
-            font-weight: 700;
-            color: var(--text-color-dark);
-            margin-bottom: 20px;
-            padding-left: 0;
-            border-left: none;
-        }
-
-        .form-group-section label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: var(--text-color-dark);
-            font-size: 1em;
-            margin-top: 15px;
-        }
-        .form-group-section label:first-of-type {
-            margin-top: 0;
-        }
-
-
-        .input-wrapper {
-            position: relative;
-            margin-bottom: 18px;
-        }
-
-        .input-wrapper input,
-        .input-wrapper select,
-        .input-wrapper textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid var(--border-color-light);
-            border-radius: 8px;
-            box-sizing: border-box;
-            background-color: var(--container-bg);
-            color: var(--text-color-dark);
-            transition: all 0.3s ease;
-            font-size: 1em;
-        }
-
-        .input-wrapper input:focus,
-        .input-wrapper textarea:focus,
-        .input-wrapper select:focus {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15);
-            outline: none;
-        }
-
-        .fixed-unit-input {
-            display: flex;
-            align-items: center;
-        }
-        .fixed-unit-input input {
-            width: 120px;
-            flex-grow: 0;
-            text-align: right;
-            border-right: none;
-            border-radius: 8px 0 0 8px;
-            cursor: not-allowed;
-            padding: 12px 10px;
-        }
-        .fixed-unit-input span {
-            padding: 12px 15px;
-            background-color: #e5e7eb;
-            border: 1px solid #d1d5db;
-            border-left: none;
-            border-radius: 0 8px 8px 0;
-            color: var(--text-color-medium);
-            font-weight: 600;
-        }
-
-        .compact-fields-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px 30px;
-            margin-bottom: 20px;
-        }
-        .compact-fields-grid label {
-            margin-top: 0;
-        }
-        .compact-fields-grid .input-wrapper {
-             margin-bottom: 0;
-        }
-
-
-        .search-input-icon {
-            padding-right: 45px !important;
-        }
-
-        .input-wrapper .search-icon {
-            position: absolute;
-            top: 50%;
-            right: 15px;
-            transform: translateY(-50%);
-            color: var(--text-color-medium);
-            pointer-events: none;
-            font-size: 1.1em;
-        }
-
-        .btn-submit {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background-color: var(--accent-primary);
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 700;
-            margin-top: 25px;
-            transition: background-color 0.3s ease, transform 0.2s, box-shadow 0.3s;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            min-width: 150px;
-        }
-        .btn-submit.btn-tab-action {
-            background-color: var(--accent-primary);
-        }
-        .btn-submit.btn-success {
-            background-color: var(--accent-success);
-        }
-        .btn-submit.btn-warning {
-            background-color: var(--accent-warning);
-        }
-        .btn-submit.btn-danger {
-            background-color: var(--accent-danger);
-        }
-        .btn-submit.btn-add {
-            padding: 12px 15px;
-            min-width: auto;
-            margin-top: 0;
-        }
-
-
-        .btn-submit i {
-            margin-right: 10px;
-        }
-
-        .btn-submit:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .detalle-table .remove-row {
-            background-color: var(--accent-danger);
-            color: white;
-            border: none;
-            padding: 8px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        .detalle-table .remove-row:hover {
-            background-color: #b91c1c;
-        }
-
-
-        .detalle-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin-top: 20px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .detalle-table th, .detalle-table td {
-            border: 1px solid var(--border-color-light);
-            padding: 14px 12px;
-            text-align: left;
-            font-size: 0.95em;
-            color: var(--text-color-dark);
-            vertical-align: middle;
-        }
-
-        .detalle-table th {
-            background-color: #e9ecef;
-            font-weight: 700;
-            color: var(--accent-primary);
-        }
-
-        .detalle-table td {
-            background-color: var(--container-bg);
-        }
-
-        .detalle-table input {
-            padding: 8px 10px !important;
-            border-color: #d1d5db !important;
-            margin: 0 !important;
-            border-radius: 4px;
-            background-color: #fff !important;
-            width: 100%;
-            box-sizing: border-box;
-            text-align: left;
-        }
-
-        .detalle-table input[type="number"] {
-            text-align: right;
-        }
-
-        .detalle-table input.readonly-field {
-            border: none !important;
-            background: #f3f4f6 !important;
-            color: var(--text-color-medium) !important;
-            box-shadow: none !important;
-            cursor: default;
-        }
-
-
-        .insumo-search-container {
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-            margin-bottom: 25px;
-            padding-bottom: 0;
-        }
-        .insumo-search-container .input-wrapper {
-             margin-bottom: 0;
-             flex-grow: 1;
-        }
-
-
-        .merma-field {
-            border: 2px dashed var(--accent-danger);
-            background-color: #fef2f2;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 30px;
-        }
-
-        .readonly-field:not(.detalle-table input) {
-            background-color: #f3f4f6 !important;
-            color: var(--text-color-medium) !important;
-            cursor: default;
-        }
-
-        .orden-activa-display {
-            padding: 15px;
-            background-color: #eff6ff;
-            border: 1px solid var(--accent-primary);
-            font-weight: 700;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: block;
-            color: var(--accent-primary);
-            font-size: 1.1em;
-            text-align: center;
-        }
-        .orden-activa-display.display-success {
-            border-color: var(--accent-success);
-            color: var(--accent-success);
-            background-color: #ecfdf5;
-        }
-        .orden-activa-display.display-warning {
-            border-color: var(--accent-warning);
-            color: var(--accent-warning);
-            background-color: #fffbeb;
-        }
-        .orden-activa-display.display-primary {
-            border-color: var(--accent-primary);
-            color: var(--accent-primary);
-            background-color: #eff6ff;
-        }
-        .orden-activa-display.display-danger {
-            border-color: var(--accent-danger);
-            color: var(--accent-danger);
-            background-color: #fef2f2;
-        }
-
-
-        @media (max-width: 900px) {
-            .tab-content.active {
-                display: block;
-                gap: 30px;
-            }
-        }
-        @media (max-width: 768px) {
-            .produccion-container {
-                padding: 20px 15px;
-            }
-
-            h1 {
-                font-size: 2em;
-                text-align: center;
-                justify-content: center;
-            }
-
-            .tabs {
-                flex-direction: column;
-                border-radius: 8px;
-            }
-
-            .tab-button {
-                justify-content: center;
-                border-bottom: 1px solid var(--border-color-light);
-            }
-            .compact-fields-grid {
-                grid-template-columns: 1fr;
-                gap: 0;
-            }
-            .compact-fields-grid .input-wrapper {
-                 margin-bottom: 18px;
-            }
-        }
-    </style>
 </head>
 <body>
 
@@ -502,6 +32,8 @@
 
             <form action="/ProduccionServlet" method="POST">
                 <input type="hidden" name="action" value="crear_receta_base">
+                <input type="hidden" name="p_id_art_ter_hidden" value="1">
+                <input type="hidden" name="p_id_uni_prod_hidden" value="1">
 
                 <div class="compact-fields-grid">
                     <div>
@@ -577,7 +109,8 @@
             <h2 class="section-header header-warning">Generar Nueva Orden de Producción</h2>
 
             <form action="/ProduccionServlet" method="POST" onsubmit="saveOrden(event)">
-                <input type="hidden" name="action" value="crear_orden_y_consumir">
+                <input type="hidden" name="action" value="crear_orden">
+                <input type="hidden" name="p_id_receta_orden_hidden" value="">
 
                 <div class="compact-fields-grid">
                     <div>
@@ -638,6 +171,7 @@
             <h2 class="section-header header-warning">Descontar Materia Prima</h2>
             <form action="/ProduccionServlet" method="POST">
                 <input type="hidden" name="action" value="ejecutar_consumo">
+                <input type="hidden" name="p_codigo_orden_consumo" id="hidden_orden_mp_submit">
 
                 <label>Orden Activa:</label>
                 <span id="display_orden_mp" class="orden-activa-display display-warning">Aún no hay Orden Activa</span>
@@ -694,6 +228,7 @@
             <h2 class="section-header header-primary">Registro Final de Producción y Merma</h2>
             <form action="/ProduccionServlet" method="POST">
                 <input type="hidden" name="action" value="registrar_produccion_merma">
+                <input type="hidden" name="p_codigo_orden" id="hidden_orden_merma_submit">
 
                 <div class="compact-fields-grid">
                     <div>
@@ -754,9 +289,10 @@
                     </div>
                 </div>
 
-                <button type="button" class="btn-submit btn-success btn-add" style="margin-top: 0;" onclick="addLotToTable()"><i class="fas fa-plus"></i> Agregar Lote</button>
+                <button type="button" class="btn-submit btn-success btn-add" style="margin-top: 0;"
+                        onclick="addLotToTable()"><i class="fas fa-plus"></i> Agregar Lote</button>
             </div>
-            <p class="alert-info"><i class="fas fa-tags" style="color: var(--accent-success);"></i> Agregue las cantidades y fechas de vencimiento. El **Código del Lote** será generado automáticamente por el *backend* al guardar. </p>
+            <p class="alert-info"><i class="fas fa-tags" style="color: var(--accent-success);"></i> Agregue las cantidades y fechas de vencimiento. El **Código del Lote** será generado automáticamente por el *backend* al guardar.</p>
 
             <h2 class="section-header header-success" style="margin-top: 40px;">Lotes a Registrar en esta Orden</h2>
             <form action="/ProduccionServlet" method="POST" onsubmit="submitAllLots(event)">
@@ -805,7 +341,121 @@
     let insumoCounter = 0;
     let currentRecipeComponents = [];
 
-    document.addEventListener("DOMContentLoaded", function() {
+    $(document).ready(function() {
+
+        $("#buscar_art_ter").autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: "/ProduccionServlet",
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        action: "buscar_articulos_terminados",
+                        busqueda: request.term
+                    },
+                    success: function(data) {
+                        response(data.map(item => ({
+                            id: item.id,
+                            value: item.nombre,
+                            label: (item.codigo || '') + ' - ' + (item.nombre || '')
+                        })));
+                    }
+                });
+            },
+            minLength: 2,
+            select: function(event, ui) {
+                $("#buscar_art_ter").val(ui.item.value);
+                $('input[name="p_id_art_ter_hidden"]').val(ui.item.id);
+                return false;
+            }
+        });
+
+
+        $("#buscar_insumo").autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: "/ProduccionServlet",
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        action: "buscar_articulos_insumos",
+                        busqueda: request.term
+                    },
+                    success: function(data) {
+                        response(data.map(item => ({
+                            id: item.id_articulo || item.id,
+                            value: item.nombre,
+                            label: (item.codigo || '') + ' - ' + (item.nombre || ''),
+                            codigo: item.codigo,
+                            unidad: item.unidad || 'UND',
+                            densidad: item.densidad || '1.000'
+                        })));
+                    }
+                });
+            },
+            minLength: 2,
+            select: function(event, ui) {
+                const selectedItem = ui.item;
+                document.getElementById('buscar_insumo').value = selectedItem.value;
+
+                addRow(
+                    'insumo-rows',
+                    selectedItem.codigo,
+                    selectedItem.value,
+                    '1.000',
+                    selectedItem.unidad,
+                    selectedItem.densidad,
+                    selectedItem.id
+                );
+
+                document.getElementById('buscar_insumo').value = '';
+                return false;
+            }
+        });
+
+
+        $("#buscar_componente_empaque").autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: "/ProduccionServlet",
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        action: "buscar_articulos_embalado_y_embalaje",
+                        busqueda: request.term
+                    },
+                    success: function(data) {
+                        response(data.map(item => ({
+                            id: item.id_articulo || item.id,
+                            value: item.nombre,
+                            label: (item.codigo || '') + ' - ' + (item.nombre || ''),
+                            codigo: item.codigo,
+                            unidad: item.unidad || 'PZ'
+                        })));
+                    }
+                });
+            },
+            minLength: 2,
+            select: function(event, ui) {
+                const selectedItem = ui.item;
+                document.getElementById('buscar_componente_empaque').value = selectedItem.value;
+
+                addPackagingRow(
+                    'empaque-rows',
+                    selectedItem.codigo,
+                    selectedItem.value,
+                    '1',
+                    selectedItem.unidad,
+                    selectedItem.id
+                );
+
+                document.getElementById('buscar_componente_empaque').value = '';
+                return false;
+            }
+        });
+
+
+
         openTab(null, 'Receta');
         const storedCode = localStorage.getItem('activeOrdenCode');
         if (storedCode) {
@@ -824,7 +474,6 @@
     function saveRecipeComponents(event) {
         event.preventDefault();
         const rows = document.getElementById('insumo-rows').querySelectorAll('tr');
-
         if (rows.length === 0) {
             alert("Agregue al menos un insumo antes de guardar.");
             return;
@@ -841,7 +490,6 @@
                 density: parseFloat(inputs[4].value)
             });
         });
-
         calculateInsumosForOrder();
         alert("Componentes de Receta Guardados (Simulado). Ahora puede crear una Orden de Producción en el paso 2.");
     }
@@ -855,20 +503,16 @@
         }
         if (currentRecipeComponents.length === 0) {
              alert("ERROR: Primero debe guardar los Componentes de la Receta en el Paso 1.");
-             return;
+            return;
         }
-
 
         const tempCode = 'ORD-' + new Date().getFullYear().toString().slice(-2) + new Date().getMonth().toString().padStart(2, '0') + '-' + Math.floor(Math.random() * 900 + 100);
         activeOrdenCode = tempCode;
         activeOrderQty = parseFloat(cantProd);
-
         localStorage.setItem('activeOrdenCode', activeOrdenCode);
         localStorage.setItem('activeOrderQty', activeOrderQty);
-
         updateOrdenFields();
         calculateInsumosForOrder();
-
         alert(`Orden Simulada Creada: ${activeOrdenCode}. (Esto solo es una simulación JS)`);
     }
 
@@ -877,7 +521,6 @@
         const statusDisplay = document.getElementById('display_order_recipe_status');
         const cantProdInput = document.getElementById('cant_prod_orden');
         const cantAProducir = parseFloat(cantProdInput ? cantProdInput.value : activeOrderQty) || activeOrderQty;
-
         if (currentRecipeComponents.length === 0) {
             tableBody.innerHTML = '';
             statusDisplay.textContent = 'La Receta Activa no tiene Componentes Guardados (Paso 1)';
@@ -886,7 +529,6 @@
 
         activeOrderQty = cantAProducir;
         localStorage.setItem('activeOrderQty', activeOrderQty);
-
         if (cantAProducir <= 0 || !activeOrdenCode) {
             tableBody.innerHTML = '';
             statusDisplay.textContent = (activeOrdenCode)
@@ -900,7 +542,6 @@
 
         currentRecipeComponents.forEach(insumo => {
             const totalReq = cantAProducir * insumo.baseQty;
-
             const newRow = tableBody.insertRow();
             newRow.innerHTML = `
                 <td>${insumo.code}</td>
@@ -914,15 +555,14 @@
         });
     }
 
-    // NUEVA FUNCIÓN: Agregar un lote a la tabla de registro
     function addLotToTable() {
         const qtyInput = document.getElementById('cant_envases_new');
         const dateInput = document.getElementById('fecha_vencimiento_new');
         const tableBody = document.getElementById('lotes-rows');
+        const lotCodeDisplay = document.getElementById('cod_lote_new_display');
 
         const qty = parseFloat(qtyInput.value);
         const date = dateInput.value;
-
         if (!activeOrdenCode) {
             alert("ERROR: Primero debe crear una Orden de Producción activa en el Paso 2.");
             return;
@@ -940,31 +580,24 @@
             return;
         }
 
+        const visualLotCode = 'LOTE-' + new Date().getFullYear().toString().slice(-2) + new Date().getMonth().toString().padStart(2, '0') + new Date().getDate().toString().padStart(2, '0') + '-' + Math.floor(Math.random() * 900 + 100);
+        lotCodeDisplay.value = visualLotCode;
+
         const newRow = tableBody.insertRow();
 
         newRow.innerHTML = `
-            <td>
-                <input type="text" name="p_cod_lote[]" value="" readonly class="readonly-field" placeholder="Generado por Backend">
-            </td>
-            <td>
-                <input type="number" name="p_cant_lote[]" value="${qty.toFixed(2)}" step="0.01" required style="text-align: right;" placeholder="Cantidad">
-            </td>
-            <td>
-                <input type="date" name="p_fecha_vencimiento[]" value="${date}" required>
-            </td>
+            <td><input type="text" name="p_cod_lote[]" value="" readonly class="readonly-field" placeholder="Generado por Backend"></td>
+            <td><input type="number" name="p_cant_lote[]" value="${qty.toFixed(2)}" step="0.01" required style="text-align: right;" placeholder="Cantidad"></td>
+            <td><input type="date" name="p_fecha_vencimiento[]" value="${date}" required></td>
             <td><button type="button" class="remove-row" onclick="deleteRow(this)"><i class="fas fa-trash"></i></button></td>
         `;
-
-        // Limpiar campos de entrada
         qtyInput.value = '';
         dateInput.value = '';
-        document.getElementById('cod_lote_new_display').value = '';
+        lotCodeDisplay.value = '';
         qtyInput.focus();
-
-        alert(`Lote agregado a la lista para registro (Cantidad: ${qty.toFixed(2)}, Vencimiento: ${date}).`);
+        alert(`Lote agregado a la lista para registro (Cantidad: ${qty.toFixed(2)}, Vencimiento: ${date}). El código final será generado por el Backend.`);
     }
 
-    // NUEVA FUNCIÓN: Envío masivo de lotes al backend
     function submitAllLots(event) {
         const tableBody = document.getElementById('lotes-rows');
         const rows = tableBody.querySelectorAll('tr');
@@ -981,11 +614,8 @@
             return;
         }
 
-        // Asegurar que el código de orden se envíe con el formulario
         document.getElementById('hidden_orden_lote_submit').value = activeOrdenCode;
-
         alert(`Simulación de envío masivo de ${rows.length} lote(s) al backend. (Orden: ${activeOrdenCode})`);
-        // El formulario se enviará al no usar event.preventDefault() aquí (comportamiento de éxito)
     }
 
     function updateOrdenFields() {
@@ -994,22 +624,17 @@
             { suffix: 'envase', colorSuffix: 'primary' },
             { suffix: 'lote', colorSuffix: 'success' },
             { suffix: 'finalizar', colorSuffix: 'danger' }
-            // Se añade el nuevo campo hidden_orden_lote_submit
         ];
-
-        // Incluimos el nuevo campo para el formulario de lotes masivos
-        const hiddenSubmitElement = document.getElementById('hidden_orden_lote_submit');
-        if (hiddenSubmitElement) {
-             hiddenSubmitElement.value = activeOrdenCode;
-        }
-
+        const hiddenFieldsToUpdate = ['hidden_orden_lote_submit', 'hidden_orden_mp', 'hidden_orden_envase', 'hidden_orden_finalizar', 'hidden_orden_merma_submit'];
+        hiddenFieldsToUpdate.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                 element.value = activeOrdenCode;
+            }
+        });
         fields.forEach(({ suffix, colorSuffix }) => {
             const displayId = 'display_orden_' + suffix;
-            const hiddenId = 'hidden_orden_' + suffix;
-
             const displayElement = document.getElementById(displayId);
-            const hiddenElement = document.getElementById(hiddenId);
-
             const displayClass = 'display-' + colorSuffix;
 
 
@@ -1021,18 +646,13 @@
                     displayElement.textContent = `Orden Activa: ${activeOrdenCode}`;
                 } else {
                     displayElement.textContent = 'Aún no hay Orden Activa';
-                }
             }
-
-            if (hiddenElement) {
-                hiddenElement.value = activeOrdenCode;
             }
         });
     }
 
     function openTab(evt, tabName) {
         let i, tabcontent, tablinks;
-
         tabcontent = document.getElementsByClassName("tab-content");
         for (i = 0; i < tabcontent.length; i++) {
             tabcontent[i].classList.remove("active");
@@ -1056,7 +676,6 @@
 
         if (currentTabButton) {
             currentTabButton.classList.add("active");
-
             const colorSuffix = currentTabButton.getAttribute('data-color-suffix');
             currentTabButton.classList.add(`active-${colorSuffix}`);
             currentTabButton.querySelector('i').style.color = `var(--accent-${colorSuffix})`;
@@ -1088,71 +707,49 @@
 
     function addRowFromSearch() {
         const searchValue = document.getElementById('buscar_insumo').value.trim();
-        if (!searchValue) {
-            alert("Por favor, ingrese un valor de búsqueda.");
-            return;
+        if (searchValue) {
+             alert("Seleccione el Insumo de la lista de sugerencias o siga con la búsqueda manual si no hay resultados.");
+        } else {
+             alert("Por favor, ingrese un valor de búsqueda.");
         }
-
-        const simulatedCode = 'INS-' + Math.floor(Math.random() * 900 + 100);
-        const simulatedUnit = (Math.random() < 0.5) ? 'Kg' : 'ml';
-        const simulatedQty = (Math.random() * 100).toFixed(3);
-        const simulatedDensity = (Math.random() * 1.5).toFixed(3);
-        addRow('insumo-rows', simulatedCode, searchValue, simulatedQty, simulatedUnit, simulatedDensity);
-        document.getElementById('buscar_insumo').value = '';
     }
 
-    function addRow(tableId, code, name, qty, unit, density) {
+    function addRow(tableId, code, name, qty, unit, density, insumoId) {
         const tableBody = document.getElementById(tableId);
         const newRow = tableBody.insertRow();
         insumoCounter++;
 
         newRow.innerHTML = `
-            <td>
-                <input type="text" name="p_codigo_insumo[]" value="${code}" readonly class="readonly-field" placeholder="CÓDIGO">
-            </td>
-            <td>
-                <input type="text" name="p_nombre_art_insumo[]" value="${name}" required placeholder="Nombre Insumo">
-            </td>
+            <td><input type="text" name="p_codigo_insumo[]" value="${code}" readonly class="readonly-field" placeholder="CÓDIGO"></td>
+            <td><input type="text" name="p_nombre_art_insumo[]" value="${name}" required placeholder="Nombre Insumo"></td>
             <td><input type="number" name="p_cant_req[]" value="${qty}" step="0.001" required placeholder="Cantidad"></td>
-            <td>
-                <input type="text" name="p_nombre_uni_insumo[]" value="${unit}" required placeholder="Unidad">
-            </td>
+            <td><input type="text" name="p_nombre_uni_insumo[]" value="${unit}" required placeholder="Unidad"></td>
             <td><input type="number" name="p_densidad[]" value="${density}" step="0.001" required placeholder="0.00" class="readonly-field" readonly></td>
             <td><button type="button" class="remove-row" onclick="deleteRow(this)"><i class="fas fa-trash"></i></button></td>
+            <input type="hidden" name="p_id_art_insumo_hidden[]" value="${insumoId}">
         `;
     }
 
     function addPackagingRowFromSearch() {
         const searchValue = document.getElementById('buscar_componente_empaque').value.trim();
-        if (!searchValue) {
-            alert("Por favor, ingrese un valor de búsqueda.");
-            return;
+        if (searchValue) {
+            alert("Seleccione el Componente de Empaque de la lista de sugerencias o siga con la búsqueda manual si no hay resultados.");
+        } else {
+             alert("Por favor, ingrese un valor de búsqueda.");
         }
-
-        const simulatedCode = 'EMP-' + Math.floor(Math.random() * 900 + 100);
-        const simulatedUnit = (searchValue.toLowerCase().includes('caja')) ? 'uds' : 'pz';
-        const simulatedQty = Math.floor(Math.random() * 500 + 10);
-
-        addPackagingRow('empaque-rows', simulatedCode, searchValue, simulatedQty, simulatedUnit);
-        document.getElementById('buscar_componente_empaque').value = '';
     }
 
-    function addPackagingRow(tableId, code, name, qty, unit) {
+    function addPackagingRow(tableId, code, name, qty, unit, empaqueId) {
         const tableBody = document.getElementById(tableId);
         const newRow = tableBody.insertRow();
 
         newRow.innerHTML = `
-            <td>
-                <input type="text" name="p_codigo_empaque[]" value="${code}" readonly class="readonly-field" placeholder="CÓDIGO">
-            </td>
-            <td>
-                <input type="text" name="p_nombre_empaque[]" value="${name}" required placeholder="Nombre Componente">
-            </td>
+            <td><input type="text" name="p_codigo_empaque[]" value="${code}" readonly class="readonly-field" placeholder="CÓDIGO"></td>
+            <td><input type="text" name="p_nombre_empaque[]" value="${name}" required placeholder="Nombre Componente"></td>
             <td><input type="number" name="p_cant_consumir[]" value="${qty}" step="1" required placeholder="Cantidad" style="text-align: right;"></td>
-            <td>
-                <input type="text" name="p_nombre_uni_empaque[]" value="${unit}" readonly class="readonly-field" placeholder="Unidad">
-            </td>
+            <td><input type="text" name="p_nombre_uni_empaque[]" value="${unit}" readonly class="readonly-field" placeholder="Unidad"></td>
             <td><button type="button" class="remove-row" onclick="deleteRow(this)"><i class="fas fa-trash"></i></button></td>
+            <input type="hidden" name="p_id_art_empaque_hidden[]" value="${empaqueId}">
         `;
     }
 
@@ -1161,6 +758,5 @@
         row.parentNode.removeChild(row);
     }
 </script>
-
 </body>
 </html>
