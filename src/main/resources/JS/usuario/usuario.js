@@ -10,9 +10,6 @@ let listadoUsuariosCache = [];
 document.addEventListener('DOMContentLoaded', () => {
     listarUsuarios();
     document.getElementById('formEditarUsuario').addEventListener('submit', enviarEdicionUsuario);
-    document.getElementById('editPermiteAccesoIrrestricto').addEventListener('change', function() {
-        document.getElementById('permiteAccesoIrrestrictoHidden').value = this.checked ? 1 : 0;
-    });
 });
 
 function listarUsuarios() {
@@ -112,10 +109,6 @@ function abrirModalEditar(id) {
     document.getElementById('editEstado').value = usuario.estado;
 
     document.getElementById('editPassword').value = '';
-
-    const permiteIrrestricto = usuario.permiteAccesoIrrestricto === 1;
-    document.getElementById('editPermiteAccesoIrrestricto').checked = permiteIrrestricto;
-    document.getElementById('permiteAccesoIrrestrictoHidden').value = permiteIrrestricto ? 1 : 0;
 
     const modal = new bootstrap.Modal(document.getElementById("modalEditarUsuario"));
     modal.show();

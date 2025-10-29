@@ -207,7 +207,6 @@ public class ListarUsuario extends HttpServlet {
             usuario.setUsername(request.getParameter("username"));
             usuario.setPassword(request.getParameter("password"));
             usuario.setRol(request.getParameter("rol"));
-            usuario.setPermiteAccesoIrrestricto(Integer.parseInt(request.getParameter("permiteAccesoIrrestricto")));
 
             int resultado = controller.editarUsuario(usuario);
 
@@ -224,7 +223,7 @@ public class ListarUsuario extends HttpServlet {
 
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print("Parámetros de ID o permiso irrestricto inválidos.");
+            out.print("Parámetros de ID inválidos.");
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.print("Error interno al procesar la edición: " + e.getMessage());
