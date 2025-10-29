@@ -1,36 +1,83 @@
 body {
-    background-color: #f8f9fa;
-    font-family: 'Segoe UI', sans-serif;
-    color: #333;
+    background-color: #e9ecef; /* Fondo suave, moderno */
+    font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif; /* Fuente profesional */
+    color: #495057; /* Texto oscuro suave */
+    font-size: 0.9rem; /* Letra ligeramente más pequeña para el cuerpo */
 }
 
 .titulo {
-    font-weight: bold;
-    font-size: 2rem;
-    color: #343a40;
+    font-weight: 600; /* Semi-bold */
+    font-size: 1.8rem; /* Tamaño de título adecuado */
+    color: #212529; /* Título muy oscuro */
+}
+
+/* Estilos de la tabla */
+.card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
 }
 
 .table {
+    font-size: 0.85rem; /* Letra pequeña en la tabla */
     border-radius: 0.5rem;
     overflow: hidden;
+    margin-bottom: 0;
 }
 
-.table th, .table td {
+.table th {
+    font-weight: 600;
     vertical-align: middle !important;
+    padding: 0.75rem 0.5rem;
+    background-color: #343a40 !important; /* Fondo del encabezado (oscuro) */
+    color: white;
+    border-bottom: none;
+}
+
+.table td {
+    vertical-align: middle !important;
+    padding: 0.5rem;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f1f1f1; /* Resalte suave */
+}
+
+/* Estilos de botones de acción */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 0.25rem;
 }
 
 .btn {
-    transition: all 0.2s ease-in-out;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .btn:hover {
-    transform: scale(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
 }
 
+/* Badges de estado */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.6em;
+    min-width: 70px;
+}
+
+/* Modal */
 .modal-content {
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
+.modal-header.bg-secondary {
+    background-color: #495057 !important;
+}
+
+/* Paginación */
 #paginacionActividades button {
-    min-width: 38px;
+    min-width: 30px;
+    font-size: 0.75rem;
 }

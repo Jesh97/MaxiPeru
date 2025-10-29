@@ -10,57 +10,109 @@
 </head>
 <body>
 <div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="titulo">Usuarios</h1>
-        <a href="../Usuario/registrarUsuario.html" class="btn btn-success">
-            <i class="fas fa-user-plus"></i> Crear Usuario
-        </a>
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <h1 class="titulo">Gestión de Usuarios</h1>
     </div>
 
-    <table class="table table-bordered table-hover table-striped shadow-sm" id="tablaUsuarios">
-        <thead class="table-dark">
-        <tr>
-            <th>Nombre</th>
-            <th>Correo</th>
-            <th>Username</th>
-            <th>Rol</th>
-            <th>Estado</th>
-            <th>Acceso Irrestricto</th>
-            <th>Acciones</th>
-        </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div class="card shadow-lg border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0" id="tablaUsuarios">
+                <thead class="bg-primary text-white">
+                <tr>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Username</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acceso Irrestricto</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <form id="formEditarUsuario">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="modalEditarUsuarioLabel"><i class="fas fa-user-edit"></i> Editar Usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editId" name="id">
+                    <input type="hidden" id="editEstado" name="estado">
+
+                    <div class="mb-3">
+                        <label for="editNombre" class="form-label small">Nombre Completo</label>
+                        <input type="text" class="form-control form-control-sm" id="editNombre" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCorreo" class="form-label small">Correo</label>
+                        <input type="email" class="form-control form-control-sm" id="editCorreo" name="correo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label small">Username</label>
+                        <input type="text" class="form-control form-control-sm" id="editUsername" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPassword" class="form-label small">Contraseña (Dejar vacío para no cambiar)</label>
+                        <input type="password" class="form-control form-control-sm" id="editPassword" name="password">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editRol" class="form-label small">Rol</label>
+                        <select class="form-select form-select-sm" id="editRol" name="rol" required>
+                            <option value="administrador">Administrador</option>
+                            <option value="produccion">Producción</option>
+                            <option value="consulta">Consulta</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="editPermiteAccesoIrrestricto">
+                        <label class="form-check-label small" for="editPermiteAccesoIrrestricto">Permiso de Acceso Irrestricto (24/7)</label>
+                        <input type="hidden" id="permiteAccesoIrrestrictoHidden" name="permiteAccesoIrrestricto" value="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-warning"><i class="fas fa-save"></i> Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="modalActividades" tabindex="-1" aria-labelledby="modalActividadesLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header bg-secondary text-white">
                 <h5 class="modal-title" id="modalActividadesLabel"><i class="fas fa-chart-line"></i> Actividades del Usuario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
                 <div class="row mb-3">
                     <div class="col-md-5">
-                        <label for="fechaInicio" class="form-label">Desde:</label>
-                        <input type="date" class="form-control" id="fechaInicio">
+                        <label for="fechaInicio" class="form-label small">Desde:</label>
+                        <input type="date" class="form-control form-control-sm" id="fechaInicio">
                     </div>
                     <div class="col-md-5">
-                        <label for="fechaFin" class="form-label">Hasta:</label>
-                        <input type="date" class="form-control" id="fechaFin">
+                        <label for="fechaFin" class="form-label small">Hasta:</label>
+                        <input type="date" class="form-control form-control-sm" id="fechaFin">
                     </div>
                     <div class="col-md-2 d-flex align-items-end gap-1">
-                        <button class="btn btn-primary w-100" onclick="filtrarActividadesPorFecha()" title="Filtrar">
+                        <button class="btn btn-sm btn-primary w-100" onclick="filtrarActividadesPorFecha()" title="Filtrar">
                             <i class="fa fa-filter"></i>
                         </button>
-                        <button class="btn btn-secondary w-100" onclick="limpiarFiltroFechas()" title="Limpiar Filtro">
+                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="limpiarFiltroFechas()" title="Limpiar Filtro">
                             <i class="fas fa-broom"></i>
                         </button>
                     </div>
                 </div>
 
-                <table class="table table-bordered table-hover table-striped">
+                <table class="table table-bordered table-striped table-sm">
                     <thead class="table-light">
                     <tr>
                         <th>Tipo</th>
@@ -73,7 +125,7 @@
             </div>
             <div class="modal-footer d-flex justify-content-between flex-wrap">
                 <div id="paginacionActividades" class="mb-2"></div>
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>

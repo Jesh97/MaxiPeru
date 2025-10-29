@@ -5,9 +5,14 @@ let paginaActual = 1;
 let usandoFiltro = false;
 
 const SERVLET_URL = '/listarUsuario';
+let listadoUsuariosCache = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     listarUsuarios();
+    document.getElementById('formEditarUsuario').addEventListener('submit', enviarEdicionUsuario);
+    document.getElementById('editPermiteAccesoIrrestricto').addEventListener('change', function() {
+        document.getElementById('permiteAccesoIrrestrictoHidden').value = this.checked ? 1 : 0;
+    });
 });
 
 function listarUsuarios() {
@@ -17,6 +22,7 @@ function listarUsuarios() {
             return res.json();
         })
         .then(data => {
+            listadoUsuariosCache = data;
             const tbody = document.querySelector("#tablaUsuarios tbody");
             tbody.innerHTML = '';
             data.forEach(usuario => {
@@ -36,9 +42,9 @@ function crearFilaUsuario(usuario) {
     const permisoTexto = usuario.permiteAccesoIrrestricto === 1 ? '<span class="badge bg-success">SÍ (24/7)</span>' : '<span class="badge bg-danger">NO</span>';
 
     let botonesAccion = `
-        <a href="editarUsuario?id=${usuario.id}" class="btn btn-warning btn-sm me-1 mb-1" title="Editar">
+        <button class="btn btn-warning btn-sm me-1 mb-1" onclick="abrirModalEditar(${usuario.id})" title="Editar">
             <i class="fas fa-edit"></i>
-        </a>
+        </button>
         <button class="btn btn-info btn-sm me-1 mb-1" onclick="verActividades(${usuario.id}, '${usuario.nombre}')" title="Ver Actividades">
             <i class="fas fa-chart-line"></i>
         </button>
@@ -89,6 +95,68 @@ function crearFilaUsuario(usuario) {
         <td class="text-center">${botonesAccion}</td>
     `;
     return row;
+}
+
+function abrirModalEditar(id) {
+    const usuario = listadoUsuariosCache.find(u => u.id === id);
+    if (!usuario) {
+        alert("Usuario no encontrado en la caché.");
+        return;
+    }
+
+    document.getElementById('editId').value = usuario.id;
+    document.getElementById('editNombre').value = usuario.nombre;
+    document.getElementById('editCorreo').value = usuario.correo;
+    document.getElementById('editUsername').value = usuario.username;
+    document.getElementById('editRol').value = usuario.rol;
+    document.getElementById('editEstado').value = usuario.estado;
+
+    document.getElementById('editPassword').value = '';
+
+    const permiteIrrestricto = usuario.permiteAccesoIrrestricto === 1;
+    document.getElementById('editPermiteAccesoIrrestricto').checked = permiteIrrestricto;
+    document.getElementById('permiteAccesoIrrestrictoHidden').value = permiteIrrestricto ? 1 : 0;
+
+    const modal = new bootstrap.Modal(document.getElementById("modalEditarUsuario"));
+    modal.show();
+}
+
+function enviarEdicionUsuario(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const params = new URLSearchParams();
+
+    params.append('accion', 'editar');
+
+    for (const pair of formData.entries()) {
+        params.append(pair[0], pair[1]);
+    }
+
+    const url = SERVLET_URL;
+
+    fetch(url, {
+        method: 'POST',
+        body: params
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.text().then(text => { throw new Error(text); });
+        }
+        return res.text();
+    })
+    .then(msg => {
+        alert(msg);
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById("modalEditarUsuario"));
+        modal.hide();
+        listarUsuarios();
+    })
+    .catch(err => {
+        alert('Error al guardar cambios: ' + err.message);
+    });
 }
 
 function cambiarEstadoUsuario(id, estado) {

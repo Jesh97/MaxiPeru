@@ -215,4 +215,30 @@ public class UsuarioController implements UsuarioRepository {
             return false;
         }
     }
+
+    public int editarUsuario(Usuario usuario) {
+        String sql = "{CALL sp_editar_usuario(?, ?, ?, ?, ?, ?)}";
+        int resultado = 0;
+
+        try (Connection conn = Conexion.obtenerConexion();
+             CallableStatement cs = conn.prepareCall(sql)) {
+
+            cs.setInt(1, usuario.getId());
+            cs.setString(2, usuario.getNombre());
+            cs.setString(3, usuario.getCorreo());
+            cs.setString(4, usuario.getUsername());
+            cs.setString(5, usuario.getPassword());
+            cs.setString(6, usuario.getRol());
+
+            try (ResultSet rs = cs.executeQuery()) {
+                if (rs.next()) {
+                    resultado = rs.getInt("resultado");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+        return resultado;
+    }
 }

@@ -89,6 +89,10 @@ public class ListarUsuario extends HttpServlet {
                 handlePermisoIrrestricto(request, response, out, adminId);
                 break;
 
+            case "editar":
+                handleEditar(request, response, out, adminId);
+                break;
+
             default:
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 out.print("Acción no encontrada o método no soportado.");
@@ -189,6 +193,41 @@ public class ListarUsuario extends HttpServlet {
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             out.print("Parámetros de entrada inválidos.");
+        }
+    }
+
+    private void handleEditar(HttpServletRequest request, HttpServletResponse response, PrintWriter out, int adminId) throws IOException {
+        UsuarioController controller = new UsuarioController();
+
+        try {
+            Usuario usuario = new Usuario();
+            usuario.setId(Integer.parseInt(request.getParameter("id")));
+            usuario.setNombre(request.getParameter("nombre"));
+            usuario.setCorreo(request.getParameter("correo"));
+            usuario.setUsername(request.getParameter("username"));
+            usuario.setPassword(request.getParameter("password"));
+            usuario.setRol(request.getParameter("rol"));
+            usuario.setPermiteAccesoIrrestricto(Integer.parseInt(request.getParameter("permiteAccesoIrrestricto")));
+
+            int resultado = controller.editarUsuario(usuario);
+
+            if (resultado == 1) {
+                out.print("Usuario editado correctamente.");
+                controller.registrarAccion(adminId, "EDITAR_USUARIO", "Usuario ID " + usuario.getId() + " editado por admin.", request);
+            } else if (resultado == 0) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                out.print("Error: El ID del usuario a editar no existe.");
+            } else {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.print("Error desconocido al intentar editar el usuario.");
+            }
+
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.print("Parámetros de ID o permiso irrestricto inválidos.");
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            out.print("Error interno al procesar la edición: " + e.getMessage());
         }
     }
 }
