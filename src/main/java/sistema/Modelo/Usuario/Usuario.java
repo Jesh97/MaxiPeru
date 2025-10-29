@@ -9,8 +9,10 @@ public class Usuario {
     private String password;
     private String rol;
     private int estado;
+    private int permiteAccesoIrrestricto;
 
-    public Usuario(int id, String nombre, String correo, String username, String password, String rol, int estado) {
+    public Usuario(int id, String nombre, String correo, String username, String password, String rol,
+                   int estado, int permiteAccesoIrrestricto) {
         this.id = id;
         this.nombre = nombre;
         this.correo = correo;
@@ -18,6 +20,7 @@ public class Usuario {
         this.password = password;
         this.rol = rol;
         this.estado = estado;
+        this.permiteAccesoIrrestricto = permiteAccesoIrrestricto;
     }
 
     public Usuario() {
@@ -82,6 +85,14 @@ public class Usuario {
         this.estado = estado;
     }
 
+    public int getPermiteAccesoIrrestricto() {
+        return permiteAccesoIrrestricto;
+    }
+
+    public void setPermiteAccesoIrrestricto(int permiteAccesoIrrestricto) {
+        this.permiteAccesoIrrestricto = permiteAccesoIrrestricto;
+    }
+
     @Override
     public String toString() {
         return "Usuario{" +
@@ -91,7 +102,8 @@ public class Usuario {
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", rol='" + rol + '\'' +
-                ", estado='" + estado + '\'' +
+                ", estado=" + estado +
+                ", permiteAccesoIrrestricto=" + permiteAccesoIrrestricto +
                 '}';
     }
 }

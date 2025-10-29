@@ -4,59 +4,158 @@ let actividadesPorPagina = 10;
 let paginaActual = 1;
 let usandoFiltro = false;
 
-fetch('/listarUsuario')
-    .then(res => res.json())
-    .then(data => {
-        const tbody = document.querySelector("#tablaUsuarios tbody");
-        data.forEach(usuario => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${usuario.id}</td>
-                <td>${usuario.nombre}</td>
-                <td>${usuario.correo}</td>
-                <td>${usuario.username}</td>
-                <td>${usuario.rol}</td>
-                <td>${usuario.estado === 1 ? 'Habilitado' : 'Deshabilitado'}</td>
-                <td class="text-center">
-                    <a href="editarUsuario?id=${usuario.id}" class="btn btn-warning btn-sm me-1">
-                        <i class="fas fa-edit"></i> Editar
-                    </a>
-                    <button class="btn ${usuario.estado === 1 ? 'btn-danger' : 'btn-success'} btn-sm me-1"
-                        onclick="cambiarEstadoUsuario(${usuario.id}, ${usuario.estado === 1 ? 0 : 1})">
-                        <i class="fas ${usuario.estado === 1 ? 'fa-user-slash' : 'fa-user-check'}"></i>
-                        ${usuario.estado === 1 ? 'Deshabilitar' : 'Habilitar'}
-                    </button>
-                    <button class="btn btn-info btn-sm" onclick="verActividades(${usuario.id}, '${usuario.nombre}')">
-                        <i class="fas fa-chart-line"></i> Actividades
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-    });
+const SERVLET_URL = '/listarUsuario';
 
-function cambiarEstadoUsuario(id, estado) {
-    const confirmMsg = estado === 0 ? '¿Seguro que deseas deshabilitar este usuario?' : '¿Deseas habilitar este usuario?';
-    if (!confirm(confirmMsg)) return;
+document.addEventListener('DOMContentLoaded', () => {
+    listarUsuarios();
+});
 
-    fetch(`/usuario/deshabilitar?id=${id}&estado=${estado}`, {
-        method: 'POST'
-    })
+function listarUsuarios() {
+    fetch(SERVLET_URL + '?accion=listar')
         .then(res => {
-            if (!res.ok) throw new Error('Error al actualizar el estado');
-            return res.text();
+            if (!res.ok) throw new Error("Error al cargar la lista de usuarios.");
+            return res.json();
         })
-        .then(() => {
-            alert('Estado actualizado correctamente.');
-            location.reload();
+        .then(data => {
+            const tbody = document.querySelector("#tablaUsuarios tbody");
+            tbody.innerHTML = '';
+            data.forEach(usuario => {
+                const row = crearFilaUsuario(usuario);
+                tbody.appendChild(row);
+            });
         })
         .catch(err => {
-            alert('Hubo un problema: ' + err.message);
+            alert('Error: ' + err.message);
         });
 }
 
+function crearFilaUsuario(usuario) {
+    const row = document.createElement("tr");
+
+    const estadoTexto = usuario.estado === 1 ? '<span class="badge bg-success">Habilitado</span>' : '<span class="badge bg-danger">PENDIENTE</span>';
+    const permisoTexto = usuario.permiteAccesoIrrestricto === 1 ? '<span class="badge bg-success">SÍ (24/7)</span>' : '<span class="badge bg-danger">NO</span>';
+
+    let botonesAccion = `
+        <a href="editarUsuario?id=${usuario.id}" class="btn btn-warning btn-sm me-1 mb-1" title="Editar">
+            <i class="fas fa-edit"></i>
+        </a>
+        <button class="btn btn-info btn-sm me-1 mb-1" onclick="verActividades(${usuario.id}, '${usuario.nombre}')" title="Ver Actividades">
+            <i class="fas fa-chart-line"></i>
+        </button>
+    `;
+
+    if (usuario.estado === 1) {
+        const estadoNuevo = 0;
+        const claseBtn = 'btn-danger';
+        const icono = 'fa-user-slash';
+        const texto = 'Deshabilitar';
+
+        botonesAccion += `
+            <button class="btn ${claseBtn} btn-sm me-1 mb-1"
+                onclick="cambiarEstadoUsuario(${usuario.id}, ${estadoNuevo})" title="${texto}">
+                <i class="fas ${icono}"></i> ${texto}
+            </button>
+        `;
+
+        if (usuario.rol === 'produccion') {
+            const permisoNuevo = usuario.permiteAccesoIrrestricto === 1 ? 0 : 1;
+            const clasePermiso = usuario.permiteAccesoIrrestricto === 1 ? 'btn-secondary' : 'btn-primary';
+            const textoPermiso = usuario.permiteAccesoIrrestricto === 1 ? 'Revocar 24/7' : 'Otorgar 24/7';
+
+            botonesAccion += `
+                <button class="btn ${clasePermiso} btn-sm mb-1"
+                    onclick="cambiarPermisoIrrestricto(${usuario.id}, ${permisoNuevo})" title="${textoPermiso}">
+                    <i class="fas fa-clock"></i>
+                    ${textoPermiso}
+                </button>
+            `;
+        }
+    } else {
+        botonesAccion += `
+            <button class="btn btn-success btn-sm me-1 mb-1"
+                onclick="aceptarUsuario(${usuario.id})" title="Aprobar Cuenta">
+                <i class="fas fa-check-circle"></i> Aceptar Cuenta
+            </button>
+        `;
+    }
+
+    row.innerHTML = `
+        <td>${usuario.nombre}</td>
+        <td>${usuario.correo}</td>
+        <td>${usuario.username}</td>
+        <td>${usuario.rol}</td>
+        <td>${estadoTexto}</td>
+        <td>${permisoTexto}</td>
+        <td class="text-center">${botonesAccion}</td>
+    `;
+    return row;
+}
+
+function cambiarEstadoUsuario(id, estado) {
+    const confirmMsg = '¿Seguro que deseas deshabilitar este usuario?';
+    if (!confirm(confirmMsg)) return;
+
+    fetch(SERVLET_URL + `?accion=deshabilitar&id=${id}&estado=${estado}`, {
+        method: 'POST'
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Error al deshabilitar el usuario');
+        return res.text();
+    })
+    .then(msg => {
+        alert(msg);
+        listarUsuarios();
+    })
+    .catch(err => {
+        alert('Hubo un problema: ' + err.message);
+    });
+}
+
+function aceptarUsuario(id) {
+    const confirmMsg = '¿Deseas APROBAR y HABILITAR esta cuenta de usuario?';
+    if (!confirm(confirmMsg)) return;
+
+    fetch(SERVLET_URL + `?accion=aceptar&id=${id}`, {
+        method: 'POST'
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Error al aprobar la cuenta');
+        return res.text();
+    })
+    .then(msg => {
+        alert(msg);
+        listarUsuarios();
+    })
+    .catch(err => {
+        alert('Hubo un problema: ' + err.message);
+    });
+}
+
+function cambiarPermisoIrrestricto(id, permisoNuevo) {
+    const confirmMsg = permisoNuevo === 1
+        ? '¿Seguro que deseas OTORGAR acceso irrestricto (24/7) a este usuario de Producción?'
+        : '¿Seguro que deseas REVOCAR el acceso irrestricto?';
+
+    if (!confirm(confirmMsg)) return;
+
+    fetch(SERVLET_URL + `?accion=permisoIrrestricto&id=${id}&permiso=${permisoNuevo}`, {
+        method: 'POST'
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Error al actualizar el permiso irrestricto');
+        return res.text();
+    })
+    .then(msg => {
+        alert(msg);
+        listarUsuarios();
+    })
+    .catch(err => {
+        alert('Hubo un problema: ' + err.message);
+    });
+}
+
 function verActividades(usuarioId, nombre) {
-    fetch(`/ListarActividad?id=${usuarioId}`)
+    fetch(SERVLET_URL + `?accion=listarActividades&id=${usuarioId}`)
         .then(res => {
             if (!res.ok) throw new Error("No autorizado o error de red");
             return res.json();

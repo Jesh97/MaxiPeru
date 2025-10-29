@@ -44,36 +44,37 @@ public class ProduccionServlet extends HttpServlet {
                 throw new IllegalArgumentException("Error: Acción no especificada.");
             }
 
-            if (action.equals("crear_receta_base")) {
+            if (action.equals("crear_receta_y_componentes")) {
+
                 int idArtTer = 1;
                 int idUniProd = 1;
-
                 String desc = request.getParameter("p_desc");
                 BigDecimal cantProd = new BigDecimal(request.getParameter("p_cant_prod"));
 
                 idRecetaActiva = dao.crearReceta(idArtTer, desc, cantProd, idUniProd);
                 session.setAttribute("idRecetaActiva", idRecetaActiva);
-                mensaje = "Receta base creada con ID: " + idRecetaActiva + ". Continúe con los componentes.";
 
-            } else if (action.equals("guardar_componentes")) {
-                if (idRecetaActiva == null) throw new IllegalArgumentException("Debe crear una receta base primero.");
-
-                String[] idArtInsumoArr = request.getParameterValues("p_codigo_insumo[]");
+                String[] idArtInsumoArr = request.getParameterValues("p_id_art_insumo_hidden[]");
                 String[] cantReqArr = request.getParameterValues("p_cant_req[]");
 
+                int componentesGuardados = 0;
                 if (idArtInsumoArr != null) {
                     for (int i = 0; i < idArtInsumoArr.length; i++) {
-                        int idArtInsumo = i + 1;
+                        int idArtInsumo = Integer.parseInt(idArtInsumoArr[i]);
                         int idUniInsumo = 1;
 
                         BigDecimal cantReq = new BigDecimal(cantReqArr[i]);
 
                         dao.agregarDetalleReceta(idRecetaActiva, idArtInsumo, cantReq, idUniInsumo);
+                        componentesGuardados++;
                     }
                 }
-                mensaje = "Detalles de receta guardados con éxito en Receta ID: " + idRecetaActiva;
 
-            } else if (action.equals("crear_orden")) {
+                mensaje = "Fórmula y sus " + componentesGuardados + " componentes guardados con éxito en Receta ID: " + idRecetaActiva;
+
+            }
+
+            else if (action.equals("crear_orden")) {
                 if (idRecetaActiva == null) throw new IllegalArgumentException("Debe haber una Receta Activa.");
 
                 BigDecimal cantProd = new BigDecimal(request.getParameter("p_cant_prod"));

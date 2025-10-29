@@ -14,7 +14,6 @@ import sistema.Servlet.Producto.CatalogoServlet;
 import sistema.Servlet.Producto.ProductoServlet;
 import sistema.Servlet.Proveedor.BuscarProveedorServlet;
 import sistema.Servlet.Proveedor.ProveedorServlet;
-import sistema.Servlet.Usuario.DeshabilitarUsuario;
 import sistema.Servlet.Usuario.ListarActividades;
 import sistema.Servlet.Usuario.ListarUsuario;
 import sistema.Servlet.Usuario.RegistrarUsuario;
@@ -36,7 +35,6 @@ public class App {
         webserver.addServlet(CerrarSesion.class,"/cerrarSesion");
         webserver.addServlet(ListarUsuario.class,"/listarUsuario");
         webserver.addServlet(ListarActividades.class,"/ListarActividad");
-        webserver.addServlet(DeshabilitarUsuario.class,"/usuario/deshabilitar");
         webserver.addServlet(ClienteServlet.class,"/clientes");
         webserver.addServlet(ProveedorServlet.class,"/proveedores");
         webserver.addServlet(CompraServlet.class,"/CompraServlet");

@@ -7,34 +7,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../../CSS/Produccion/produccion.css">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-
 </head>
 <body>
-
 <div class="produccion-container">
     <h1><i class="fas fa-industry"></i> Gestión de Producción</h1>
-
     <div class="tabs">
         <button class="tab-button active" data-color-suffix="success" onclick="openTab(event, 'Receta')"><i class="fas fa-flask"></i> 1. Receta y Componentes</button>
         <button class="tab-button" data-color-suffix="warning" onclick="openTab(event, 'OrdenConsumo')"><i class="fas fa-clipboard-list"></i> 2. Orden y Consumo MP</button>
         <button class="tab-button" data-color-suffix="primary" onclick="openTab(event, 'Empaque')"><i class="fas fa-boxes"></i> 3. Envases y Merma</button>
         <button class="tab-button" data-color-suffix="danger" onclick="openTab(event, 'Lotes')"><i class="fas fa-barcode"></i> 4. Lotes y Cierre</button>
     </div>
-
     <div id="Receta" class="tab-content active">
-
-        <div class="form-group-section">
-            <h2 class="section-header header-success">Definir Producto y Unidades</h2>
-
-            <form action="/ProduccionServlet" method="POST">
-                <input type="hidden" name="action" value="crear_receta_base">
-                <input type="hidden" name="p_id_art_ter_hidden" value="1">
-                <input type="hidden" name="p_id_uni_prod_hidden" value="1">
-
+        <form action="/ProduccionServlet" method="POST" onsubmit="saveFullRecipe(event)">
+            <input type="hidden" name="action" value="crear_receta_y_componentes">
+            <input type="hidden" name="p_id_art_ter_hidden" id="p_id_art_ter_hidden" value="1">
+            <input type="hidden" name="p_id_uni_prod_hidden" value="1">
+            <div class="form-group-section">
+                <h2 class="section-header header-success">Definir Producto y Unidades</h2>
                 <div class="compact-fields-grid">
                     <div>
                         <label for="buscar_art_ter">Producto Terminado:</label>
@@ -43,35 +35,25 @@
                             <i class="fas fa-search search-icon"></i>
                         </div>
                     </div>
-
                     <div>
                         <label for="desc">Descripción de Fórmula:</label>
                         <div class="input-wrapper">
-                            <input type="text" id="desc" name="p_desc" placeholder="Ej: Fórmula estándar para 1 Litro" required>
+                            <input type="text" id="desc" name="p_desc" placeholder="Ej: Fórmula estándar" required>
                         </div>
                     </div>
-
                     <div>
                         <label>Cantidad Base de la Fórmula:</label>
                         <div class="fixed-unit-input">
-                            <input type="number" id="cant_prod" name="p_cant_prod" value="1.00" step="0.01" readonly class="readonly-field">
+                            <input type="number" id="cant_prod" name="p_cant_prod" value="1.00" step="0.01" required>
                             <span>L</span>
                         </div>
                         <input type="hidden" name="p_nombre_uni_prod" value="L">
                     </div>
                 </div>
-
-                <button type="submit" class="btn-submit btn-success"><i class="fas fa-plus-circle"></i> Crear Fórmula Base</button>
-                <p class="alert-info"><i class="fas fa-info-circle" style="color: var(--accent-success);"></i> La cantidad base está fija en **1 Litro (L)**. El sistema debe devolver el ID de la fórmula recién creada.</p>
-            </form>
-        </div>
-
-        <div class="form-group-section">
-            <h2 class="section-header header-success">Componentes Requeridos (Insumos) - **Fórmula Activa**</h2>
-
-            <form action="/ProduccionServlet" method="POST">
-                <input type="hidden" name="action" value="guardar_componentes">
-
+                <p class="alert-info"><i class="fas fa-info-circle" style="color: var(--accent-success);"></i> La cantidad base **se puede modificar**. El sistema debe devolver el ID de la fórmula recién creada.</p>
+            </div>
+            <div class="form-group-section">
+                <h2 class="section-header header-success">Componentes Requeridos (Insumos)</h2>
                 <label for="buscar_insumo">Buscar Insumo y Agregar a la Lista:</label>
                 <div class="insumo-search-container">
                     <div class="input-wrapper">
@@ -80,7 +62,6 @@
                     </div>
                     <button type="button" class="btn-submit btn-success btn-add" onclick="addRowFromSearch()"><i class="fas fa-plus"></i> Agregar</button>
                 </div>
-
                 <div style="overflow-x: auto;">
                     <table class="detalle-table">
                         <thead>
@@ -97,21 +78,17 @@
                         </tbody>
                     </table>
                 </div>
-
-                <button type="submit" class="btn-submit btn-success" onclick="saveRecipeComponents(event)"><i class="fas fa-save"></i> Guardar Componentes</button>
-                <p class="alert-info"><i class="fas fa-check-circle" style="color: var(--accent-success);"></i> Los insumos son la base para producir 1 Litro del producto final.</p>
-            </form>
-        </div>
+                <button type="submit" class="btn-submit btn-success"><i class="fas fa-save"></i> Guardar Fórmula Completa</button>
+                <p class="alert-info"><i class="fas fa-check-circle" style="color: var(--accent-success);"></i> Los insumos son la base para producir la cantidad definida en la fórmula.</p>
+            </div>
+        </form>
     </div>
-
     <div id="OrdenConsumo" class="tab-content">
         <div class="form-group-section">
             <h2 class="section-header header-warning">Generar Nueva Orden de Producción</h2>
-
             <form action="/ProduccionServlet" method="POST" onsubmit="saveOrden(event)">
                 <input type="hidden" name="action" value="crear_orden">
                 <input type="hidden" name="p_id_receta_orden_hidden" value="">
-
                 <div class="compact-fields-grid">
                     <div>
                         <label for="buscar_receta_orden">Fórmula a Usar:</label>
@@ -120,14 +97,12 @@
                             <i class="fas fa-search search-icon"></i>
                         </div>
                     </div>
-
                     <div>
                         <label for="cant_prod_orden">Cantidad a Producir (Litros Reales):</label>
                         <div class="input-wrapper">
                             <input type="number" id="cant_prod_orden" name="p_cant_prod" step="0.01" required oninput="calculateInsumosForOrder()">
                         </div>
                     </div>
-
                     <div>
                         <label for="fecha_ini">Fecha de Inicio Programada:</label>
                         <div class="input-wrapper">
@@ -135,21 +110,17 @@
                         </div>
                     </div>
                 </div>
-
                 <label for="obs_orden">Observaciones:</label>
                 <div class="input-wrapper">
                     <textarea id="obs_orden" name="p_obs" rows="3"></textarea>
                 </div>
-
                 <button type="submit" class="btn-submit btn-tab-action"><i class="fas fa-file-alt"></i> Crear Orden</button>
                 <p class="alert-info"><i class="fas fa-info-circle"></i> La orden será usada automáticamente en los siguientes pasos.</p>
             </form>
         </div>
-
         <div class="form-group-section">
             <h2 class="section-header header-warning">Insumos Requeridos por Orden (Cálculo)</h2>
             <span id="display_order_recipe_status" class="orden-activa-display display-warning">Guarde Componentes (Paso 1) y Cree la Orden</span>
-
             <div style="overflow-x: auto;">
                 <table class="detalle-table" style="margin-top: 15px;">
                     <thead>
@@ -166,34 +137,27 @@
                 </table>
             </div>
         </div>
-
         <div class="form-group-section">
             <h2 class="section-header header-warning">Descontar Materia Prima</h2>
             <form action="/ProduccionServlet" method="POST">
                 <input type="hidden" name="action" value="ejecutar_consumo">
                 <input type="hidden" name="p_codigo_orden_consumo" id="hidden_orden_mp_submit">
-
                 <label>Orden Activa:</label>
                 <span id="display_orden_mp" class="orden-activa-display display-warning">Aún no hay Orden Activa</span>
                 <input type="hidden" id="hidden_orden_mp" name="p_codigo_orden_consumo" required>
-
                 <button type="submit" class="btn-submit btn-tab-action"><i class="fas fa-recycle"></i> Ejecutar Consumo MP</button>
                 <p class="alert-warning"><i class="fas fa-exclamation-triangle"></i> ADVERTENCIA: Descuenta stock y mueve la Orden a **'En Proceso'**.</p>
             </form>
         </div>
     </div>
-
     <div id="Empaque" class="tab-content">
         <div class="form-group-section">
             <h2 class="section-header header-primary">Registro de Empaque y Consumo de Envases</h2>
-
             <label>Orden de Producción Activa:</label>
             <span id="display_orden_envase" class="orden-activa-display display-primary">Aún no hay Orden Activa</span>
             <input type="hidden" id="hidden_orden_envase" name="p_codigo_orden" required>
-
             <form action="/ProduccionServlet" method="POST">
                 <input type="hidden" name="action" value="consumo_envase_detalle">
-
                 <label for="buscar_componente_empaque">Buscar Componente de Empaque (Envase, Tapa, Etiqueta, Caja):</label>
                 <div class="insumo-search-container">
                     <div class="input-wrapper">
@@ -202,7 +166,6 @@
                     </div>
                     <button type="button" class="btn-submit btn-tab-action btn-add" onclick="addPackagingRowFromSearch()"><i class="fas fa-plus"></i> Agregar</button>
                 </div>
-
                 <div style="overflow-x: auto;">
                     <table class="detalle-table">
                         <thead>
@@ -218,18 +181,15 @@
                         </tbody>
                     </table>
                 </div>
-
                 <button type="submit" class="btn-submit btn-tab-action"><i class="fas fa-cubes"></i> Descontar Materiales</button>
                 <p class="alert-info"><i class="fas fa-info-circle"></i> Descuenta el stock de todos los materiales de empaque listados.</p>
             </form>
         </div>
-
         <div class="form-group-section">
             <h2 class="section-header header-primary">Registro Final de Producción y Merma</h2>
             <form action="/ProduccionServlet" method="POST">
                 <input type="hidden" name="action" value="registrar_produccion_merma">
                 <input type="hidden" name="p_codigo_orden" id="hidden_orden_merma_submit">
-
                 <div class="compact-fields-grid">
                     <div>
                         <label for="cant_a_empacar_final">Total de Unidades Empacadas (Producto Final):</label>
@@ -238,7 +198,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="merma-field">
                     <label for="merma_cantidad"><i class="fas fa-trash-alt"></i> Cantidad de Merma/Sobrante (Litros):</label>
                     <div class="input-wrapper" style="margin-bottom: 0;">
@@ -254,17 +213,14 @@
                     </div>
                     <p class="alert-info" style="color: var(--accent-danger);"><i class="fas fa-calculator" style="color: var(--accent-danger);"></i> Campo automático. Representa los Litros de producto no envasados.</p>
                 </div>
-
                 <button type="submit" class="btn-submit btn-tab-action"><i class="fas fa-check"></i> Registrar Producción y Merma</button>
                 <p class="alert-info"><i class="fas fa-info-circle"></i> Finaliza la etapa de empaque de esta orden.</p>
             </form>
         </div>
     </div>
-
     <div id="Lotes" class="tab-content">
         <div class="form-group-section">
             <h2 class="section-header header-success">Registro de Lotes Producidos</h2>
-
             <label>Orden de Producción Activa:</label>
             <span id="display_orden_lote" class="orden-activa-display display-success">Aún no hay Orden Activa</span>
             <div class="compact-fields-grid" style="align-items: flex-end; margin-bottom: 10px;">
@@ -274,31 +230,26 @@
                         <input type="number" id="cant_envases_new" step="0.01" required placeholder="0.00">
                     </div>
                 </div>
-
                 <div style="grid-column: span 1 / auto;">
                     <label for="fecha_vencimiento_new">Fecha de Vencimiento:</label>
                     <div class="input-wrapper">
                         <input type="date" id="fecha_vencimiento_new" required>
                     </div>
                 </div>
-
                 <div style="grid-column: span 1 / auto;">
                     <label for="cod_lote_new_display">Código del Lote (Generado Backend):</label>
                     <div class="input-wrapper">
                         <input type="text" id="cod_lote_new_display" value="" readonly class="readonly-field" placeholder="Será generado">
                     </div>
                 </div>
-
                 <button type="button" class="btn-submit btn-success btn-add" style="margin-top: 0;"
                         onclick="addLotToTable()"><i class="fas fa-plus"></i> Agregar Lote</button>
             </div>
             <p class="alert-info"><i class="fas fa-tags" style="color: var(--accent-success);"></i> Agregue las cantidades y fechas de vencimiento. El **Código del Lote** será generado automáticamente por el *backend* al guardar.</p>
-
             <h2 class="section-header header-success" style="margin-top: 40px;">Lotes a Registrar en esta Orden</h2>
             <form action="/ProduccionServlet" method="POST" onsubmit="submitAllLots(event)">
                 <input type="hidden" name="action" value="registrar_multiples_lotes">
                 <input type="hidden" id="hidden_orden_lote_submit" name="p_codigo_orden_lote" required>
-
                 <div style="overflow-x: auto;">
                     <table class="detalle-table">
                         <thead>
@@ -317,32 +268,25 @@
                 <p class="alert-info"><i class="fas fa-check-circle" style="color: var(--accent-success);"></i> Envía todos los lotes listados al backend para su registro y aumenta el stock.</p>
             </form>
         </div>
-
         <div class="form-group-section">
             <h2 class="section-header danger-header">Cerrar Orden de Producción</h2>
             <form action="/ProduccionServlet" method="POST">
                 <input type="hidden" name="action" value="finalizar_orden">
-
                 <label>Orden a Finalizar:</label>
                 <span id="display_orden_finalizar" class="orden-activa-display display-danger">Aún no hay Orden Activa</span>
                 <input type="hidden" id="hidden_orden_finalizar" name="p_codigo_orden_finalizar" required>
-
                 <button type="submit" class="btn-submit btn-danger"><i class="fas fa-power-off"></i> Finalizar Orden</button>
                 <p class="alert-info"><i class="fas fa-check"></i> Marca la orden como **'Terminada'** y no permitirá más registros.</p>
             </form>
         </div>
     </div>
-
 </div>
-
 <script>
     let activeOrdenCode = '';
     let activeOrderQty = 0;
     let insumoCounter = 0;
     let currentRecipeComponents = [];
-
     $(document).ready(function() {
-
         $("#buscar_art_ter").autocomplete({
             source: function(request, response) {
                 $.ajax({
@@ -369,8 +313,6 @@
                 return false;
             }
         });
-
-
         $("#buscar_insumo").autocomplete({
             source: function(request, response) {
                 $.ajax({
@@ -397,7 +339,6 @@
             select: function(event, ui) {
                 const selectedItem = ui.item;
                 document.getElementById('buscar_insumo').value = selectedItem.value;
-
                 addRow(
                     'insumo-rows',
                     selectedItem.codigo,
@@ -407,13 +348,10 @@
                     selectedItem.densidad,
                     selectedItem.id
                 );
-
                 document.getElementById('buscar_insumo').value = '';
                 return false;
             }
         });
-
-
         $("#buscar_componente_empaque").autocomplete({
             source: function(request, response) {
                 $.ajax({
@@ -439,7 +377,6 @@
             select: function(event, ui) {
                 const selectedItem = ui.item;
                 document.getElementById('buscar_componente_empaque').value = selectedItem.value;
-
                 addPackagingRow(
                     'empaque-rows',
                     selectedItem.codigo,
@@ -448,14 +385,10 @@
                     selectedItem.unidad,
                     selectedItem.id
                 );
-
                 document.getElementById('buscar_componente_empaque').value = '';
                 return false;
             }
         });
-
-
-
         openTab(null, 'Receta');
         const storedCode = localStorage.getItem('activeOrdenCode');
         if (storedCode) {
@@ -470,15 +403,19 @@
             }
         }
     });
-
-    function saveRecipeComponents(event) {
-        event.preventDefault();
+    function saveFullRecipe(event) {
         const rows = document.getElementById('insumo-rows').querySelectorAll('tr');
-        if (rows.length === 0) {
-            alert("Agregue al menos un insumo antes de guardar.");
+        const cantProd = parseFloat(document.getElementById('cant_prod').value);
+        if (isNaN(cantProd) || cantProd <= 0) {
+            event.preventDefault();
+            alert("La Cantidad Base de la Fórmula debe ser un número positivo.");
             return;
         }
-
+        if (rows.length === 0) {
+            event.preventDefault();
+            alert("Agregue al menos un insumo componente antes de guardar la Fórmula Completa.");
+            return;
+        }
         currentRecipeComponents = [];
         rows.forEach(row => {
             const inputs = row.querySelectorAll('input');
@@ -487,13 +424,12 @@
                 name: inputs[1].value,
                 baseQty: parseFloat(inputs[2].value),
                 unit: inputs[3].value,
-                density: parseFloat(inputs[4].value)
+                density: parseFloat(inputs[4].value),
+                id: inputs[5].value
             });
         });
-        calculateInsumosForOrder();
-        alert("Componentes de Receta Guardados (Simulado). Ahora puede crear una Orden de Producción en el paso 2.");
+        alert("Fórmula Base y Componentes Enviados al Servidor. (El backend debe manejar la acción 'crear_receta_y_componentes')");
     }
-
     function saveOrden(event) {
         event.preventDefault();
         const cantProdInput = document.getElementById('cant_prod_orden');
@@ -503,9 +439,8 @@
         }
         if (currentRecipeComponents.length === 0) {
              alert("ERROR: Primero debe guardar los Componentes de la Receta en el Paso 1.");
-            return;
+             return;
         }
-
         const tempCode = 'ORD-' + new Date().getFullYear().toString().slice(-2) + new Date().getMonth().toString().padStart(2, '0') + '-' + Math.floor(Math.random() * 900 + 100);
         activeOrdenCode = tempCode;
         activeOrderQty = parseFloat(cantProd);
@@ -515,18 +450,17 @@
         calculateInsumosForOrder();
         alert(`Orden Simulada Creada: ${activeOrdenCode}. (Esto solo es una simulación JS)`);
     }
-
     function calculateInsumosForOrder() {
         const tableBody = document.getElementById('insumos-orden-rows');
         const statusDisplay = document.getElementById('display_order_recipe_status');
         const cantProdInput = document.getElementById('cant_prod_orden');
         const cantAProducir = parseFloat(cantProdInput ? cantProdInput.value : activeOrderQty) || activeOrderQty;
+        const baseQtyFormula = parseFloat(document.getElementById('cant_prod') ? document.getElementById('cant_prod').value : '1.00');
         if (currentRecipeComponents.length === 0) {
             tableBody.innerHTML = '';
             statusDisplay.textContent = 'La Receta Activa no tiene Componentes Guardados (Paso 1)';
             return;
         }
-
         activeOrderQty = cantAProducir;
         localStorage.setItem('activeOrderQty', activeOrderQty);
         if (cantAProducir <= 0 || !activeOrdenCode) {
@@ -536,12 +470,11 @@
                 : 'Cree una Orden y defina la Cantidad a Producir';
             return;
         }
-
-        statusDisplay.textContent = `Orden ${activeOrdenCode}: Cantidad a Producir: ${cantAProducir.toFixed(2)} L`;
+        statusDisplay.textContent = `Orden ${activeOrdenCode}: Cantidad a Producir: ${cantAProducir.toFixed(2)} L (Base de Fórmula: ${baseQtyFormula.toFixed(2)} L)`;
         tableBody.innerHTML = '';
-
         currentRecipeComponents.forEach(insumo => {
-            const totalReq = cantAProducir * insumo.baseQty;
+            const factor = cantAProducir / baseQtyFormula;
+            const totalReq = insumo.baseQty * factor;
             const newRow = tableBody.insertRow();
             newRow.innerHTML = `
                 <td>${insumo.code}</td>
@@ -554,37 +487,30 @@
             `;
         });
     }
-
     function addLotToTable() {
         const qtyInput = document.getElementById('cant_envases_new');
         const dateInput = document.getElementById('fecha_vencimiento_new');
         const tableBody = document.getElementById('lotes-rows');
         const lotCodeDisplay = document.getElementById('cod_lote_new_display');
-
         const qty = parseFloat(qtyInput.value);
         const date = dateInput.value;
         if (!activeOrdenCode) {
             alert("ERROR: Primero debe crear una Orden de Producción activa en el Paso 2.");
             return;
         }
-
         if (isNaN(qty) || qty <= 0) {
             alert("Ingrese una Cantidad válida mayor a cero.");
             qtyInput.focus();
             return;
         }
-
         if (!date) {
             alert("Seleccione una Fecha de Vencimiento.");
             dateInput.focus();
             return;
         }
-
         const visualLotCode = 'LOTE-' + new Date().getFullYear().toString().slice(-2) + new Date().getMonth().toString().padStart(2, '0') + new Date().getDate().toString().padStart(2, '0') + '-' + Math.floor(Math.random() * 900 + 100);
         lotCodeDisplay.value = visualLotCode;
-
         const newRow = tableBody.insertRow();
-
         newRow.innerHTML = `
             <td><input type="text" name="p_cod_lote[]" value="" readonly class="readonly-field" placeholder="Generado por Backend"></td>
             <td><input type="number" name="p_cant_lote[]" value="${qty.toFixed(2)}" step="0.01" required style="text-align: right;" placeholder="Cantidad"></td>
@@ -597,27 +523,22 @@
         qtyInput.focus();
         alert(`Lote agregado a la lista para registro (Cantidad: ${qty.toFixed(2)}, Vencimiento: ${date}). El código final será generado por el Backend.`);
     }
-
     function submitAllLots(event) {
         const tableBody = document.getElementById('lotes-rows');
         const rows = tableBody.querySelectorAll('tr');
-
         if (!activeOrdenCode) {
             event.preventDefault();
             alert("ERROR: No hay una Orden de Producción activa para registrar lotes.");
             return;
         }
-
         if (rows.length === 0) {
             event.preventDefault();
             alert("ERROR: Debe agregar al menos un lote a la lista para poder guardar.");
             return;
         }
-
         document.getElementById('hidden_orden_lote_submit').value = activeOrdenCode;
         alert(`Simulación de envío masivo de ${rows.length} lote(s) al backend. (Orden: ${activeOrdenCode})`);
     }
-
     function updateOrdenFields() {
         const fields = [
             { suffix: 'mp', colorSuffix: 'warning' },
@@ -636,51 +557,42 @@
             const displayId = 'display_orden_' + suffix;
             const displayElement = document.getElementById(displayId);
             const displayClass = 'display-' + colorSuffix;
-
-
             if (displayElement) {
                 displayElement.classList.remove('display-success', 'display-warning', 'display-primary', 'display-danger');
                 displayElement.classList.add(displayClass);
-
                 if (activeOrdenCode) {
                     displayElement.textContent = `Orden Activa: ${activeOrdenCode}`;
                 } else {
                     displayElement.textContent = 'Aún no hay Orden Activa';
-            }
+                }
             }
         });
     }
-
     function openTab(evt, tabName) {
         let i, tabcontent, tablinks;
         tabcontent = document.getElementsByClassName("tab-content");
         for (i = 0; i < tabcontent.length; i++) {
             tabcontent[i].classList.remove("active");
         }
-
         tablinks = document.getElementsByClassName("tab-button");
         for (i = 0; i < tablinks.length; i++) {
             tablinks[i].classList.remove("active");
             tablinks[i].classList.remove('active-success', 'active-warning', 'active-primary', 'active-danger');
             tablinks[i].querySelector('i').style.color = 'var(--text-color-medium)';
         }
-
         document.getElementById(tabName).classList.add("active");
-
         let currentTabButton;
         if (evt) {
             currentTabButton = evt.currentTarget;
         } else {
             currentTabButton = document.querySelector(`.tab-button[onclick*="'${tabName}'"]`);
         }
-
         if (currentTabButton) {
             currentTabButton.classList.add("active");
             const colorSuffix = currentTabButton.getAttribute('data-color-suffix');
             currentTabButton.classList.add(`active-${colorSuffix}`);
             currentTabButton.querySelector('i').style.color = `var(--accent-${colorSuffix})`;
         }
-
         const currentTabContent = document.getElementById(tabName);
         const submitButtons = currentTabContent.querySelectorAll('.btn-submit');
         if (currentTabButton) {
@@ -691,7 +603,6 @@
                 }
             });
         }
-
         const alertInfos = currentTabContent.querySelectorAll('.alert-info i:not([style*="color: var(--accent-danger)"])');
         if (currentTabButton) {
             const colorSuffix = currentTabButton.getAttribute('data-color-suffix');
@@ -704,7 +615,6 @@
             calculateInsumosForOrder();
         }
     }
-
     function addRowFromSearch() {
         const searchValue = document.getElementById('buscar_insumo').value.trim();
         if (searchValue) {
@@ -713,12 +623,10 @@
              alert("Por favor, ingrese un valor de búsqueda.");
         }
     }
-
     function addRow(tableId, code, name, qty, unit, density, insumoId) {
         const tableBody = document.getElementById(tableId);
         const newRow = tableBody.insertRow();
         insumoCounter++;
-
         newRow.innerHTML = `
             <td><input type="text" name="p_codigo_insumo[]" value="${code}" readonly class="readonly-field" placeholder="CÓDIGO"></td>
             <td><input type="text" name="p_nombre_art_insumo[]" value="${name}" required placeholder="Nombre Insumo"></td>
@@ -729,7 +637,6 @@
             <input type="hidden" name="p_id_art_insumo_hidden[]" value="${insumoId}">
         `;
     }
-
     function addPackagingRowFromSearch() {
         const searchValue = document.getElementById('buscar_componente_empaque').value.trim();
         if (searchValue) {
@@ -738,11 +645,9 @@
              alert("Por favor, ingrese un valor de búsqueda.");
         }
     }
-
     function addPackagingRow(tableId, code, name, qty, unit, empaqueId) {
         const tableBody = document.getElementById(tableId);
         const newRow = tableBody.insertRow();
-
         newRow.innerHTML = `
             <td><input type="text" name="p_codigo_empaque[]" value="${code}" readonly class="readonly-field" placeholder="CÓDIGO"></td>
             <td><input type="text" name="p_nombre_empaque[]" value="${name}" required placeholder="Nombre Componente"></td>
@@ -752,7 +657,6 @@
             <input type="hidden" name="p_id_art_empaque_hidden[]" value="${empaqueId}">
         `;
     }
-
     function deleteRow(btn) {
         const row = btn.parentNode.parentNode;
         row.parentNode.removeChild(row);
