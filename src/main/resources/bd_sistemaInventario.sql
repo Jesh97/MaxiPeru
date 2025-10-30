@@ -1,4 +1,5 @@
-CREATE DATABASE IF NOT EXISTS bd_maxiperu DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE DATABASE IF NOT EXISTS bd_maxiperu
+DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 USE bd_maxiperu;
 
@@ -23,13 +24,14 @@ correo VARCHAR(100)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE usuario (
-id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-nombre VARCHAR(45) DEFAULT NULL,
-correo VARCHAR(45) DEFAULT NULL,
-username VARCHAR(45) DEFAULT NULL,
-password VARCHAR(255) DEFAULT NULL,
-rol VARCHAR(45) DEFAULT NULL,
-estado TINYINT(1) DEFAULT NULL
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(45) DEFAULT NULL,
+    correo VARCHAR(45) DEFAULT NULL,
+    username VARCHAR(45) DEFAULT NULL,
+    password VARCHAR(255) DEFAULT NULL,
+    rol VARCHAR(45) DEFAULT NULL,
+    estado TINYINT(1) DEFAULT 0,
+    permite_acceso_irrestricto TINYINT(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE actividad_usuario (
@@ -65,7 +67,8 @@ simbolo VARCHAR(5) DEFAULT NULL
 CREATE TABLE unidad_medida (
 id_unidad INT AUTO_INCREMENT PRIMARY KEY,
 nombre VARCHAR(100) NOT NULL UNIQUE,
-abreviatura VARCHAR(20) NOT NULL UNIQUE
+abreviatura VARCHAR(20) NOT NULL UNIQUE,
+factor_a_kg DECIMAL(12,8) NOT NULL DEFAULT 1.00000000
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE marca (
@@ -89,20 +92,20 @@ nombre VARCHAR(100) NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE articulo (
-id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 codigo VARCHAR(50) NOT NULL,
 descripcion VARCHAR(255) NOT NULL UNIQUE,
 cantidad DECIMAL(12,2) DEFAULT 0.00,
 precio_compra DECIMAL(12,2) DEFAULT 0.00,
 precio_venta DECIMAL(12,2) DEFAULT 0.00,
 peso_unitario DECIMAL(10,3) DEFAULT 0.000,
-densidad DECIMAL(10,3) DEFAULT 0.000,
+densidad DECIMAL(12,8) DEFAULT 0.00000000,
 aroma VARCHAR(50) DEFAULT NULL,
 color VARCHAR(50) DEFAULT NULL,
-id_marca INT(11) DEFAULT NULL,
-id_categoria INT(11) DEFAULT NULL,
-id_unidad INT(11) DEFAULT NULL,
-id_tipo_articulo INT(11) DEFAULT NULL,
+id_marca INT DEFAULT NULL,
+id_categoria INT DEFAULT NULL,
+id_unidad INT DEFAULT NULL,
+id_tipo_articulo INT DEFAULT NULL,
 FOREIGN KEY (id_marca) REFERENCES marca (id_marca) ON DELETE CASCADE,
 FOREIGN KEY (id_categoria) REFERENCES categoria (id_categoria) ON DELETE CASCADE,
 FOREIGN KEY (id_unidad) REFERENCES unidad_medida (id_unidad) ON DELETE CASCADE,
@@ -159,14 +162,13 @@ FOREIGN KEY (id_unidad) REFERENCES unidad_medida(id_unidad) ON DELETE RESTRICT
 
 CREATE TABLE inventario_lote (
 id_lote INT AUTO_INCREMENT PRIMARY KEY,
-id_articulo INT NOT NULL,
-id_detalle_compra INT NULL,
-codigo_lote VARCHAR(50) NOT NULL UNIQUE,
+id_articulo INT,
+id_detalle_compra INT,
+codigo_lote VARCHAR(50) UNIQUE,
 fecha_vencimiento DATE NULL,
-cantidad_ingreso DECIMAL(12,2) NOT NULL,
-cantidad_disponible DECIMAL(12,2) NOT NULL,
+cantidad_ingreso DECIMAL(12,2),
+cantidad_disponible DECIMAL(12,2),
 fecha_ingreso DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-costo_unitario DECIMAL(12,4) NULL,
 FOREIGN KEY (id_articulo) REFERENCES articulo(id) ON DELETE RESTRICT,
 FOREIGN KEY (id_detalle_compra) REFERENCES detalle_compra(id_detalle) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -319,7 +321,7 @@ id_guia INT AUTO_INCREMENT PRIMARY KEY,
 id_compra INT NULL,
 id_venta INT NULL,
 tipo_documento_ref ENUM('compra', 'venta') NOT NULL DEFAULT 'compra',
-ruc_guia VARCHAR(20),
+ruc_guia VARCHAR(255),
 razon_social_guia VARCHAR(255),
 fecha_emision DATE,
 tipo_comprobante VARCHAR(50),
@@ -399,7 +401,7 @@ cantidad_a_producir DECIMAL(12,2) NOT NULL,
 id_unidad_producir INT NOT NULL,
 estado ENUM('Pendiente', 'En Proceso', 'Terminada', 'Cancelada') NOT NULL DEFAULT 'Pendiente',
 observaciones TEXT NULL,
-cantidad_empacada_pendiente INT DEFAULT 0,
+cantidad_empacada_pendiente DECIMAL(12,2) DEFAULT 0,
 FOREIGN KEY (id_receta) REFERENCES receta_producto(id_receta) ON DELETE RESTRICT,
 FOREIGN KEY (id_unidad_producir) REFERENCES unidad_medida(id_unidad) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -426,7 +428,6 @@ id_articulo_terminado INT NOT NULL,
 cantidad_producida DECIMAL(12,2) NOT NULL,
 id_unidad_producida INT NOT NULL,
 fecha_termino DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-costo_unitario_produccion DECIMAL(12,4) NULL,
 FOREIGN KEY (id_orden) REFERENCES orden_produccion(id_orden) ON DELETE RESTRICT,
 FOREIGN KEY (id_articulo_terminado) REFERENCES articulo(id) ON DELETE RESTRICT,
 FOREIGN KEY (id_unidad_producida) REFERENCES unidad_medida(id_unidad) ON DELETE RESTRICT
@@ -441,4 +442,4 @@ CREATE TABLE detalle_articulo_componente (
     FOREIGN KEY (id_articulo_terminado) REFERENCES articulo(id) ON DELETE CASCADE,
     FOREIGN KEY (id_articulo_envase) REFERENCES articulo(id) ON DELETE RESTRICT,
     FOREIGN KEY (id_unidad_envase) REFERENCES unidad_medida(id_unidad) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;s
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

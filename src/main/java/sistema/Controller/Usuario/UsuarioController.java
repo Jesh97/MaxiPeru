@@ -18,7 +18,8 @@ public class UsuarioController implements UsuarioRepository {
     @Override
     public Usuario obtenerUsuario(String username, String password) {
         String sqlValidacion = "{CALL sp_validar_inicio_sesion(?, ?)}";
-        int resultadoValidacion = 0;
+        int resultadoValidacion = -99;
+        int usuarioIdDesdeSP = 0;
 
         try (Connection conn = Conexion.obtenerConexion();
              CallableStatement cs = conn.prepareCall(sqlValidacion)) {
@@ -33,10 +34,9 @@ public class UsuarioController implements UsuarioRepository {
             }
 
             if (resultadoValidacion == 1) {
-                String sqlDatos = "SELECT id, nombre, correo, username, password, rol, estado, permite_acceso_irrestricto FROM usuario WHERE username = ? AND password = ?";
+                String sqlDatos = "SELECT id, nombre, correo, username, password, rol, estado, permite_acceso_irrestricto FROM usuario WHERE username = ?";
                 try (PreparedStatement stmt = conn.prepareStatement(sqlDatos)) {
                     stmt.setString(1, username);
-                    stmt.setString(2, password);
                     ResultSet rsDatos = stmt.executeQuery();
 
                     if (rsDatos.next()) {
@@ -52,14 +52,24 @@ public class UsuarioController implements UsuarioRepository {
                         return usuario;
                     }
                 }
-            } else {
-                Usuario errorUsuario = new Usuario();
-                errorUsuario.setEstado(resultadoValidacion);
-                return errorUsuario;
+            } else if (resultadoValidacion == 0 || resultadoValidacion == -1) {
+                String sqlGetId = "SELECT id FROM usuario WHERE username = ?";
+                try (PreparedStatement psId = conn.prepareStatement(sqlGetId)) {
+                    psId.setString(1, username);
+                    ResultSet rsId = psId.executeQuery();
+                    if (rsId.next()) {
+                        usuarioIdDesdeSP = rsId.getInt("id");
+                    }
+                }
+
+                Usuario estadoUsuario = new Usuario();
+                estadoUsuario.setEstado(resultadoValidacion);
+                estadoUsuario.setId(usuarioIdDesdeSP);
+                return estadoUsuario;
             }
 
         } catch (SQLException e) {
-            System.out.println("Error en la validación de inicio de sesión (SP): " + e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
@@ -85,12 +95,12 @@ public class UsuarioController implements UsuarioRepository {
         return false;
     }
 
-    public boolean aceptarUsuario(int usuarioId, int adminId) {
+    public boolean habilitarUsuario(int usuarioId, int adminPrincipalId) {
         String sql = "{CALL sp_aceptar_usuario(?, ?)}";
         try (Connection conn = Conexion.obtenerConexion();
              CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, usuarioId);
-            cs.setInt(2, adminId);
+            cs.setInt(2, adminPrincipalId);
             cs.execute();
             return true;
         } catch (SQLException e) {
@@ -99,13 +109,27 @@ public class UsuarioController implements UsuarioRepository {
         }
     }
 
-    public boolean cambiarPermisoIrrestricto(int usuarioId, int adminId, int permisoNuevo) {
+    public boolean deshabilitarUsuario(int usuarioId, int adminPrincipalId) {
+        String sql = "{CALL sp_deshabilitar_usuario(?, ?)}";
+        try (Connection conn = Conexion.obtenerConexion();
+             CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, usuarioId);
+            cs.setInt(2, adminPrincipalId);
+            cs.execute();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean cambiarPermisoIrrestricto(int usuarioId, int adminPrincipalId, int permisoNuevo) {
         if (permisoNuevo == 1) {
             String sql = "{CALL sp_otorgar_acceso_irrestricto(?, ?)}";
             try (Connection conn = Conexion.obtenerConexion();
                  CallableStatement cs = conn.prepareCall(sql)) {
                 cs.setInt(1, usuarioId);
-                cs.setInt(2, adminId);
+                cs.setInt(2, adminPrincipalId);
                 cs.execute();
                 return true;
             } catch (SQLException e) {
@@ -203,17 +227,7 @@ public class UsuarioController implements UsuarioRepository {
 
     @Override
     public boolean cambiarEstadoUsuario(int id, int estado) {
-        String sql = "UPDATE usuario SET estado = ? WHERE id = ?";
-        try (Connection conn = Conexion.obtenerConexion();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, estado);
-            ps.setInt(2, id);
-            int filasAfectadas = ps.executeUpdate();
-            return filasAfectadas > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+        throw new UnsupportedOperationException("Usar habilitarUsuario o deshabilitarUsuario en su lugar.");
     }
 
     public int editarUsuario(Usuario usuario) {

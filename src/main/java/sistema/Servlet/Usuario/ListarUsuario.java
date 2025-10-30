@@ -70,27 +70,23 @@ public class ListarUsuario extends HttpServlet {
         response.setContentType("text/plain;charset=UTF-8");
         PrintWriter out = response.getWriter();
 
-        int adminId = 1;
+        int adminPrincipalId = obtenerAdminPrincipalId(request);
 
         switch (accion) {
-            case "login":
-                handleLogin(request, response, out);
-                break;
-
-            case "aceptar":
-                handleAceptar(request, response, out, adminId);
+            case "habilitar":
+                handleHabilitar(request, response, out, adminPrincipalId);
                 break;
 
             case "deshabilitar":
-                handleDeshabilitar(request, response, out, adminId);
+                handleDeshabilitar(request, response, out, adminPrincipalId);
                 break;
 
             case "permisoIrrestricto":
-                handlePermisoIrrestricto(request, response, out, adminId);
+                handlePermisoIrrestricto(request, response, out, adminPrincipalId);
                 break;
 
             case "editar":
-                handleEditar(request, response, out, adminId);
+                handleEditar(request, response, out, adminPrincipalId);
                 break;
 
             default:
@@ -101,55 +97,29 @@ public class ListarUsuario extends HttpServlet {
         out.flush();
     }
 
-    private void handleLogin(HttpServletRequest request, HttpServletResponse response, PrintWriter out) throws IOException {
-        UsuarioController controller = new UsuarioController();
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-
-        Usuario usuario = controller.obtenerUsuario(username, password);
-        String tipoRegistro;
-
-        if (usuario == null || usuario.getId() == 0) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            out.print("Credenciales incorrectas.");
-            tipoRegistro = "LOGIN_FALLO";
-        } else if (usuario.getEstado() == 1) {
-            HttpSession session = request.getSession();
-            session.setAttribute("usuario", usuario);
-            session.setAttribute("userId", usuario.getId());
-
-            response.setStatus(HttpServletResponse.SC_OK);
-            out.print("ÉXITO");
-            tipoRegistro = "LOGIN_EXITO";
-        } else if (usuario.getEstado() == 0) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            out.print("Su cuenta está pendiente de aprobación por un administrador.");
-            tipoRegistro = "LOGIN_FALLO_PENDIENTE";
-        } else if (usuario.getEstado() == -1) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            out.print("Acceso restringido. Intente nuevamente en el horario permitido.");
-            tipoRegistro = "LOGIN_FALLO_RESTRICCION";
-        } else {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            out.print("Error de validación desconocido.");
-            tipoRegistro = "LOGIN_FALLO_DESCONOCIDO";
+    private int obtenerAdminPrincipalId(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("userId") != null) {
+            return (int) session.getAttribute("userId");
         }
-
-        int usuarioIdRegistro = (usuario != null && usuario.getId() > 0) ? usuario.getId() : 0;
-        String descripcion = "Intento de login para usuario: " + username;
-        controller.registrarAccion(usuarioIdRegistro, tipoRegistro, descripcion, request);
+        return 0;
     }
 
-    private void handleAceptar(HttpServletRequest request, HttpServletResponse response, PrintWriter out, int adminId) throws IOException {
+    private void handleHabilitar(HttpServletRequest request, HttpServletResponse response, PrintWriter out, int adminPrincipalId) throws IOException {
         UsuarioController controller = new UsuarioController();
+        if (adminPrincipalId == 0) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            out.print("Acceso denegado. Se requiere un Administrador Principal activo.");
+            return;
+        }
         try {
             int usuarioId = Integer.parseInt(request.getParameter("id"));
-            if (controller.aceptarUsuario(usuarioId, adminId)) {
-                out.print("Cuenta aprobada correctamente.");
-                controller.registrarAccion(adminId, "APROBAR_CUENTA", "Aprobación de cuenta para Usuario ID: " + usuarioId, request);
+            if (controller.habilitarUsuario(usuarioId, adminPrincipalId)) {
+                out.print("Cuenta habilitada/aceptada correctamente.");
+                controller.registrarAccion(adminPrincipalId, "HABILITAR_CUENTA", "Habilitación de cuenta para Usuario ID: " + usuarioId, request);
             } else {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                out.print("Error al aprobar la cuenta.");
+                out.print("Error al habilitar la cuenta. Verifique el rol del administrador principal.");
             }
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -157,18 +127,21 @@ public class ListarUsuario extends HttpServlet {
         }
     }
 
-    private void handleDeshabilitar(HttpServletRequest request, HttpServletResponse response, PrintWriter out, int adminId) throws IOException {
+    private void handleDeshabilitar(HttpServletRequest request, HttpServletResponse response, PrintWriter out, int adminPrincipalId) throws IOException {
         UsuarioController controller = new UsuarioController();
+        if (adminPrincipalId == 0) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            out.print("Acceso denegado. Se requiere un Administrador Principal activo.");
+            return;
+        }
         try {
             int usuarioId = Integer.parseInt(request.getParameter("id"));
-            int estado = Integer.parseInt(request.getParameter("estado"));
-
-            if (controller.cambiarEstadoUsuario(usuarioId, estado)) {
+            if (controller.deshabilitarUsuario(usuarioId, adminPrincipalId)) {
                 out.print("Usuario deshabilitado correctamente.");
-                controller.registrarAccion(adminId, "DESHABILITAR_USUARIO", "Deshabilitación de Usuario ID: " + usuarioId, request);
+                controller.registrarAccion(adminPrincipalId, "DESHABILITAR_USUARIO", "Deshabilitación de Usuario ID: " + usuarioId, request);
             } else {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                out.print("Error al deshabilitar el usuario.");
+                out.print("Error al deshabilitar el usuario. Verifique el rol del administrador principal.");
             }
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -176,19 +149,24 @@ public class ListarUsuario extends HttpServlet {
         }
     }
 
-    private void handlePermisoIrrestricto(HttpServletRequest request, HttpServletResponse response, PrintWriter out, int adminId) throws IOException {
+    private void handlePermisoIrrestricto(HttpServletRequest request, HttpServletResponse response, PrintWriter out, int adminPrincipalId) throws IOException {
         UsuarioController controller = new UsuarioController();
+        if (adminPrincipalId == 0) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            out.print("Acceso denegado. Se requiere un Administrador Principal activo.");
+            return;
+        }
         try {
             int usuarioId = Integer.parseInt(request.getParameter("id"));
             int permisoNuevo = Integer.parseInt(request.getParameter("permiso"));
 
-            if (controller.cambiarPermisoIrrestricto(usuarioId, adminId, permisoNuevo)) {
+            if (controller.cambiarPermisoIrrestricto(usuarioId, adminPrincipalId, permisoNuevo)) {
                 String accion = (permisoNuevo == 1) ? "OTORGAR" : "REVOCAR";
                 out.print("Permiso irrestricto " + accion + " correctamente.");
-                controller.registrarAccion(adminId, accion + "_ACCESO_IRRESTRICTO", accion + " acceso irrestricto a Usuario ID: " + usuarioId, request);
+                controller.registrarAccion(adminPrincipalId, accion + "_ACCESO_IRRESTRICTO", accion + " acceso irrestricto a Usuario ID: " + usuarioId, request);
             } else {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                out.print("Error al actualizar el permiso irrestricto.");
+                out.print("Error al actualizar el permiso irrestricto. Verifique el rol del administrador principal.");
             }
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -196,9 +174,13 @@ public class ListarUsuario extends HttpServlet {
         }
     }
 
-    private void handleEditar(HttpServletRequest request, HttpServletResponse response, PrintWriter out, int adminId) throws IOException {
+    private void handleEditar(HttpServletRequest request, HttpServletResponse response, PrintWriter out, int adminPrincipalId) throws IOException {
         UsuarioController controller = new UsuarioController();
-
+        if (adminPrincipalId == 0) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            out.print("Acceso denegado. Se requiere un Administrador Principal activo.");
+            return;
+        }
         try {
             Usuario usuario = new Usuario();
             usuario.setId(Integer.parseInt(request.getParameter("id")));
@@ -212,7 +194,7 @@ public class ListarUsuario extends HttpServlet {
 
             if (resultado == 1) {
                 out.print("Usuario editado correctamente.");
-                controller.registrarAccion(adminId, "EDITAR_USUARIO", "Usuario ID " + usuario.getId() + " editado por admin.", request);
+                controller.registrarAccion(adminPrincipalId, "EDITAR_USUARIO", "Usuario ID " + usuario.getId() + " editado por admin principal.", request);
             } else if (resultado == 0) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 out.print("Error: El ID del usuario a editar no existe.");
