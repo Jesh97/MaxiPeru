@@ -159,32 +159,57 @@ public class ProduccionServlet extends HttpServlet {
         String action = request.getParameter("action");
         String busqueda = request.getParameter("busqueda");
 
-        if (action != null && action.startsWith("buscar_")) {
-            List<Map<String, Object>> resultados;
+        if (action != null && action.startsWith("buscar_") || action != null && action.startsWith("obtener_")) {
 
             try {
                 if (action.equals("buscar_articulos_terminados")) {
-                    resultados = dao.buscarArticulosTerminados(busqueda);
+                    List<Map<String, Object>> resultados = dao.buscarArticulosTerminados(busqueda);
+                    if (resultados.size() > 5) {
+                        resultados = resultados.subList(0, 5);
+                    }
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write(gson.toJson(resultados));
+
                 } else if (action.equals("buscar_articulos_insumos")) {
-                    resultados = dao.buscarArticulosInsumos(busqueda);
+                    List<Map<String, Object>> resultados = dao.buscarArticulosInsumos(busqueda);
+                    if (resultados.size() > 5) {
+                        resultados = resultados.subList(0, 5);
+                    }
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write(gson.toJson(resultados));
+
                 } else if (action.equals("buscar_articulos_embalado_y_embalaje")) {
-                    resultados = dao.buscarArticulosEmbalaje(busqueda);
+                    List<Map<String, Object>> resultados = dao.buscarArticulosEmbalaje(busqueda);
+                    if (resultados.size() > 5) {
+                        resultados = resultados.subList(0, 5);
+                    }
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write(gson.toJson(resultados));
+
+                } else if (action.equals("obtener_presentaciones_pm")) {
+                    String idPmStr = request.getParameter("id_pm");
+                    if (idPmStr == null || idPmStr.isEmpty()) {
+                        throw new IllegalArgumentException("ID de Producto Maestro no especificado.");
+                    }
+                    int idProductoMaestro = Integer.parseInt(idPmStr);
+
+                    List<String> presentaciones = dao.obtenerPresentacionesPorProductoMaestro(idProductoMaestro);
+
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write(gson.toJson(presentaciones));
+
                 } else {
-                    throw new IllegalArgumentException("Acción de búsqueda no válida.");
+                    throw new IllegalArgumentException("Acción de búsqueda o consulta no válida.");
                 }
 
-                if (resultados.size() > 5) {
-                    resultados = resultados.subList(0, 5);
-                }
-
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-
-                response.getWriter().write(gson.toJson(resultados));
 
             } catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                response.getWriter().write("{\"error\": \"Error al procesar la búsqueda: " + e.getMessage().replace("\"", "\\\"") + "\"}");
+                response.getWriter().write("{\"error\": \"Error al procesar la solicitud: " + e.getMessage().replace("\"", "\\\"") + "\"}");
             }
         } else {
             doPost(request, response);

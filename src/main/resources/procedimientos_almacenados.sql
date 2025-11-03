@@ -947,14 +947,13 @@ END$$
 
 DROP PROCEDURE IF EXISTS sp_crear_receta $$
 CREATE PROCEDURE sp_crear_receta(
-    IN p_id_art_ter INT,
-    IN p_desc VARCHAR(255),
+    IN p_id_prod_maestro INT,
     IN p_cant_prod DECIMAL(12,2),
     IN p_id_uni_prod INT
 )
 BEGIN
-    INSERT INTO receta_producto (id_articulo_terminado, descripcion, cantidad_producir, id_unidad_producir, estado)
-    VALUES (p_id_art_ter, p_desc, p_cant_prod, p_id_uni_prod, 'Activa');
+    INSERT INTO receta_producto (id_producto_maestro, cantidad_producir, id_unidad_producir, estado)
+    VALUES (p_id_prod_maestro, p_cant_prod, p_id_uni_prod, 'Activa');
 
     SELECT LAST_INSERT_ID() AS id_receta;
 END $$
@@ -973,12 +972,14 @@ END$$
 DROP PROCEDURE IF EXISTS sp_crear_orden$$
 CREATE PROCEDURE sp_crear_orden(
     IN p_id_receta INT,
+    IN p_id_articulo_producido INT,
     IN p_cant_prod DECIMAL(12,2),
+    IN p_cant_prod_final_real DECIMAL(12,2),
     IN p_fecha_ini DATE,
     IN p_obs TEXT)
 BEGIN
-    INSERT INTO orden_produccion (id_receta, fecha_creacion, fecha_inicio_programada, cantidad_a_producir, id_unidad_producir, estado, observaciones)
-    SELECT p_id_receta, NOW(), p_fecha_ini, p_cant_prod, id_unidad_producir, 'Pendiente', p_obs
+    INSERT INTO orden_produccion (id_receta, id_articulo_producido, fecha_creacion, fecha_inicio_programada, cantidad_a_producir, cantidad_producida_final_real, id_unidad_producir, estado, observaciones)
+    SELECT p_id_receta, p_id_articulo_producido, NOW(), p_fecha_ini, p_cant_prod, p_cant_prod_final_real, id_unidad_producir, 'Pendiente', p_obs
     FROM receta_producto WHERE id_receta = p_id_receta;
 
     IF ROW_COUNT() = 0 THEN
@@ -1019,6 +1020,7 @@ BEGIN
     IF v_stock_actual < v_cant_en_kg THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Stock insuficiente en inventario general (en KG).';
     ELSE
+        -- Stock en la tabla articulo (ahora con DECIMAL(12,8)) es disminuido por v_cant_en_kg
         UPDATE articulo SET cantidad = cantidad - v_cant_en_kg WHERE id = p_id_articulo;
 
         INSERT INTO consumo_produccion (id_orden, id_articulo_consumido, cantidad_consumida, id_unidad_consumida, es_envase_embalaje)
@@ -1085,6 +1087,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Stock insuficiente en lotes disponibles para el consumo de producción (en KG).';
     END IF;
 
+    -- Stock en la tabla articulo (ahora con DECIMAL(12,8)) es disminuido por v_cantidad_total_en_kg
     UPDATE articulo SET cantidad = cantidad - v_cantidad_total_en_kg WHERE id = p_id_articulo;
 END$$
 
@@ -1144,49 +1147,63 @@ BEGIN
     UPDATE orden_produccion SET estado = 'En Proceso' WHERE id_orden = p_id_orden AND estado = 'Pendiente';
 END$$
 
+DROP PROCEDURE IF EXISTS sp_registrar_consumo_produccion_componente$$
+CREATE PROCEDURE sp_registrar_consumo_produccion_componente(
+    IN p_id_orden INT,
+    IN p_id_articulo_consumido INT,
+    IN p_cantidad_a_consumir DECIMAL(12,8),
+    IN p_id_unidad INT,
+    IN p_es_envase BOOLEAN
+)
+BEGIN
+    DECLARE v_usa_lotes BOOLEAN;
+
+    SELECT EXISTS (
+        SELECT 1 FROM inventario_lote WHERE id_articulo = p_id_articulo_consumido AND cantidad_disponible > 0
+    ) INTO v_usa_lotes;
+
+    IF v_usa_lotes THEN
+        CALL sp_consumir_stock_lote_produccion(
+            p_id_orden,
+            p_id_articulo_consumido,
+            p_cantidad_a_consumir,
+            p_id_unidad,
+            p_es_envase
+        );
+    ELSE
+        CALL sp_consumir_stock_general_produccion(
+            p_id_orden,
+            p_id_articulo_consumido,
+            p_cantidad_a_consumir,
+            p_id_unidad,
+            p_es_envase
+        );
+    END IF;
+
+    UPDATE orden_produccion
+    SET estado = 'En Proceso (Componentes)'
+    WHERE id_orden = p_id_orden AND estado IN ('Pendiente', 'En Proceso');
+
+    SELECT 'Consumo de componente registrado correctamente.' AS resultado;
+END$$
+
 DROP PROCEDURE IF EXISTS sp_gestionar_consumo_envase$$
 CREATE PROCEDURE sp_gestionar_consumo_envase(
     IN p_id_orden INT,
-    IN p_cant_a_empacar DECIMAL(12,2)
+    IN p_merma_cantidad DECIMAL(12,2)
 )
 BEGIN
-    DECLARE v_articulo_envase_id INT;
-    DECLARE v_cantidad_requerida_base DECIMAL(12,4);
-    DECLARE v_id_unidad_envase INT;
-    DECLARE v_cantidad_total_consumir DECIMAL(12,8);
-    DECLARE finished BOOLEAN DEFAULT FALSE;
-    DECLARE v_usa_lotes BOOLEAN;
-
-    DECLARE cur_componentes CURSOR FOR
-        SELECT dac.id_articulo_envase, dac.cantidad_requerida, dac.id_unidad_envase
-        FROM orden_produccion op
-        JOIN receta_producto rp ON op.id_receta = rp.id_receta
-        JOIN detalle_articulo_componente dac ON rp.id_articulo_terminado = dac.id_articulo_terminado
-        WHERE op.id_orden = p_id_orden;
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = TRUE;
-
-    OPEN cur_componentes;
-    envase_consumo_loop: LOOP
-        FETCH cur_componentes INTO v_articulo_envase_id, v_cantidad_requerida_base, v_id_unidad_envase;
-        IF finished THEN LEAVE envase_consumo_loop; END IF;
-
-        SET v_cantidad_total_consumir = v_cantidad_requerida_base * p_cant_a_empacar;
-
-        SELECT EXISTS (SELECT 1 FROM inventario_lote WHERE id_articulo = v_articulo_envase_id AND cantidad_disponible > 0)
-        INTO v_usa_lotes;
-
-        IF v_usa_lotes THEN
-            CALL sp_consumir_stock_lote_produccion(p_id_orden, v_articulo_envase_id, v_cantidad_total_consumir, v_id_unidad_envase, TRUE);
-        ELSE
-            CALL sp_consumir_stock_general_produccion(p_id_orden, v_articulo_envase_id, v_cantidad_total_consumir, v_id_unidad_envase, TRUE);
-        END IF;
-
-    END LOOP envase_consumo_loop;
-    CLOSE cur_componentes;
-
     UPDATE orden_produccion
-    SET cantidad_empacada_pendiente = cantidad_empacada_pendiente + p_cant_a_empacar
+    SET
+        merma_total = p_merma_cantidad,
+        estado = 'Empaque Cerrado'
     WHERE id_orden = p_id_orden;
+
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Orden de producción no encontrada para registrar merma.';
+    ELSE
+        SELECT 'Merma registrada y etapa de empaque cerrada.' AS resultado;
+    END IF;
 END$$
 
 DROP PROCEDURE IF EXISTS sp_finalizar_orden$$
@@ -1217,26 +1234,31 @@ BEGIN
     DECLARE v_id_unidad_producir INT;
 
     SELECT
-        rp.id_articulo_terminado, op.id_unidad_producir
+        op.id_articulo_producido,
+        op.id_unidad_producir
     INTO
         v_id_articulo_terminado, v_id_unidad_producir
     FROM orden_produccion op
-    JOIN receta_producto rp ON op.id_receta = rp.id_receta
     WHERE op.id_orden = p_id_orden;
 
     IF v_id_articulo_terminado IS NOT NULL THEN
 
-        INSERT INTO produccion_realizada (id_orden, id_articulo_terminado, cantidad_producida, id_unidad_producida)
-        VALUES (p_id_orden, v_id_articulo_terminado, p_cant_envases, v_id_unidad_producir);
+        INSERT INTO produccion_realizada (id_orden, id_articulo_terminado, cantidad_producida, id_unidad_producida, codigo_lote)
+        VALUES (p_id_orden, v_id_articulo_terminado, p_cant_envases, v_id_unidad_producir, p_cod_lote);
 
         INSERT INTO inventario_lote (id_articulo, codigo_lote, cantidad_ingreso, cantidad_disponible, fecha_vencimiento)
         VALUES (v_id_articulo_terminado, p_cod_lote, p_cant_envases, p_cant_envases, p_fecha_vencimiento);
 
+        -- El stock de articulo ahora usa DECIMAL(12,8) para manejar precisión
         UPDATE articulo
         SET cantidad = cantidad + p_cant_envases
         WHERE id = v_id_articulo_terminado;
 
-        SELECT 'Lote registrado.' AS resultado;
+        UPDATE orden_produccion
+        SET cantidad_producida_final_real = p_cant_envases
+        WHERE id_orden = p_id_orden;
+
+        SELECT 'Lote registrado y stock actualizado.' AS resultado;
 
     ELSE
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: No se pudo encontrar el artículo terminado para la orden.';

@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.Random;
 import java.text.SimpleDateFormat;
-import java.sql.Date;
 
 public class ProduccionController implements ProduccionRepository {
 
@@ -79,9 +78,7 @@ public class ProduccionController implements ProduccionRepository {
 
             cs.setInt(1, idReceta);
             cs.setBigDecimal(2, cantProd);
-
             cs.setDate(3, fechaIni != null ? java.sql.Date.valueOf(fechaIni) : null);
-
             cs.setString(4, obs);
 
             try (ResultSet rs = cs.executeQuery()) {
@@ -139,7 +136,6 @@ public class ProduccionController implements ProduccionRepository {
                     cs.setInt(1, idOrden);
                     cs.setBigDecimal(2, cantidad);
                     cs.setString(3, codigoLote);
-
                     cs.setDate(4, fechaVencimiento != null ? java.sql.Date.valueOf(fechaVencimiento) : null);
 
                     cs.execute();
@@ -164,6 +160,26 @@ public class ProduccionController implements ProduccionRepository {
             cs.setInt(1, idOrden);
             cs.execute();
         }
+    }
+
+    @Override
+    public List<String> obtenerPresentacionesPorProductoMaestro(int idProductoMaestro) throws SQLException {
+        List<String> presentaciones = new ArrayList<>();
+        String sql = "{CALL sp_obtener_presentaciones_por_pm(?)}";
+
+        try (Connection conn = getConnection();
+             CallableStatement cs = conn.prepareCall(sql)) {
+
+            cs.setInt(1, idProductoMaestro);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                while (rs.next()) {
+                    String presentacion = rs.getString("presentacion_detalle");
+                    presentaciones.add(presentacion);
+                }
+            }
+        }
+        return presentaciones;
     }
 
     private List<Map<String, Object>> ejecutarBusqueda(String sql, String busqueda) throws SQLException {
@@ -193,14 +209,42 @@ public class ProduccionController implements ProduccionRepository {
                     } catch (SQLException e) { articulo.put("codigo", ""); }
 
                     try {
-                        articulo.put("nombre", rs.getString("descripcion"));
-                    } catch (SQLException e) { articulo.put("nombre", "Artículo Desconocido"); }
+                        articulo.put("nombre", rs.getString("nombre_producto"));
+                    } catch (SQLException e) {
+                        try {
+                            articulo.put("nombre", rs.getString("descripcion"));
+                        } catch (SQLException e2) {
+                            articulo.put("nombre", "Artículo Desconocido");
+                        }
+                    }
 
                     try {
-                        articulo.put("unidad", rs.getString("unidad"));
-                    } catch (SQLException e) {
-                        articulo.put("unidad", "UND");
-                    }
+                        articulo.put("presentacion_detalle", rs.getString("presentacion_detalle"));
+                    } catch (SQLException e) { }
+
+                    try {
+                        articulo.put("cantidad", rs.getInt("cantidad"));
+                    } catch (SQLException e) { }
+
+                    try {
+                        articulo.put("precio_compra", rs.getBigDecimal("precio_compra"));
+                    } catch (SQLException e) { }
+
+                    try {
+                        articulo.put("precio_venta", rs.getBigDecimal("precio_venta"));
+                    } catch (SQLException e) { }
+
+                    try {
+                        articulo.put("peso_unitario", rs.getDouble("peso_unitario"));
+                    } catch (SQLException e) { }
+
+                    try {
+                        articulo.put("aroma", rs.getString("aroma"));
+                    } catch (SQLException e) { }
+
+                    try {
+                        articulo.put("color", rs.getString("color"));
+                    } catch (SQLException e) { }
 
                     try {
                         articulo.put("densidad", rs.getDouble("densidad"));
@@ -209,8 +253,10 @@ public class ProduccionController implements ProduccionRepository {
                     }
 
                     try {
-                        articulo.put("peso_unitario", rs.getDouble("peso_unitario"));
-                    } catch (SQLException e) { }
+                        articulo.put("unidad", rs.getString("unidad"));
+                    } catch (SQLException e) {
+                        articulo.put("unidad", "UND");
+                    }
 
                     articulos.add(articulo);
                 }

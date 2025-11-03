@@ -14,6 +14,7 @@ public interface ProduccionRepository {
     void gestionarConsumoEnvase(int idOrden, BigDecimal cantAEmpacar) throws SQLException;
     void registrarLotes(int idOrden, List<Map<String, Object>> lotes) throws SQLException;
     void finalizarOrden(int idOrden) throws SQLException;
+    List<String> obtenerPresentacionesPorProductoMaestro(int idProductoMaestro) throws SQLException;
     List<Map<String, Object>> buscarArticulosTerminados(String busqueda) throws SQLException;
     List<Map<String, Object>> buscarArticulosInsumos(String busqueda) throws SQLException;
     List<Map<String, Object>> buscarArticulosEmbalaje(String busqueda) throws SQLException;
