@@ -257,9 +257,23 @@ public class ProduccionController implements ProduccionRepository {
             try (ResultSet rs = cs.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> articulo = new LinkedHashMap<>();
+
                     try { articulo.put("id", rs.getInt("id")); } catch (SQLException e) { try { articulo.put("id", rs.getInt("id_articulo")); } catch (SQLException e2) { articulo.put("id", 0); } }
+
                     try { articulo.put("codigo", rs.getString("codigo")); } catch (SQLException e) { articulo.put("codigo", ""); }
-                    try { articulo.put("nombre", rs.getString("nombre_producto")); } catch (SQLException e) { try { articulo.put("nombre", rs.getString("descripcion")); } catch (SQLException e2) { articulo.put("nombre", "Artículo Desconocido"); } }
+
+                    try { articulo.put("descripcion", rs.getString("descripcion")); } catch (SQLException e) { articulo.put("descripcion", "Artículo Desconocido"); }
+
+                    try { articulo.put("nombre_generico", rs.getString("nombre_generico")); } catch (SQLException e) { }
+
+                    try { articulo.put("id_unidad", rs.getInt("id_unidad")); } catch (SQLException e) { articulo.put("id_unidad", 0); }
+
+                    try { articulo.put("unidad_nombre", rs.getString("unidad_nombre")); } catch (SQLException e) {
+                        try { articulo.put("unidad_nombre", rs.getString("unidad")); } catch (SQLException e2) {
+                            articulo.put("unidad_nombre", "UND");
+                        }
+                    }
+
                     try { articulo.put("presentacion_detalle", rs.getString("presentacion_detalle")); } catch (SQLException e) { }
                     try { articulo.put("cantidad", rs.getInt("cantidad")); } catch (SQLException e) { }
                     try { articulo.put("precio_compra", rs.getBigDecimal("precio_compra")); } catch (SQLException e) { }
@@ -268,7 +282,6 @@ public class ProduccionController implements ProduccionRepository {
                     try { articulo.put("aroma", rs.getString("aroma")); } catch (SQLException e) { }
                     try { articulo.put("color", rs.getString("color")); } catch (SQLException e) { }
                     try { articulo.put("densidad", rs.getDouble("densidad")); } catch (SQLException e) { articulo.put("densidad", 1.0); }
-                    try { articulo.put("unidad", rs.getString("unidad")); } catch (SQLException e) { articulo.put("unidad", "UND"); }
 
                     articulos.add(articulo);
                 }
