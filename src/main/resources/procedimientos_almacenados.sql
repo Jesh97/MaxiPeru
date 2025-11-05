@@ -4,64 +4,39 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS `sp_crear_usuario`$$
 CREATE PROCEDURE sp_crear_usuario (
-    IN p_nombre VARCHAR(45),
-    IN p_correo VARCHAR(45),
-    IN p_username VARCHAR(45),
-    IN p_password VARCHAR(255),
-    IN p_rol VARCHAR(45)
-)
+    IN p_nombre VARCHAR(45), IN p_correo VARCHAR(45), IN p_username VARCHAR(45),
+    IN p_password VARCHAR(255), IN p_rol VARCHAR(45))
 BEGIN
     INSERT INTO usuario (nombre, correo, username, password, rol, estado)
     VALUES (p_nombre, p_correo, p_username, p_password, p_rol, 0);
 
     INSERT INTO actividad_usuario (usuario_id, tipo, descripcion)
-    VALUES (
-        LAST_INSERT_ID(),
-        'CREACION_CUENTA',
-        CONCAT('El usuario ', p_username, ' ha sido registrado y está pendiente de aprobación.')
-    );
+    VALUES (LAST_INSERT_ID(), 'CREACION_CUENTA',
+        CONCAT('El usuario ', p_username, ' ha sido registrado y está pendiente de aprobación.'));
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_editar_usuario`$$
 CREATE PROCEDURE sp_editar_usuario(
-    IN p_id INT,
-    IN p_nombre VARCHAR(45),
-    IN p_correo VARCHAR(45),
-    IN p_username VARCHAR(45),
-    IN p_password VARCHAR(255),
-    IN p_rol VARCHAR(45)
-)
+    IN p_id INT, IN p_nombre VARCHAR(45), IN p_correo VARCHAR(45),
+    IN p_username VARCHAR(45), IN p_password VARCHAR(255), IN p_rol VARCHAR(45))
 BEGIN
     IF EXISTS (SELECT 1 FROM usuario WHERE id = p_id) THEN
         IF p_password IS NOT NULL AND p_password != '' THEN
             UPDATE usuario
-            SET
-                nombre = p_nombre,
-                correo = p_correo,
-                username = p_username,
-                password = p_password,
-                rol = p_rol
+            SET nombre = p_nombre, correo = p_correo, username = p_username, password = p_password, rol = p_rol
             WHERE id = p_id;
         ELSE
             UPDATE usuario
-            SET
-                nombre = p_nombre,
-                correo = p_correo,
-                username = p_username,
-                rol = p_rol
+            SET nombre = p_nombre, correo = p_correo, username = p_username, rol = p_rol
             WHERE id = p_id;
         END IF;
         SELECT 1 AS resultado;
-    ELSE
-        SELECT 0 AS resultado;
+    ELSE SELECT 0 AS resultado;
     END IF;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_aceptar_usuario`$$
-CREATE PROCEDURE sp_aceptar_usuario (
-    IN p_usuario_id INT,
-    IN p_admin_principal_id INT
-)
+CREATE PROCEDURE sp_aceptar_usuario (IN p_usuario_id INT, IN p_admin_principal_id INT)
 BEGIN
     DECLARE v_username VARCHAR(45);
     DECLARE v_admin_principal_username VARCHAR(45);
@@ -80,20 +55,14 @@ BEGIN
 
         IF v_username IS NOT NULL THEN
             INSERT INTO actividad_usuario (usuario_id, tipo, descripcion)
-            VALUES (
-                p_usuario_id,
-                'CUENTA_HABILITADA',
-                CONCAT('Cuenta de usuario ', v_username, ' habilitada/aceptada por el administrador principal ', v_admin_principal_username, '.')
-            );
+            VALUES (p_usuario_id, 'CUENTA_HABILITADA',
+                CONCAT('Cuenta de usuario ', v_username, ' habilitada/aceptada por el administrador principal ', v_admin_principal_username, '.'));
         END IF;
     END IF;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_otorgar_acceso_irrestricto`$$
-CREATE PROCEDURE sp_otorgar_acceso_irrestricto (
-    IN p_usuario_id INT,
-    IN p_admin_principal_id INT
-)
+CREATE PROCEDURE sp_otorgar_acceso_irrestricto (IN p_usuario_id INT, IN p_admin_principal_id INT)
 BEGIN
     DECLARE v_username VARCHAR(45);
     DECLARE v_admin_principal_username VARCHAR(45);
@@ -112,20 +81,14 @@ BEGIN
 
         IF v_username IS NOT NULL THEN
             INSERT INTO actividad_usuario (usuario_id, tipo, descripcion)
-            VALUES (
-                p_usuario_id,
-                'PERMISO_HORARIO',
-                CONCAT('El administrador principal ', v_admin_principal_username, ' otorgó acceso irrestricto al usuario ', v_username, '.')
-            );
+            VALUES (p_usuario_id, 'PERMISO_HORARIO',
+                CONCAT('El administrador principal ', v_admin_principal_username, ' otorgó acceso irrestricto al usuario ', v_username, '.'));
         END IF;
     END IF;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_validar_inicio_sesion`$$
-CREATE PROCEDURE sp_validar_inicio_sesion (
-    IN p_username VARCHAR(45),
-    IN p_password_hash VARCHAR(255)
-)
+CREATE PROCEDURE sp_validar_inicio_sesion (IN p_username VARCHAR(45), IN p_password_hash VARCHAR(255))
 BEGIN
     DECLARE v_rol VARCHAR(45);
     DECLARE v_estado TINYINT(1);
@@ -154,25 +117,19 @@ BEGIN
                 SET v_puede_iniciar_sesion = -1;
             END IF;
 
-        ELSE
-            SET v_puede_iniciar_sesion = 1;
+        ELSE SET v_puede_iniciar_sesion = 1;
         END IF;
-    ELSE
-        SET v_puede_iniciar_sesion = 0;
+    ELSE SET v_puede_iniciar_sesion = 0;
     END IF;
 
     SELECT v_puede_iniciar_sesion AS resultado_validacion;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_deshabilitar_usuario`$$
-CREATE PROCEDURE sp_deshabilitar_usuario (
-    IN p_usuario_id INT,
-    IN p_admin_principal_id INT
-)
+CREATE PROCEDURE sp_deshabilitar_usuario (IN p_usuario_id INT, IN p_admin_principal_id INT)
 BEGIN
     DECLARE v_username VARCHAR(45);
-    DECLARE v_admin_principal_username VARCHAR(45);
-    DECLARE v_admin_principal_rol VARCHAR(45);
+    DECLARE v_admin_principal_username VARCHAR(45); DECLARE v_admin_principal_rol VARCHAR(45);
 
     SELECT username, rol INTO v_admin_principal_username, v_admin_principal_rol
     FROM usuario
@@ -182,16 +139,12 @@ BEGIN
         UPDATE usuario
         SET estado = 0
         WHERE id = p_usuario_id;
-
         SELECT username INTO v_username FROM usuario WHERE id = p_usuario_id;
 
         IF v_username IS NOT NULL THEN
             INSERT INTO actividad_usuario (usuario_id, tipo, descripcion)
-            VALUES (
-                p_usuario_id,
-                'CUENTA_DESHABILITADA',
-                CONCAT('Cuenta de usuario ', v_username, ' deshabilitada por el administrador principal ', v_admin_principal_username, '.')
-            );
+            VALUES (p_usuario_id, 'CUENTA_DESHABILITADA',
+                CONCAT('Cuenta de usuario ', v_username, ' deshabilitada por el administrador principal ', v_admin_principal_username, '.'));
         END IF;
     END IF;
 END$$
@@ -212,8 +165,7 @@ CREATE PROCEDURE `sp_actualizar_articulo`(
     IN p_id INT, IN p_descripcion VARCHAR(255), IN p_cantidad INT,
     IN p_precio_compra DECIMAL(12,2), IN p_precio_venta DECIMAL(12,2),
     IN p_peso_unitario DECIMAL(10,3), IN p_densidad DECIMAL(10,3), IN p_aroma VARCHAR(50), IN p_color VARCHAR(50),
-    IN p_id_marca INT, IN p_id_categoria INT, IN p_id_unidad INT, IN p_id_tipo_articulo INT
-)
+    IN p_id_marca INT, IN p_id_categoria INT, IN p_id_unidad INT, IN p_id_tipo_articulo INT)
 BEGIN
     UPDATE articulo
     SET descripcion = p_descripcion, cantidad = p_cantidad, precio_compra = p_precio_compra, precio_venta = p_precio_venta,
@@ -223,9 +175,7 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_eliminar_articulo`$$
-CREATE PROCEDURE `sp_eliminar_articulo`(
-    IN p_id INT
-)
+CREATE PROCEDURE `sp_eliminar_articulo`(IN p_id INT)
 BEGIN
     DELETE FROM articulo WHERE id = p_id;
 END$$
@@ -287,20 +237,10 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_terminados`$$
 CREATE PROCEDURE `sp_buscar_articulos_terminados`(IN p_busqueda VARCHAR(100))
 BEGIN
-    SELECT
-        a.id,
-        a.codigo,
-        a.descripcion,
-        a.cantidad,
-        a.precio_compra,
-        a.precio_venta,
-        a.peso_unitario,
-        a.aroma,
-        a.color,
-        a.densidad, -- AÑADIDO
-        um.nombre AS unidad -- AÑADIDO (ASUME JOIN)
+    SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario,
+        a.aroma, a.color, a.densidad, um.nombre AS unidad
     FROM articulo a
-    JOIN unidad_medida um ON a.id_unidad = um.id_unidad -- ASUME JOIN
+    JOIN unidad_medida um ON a.id_unidad = um.id_unidad
     WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
       AND a.id_tipo_articulo = 1;
 END$$
@@ -308,20 +248,10 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_insumos`$$
 CREATE PROCEDURE `sp_buscar_articulos_insumos`(IN p_busqueda VARCHAR(100))
 BEGIN
-    SELECT
-        a.id,
-        a.codigo,
-        a.descripcion,
-        a.cantidad,
-        a.precio_compra,
-        a.precio_venta,
-        a.peso_unitario,
-        a.aroma,
-        a.color,
-        a.densidad, -- AÑADIDO
-        um.nombre AS unidad -- AÑADIDO (ASUME JOIN)
+    SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario,
+        a.aroma, a.color, a.densidad, um.nombre AS unidad
     FROM articulo a
-    JOIN unidad_medida um ON a.id_unidad = um.id_unidad -- ASUME JOIN
+    JOIN unidad_medida um ON a.id_unidad = um.id_unidad
     WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
       AND a.id_tipo_articulo = 2
       AND a.cantidad > 0;
@@ -330,29 +260,16 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_embalado_y_embalaje`$$
 CREATE PROCEDURE `sp_buscar_articulos_embalado_y_embalaje`(IN p_busqueda VARCHAR(100))
 BEGIN
-    SELECT
-        a.id,
-        a.codigo,
-        a.descripcion,
-        a.cantidad,
-        a.precio_compra,
-        a.precio_venta,
-        a.peso_unitario,
-        a.aroma,
-        a.color,
-        a.densidad,
-        um.nombre AS unidad
+    SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario,
+        a.aroma, a.color, a.densidad, um.nombre AS unidad
     FROM articulo a
     JOIN unidad_medida um ON a.id_unidad = um.id_unidad
     WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
-      AND a.id_tipo_articulo = 4
-      AND a.cantidad > 0;
+      AND a.id_tipo_articulo = 4 AND a.cantidad > 0;
 END$$
 
 DROP PROCEDURE IF EXISTS `SP_VerLotesPorArticulo`$$
-CREATE PROCEDURE SP_VerLotesPorArticulo(
-    IN p_id_articulo INT
-)
+CREATE PROCEDURE SP_VerLotesPorArticulo(IN p_id_articulo INT)
 BEGIN
     SELECT il.id_lote AS ID_Lote, il.codigo_lote AS Codigo_Lote, il.fecha_vencimiento AS Fecha_Vencimiento,
            il.cantidad_disponible AS Cantidad_Disponible, il.fecha_ingreso AS Fecha_Ingreso_Lote,
@@ -367,8 +284,7 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_agregar_cliente`$$
 CREATE PROCEDURE `sp_agregar_cliente`(
     IN p_tipo_documento VARCHAR(20), IN p_numero_documento VARCHAR(20), IN p_razon_social VARCHAR(150),
-    IN p_direccion TEXT, IN p_telefono VARCHAR(20), IN p_correo VARCHAR(100)
-)
+    IN p_direccion TEXT, IN p_telefono VARCHAR(20), IN p_correo VARCHAR(100))
 BEGIN
     INSERT INTO cliente(tipoDocumento, n_documento, razonSocial, direccion, telefono, correo)
     VALUES (p_tipo_documento, p_numero_documento, p_razon_social, p_direccion, p_telefono, p_correo);
@@ -377,9 +293,7 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_actualizar_cliente`$$
 CREATE PROCEDURE `sp_actualizar_cliente`(
     IN p_id INT, IN p_tipo_documento VARCHAR(20), IN p_numero_documento VARCHAR(20),
-    IN p_razon_social VARCHAR(150), IN p_direccion TEXT, IN p_telefono VARCHAR(20),
-    IN p_correo VARCHAR(100)
-)
+    IN p_razon_social VARCHAR(150), IN p_direccion TEXT, IN p_telefono VARCHAR(20), IN p_correo VARCHAR(100))
 BEGIN
     UPDATE cliente
     SET tipoDocumento = p_tipo_documento, n_documento = p_numero_documento, razonSocial = p_razon_social,
@@ -388,9 +302,7 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_eliminar_cliente`$$
-CREATE PROCEDURE `sp_eliminar_cliente`(
-    IN p_id INT
-)
+CREATE PROCEDURE `sp_eliminar_cliente`(IN p_id INT)
 BEGIN
     DELETE FROM cliente WHERE id = p_id;
 END$$
@@ -404,9 +316,7 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_cliente`$$
-CREATE PROCEDURE `sp_buscar_cliente`(
-    IN p_busqueda VARCHAR(100)
-)
+CREATE PROCEDURE `sp_buscar_cliente`(IN p_busqueda VARCHAR(100))
 BEGIN
     SELECT id, tipoDocumento, n_documento, razonSocial, direccion, telefono, correo
     FROM cliente
@@ -416,8 +326,7 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_agregar_proveedor`$$
 CREATE PROCEDURE `sp_agregar_proveedor`(
     IN p_ruc VARCHAR(20), IN p_razon_social VARCHAR(255), IN p_direccion VARCHAR(255),
-    IN p_telefono VARCHAR(50), IN p_correo VARCHAR(100), IN p_ciudad VARCHAR(50)
-)
+    IN p_telefono VARCHAR(50), IN p_correo VARCHAR(100), IN p_ciudad VARCHAR(50))
 BEGIN
     INSERT INTO proveedor(ruc, razonSocial, direccion, telefono, correo, ciudad)
     VALUES (p_ruc, p_razon_social, p_direccion, p_telefono, p_correo, p_ciudad);
@@ -426,8 +335,7 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_actualizar_proveedor`$$
 CREATE PROCEDURE `sp_actualizar_proveedor`(
     IN p_id INT, IN p_ruc VARCHAR(20), IN p_razon_social VARCHAR(255), IN p_direccion VARCHAR(255),
-    IN p_telefono VARCHAR(50), IN p_correo VARCHAR(100), IN p_ciudad VARCHAR(50)
-)
+    IN p_telefono VARCHAR(50), IN p_correo VARCHAR(100), IN p_ciudad VARCHAR(50))
 BEGIN
     UPDATE proveedor
     SET ruc = p_ruc, razonSocial = p_razon_social, direccion = p_direccion,
@@ -436,9 +344,7 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_eliminar_proveedor`$$
-CREATE PROCEDURE `sp_eliminar_proveedor`(
-    IN p_id INT
-)
+CREATE PROCEDURE `sp_eliminar_proveedor`(IN p_id INT)
 BEGIN
     DELETE FROM proveedor WHERE id = p_id;
 END$$
@@ -452,9 +358,7 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_proveedor`$$
-CREATE PROCEDURE `sp_buscar_proveedor`(
-    IN p_busqueda VARCHAR(100)
-)
+CREATE PROCEDURE `sp_buscar_proveedor`(IN p_busqueda VARCHAR(100))
 BEGIN
     SELECT id, ruc, razonSocial, direccion, telefono, correo, ciudad
     FROM proveedor
@@ -464,8 +368,7 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_insertar_caja_compra`$$
 CREATE PROCEDURE `sp_insertar_caja_compra`(
     IN p_id_compra INT, IN p_nombre_caja VARCHAR(255), IN p_cantidad INT, IN p_costo_caja DECIMAL(12,2),
-    OUT p_id_caja_compra INT
-)
+    OUT p_id_caja_compra INT)
 BEGIN
     INSERT INTO caja_compra (id_compra, nombre_caja, cantidad, costo_caja)
     VALUES (p_id_compra, p_nombre_caja, p_cantidad, p_costo_caja);
@@ -473,9 +376,7 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_insertar_detalle_caja_compra`$$
-CREATE PROCEDURE `sp_insertar_detalle_caja_compra`(
-    IN p_id_caja_compra INT, IN p_id_articulo INT, IN p_cantidad DECIMAL(12,2)
-)
+CREATE PROCEDURE `sp_insertar_detalle_caja_compra`(IN p_id_caja_compra INT, IN p_id_articulo INT, IN p_cantidad DECIMAL(12,2))
 BEGIN
     INSERT INTO detalle_caja_compra (id_caja_compra, id_articulo, cantidad) VALUES (p_id_caja_compra, p_id_articulo, p_cantidad);
 END$$
@@ -597,8 +498,7 @@ CREATE PROCEDURE `sp_editar_compra`(
     IN p_fecha_emision DATE, IN p_fecha_vencimiento DATE, IN p_id_pago INT, IN p_id_forma_pago INT,
     IN p_id_moneda INT, IN p_tipo_cambio DECIMAL(10,4), IN p_con_igv BOOLEAN, IN p_con_bonificacion BOOLEAN,
     IN p_con_traslado BOOLEAN, IN p_observacion TEXT, IN p_subtotal DECIMAL(12,2), IN p_igv DECIMAL(12,2),
-    IN p_total DECIMAL(12,2), IN p_peso_total DECIMAL(12,3), IN p_costo_transporte DECIMAL(12,2)
-)
+    IN p_total DECIMAL(12,2), IN p_peso_total DECIMAL(12,3), IN p_costo_transporte DECIMAL(12,2))
 BEGIN
     DECLARE v_fecha_pedido DATE; DECLARE v_fecha_entrega DATE; DECLARE v_hoy DATE;
     SET v_hoy = CURDATE();
@@ -614,8 +514,7 @@ DROP PROCEDURE IF EXISTS `sp_editar_articulo_detalle`$$
 CREATE PROCEDURE `sp_editar_articulo_detalle`(
     IN p_id_detalle INT, IN p_cantidad_nueva DECIMAL(12,2), IN p_precio_unitario DECIMAL(12,2), IN p_bonificacion DECIMAL(12,2),
     IN p_costo_unitario_transporte DECIMAL(12,2), IN p_costo_total_transporte DECIMAL(12,2), IN p_precio_descuento DECIMAL(12,2),
-    IN p_igv_insumo DECIMAL(12,2), IN p_total DECIMAL(12,2), IN p_peso_total DECIMAL(12,3)
-)
+    IN p_igv_insumo DECIMAL(12,2), IN p_total DECIMAL(12,2), IN p_peso_total DECIMAL(12,3))
 BEGIN
     DECLARE v_id_articulo INT; DECLARE v_cantidad_antigua DECIMAL(12,2); DECLARE v_diferencia_stock DECIMAL(12,2); DECLARE v_id_lote INT;
     START TRANSACTION;
@@ -640,9 +539,7 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_actualizar_lote`$$
-CREATE PROCEDURE `sp_actualizar_lote`(
-    IN p_id_detalle_compra INT, IN p_codigo_lote_nuevo VARCHAR(50), IN p_fecha_vencimiento_nueva DATE
-)
+CREATE PROCEDURE `sp_actualizar_lote`(IN p_id_detalle_compra INT, IN p_codigo_lote_nuevo VARCHAR(50), IN p_fecha_vencimiento_nueva DATE)
 BEGIN
     UPDATE inventario_lote
     SET codigo_lote = p_codigo_lote_nuevo, fecha_vencimiento = p_fecha_vencimiento_nueva
@@ -651,8 +548,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS `sp_editar_caja`$$
 CREATE PROCEDURE `sp_editar_caja`(
-    IN p_id_caja_compra INT, IN p_nombre_caja VARCHAR(100), IN p_cantidad_cajas INT, IN p_costo_caja DECIMAL(12,2)
-)
+    IN p_id_caja_compra INT, IN p_nombre_caja VARCHAR(100), IN p_cantidad_cajas INT, IN p_costo_caja DECIMAL(12,2))
 BEGIN
     UPDATE caja_compra
     SET nombre_caja = p_nombre_caja, cantidad = p_cantidad_cajas, costo_caja = p_costo_caja
@@ -804,9 +700,7 @@ CREATE PROCEDURE `sp_agregar_detalle_venta`(
     IN p_id_venta INT, IN p_id_articulo INT, IN p_id_unidad INT, IN p_descripcion VARCHAR(255),
     IN p_cantidad DECIMAL(12,2),
     IN p_peso_unitario DECIMAL(10,3), IN p_precio_unitario DECIMAL(12,2), IN p_descuento_monto DECIMAL(12,2),
-    IN p_subtotal DECIMAL(12,2), IN p_total DECIMAL(12,2),
-    OUT p_id_detalle_venta INT
-)
+    IN p_subtotal DECIMAL(12,2), IN p_total DECIMAL(12,2), OUT p_id_detalle_venta INT)
 BEGIN
     INSERT INTO detalle_venta(id_venta, id_articulo, id_unidad, descripcion, cantidad, peso_unitario, precio_unitario, descuento_monto, subtotal, total)
     VALUES (p_id_venta, p_id_articulo, p_id_unidad, p_descripcion, p_cantidad, p_peso_unitario, p_precio_unitario, p_descuento_monto, p_subtotal, p_total);
@@ -816,8 +710,7 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_agregar_descuento_global_venta`$$
 CREATE PROCEDURE `sp_agregar_descuento_global_venta`(
     IN p_id_venta INT, IN p_motivo VARCHAR(255),
-    IN p_tipo_valor ENUM('porcentaje', 'soles'), IN p_valor DECIMAL(12,2), IN p_tasa_igv DECIMAL(5,2)
-)
+    IN p_tipo_valor ENUM('porcentaje', 'soles'), IN p_valor DECIMAL(12,2), IN p_tasa_igv DECIMAL(5,2))
 BEGIN
     DECLARE v_tasa_igv_default DECIMAL(5,2);
     SET v_tasa_igv_default = IFNULL(p_tasa_igv, 0.18);
@@ -828,8 +721,7 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_agregar_descuento_item_venta`$$
 CREATE PROCEDURE `sp_agregar_descuento_item_venta`(
     IN p_id_detalle_venta INT, IN p_motivo VARCHAR(255),
-    IN p_tipo_valor ENUM('porcentaje', 'soles'), IN p_valor DECIMAL(12,2), IN p_tasa_igv DECIMAL(5,2)
-)
+    IN p_tipo_valor ENUM('porcentaje', 'soles'), IN p_valor DECIMAL(12,2), IN p_tasa_igv DECIMAL(5,2))
 BEGIN
     DECLARE v_tasa_igv_default DECIMAL(5,2);
     SET v_tasa_igv_default = IFNULL(p_tasa_igv, 0.18);
@@ -843,8 +735,7 @@ CREATE PROCEDURE `sp_registrar_guia_transporte_venta`(
     IN p_ruc_empresa VARCHAR(20), IN p_razon_social_empresa VARCHAR(255), IN p_marca_vehiculo VARCHAR(100),
     IN p_dni_conductor VARCHAR(20), IN p_nombre_conductor VARCHAR(255), IN p_punto_partida VARCHAR(255),
     IN p_punto_llegada VARCHAR(255), IN p_fecha_traslado DATE, IN p_observaciones TEXT,
-    IN p_conformidad_nombre VARCHAR(255), IN p_conformidad_dni VARCHAR(20)
-)
+    IN p_conformidad_nombre VARCHAR(255), IN p_conformidad_dni VARCHAR(20))
 BEGIN
     INSERT INTO guia_transporte (id_venta, tipo_documento_ref, peso, fecha_traslado, observaciones, modalidad_transporte, ruc_empresa, razon_social_empresa, marca_vehiculo, dni_conductor, nombre_conductor, punto_partida, punto_llegada)
     VALUES (p_id_venta, 'venta', p_peso, p_fecha_traslado, p_observaciones, p_modalidad_transporte, p_ruc_empresa, p_razon_social_empresa, p_marca_vehiculo, p_dni_conductor, p_nombre_conductor, p_punto_partida, p_punto_llegada);
@@ -854,8 +745,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS `sp_registrar_conformidad_tienda`$$
 CREATE PROCEDURE `sp_registrar_conformidad_tienda`(
-    IN p_id_venta INT, IN p_nombre_cliente_confirma VARCHAR(255), IN p_dni_cliente_confirma VARCHAR(20)
-)
+    IN p_id_venta INT, IN p_nombre_cliente_confirma VARCHAR(255), IN p_dni_cliente_confirma VARCHAR(20))
 BEGIN
     INSERT INTO conformidad_cliente (id_venta, nombre_cliente_confirma, dni_cliente_confirma, tipo_entrega)
     VALUES (p_id_venta, p_nombre_cliente_confirma, p_dni_cliente_confirma, 'tienda');
@@ -864,8 +754,7 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_listar_ventas_final`$$
 CREATE PROCEDURE `sp_listar_ventas_final`()
 BEGIN
-    SELECT
-        v.id_venta, v.serie, v.correlativo, v.fecha_emision, v.fecha_vencimiento, v.estado_venta, v.tipo_descuento AS venta_tipo_descuento, v.aplica_igv, v.observaciones AS venta_observaciones, v.subtotal AS venta_subtotal, v.igv AS venta_igv, v.descuento_total AS venta_descuento_total, v.total_final, v.total_peso AS venta_total_peso, v.hay_traslado,
+    SELECT v.id_venta, v.serie, v.correlativo, v.fecha_emision, v.fecha_vencimiento, v.estado_venta, v.tipo_descuento AS venta_tipo_descuento, v.aplica_igv, v.observaciones AS venta_observaciones, v.subtotal AS venta_subtotal, v.igv AS venta_igv, v.descuento_total AS venta_descuento_total, v.total_final, v.total_peso AS venta_total_peso, v.hay_traslado,
         tc.nombre AS tipo_comprobante,
         m.nombre AS moneda_nombre, m.simbolo AS moneda_simbolo,
         tp.nombre AS tipo_pago_nombre,
@@ -902,9 +791,7 @@ DROP PROCEDURE IF EXISTS `sp_registrar_gasto`$$
 CREATE PROCEDURE `sp_registrar_gasto`(
     IN p_id_proveedor INT, IN p_id_tipo_gasto INT, IN p_motivo VARCHAR(100), IN p_placa VARCHAR(50),
     IN p_fecha DATE, IN p_id_moneda INT, IN p_subtotal DECIMAL(12,2), IN p_igv DECIMAL(12,2),
-    IN p_total DECIMAL(12,2), IN p_observacion TEXT, IN p_total_peso DECIMAL(12,3),
-    OUT p_id_gasto INT
-)
+    IN p_total DECIMAL(12,2), IN p_observacion TEXT, IN p_total_peso DECIMAL(12,3), OUT p_id_gasto INT)
 BEGIN
     INSERT INTO gasto (id_proveedor, id_tipo_gasto, motivo, placa, fecha, id_moneda, subtotal, igv, total, observacion, total_peso)
     VALUES (p_id_proveedor, p_id_tipo_gasto, p_motivo, p_placa, p_fecha, p_id_moneda, p_subtotal, p_igv, p_total, p_observacion, p_total_peso);
@@ -915,8 +802,7 @@ DROP PROCEDURE IF EXISTS `sp_agregar_detalle_gasto`$$
 CREATE PROCEDURE `sp_agregar_detalle_gasto`(
     IN p_id_gasto INT, IN p_descripcion VARCHAR(255), IN p_cantidad DECIMAL(12,2), IN p_id_unidad INT,
     IN p_peso_unitario DECIMAL(10,3), IN p_precio_unitario DECIMAL(12,2), IN p_subtotal DECIMAL(12,2),
-    IN p_igv DECIMAL(12,2), IN p_total DECIMAL(12,2)
-)
+    IN p_igv DECIMAL(12,2), IN p_total DECIMAL(12,2))
 BEGIN
     INSERT INTO detalle_gasto (id_gasto, descripcion, cantidad, id_unidad, peso_unitario, precio_unitario, subtotal, igv, total)
     VALUES (p_id_gasto, p_descripcion, p_cantidad, p_id_unidad, p_peso_unitario, p_precio_unitario, p_subtotal, p_igv, p_total);
@@ -925,8 +811,7 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_agregar_documento_gasto`$$
 CREATE PROCEDURE `sp_agregar_documento_gasto`(
     IN p_id_gasto INT, IN p_id_tipo_comprobante INT, IN p_serie VARCHAR(20),
-    IN p_correlativo VARCHAR(50), IN p_fecha_emision DATE
-)
+    IN p_correlativo VARCHAR(50), IN p_fecha_emision DATE)
 BEGIN
     INSERT INTO documento_gasto (id_gasto, id_tipo_comprobante, serie, correlativo, fecha_emision)
     VALUES (p_id_gasto, p_id_tipo_comprobante, p_serie, p_correlativo, p_fecha_emision);
@@ -935,8 +820,7 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_agregar_descuento_global`$$
 CREATE PROCEDURE `sp_agregar_descuento_global`(
     IN p_id_compra INT, IN p_id_venta INT, IN p_motivo VARCHAR(255),
-    IN p_tipo_valor ENUM('porcentaje', 'soles'), IN p_valor DECIMAL(12,2), IN p_tasa_igv DECIMAL(5,2)
-)
+    IN p_tipo_valor ENUM('porcentaje', 'soles'), IN p_valor DECIMAL(12,2), IN p_tasa_igv DECIMAL(5,2))
 BEGIN
     INSERT INTO descuento (id_compra, id_venta, motivo, tipo_aplicacion, tipo_valor, valor, tasa_igv)
     VALUES (p_id_compra, p_id_venta, p_motivo, 'global', p_tipo_valor, p_valor, p_tasa_igv);
@@ -945,8 +829,7 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_agregar_descuento_item`$$
 CREATE PROCEDURE `sp_agregar_descuento_item`(
     IN p_id_detalle_compra INT, IN p_id_detalle_venta INT, IN p_motivo VARCHAR(255),
-    IN p_tipo_valor ENUM('porcentaje', 'soles'), IN p_valor DECIMAL(12,2), IN p_tasa_igv DECIMAL(5,2)
-)
+    IN p_tipo_valor ENUM('porcentaje', 'soles'), IN p_valor DECIMAL(12,2), IN p_tasa_igv DECIMAL(5,2))
 BEGIN
     INSERT INTO descuento (id_detalle_compra, id_detalle_venta, motivo, tipo_aplicacion, tipo_valor, valor, tasa_igv)
     VALUES (p_id_detalle_compra, p_id_detalle_venta, p_motivo, 'item', p_tipo_valor, p_valor, p_tasa_igv);
@@ -1243,10 +1126,10 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS sp_generar_siguiente_codigo_lote$$
-CREATE PROCEDURE sp_generar_siguiente_codigo_lote(IN p_id_articulo INT, OUT p_codigo_lote_generado VARCHAR(50))
+CREATE PROCEDURE sp_generar_siguiente_codigo_lote(
+    IN p_id_articulo INT, OUT p_codigo_lote_generado VARCHAR(50))
 BEGIN
-    DECLARE v_abreviatura VARCHAR(10); DECLARE v_hora_min_seg VARCHAR(6);
-    DECLARE v_fecha_hoy DATE; DECLARE v_nuevo_num_remesa INT;
+    DECLARE v_abreviatura VARCHAR(10); DECLARE v_hora_min_seg VARCHAR(6); DECLARE v_fecha_hoy DATE; DECLARE v_nuevo_num_remesa INT;
 
     SELECT pm.abreviatura
     INTO v_abreviatura
@@ -1271,7 +1154,8 @@ BEGIN
     FROM control_remesa_lote
     WHERE fecha_actual = v_fecha_hoy;
 
-    SET p_codigo_lote_generado = CONCAT(v_abreviatura, '-', v_hora_min_seg, '-', LPAD(v_nuevo_num_remesa, 3, '0'));
+    SET p_codigo_lote_generado = CONCAT(v_abreviatura, v_hora_min_seg, '-', LPAD(v_nuevo_num_remesa, 2, '0'));
+
     COMMIT;
 END$$
 

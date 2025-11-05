@@ -11,8 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
-import java.util.Random;
-import java.text.SimpleDateFormat;
 import java.sql.Date;
 
 public class ProduccionController implements ProduccionRepository {
@@ -23,12 +21,40 @@ public class ProduccionController implements ProduccionRepository {
         return conn;
     }
 
-    private String generarCodigoLote() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd");
-        String fecha = sdf.format(new java.util.Date());
-        Random random = new Random();
-        int sufijo = 100 + random.nextInt(900);
-        return "LOTE-" + fecha + "-" + sufijo;
+    private String generarCodigoLoteDB(int idArticulo) throws SQLException {
+        String codigoLote = null;
+        String sql = "{CALL sp_generar_siguiente_codigo_lote(?, ?)}";
+
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, idArticulo);
+            cs.registerOutParameter(2, java.sql.Types.VARCHAR);
+            cs.execute();
+
+            codigoLote = cs.getString(2);
+        }
+        if (codigoLote == null || codigoLote.isEmpty()) {
+            throw new SQLException("Error: El SP de generación de lote devolvió un código inválido.");
+        }
+        return codigoLote;
+    }
+
+    private int obtenerIdArticuloProducidoPorOrden(int idOrden) throws SQLException {
+        int idArticulo = -1;
+        String sql = "SELECT id_articulo_producido FROM orden_produccion WHERE id_orden = ?";
+
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, idOrden);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                if (rs.next()) {
+                    idArticulo = rs.getInt("id_articulo_producido");
+                }
+            }
+        }
+        if (idArticulo <= 0) {
+            throw new SQLException("Error: No se pudo obtener el ID del artículo producido para la orden " + idOrden);
+        }
+        return idArticulo;
     }
 
     @Override
@@ -57,9 +83,7 @@ public class ProduccionController implements ProduccionRepository {
     public void agregarDetalleReceta(int idReceta, int idArtInsumo, BigDecimal cantReq, int idUniInsumo) throws SQLException {
         String sql = "{CALL sp_detalle_receta(?, ?, ?, ?)}";
 
-        try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idReceta);
             cs.setInt(2, idArtInsumo);
             cs.setBigDecimal(3, cantReq);
@@ -72,9 +96,7 @@ public class ProduccionController implements ProduccionRepository {
         List<Map<String, Object>> detallesReceta = new ArrayList<>();
         String sql = "{CALL sp_obtener_receta_por_nombre_generico(?)}";
 
-        try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setString(1, nombreGenerico);
 
             try (ResultSet rs = cs.executeQuery()) {
@@ -100,9 +122,7 @@ public class ProduccionController implements ProduccionRepository {
         int idOrden = -1;
         String sql = "{CALL sp_crear_orden(?, ?, ?, ?, ?, ?)}";
 
-        try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idReceta);
             cs.setInt(2, idArticuloProducido);
             cs.setBigDecimal(3, cantProd);
@@ -145,10 +165,7 @@ public class ProduccionController implements ProduccionRepository {
             cs.setInt(4, idUnidad);
             cs.setBoolean(5, esEnvase);
 
-            try (ResultSet rs = cs.executeQuery()) {
-                if (rs.next()) {
-                }
-            }
+            cs.execute();
         }
     }
 
@@ -163,16 +180,15 @@ public class ProduccionController implements ProduccionRepository {
             cs.setBigDecimal(2, mermaCantidad);
             cs.setBigDecimal(3, envasesSueltos);
 
-            try (ResultSet rs = cs.executeQuery()) {
-                if (rs.next()) {
-                }
-            }
+            cs.execute();
         }
     }
 
     @Override
     public void registrarLotes(int idOrden, List<Map<String, Object>> lotes) throws SQLException {
         String sql = "{CALL sp_reg_lote(?, ?, ?, ?)}";
+
+        int idArticuloProducido = obtenerIdArticuloProducidoPorOrden(idOrden);
 
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
@@ -185,18 +201,14 @@ public class ProduccionController implements ProduccionRepository {
                     Date fechaVencimientoSql = fechaVencimientoStr != null ? Date.valueOf(fechaVencimientoStr) : null;
 
                     if (codigoLote == null || codigoLote.isEmpty()) {
-                        codigoLote = generarCodigoLote();
+                        codigoLote = generarCodigoLoteDB(idArticuloProducido);
                     }
 
                     cs.setInt(1, idOrden);
                     cs.setBigDecimal(2, cantidad);
                     cs.setString(3, codigoLote);
                     cs.setDate(4, fechaVencimientoSql);
-
-                    try (ResultSet rs = cs.executeQuery()) {
-                        if (rs.next()) {
-                        }
-                    }
+                    cs.execute();
                 }
                 conn.commit();
             } catch (SQLException e) {
@@ -212,15 +224,9 @@ public class ProduccionController implements ProduccionRepository {
     public void finalizarOrden(int idOrden) throws SQLException {
         String sql = "{CALL sp_finalizar_orden(?)}";
 
-        try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idOrden);
-
-            try (ResultSet rs = cs.executeQuery()) {
-                if (rs.next()) {
-                }
-            }
+            cs.execute();
         }
     }
 
@@ -229,9 +235,7 @@ public class ProduccionController implements ProduccionRepository {
         List<String> presentaciones = new ArrayList<>();
         String sql = "{CALL sp_obtener_presentaciones_por_pm(?)}";
 
-        try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idProductoMaestro);
 
             try (ResultSet rs = cs.executeQuery()) {
@@ -247,9 +251,7 @@ public class ProduccionController implements ProduccionRepository {
     private List<Map<String, Object>> ejecutarBusqueda(String sql, String busqueda) throws SQLException {
         List<Map<String, Object>> articulos = new ArrayList<>();
 
-        try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setString(1, busqueda);
 
             try (ResultSet rs = cs.executeQuery()) {

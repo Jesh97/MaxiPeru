@@ -114,23 +114,27 @@ public class ProduccionServlet extends HttpServlet {
             } else if (action.equals("registrar_multiples_lotes")) {
                 if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa para registrar lotes.");
 
-                String[] cantidadesArr = request.getParameterValues("p_cant_lote[]");
-                String[] codigosArr = request.getParameterValues("p_cod_lote[]");
-                String[] fechasVencimientoArr = request.getParameterValues("p_fecha_vencimiento[]");
+                String cantidadStr = request.getParameter("p_cant_lote");
+                String codigoStr = request.getParameter("p_cod_lote");
+                String fechaVencimientoStr = request.getParameter("p_fecha_vencimiento");
 
-                List<Map<String, Object>> lotes = new ArrayList<>();
-                if (cantidadesArr != null) {
-                    for (int i = 0; i < cantidadesArr.length; i++) {
-                        Map<String, Object> lote = new LinkedHashMap<>();
-                        lote.put("cantidad", new BigDecimal(cantidadesArr[i]));
-                        lote.put("codigo_lote", codigosArr[i]);
-                        lote.put("fecha_vencimiento", fechasVencimientoArr[i]);
-                        lotes.add(lote);
-                    }
+                if (cantidadStr == null || codigoStr == null || fechaVencimientoStr == null) {
+                    throw new IllegalArgumentException("Faltan datos del lote (cantidad, código o fecha de vencimiento).");
                 }
 
+                BigDecimal cantidad = new BigDecimal(cantidadStr);
+
+                Map<String, Object> loteUnico = new LinkedHashMap<>();
+                loteUnico.put("cantidad", cantidad);
+                loteUnico.put("codigo_lote", codigoStr);
+                loteUnico.put("fecha_vencimiento", fechaVencimientoStr);
+
+                List<Map<String, Object>> lotes = new ArrayList<>();
+                lotes.add(loteUnico);
+
+
                 dao.registrarLotes(idOrdenActiva, lotes);
-                mensaje = "Se registraron " + lotes.size() + " lote(s) con códigos generados por el sistema.";
+                mensaje = "Se registró el Lote: " + codigoStr + " para la Orden " + idOrdenActiva;
 
             } else if (action.equals("finalizar_orden")) {
                 if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa para finalizar.");
