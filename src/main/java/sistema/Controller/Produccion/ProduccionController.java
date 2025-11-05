@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.Random;
 import java.text.SimpleDateFormat;
+import java.sql.Date;
 
 public class ProduccionController implements ProduccionRepository {
 
@@ -26,22 +27,21 @@ public class ProduccionController implements ProduccionRepository {
         SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd");
         String fecha = sdf.format(new java.util.Date());
         Random random = new Random();
-        int sufijo = 100 + random.nextInt(899);
+        int sufijo = 100 + random.nextInt(900);
         return "LOTE-" + fecha + "-" + sufijo;
     }
 
     @Override
-    public int crearReceta(int idArtTer, String descripcion, BigDecimal cantProd, int idUniProd) throws SQLException {
+    public int crearReceta(int idProductoMaestro, String descripcion, BigDecimal cantProd, int idUniProd) throws SQLException {
         int idReceta = -1;
-        String sql = "{CALL sp_crear_receta(?, ?, ?, ?)}";
+        String sql = "{CALL sp_crear_receta(?, ?, ?)}";
 
         try (Connection conn = getConnection();
              CallableStatement cs = conn.prepareCall(sql)) {
 
-            cs.setInt(1, idArtTer);
-            cs.setString(2, descripcion);
-            cs.setBigDecimal(3, cantProd);
-            cs.setInt(4, idUniProd);
+            cs.setInt(1, idProductoMaestro);
+            cs.setBigDecimal(2, cantProd);
+            cs.setInt(3, idUniProd);
 
             try (ResultSet rs = cs.executeQuery()) {
                 if (rs.next()) {
@@ -68,18 +68,47 @@ public class ProduccionController implements ProduccionRepository {
         }
     }
 
+    public List<Map<String, Object>> obtenerRecetaPorNombreGenerico(String nombreGenerico) throws SQLException {
+        List<Map<String, Object>> detallesReceta = new ArrayList<>();
+        String sql = "{CALL sp_obtener_receta_por_nombre_generico(?)}";
+
+        try (Connection conn = getConnection();
+             CallableStatement cs = conn.prepareCall(sql)) {
+
+            cs.setString(1, nombreGenerico);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> detalle = new LinkedHashMap<>();
+                    detalle.put("id_producto_maestro", rs.getInt("id_producto_maestro"));
+                    detalle.put("nombre_generico", rs.getString("nombre_generico"));
+                    detalle.put("id_receta", rs.getInt("id_receta"));
+                    detalle.put("receta_cantidad_base", rs.getBigDecimal("receta_cantidad_base"));
+                    detalle.put("unidad_producir_nombre", rs.getString("unidad_producir_nombre"));
+                    detalle.put("insumo_nombre", rs.getString("insumo_nombre"));
+                    detalle.put("insumo_cantidad_requerida", rs.getBigDecimal("insumo_cantidad_requerida"));
+                    detalle.put("insumo_unidad_nombre", rs.getString("insumo_unidad_nombre"));
+                    detallesReceta.add(detalle);
+                }
+            }
+        }
+        return detallesReceta;
+    }
+
     @Override
-    public int crearOrden(int idReceta, BigDecimal cantProd, String fechaIni, String obs) throws SQLException {
+    public int crearOrden(int idReceta, int idArticuloProducido, BigDecimal cantProd, String fechaIni, String obs) throws SQLException {
         int idOrden = -1;
-        String sql = "{CALL sp_crear_orden(?, ?, ?, ?)}";
+        String sql = "{CALL sp_crear_orden(?, ?, ?, ?, ?, ?)}";
 
         try (Connection conn = getConnection();
              CallableStatement cs = conn.prepareCall(sql)) {
 
             cs.setInt(1, idReceta);
-            cs.setBigDecimal(2, cantProd);
-            cs.setDate(3, fechaIni != null ? java.sql.Date.valueOf(fechaIni) : null);
-            cs.setString(4, obs);
+            cs.setInt(2, idArticuloProducido);
+            cs.setBigDecimal(3, cantProd);
+            cs.setBigDecimal(4, BigDecimal.ZERO);
+            cs.setDate(5, fechaIni != null ? Date.valueOf(fechaIni) : null);
+            cs.setString(6, obs);
 
             try (ResultSet rs = cs.executeQuery()) {
                 if (rs.next()) {
@@ -104,15 +133,40 @@ public class ProduccionController implements ProduccionRepository {
     }
 
     @Override
-    public void gestionarConsumoEnvase(int idOrden, BigDecimal cantAEmpacar) throws SQLException {
-        String sql = "{CALL sp_gestionar_consumo_envase(?, ?)}";
+    public void registrarConsumoComponente(int idOrden, int idArticuloConsumido, BigDecimal cantidadAConsumir, int idUnidad, boolean esEnvase) throws SQLException {
+        String sql = "{CALL sp_registrar_consumo_produccion_componente(?, ?, ?, ?, ?)}";
 
         try (Connection conn = getConnection();
              CallableStatement cs = conn.prepareCall(sql)) {
 
             cs.setInt(1, idOrden);
-            cs.setBigDecimal(2, cantAEmpacar);
-            cs.execute();
+            cs.setInt(2, idArticuloConsumido);
+            cs.setBigDecimal(3, cantidadAConsumir);
+            cs.setInt(4, idUnidad);
+            cs.setBoolean(5, esEnvase);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                if (rs.next()) {
+                }
+            }
+        }
+    }
+
+    @Override
+    public void gestionarConsumoEnvase(int idOrden, BigDecimal mermaCantidad, BigDecimal envasesSueltos) throws SQLException {
+        String sql = "{CALL sp_gestionar_consumo_envase(?, ?, ?)}";
+
+        try (Connection conn = getConnection();
+             CallableStatement cs = conn.prepareCall(sql)) {
+
+            cs.setInt(1, idOrden);
+            cs.setBigDecimal(2, mermaCantidad);
+            cs.setBigDecimal(3, envasesSueltos);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                if (rs.next()) {
+                }
+            }
         }
     }
 
@@ -127,7 +181,8 @@ public class ProduccionController implements ProduccionRepository {
                 for (Map<String, Object> lote : lotes) {
                     BigDecimal cantidad = (BigDecimal) lote.get("cantidad");
                     String codigoLote = (String) lote.get("codigo_lote");
-                    String fechaVencimiento = (String) lote.get("fecha_vencimiento");
+                    String fechaVencimientoStr = (String) lote.get("fecha_vencimiento");
+                    Date fechaVencimientoSql = fechaVencimientoStr != null ? Date.valueOf(fechaVencimientoStr) : null;
 
                     if (codigoLote == null || codigoLote.isEmpty()) {
                         codigoLote = generarCodigoLote();
@@ -136,9 +191,12 @@ public class ProduccionController implements ProduccionRepository {
                     cs.setInt(1, idOrden);
                     cs.setBigDecimal(2, cantidad);
                     cs.setString(3, codigoLote);
-                    cs.setDate(4, fechaVencimiento != null ? java.sql.Date.valueOf(fechaVencimiento) : null);
+                    cs.setDate(4, fechaVencimientoSql);
 
-                    cs.execute();
+                    try (ResultSet rs = cs.executeQuery()) {
+                        if (rs.next()) {
+                        }
+                    }
                 }
                 conn.commit();
             } catch (SQLException e) {
@@ -158,7 +216,11 @@ public class ProduccionController implements ProduccionRepository {
              CallableStatement cs = conn.prepareCall(sql)) {
 
             cs.setInt(1, idOrden);
-            cs.execute();
+
+            try (ResultSet rs = cs.executeQuery()) {
+                if (rs.next()) {
+                }
+            }
         }
     }
 
@@ -193,70 +255,18 @@ public class ProduccionController implements ProduccionRepository {
             try (ResultSet rs = cs.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> articulo = new LinkedHashMap<>();
-
-                    try {
-                        articulo.put("id", rs.getInt("id"));
-                    } catch (SQLException e) {
-                        try {
-                            articulo.put("id", rs.getInt("id_articulo"));
-                        } catch (SQLException e2) {
-                            articulo.put("id", 0);
-                        }
-                    }
-
-                    try {
-                        articulo.put("codigo", rs.getString("codigo"));
-                    } catch (SQLException e) { articulo.put("codigo", ""); }
-
-                    try {
-                        articulo.put("nombre", rs.getString("nombre_producto"));
-                    } catch (SQLException e) {
-                        try {
-                            articulo.put("nombre", rs.getString("descripcion"));
-                        } catch (SQLException e2) {
-                            articulo.put("nombre", "Artículo Desconocido");
-                        }
-                    }
-
-                    try {
-                        articulo.put("presentacion_detalle", rs.getString("presentacion_detalle"));
-                    } catch (SQLException e) { }
-
-                    try {
-                        articulo.put("cantidad", rs.getInt("cantidad"));
-                    } catch (SQLException e) { }
-
-                    try {
-                        articulo.put("precio_compra", rs.getBigDecimal("precio_compra"));
-                    } catch (SQLException e) { }
-
-                    try {
-                        articulo.put("precio_venta", rs.getBigDecimal("precio_venta"));
-                    } catch (SQLException e) { }
-
-                    try {
-                        articulo.put("peso_unitario", rs.getDouble("peso_unitario"));
-                    } catch (SQLException e) { }
-
-                    try {
-                        articulo.put("aroma", rs.getString("aroma"));
-                    } catch (SQLException e) { }
-
-                    try {
-                        articulo.put("color", rs.getString("color"));
-                    } catch (SQLException e) { }
-
-                    try {
-                        articulo.put("densidad", rs.getDouble("densidad"));
-                    } catch (SQLException e) {
-                        articulo.put("densidad", 1.0);
-                    }
-
-                    try {
-                        articulo.put("unidad", rs.getString("unidad"));
-                    } catch (SQLException e) {
-                        articulo.put("unidad", "UND");
-                    }
+                    try { articulo.put("id", rs.getInt("id")); } catch (SQLException e) { try { articulo.put("id", rs.getInt("id_articulo")); } catch (SQLException e2) { articulo.put("id", 0); } }
+                    try { articulo.put("codigo", rs.getString("codigo")); } catch (SQLException e) { articulo.put("codigo", ""); }
+                    try { articulo.put("nombre", rs.getString("nombre_producto")); } catch (SQLException e) { try { articulo.put("nombre", rs.getString("descripcion")); } catch (SQLException e2) { articulo.put("nombre", "Artículo Desconocido"); } }
+                    try { articulo.put("presentacion_detalle", rs.getString("presentacion_detalle")); } catch (SQLException e) { }
+                    try { articulo.put("cantidad", rs.getInt("cantidad")); } catch (SQLException e) { }
+                    try { articulo.put("precio_compra", rs.getBigDecimal("precio_compra")); } catch (SQLException e) { }
+                    try { articulo.put("precio_venta", rs.getBigDecimal("precio_venta")); } catch (SQLException e) { }
+                    try { articulo.put("peso_unitario", rs.getDouble("peso_unitario")); } catch (SQLException e) { }
+                    try { articulo.put("aroma", rs.getString("aroma")); } catch (SQLException e) { }
+                    try { articulo.put("color", rs.getString("color")); } catch (SQLException e) { }
+                    try { articulo.put("densidad", rs.getDouble("densidad")); } catch (SQLException e) { articulo.put("densidad", 1.0); }
+                    try { articulo.put("unidad", rs.getString("unidad")); } catch (SQLException e) { articulo.put("unidad", "UND"); }
 
                     articulos.add(articulo);
                 }

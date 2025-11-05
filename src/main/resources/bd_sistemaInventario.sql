@@ -486,3 +486,10 @@ FOREIGN KEY (id_articulo_terminado) REFERENCES articulo(id) ON DELETE CASCADE,
 FOREIGN KEY (id_articulo_envase) REFERENCES articulo(id) ON DELETE RESTRICT,
 FOREIGN KEY (id_unidad_envase) REFERENCES unidad_medida(id_unidad) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE control_remesa_lote (
+    id_control INT NOT NULL AUTO_INCREMENT,
+    fecha_actual DATE NOT NULL UNIQUE,
+    ultimo_numero_remesa INT NOT NULL DEFAULT 0,
+    PRIMARY KEY (id_control)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

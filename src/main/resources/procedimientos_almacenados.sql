@@ -954,283 +954,325 @@ END$$
 
 DROP PROCEDURE IF EXISTS sp_crear_receta$$
 CREATE PROCEDURE sp_crear_receta(
-IN p_id_prod_maestro INT, IN p_cant_prod DECIMAL(12,2), IN p_id_uni_prod INT)
+    IN p_id_prod_maestro INT, IN p_cant_prod DECIMAL(12,2), IN p_id_uni_prod INT)
 BEGIN
-INSERT INTO receta_producto (id_producto_maestro, cantidad_producir, id_unidad_producir, estado)
-VALUES (p_id_prod_maestro, p_cant_prod, p_id_uni_prod, 'Activa');
-
-SELECT LAST_INSERT_ID() AS id_receta;
+    INSERT INTO receta_producto (id_producto_maestro, cantidad_producir, id_unidad_producir, estado)
+    VALUES (p_id_prod_maestro, p_cant_prod, p_id_uni_prod, 'Activa');
+    SELECT LAST_INSERT_ID() AS id_receta;
 END $$
 
 DROP PROCEDURE IF EXISTS sp_detalle_receta$$
 CREATE PROCEDURE sp_detalle_receta(
-IN p_id_receta INT, IN p_id_art_insumo INT, IN p_cant_req DECIMAL(12,2), IN p_id_uni_insumo INT)
+    IN p_id_receta INT, IN p_id_art_insumo INT, IN p_cant_req DECIMAL(12,2), IN p_id_uni_insumo INT)
 BEGIN
-INSERT INTO detalle_receta (id_receta, id_articulo_insumo, cantidad_requerida, id_unidad_insumo)
-VALUES (p_id_receta, p_id_art_insumo, p_cant_req, p_id_uni_insumo);
+    INSERT INTO detalle_receta (id_receta, id_articulo_insumo, cantidad_requerida, id_unidad_insumo)
+    VALUES (p_id_receta, p_id_art_insumo, p_cant_req, p_id_uni_insumo);
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_obtener_receta_por_nombre_generico`$$
 CREATE PROCEDURE `sp_obtener_receta_por_nombre_generico`(IN p_nombre_generico VARCHAR(150))
 BEGIN
-SELECT
-pm.id_producto_maestro, pm.nombre_generico,
-rp.id_receta, rp.cantidad_producir AS receta_cantidad_base,
-um_prod.nombre AS unidad_producir_nombre,
-rp.estado AS receta_estado, dr.id_detalle_receta,
-a_insumo.id AS id_articulo_insumo, a_insumo.codigo AS insumo_codigo, a_insumo.descripcion AS insumo_nombre,
-dr.cantidad_requerida AS insumo_cantidad_requerida,
-um_insumo.nombre AS insumo_unidad_nombre
-FROM producto_maestro pm
-INNER JOIN receta_producto rp ON pm.id_producto_maestro = rp.id_producto_maestro
-INNER JOIN unidad_medida um_prod ON rp.id_unidad_producir = um_prod.id_unidad
-INNER JOIN detalle_receta dr ON rp.id_receta = dr.id_receta
-INNER JOIN articulo a_insumo ON dr.id_articulo_insumo = a_insumo.id
-INNER JOIN unidad_medida um_insumo ON dr.id_unidad_insumo = um_insumo.id_unidad
-WHERE pm.nombre_generico = p_nombre_generico
-ORDER BY rp.id_receta, dr.id_detalle_receta;
+    SELECT
+        pm.id_producto_maestro, pm.nombre_generico,
+        rp.id_receta, rp.cantidad_producir AS receta_cantidad_base,
+        um_prod.nombre AS unidad_producir_nombre,
+        rp.estado AS receta_estado, dr.id_detalle_receta,
+        a_insumo.id AS id_articulo_insumo, a_insumo.codigo AS insumo_codigo, a_insumo.descripcion AS insumo_nombre,
+        dr.cantidad_requerida AS insumo_cantidad_requerida,
+        um_insumo.nombre AS insumo_unidad_nombre
+    FROM producto_maestro pm
+    INNER JOIN receta_producto rp ON pm.id_producto_maestro = rp.id_producto_maestro
+    INNER JOIN unidad_medida um_prod ON rp.id_unidad_producir = um_prod.id_unidad
+    INNER JOIN detalle_receta dr ON rp.id_receta = dr.id_receta
+    INNER JOIN articulo a_insumo ON dr.id_articulo_insumo = a_insumo.id
+    INNER JOIN unidad_medida um_insumo ON dr.id_unidad_insumo = um_insumo.id_unidad
+    WHERE pm.nombre_generico = p_nombre_generico
+    ORDER BY rp.id_receta, dr.id_detalle_receta;
 END$$
 
 DROP PROCEDURE IF EXISTS sp_crear_orden$$
 CREATE PROCEDURE sp_crear_orden(
-IN p_id_receta INT, IN p_id_articulo_producido INT, IN p_cant_prod DECIMAL(12,2), IN p_cant_prod_final_real DECIMAL(12,2),
-IN p_fecha_ini DATE, IN p_obs TEXT)
+    IN p_id_receta INT, IN p_id_articulo_producido INT,
+    IN p_cant_prod DECIMAL(12,2), IN p_cant_prod_final_real DECIMAL(12,2),
+    IN p_fecha_ini DATE, IN p_obs TEXT)
 BEGIN
-INSERT INTO orden_produccion (id_receta, id_articulo_producido, fecha_creacion, fecha_inicio_programada, cantidad_a_producir, cantidad_producida_final_real, id_unidad_producir, estado, observaciones)
-SELECT p_id_receta, p_id_articulo_producido, NOW(), p_fecha_ini, p_cant_prod, p_cant_prod_final_real, id_unidad_producir, 'Pendiente', p_obs
-FROM receta_producto WHERE id_receta = p_id_receta;
+    INSERT INTO orden_produccion (id_receta, id_articulo_producido, fecha_creacion, fecha_inicio_programada, cantidad_a_producir, cantidad_producida_final_real, id_unidad_producir, estado, observaciones)
+    SELECT p_id_receta, p_id_articulo_producido, NOW(), p_fecha_ini, p_cant_prod, p_cant_prod_final_real, id_unidad_producir, 'Pendiente', p_obs
+    FROM receta_producto
+    WHERE id_receta = p_id_receta;
 
-IF ROW_COUNT() = 0 THEN
-SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: La receta especificada no existe.';
-ELSE
-SELECT LAST_INSERT_ID() AS id_orden;
-END IF;
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: La receta especificada no existe.';
+    ELSE
+        SELECT LAST_INSERT_ID() AS id_orden;
+    END IF;
 END$$
 
 DROP PROCEDURE IF EXISTS sp_consumir_stock_general_produccion$$
 CREATE PROCEDURE sp_consumir_stock_general_produccion(
-IN p_id_orden INT, IN p_id_articulo INT, IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT, IN p_es_envase BOOLEAN)
+    IN p_id_orden INT, IN p_id_articulo INT,
+    IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT, IN p_es_envase BOOLEAN)
 BEGIN
-DECLARE v_stock_actual DECIMAL(12,8); DECLARE v_densidad DECIMAL(12,8); DECLARE v_cant_en_kg DECIMAL(12,8);
-DECLARE v_factor_conversion DECIMAL(12,8);
-DECLARE v_id_unidad_kg INT;
+    DECLARE v_stock_actual DECIMAL(12,8);
+    DECLARE v_densidad DECIMAL(12,8);
+    DECLARE v_cant_en_kg DECIMAL(12,8);
+    DECLARE v_factor_conversion DECIMAL(12,8);
+    DECLARE v_id_unidad_kg INT;
 
-SELECT id_unidad INTO v_id_unidad_kg FROM unidad_medida WHERE abreviatura = 'KG' LIMIT 1;
+    SELECT id_unidad INTO v_id_unidad_kg FROM unidad_medida WHERE abreviatura = 'KG' LIMIT 1;
 
-SELECT a.densidad, u.factor_a_kg
-INTO v_densidad, v_factor_conversion
-FROM articulo a
-JOIN unidad_medida u ON p_id_unidad = u.id_unidad
-WHERE a.id = p_id_articulo;
+    SELECT a.densidad, u.factor_a_kg
+    INTO v_densidad, v_factor_conversion
+    FROM articulo a
+    JOIN unidad_medida u ON p_id_unidad = u.id_unidad
+    WHERE a.id = p_id_articulo;
 
-IF p_id_unidad = 3 THEN
-SET v_cant_en_kg = p_cantidad_a_consumir * v_densidad / 1000;
-ELSE
-SET v_cant_en_kg = p_cantidad_a_consumir * v_factor_conversion;
-END IF;
+    IF p_id_unidad = 3 THEN
+        SET v_cant_en_kg = p_cantidad_a_consumir * v_densidad / 1000;
+    ELSE
+        SET v_cant_en_kg = p_cantidad_a_consumir * v_factor_conversion;
+    END IF;
 
-SELECT cantidad INTO v_stock_actual FROM articulo WHERE id = p_id_articulo;
+    SELECT cantidad INTO v_stock_actual FROM articulo WHERE id = p_id_articulo;
 
-IF v_stock_actual < v_cant_en_kg THEN
-SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Stock insuficiente en inventario general (en KG).';
-ELSE
-UPDATE articulo SET cantidad = cantidad - v_cant_en_kg WHERE id = p_id_articulo;
-
-INSERT INTO consumo_produccion (id_orden, id_articulo_consumido, cantidad_consumida, id_unidad_consumida, es_envase_embalaje)
-VALUES (p_id_orden, p_id_articulo, v_cant_en_kg, v_id_unidad_kg, p_es_envase);
-END IF;
+    IF v_stock_actual < v_cant_en_kg THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Stock insuficiente en inventario general (en KG).';
+    ELSE
+        UPDATE articulo SET cantidad = cantidad - v_cant_en_kg WHERE id = p_id_articulo;
+        INSERT INTO consumo_produccion (id_orden, id_articulo_consumido, cantidad_consumida, id_unidad_consumida, es_envase_embalaje)
+        VALUES (p_id_orden, p_id_articulo, v_cant_en_kg, v_id_unidad_kg, p_es_envase);
+    END IF;
 END$$
 
 DROP PROCEDURE IF EXISTS sp_consumir_stock_lote_produccion$$
 CREATE PROCEDURE sp_consumir_stock_lote_produccion(
-IN p_id_orden INT, IN p_id_articulo INT, IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT, IN p_es_envase BOOLEAN)
+    IN p_id_orden INT, IN p_id_articulo INT,
+    IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT, IN p_es_envase BOOLEAN)
 BEGIN
-DECLARE v_cantidad_restante DECIMAL(12,8); DECLARE v_id_lote_actual INT; DECLARE v_disponible_lote DECIMAL(12,8);
-DECLARE v_cantidad_consumida DECIMAL(12,8); DECLARE v_cantidad_total_en_kg DECIMAL(12,8); DECLARE v_densidad DECIMAL(12,8);
-DECLARE v_factor_conversion DECIMAL(12,8); DECLARE finished BOOLEAN DEFAULT FALSE;
-DECLARE v_id_unidad_kg INT;
+    DECLARE v_cantidad_restante DECIMAL(12,8);
+    DECLARE v_id_lote_actual INT;
+    DECLARE v_disponible_lote DECIMAL(12,8);
+    DECLARE v_cantidad_consumida DECIMAL(12,8);
+    DECLARE v_cantidad_total_en_kg DECIMAL(12,8);
+    DECLARE v_densidad DECIMAL(12,8);
+    DECLARE v_factor_conversion DECIMAL(12,8);
+    DECLARE finished BOOLEAN DEFAULT FALSE;
+    DECLARE v_id_unidad_kg INT;
 
-DECLARE cur_lotes CURSOR FOR
-SELECT id_lote, cantidad_disponible
-FROM inventario_lote
-WHERE id_articulo = p_id_articulo AND cantidad_disponible > 0
-ORDER BY fecha_ingreso ASC;
-DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = TRUE;
+    DECLARE cur_lotes CURSOR FOR
+        SELECT id_lote, cantidad_disponible
+        FROM inventario_lote
+        WHERE id_articulo = p_id_articulo AND cantidad_disponible > 0
+        ORDER BY fecha_ingreso ASC;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = TRUE;
 
-SELECT id_unidad INTO v_id_unidad_kg FROM unidad_medida WHERE abreviatura = 'KG' LIMIT 1;
+    SELECT id_unidad INTO v_id_unidad_kg FROM unidad_medida WHERE abreviatura = 'KG' LIMIT 1;
 
-SELECT a.densidad, u.factor_a_kg
-INTO v_densidad, v_factor_conversion
-FROM articulo a
-JOIN unidad_medida u ON p_id_unidad = u.id_unidad
-WHERE a.id = p_id_articulo;
+    SELECT a.densidad, u.factor_a_kg
+    INTO v_densidad, v_factor_conversion
+    FROM articulo a
+    JOIN unidad_medida u ON p_id_unidad = u.id_unidad
+    WHERE a.id = p_id_articulo;
 
-IF p_id_unidad = 3 THEN
-SET v_cantidad_total_en_kg = p_cantidad_a_consumir * v_densidad / 1000;
-ELSE
-SET v_cantidad_total_en_kg = p_cantidad_a_consumir * v_factor_conversion;
-END IF;
+    IF p_id_unidad = 3 THEN
+        SET v_cantidad_total_en_kg = p_cantidad_a_consumir * v_densidad / 1000;
+    ELSE
+        SET v_cantidad_total_en_kg = p_cantidad_a_consumir * v_factor_conversion;
+    END IF;
 
-SET v_cantidad_restante = v_cantidad_total_en_kg;
-OPEN cur_lotes;
+    SET v_cantidad_restante = v_cantidad_total_en_kg;
+    OPEN cur_lotes;
 
-lote_consumo_prod_loop: LOOP
-FETCH cur_lotes INTO v_id_lote_actual, v_disponible_lote;
-IF finished OR v_cantidad_restante <= 0 THEN LEAVE lote_consumo_prod_loop; END IF;
+    lote_consumo_prod_loop: LOOP
+        FETCH cur_lotes INTO v_id_lote_actual, v_disponible_lote;
+        IF finished OR v_cantidad_restante <= 0 THEN LEAVE lote_consumo_prod_loop; END IF;
 
-SET v_cantidad_consumida = LEAST(v_cantidad_restante, v_disponible_lote);
-UPDATE inventario_lote SET cantidad_disponible = cantidad_disponible - v_cantidad_consumida WHERE id_lote = v_id_lote_actual;
+        SET v_cantidad_consumida = LEAST(v_cantidad_restante, v_disponible_lote);
+        UPDATE inventario_lote SET cantidad_disponible = cantidad_disponible - v_cantidad_consumida WHERE id_lote = v_id_lote_actual;
 
-INSERT INTO consumo_produccion (id_orden, id_articulo_consumido, id_lote_consumido, cantidad_consumida, id_unidad_consumida, es_envase_embalaje)
-VALUES (p_id_orden, p_id_articulo, v_id_lote_actual, v_cantidad_consumida, v_id_unidad_kg, p_es_envase);
+        INSERT INTO consumo_produccion (id_orden, id_articulo_consumido, id_lote_consumido, cantidad_consumida, id_unidad_consumida, es_envase_embalaje)
+        VALUES (p_id_orden, p_id_articulo, v_id_lote_actual, v_cantidad_consumida, v_id_unidad_kg, p_es_envase);
 
-SET v_cantidad_restante = v_cantidad_restante - v_cantidad_consumida;
-END LOOP lote_consumo_prod_loop;
-CLOSE cur_lotes;
+        SET v_cantidad_restante = v_cantidad_restante - v_cantidad_consumida;
+    END LOOP lote_consumo_prod_loop;
+    CLOSE cur_lotes;
 
-IF v_cantidad_restante > 0 THEN
-SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Stock insuficiente en lotes disponibles para el consumo de producción (en KG).';
-END IF;
+    IF v_cantidad_restante > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Stock insuficiente en lotes disponibles para el consumo de producción (en KG).';
+    END IF;
 
-UPDATE articulo SET cantidad = cantidad - v_cantidad_total_en_kg WHERE id = p_id_articulo;
+    UPDATE articulo SET cantidad = cantidad - v_cantidad_total_en_kg WHERE id = p_id_articulo;
 END$$
 
 DROP PROCEDURE IF EXISTS sp_gestionar_consumo_mp$$
 CREATE PROCEDURE sp_gestionar_consumo_mp(IN p_id_orden INT)
 BEGIN
-DECLARE v_factor DECIMAL(12,8); DECLARE v_id_articulo_insumo INT; DECLARE v_cantidad_requerida_base DECIMAL(12,8);
-DECLARE v_id_unidad_insumo INT; DECLARE v_cantidad_a_consumir DECIMAL(12,8); DECLARE finished BOOLEAN DEFAULT FALSE;
-DECLARE v_cantidad_a_producir DECIMAL(12,2); DECLARE v_cantidad_base DECIMAL(12,2); DECLARE v_usa_lotes BOOLEAN;
+    DECLARE v_factor DECIMAL(12,8);
+    DECLARE v_id_articulo_insumo INT;
+    DECLARE v_cantidad_requerida_base DECIMAL(12,8);
+    DECLARE v_id_unidad_insumo INT;
+    DECLARE v_cantidad_a_consumir DECIMAL(12,8);
+    DECLARE finished BOOLEAN DEFAULT FALSE;
+    DECLARE v_cantidad_a_producir DECIMAL(12,2);
+    DECLARE v_cantidad_base DECIMAL(12,2);
+    DECLARE v_usa_lotes BOOLEAN;
 
-DECLARE cur_detalles CURSOR FOR
-SELECT dr.id_articulo_insumo, dr.cantidad_requerida, dr.id_unidad_insumo
-FROM orden_produccion op
-JOIN receta_producto rp ON op.id_receta = rp.id_receta
-JOIN detalle_receta dr ON rp.id_receta = dr.id_receta
-WHERE op.id_orden = p_id_orden;
-DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = TRUE;
+    DECLARE cur_detalles CURSOR FOR
+        SELECT dr.id_articulo_insumo, dr.cantidad_requerida, dr.id_unidad_insumo
+        FROM orden_produccion op
+        JOIN receta_producto rp ON op.id_receta = rp.id_receta
+        JOIN detalle_receta dr ON rp.id_receta = dr.id_receta
+        WHERE op.id_orden = p_id_orden;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = TRUE;
 
-SELECT op.cantidad_a_producir, rp.cantidad_producir
-INTO v_cantidad_a_producir, v_cantidad_base
-FROM orden_produccion op
-JOIN receta_producto rp ON op.id_receta = rp.id_receta
-WHERE op.id_orden = p_id_orden;
+    SELECT op.cantidad_a_producir, rp.cantidad_producir
+    INTO v_cantidad_a_producir, v_cantidad_base
+    FROM orden_produccion op
+    JOIN receta_producto rp ON op.id_receta = rp.id_receta
+    WHERE op.id_orden = p_id_orden;
 
-IF v_cantidad_base IS NULL OR v_cantidad_base = 0 THEN
-SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Receta no válida o cantidad base cero.';
-END IF;
+    IF v_cantidad_base IS NULL OR v_cantidad_base = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Receta no válida o cantidad base cero.';
+    END IF;
 
-SET v_factor = v_cantidad_a_producir / v_cantidad_base;
-OPEN cur_detalles;
+    SET v_factor = v_cantidad_a_producir / v_cantidad_base;
+    OPEN cur_detalles;
 
-mp_consumo_loop: LOOP
-FETCH cur_detalles INTO v_id_articulo_insumo, v_cantidad_requerida_base, v_id_unidad_insumo;
-IF finished THEN LEAVE mp_consumo_loop; END IF;
-SET v_cantidad_a_consumir = v_cantidad_requerida_base * v_factor;
+    mp_consumo_loop: LOOP
+        FETCH cur_detalles INTO v_id_articulo_insumo, v_cantidad_requerida_base, v_id_unidad_insumo;
+        IF finished THEN LEAVE mp_consumo_loop; END IF;
 
-SELECT EXISTS (
-SELECT 1 FROM inventario_lote WHERE id_articulo = v_id_articulo_insumo AND cantidad_disponible > 0
-) INTO v_usa_lotes;
+        SET v_cantidad_a_consumir = v_cantidad_requerida_base * v_factor;
 
-IF v_usa_lotes THEN
-CALL sp_consumir_stock_lote_produccion(p_id_orden, v_id_articulo_insumo, v_cantidad_a_consumir, v_id_unidad_insumo, FALSE);
-ELSE
-CALL sp_consumir_stock_general_produccion(p_id_orden, v_id_articulo_insumo, v_cantidad_a_consumir, v_id_unidad_insumo, FALSE);
-END IF;
-END LOOP mp_consumo_loop;
-CLOSE cur_detalles;
+        SELECT EXISTS (
+            SELECT 1 FROM inventario_lote WHERE id_articulo = v_id_articulo_insumo AND cantidad_disponible > 0
+        ) INTO v_usa_lotes;
 
-UPDATE orden_produccion SET estado = 'En Proceso' WHERE id_orden = p_id_orden AND estado = 'Pendiente';
+        IF v_usa_lotes THEN
+            CALL sp_consumir_stock_lote_produccion(p_id_orden, v_id_articulo_insumo, v_cantidad_a_consumir, v_id_unidad_insumo, FALSE);
+        ELSE
+            CALL sp_consumir_stock_general_produccion(p_id_orden, v_id_articulo_insumo, v_cantidad_a_consumir, v_id_unidad_insumo, FALSE);
+        END IF;
+    END LOOP mp_consumo_loop;
+    CLOSE cur_detalles;
+
+    UPDATE orden_produccion SET estado = 'En Proceso' WHERE id_orden = p_id_orden AND estado = 'Pendiente';
 END$$
 
 DROP PROCEDURE IF EXISTS sp_registrar_consumo_produccion_componente$$
 CREATE PROCEDURE sp_registrar_consumo_produccion_componente(
-IN p_id_orden INT, IN p_id_articulo_consumido INT, IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT, IN p_es_envase BOOLEAN)
+    IN p_id_orden INT, IN p_id_articulo_consumido INT,
+    IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT, IN p_es_envase BOOLEAN)
 BEGIN
-DECLARE v_usa_lotes BOOLEAN;
+    DECLARE v_usa_lotes BOOLEAN;
 
-SELECT EXISTS (
-SELECT 1 FROM inventario_lote WHERE id_articulo = p_id_articulo_consumido AND cantidad_disponible > 0
-) INTO v_usa_lotes;
+    SELECT EXISTS (
+        SELECT 1 FROM inventario_lote WHERE id_articulo = p_id_articulo_consumido AND cantidad_disponible > 0)
+        INTO v_usa_lotes;
 
-IF v_usa_lotes THEN
-CALL sp_consumir_stock_lote_produccion(
-p_id_orden, p_id_articulo_consumido, p_cantidad_a_consumir, p_id_unidad, p_es_envase);
-ELSE
-CALL sp_consumir_stock_general_produccion(
-p_id_orden, p_id_articulo_consumido, p_cantidad_a_consumir, p_id_unidad, p_es_envase);
-END IF;
+    IF v_usa_lotes THEN
+        CALL sp_consumir_stock_lote_produccion(p_id_orden, p_id_articulo_consumido, p_cantidad_a_consumir, p_id_unidad, p_es_envase);
+    ELSE
+        CALL sp_consumir_stock_general_produccion(p_id_orden, p_id_articulo_consumido, p_cantidad_a_consumir, p_id_unidad, p_es_envase);
+    END IF;
 
-UPDATE orden_produccion
-SET estado = 'En Proceso (Componentes)'
-WHERE id_orden = p_id_orden AND estado IN ('Pendiente', 'En Proceso');
+    UPDATE orden_produccion
+    SET estado = 'En Proceso (Componentes)'
+    WHERE id_orden = p_id_orden AND estado IN ('Pendiente', 'En Proceso');
 
-SELECT 'Consumo de componente registrado correctamente.' AS resultado;
+    SELECT 'Consumo de componente registrado correctamente.' AS resultado;
 END$$
 
 DROP PROCEDURE IF EXISTS sp_gestionar_consumo_envase$$
-CREATE PROCEDURE sp_gestionar_consumo_envase(
-IN p_id_orden INT, IN p_merma_cantidad DECIMAL(12,2), IN p_envases_sueltos DECIMAL(12,2))
+CREATE PROCEDURE sp_gestionar_consumo_envase(IN p_id_orden INT, IN p_merma_cantidad DECIMAL(12,2), IN p_envases_sueltos DECIMAL(12,2))
 BEGIN
-UPDATE orden_produccion
-SET
-merma_total = p_merma_cantidad, envases_sueltos_cantidad = p_envases_sueltos,
-estado = 'Empaque Cerrado'
-WHERE id_orden = p_id_orden;
+    UPDATE orden_produccion
+    SET merma_total = p_merma_cantidad, envases_sueltos_cantidad = p_envases_sueltos, estado = 'Empaque Cerrado'
+    WHERE id_orden = p_id_orden;
 
-IF ROW_COUNT() = 0 THEN
-SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Orden de producción no encontrada para registrar merma y envases sueltos.';
-ELSE
-SELECT 'Merma y envases sueltos registrados, etapa de empaque cerrada.' AS resultado;
-END IF;
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Orden de producción no encontrada para registrar merma y envases sueltos.';
+    ELSE
+        SELECT 'Merma y envases sueltos registrados, etapa de empaque cerrada.' AS resultado;
+    END IF;
 END$$
 
 DROP PROCEDURE IF EXISTS sp_finalizar_orden$$
 CREATE PROCEDURE sp_finalizar_orden(IN p_id_orden INT)
 BEGIN
-UPDATE orden_produccion
-SET estado = 'Terminada'
-WHERE id_orden = p_id_orden;
+    UPDATE orden_produccion
+    SET estado = 'Terminada'
+    WHERE id_orden = p_id_orden;
 
-IF ROW_COUNT() = 0 THEN
-SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Orden de producción no encontrada.';
-ELSE
-SELECT 'Orden terminada.' AS resultado;
-END IF;
+    IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Orden de producción no encontrada.';
+    ELSE SELECT 'Orden terminada.' AS resultado;
+    END IF;
 END$$
 
 DROP PROCEDURE IF EXISTS sp_reg_lote$$
 CREATE PROCEDURE sp_reg_lote(
-IN p_id_orden INT, IN p_cant_envases DECIMAL(12,2), IN p_cod_lote VARCHAR(50), IN p_fecha_vencimiento DATE)
+    IN p_id_orden INT, IN p_cant_envases DECIMAL(12,2), IN p_cod_lote VARCHAR(50), IN p_fecha_vencimiento DATE)
 BEGIN
-DECLARE v_id_articulo_terminado INT; DECLARE v_id_unidad_producir INT;
+    DECLARE v_id_articulo_terminado INT; DECLARE v_id_unidad_producir INT;
 
-SELECT op.id_articulo_producido, op.id_unidad_producir
-INTO v_id_articulo_terminado, v_id_unidad_producir
-FROM orden_produccion op
-WHERE op.id_orden = p_id_orden;
+    SELECT op.id_articulo_producido, op.id_unidad_producir
+    INTO v_id_articulo_terminado, v_id_unidad_producir
+    FROM orden_produccion op
+    WHERE op.id_orden = p_id_orden;
 
-IF v_id_articulo_terminado IS NOT NULL THEN
+    IF v_id_articulo_terminado IS NOT NULL THEN
+        INSERT INTO produccion_realizada (id_orden, id_articulo_terminado, cantidad_producida, id_unidad_producida, codigo_lote)
+        VALUES (p_id_orden, v_id_articulo_terminado, p_cant_envases, v_id_unidad_producir, p_cod_lote);
 
-INSERT INTO produccion_realizada (id_orden, id_articulo_terminado, cantidad_producida, id_unidad_producida, codigo_lote)
-VALUES (p_id_orden, v_id_articulo_terminado, p_cant_envases, v_id_unidad_producir, p_cod_lote);
+        INSERT INTO inventario_lote (id_articulo, codigo_lote, cantidad_ingreso, cantidad_disponible, fecha_vencimiento)
+        VALUES (v_id_articulo_terminado, p_cod_lote, p_cant_envases, p_cant_envases, p_fecha_vencimiento);
 
-INSERT INTO inventario_lote (id_articulo, codigo_lote, cantidad_ingreso, cantidad_disponible, fecha_vencimiento)
-VALUES (v_id_articulo_terminado, p_cod_lote, p_cant_envases, p_cant_envases, p_fecha_vencimiento);
+        UPDATE articulo
+        SET cantidad = cantidad + p_cant_envases
+        WHERE id = v_id_articulo_terminado;
 
-UPDATE articulo
-SET cantidad = cantidad + p_cant_envases
-WHERE id = v_id_articulo_terminado;
+        UPDATE orden_produccion
+        SET cantidad_producida_final_real = p_cant_envases
+        WHERE id = p_id_orden;
 
-UPDATE orden_produccion
-SET cantidad_producida_final_real = p_cant_envases
-WHERE id_orden = p_id_orden;
+        SELECT 'Lote registrado y stock actualizado.' AS resultado;
+    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: No se pudo encontrar el artículo terminado para la orden.';
+    END IF;
+END$$
 
-SELECT 'Lote registrado y stock actualizado.' AS resultado;
+DROP PROCEDURE IF EXISTS sp_generar_siguiente_codigo_lote$$
+CREATE PROCEDURE sp_generar_siguiente_codigo_lote(IN p_id_articulo INT, OUT p_codigo_lote_generado VARCHAR(50))
+BEGIN
+    DECLARE v_abreviatura VARCHAR(10); DECLARE v_hora_min_seg VARCHAR(6);
+    DECLARE v_fecha_hoy DATE; DECLARE v_nuevo_num_remesa INT;
 
-ELSE
-SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: No se pudo encontrar el artículo terminado para la orden.';
-END IF;
+    SELECT pm.abreviatura
+    INTO v_abreviatura
+    FROM articulo a
+    INNER JOIN producto_maestro pm ON a.id_producto_maestro = pm.id_producto_maestro
+    WHERE a.id = p_id_articulo;
+
+    IF v_abreviatura IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Artículo no válido o sin Producto Maestro asociado.';
+    END IF;
+
+    SET v_fecha_hoy = CURDATE();
+    SET v_hora_min_seg = DATE_FORMAT(NOW(), '%H%i%s');
+
+    START TRANSACTION;
+
+    INSERT INTO control_remesa_lote (fecha_actual, ultimo_numero_remesa)
+    VALUES (v_fecha_hoy, 1)
+    ON DUPLICATE KEY UPDATE ultimo_numero_remesa = ultimo_numero_remesa + 1;
+
+    SELECT ultimo_numero_remesa INTO v_nuevo_num_remesa
+    FROM control_remesa_lote
+    WHERE fecha_actual = v_fecha_hoy;
+
+    SET p_codigo_lote_generado = CONCAT(v_abreviatura, '-', v_hora_min_seg, '-', LPAD(v_nuevo_num_remesa, 3, '0'));
+    COMMIT;
 END$$
 
 DELIMITER ;

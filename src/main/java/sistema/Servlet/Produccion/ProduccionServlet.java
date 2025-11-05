@@ -46,8 +46,8 @@ public class ProduccionServlet extends HttpServlet {
 
             if (action.equals("crear_receta_y_componentes")) {
 
-                int idArtTer = 1;
-                int idUniProd = 1;
+                int idArtTer = Integer.parseInt(request.getParameter("p_id_art_ter"));
+                int idUniProd = Integer.parseInt(request.getParameter("p_id_uni_prod"));
                 String desc = request.getParameter("p_desc");
                 BigDecimal cantProd = new BigDecimal(request.getParameter("p_cant_prod"));
 
@@ -56,13 +56,13 @@ public class ProduccionServlet extends HttpServlet {
 
                 String[] idArtInsumoArr = request.getParameterValues("p_id_art_insumo_hidden[]");
                 String[] cantReqArr = request.getParameterValues("p_cant_req[]");
+                String[] idUniInsumoArr = request.getParameterValues("p_id_uni_insumo_hidden[]");
 
                 int componentesGuardados = 0;
                 if (idArtInsumoArr != null) {
                     for (int i = 0; i < idArtInsumoArr.length; i++) {
                         int idArtInsumo = Integer.parseInt(idArtInsumoArr[i]);
-                        int idUniInsumo = 1;
-
+                        int idUniInsumo = Integer.parseInt(idUniInsumoArr[i]);
                         BigDecimal cantReq = new BigDecimal(cantReqArr[i]);
 
                         dao.agregarDetalleReceta(idRecetaActiva, idArtInsumo, cantReq, idUniInsumo);
@@ -72,16 +72,16 @@ public class ProduccionServlet extends HttpServlet {
 
                 mensaje = "Fórmula y sus " + componentesGuardados + " componentes guardados con éxito en Receta ID: " + idRecetaActiva;
 
-            }
-
-            else if (action.equals("crear_orden")) {
+            } else if (action.equals("crear_orden")) {
                 if (idRecetaActiva == null) throw new IllegalArgumentException("Debe haber una Receta Activa.");
 
                 BigDecimal cantProd = new BigDecimal(request.getParameter("p_cant_prod"));
                 String fechaIni = request.getParameter("p_fecha_ini");
                 String obs = request.getParameter("p_obs");
 
-                idOrdenActiva = dao.crearOrden(idRecetaActiva, cantProd, fechaIni, obs);
+                int idArticuloProducido = Integer.parseInt(request.getParameter("p_id_art_producido"));
+
+                idOrdenActiva = dao.crearOrden(idRecetaActiva, idArticuloProducido, cantProd, fechaIni, obs);
                 session.setAttribute("idOrdenActiva", idOrdenActiva);
                 mensaje = "Orden de Producción " + idOrdenActiva + " creada. Ejecute el consumo de MP.";
 
@@ -91,17 +91,25 @@ public class ProduccionServlet extends HttpServlet {
                 dao.gestionarConsumoMateriaPrima(idOrdenActiva);
                 mensaje = "Consumo de Materia Prima ejecutado. Orden en estado 'En Proceso'.";
 
-            } else if (action.equals("consumo_envase_detalle") || action.equals("registrar_produccion_merma")) {
+            } else if (action.equals("registrar_consumo_componente")) {
                 if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa.");
 
-                if (action.equals("registrar_produccion_merma")) {
-                    BigDecimal cantAEmpacar = new BigDecimal(request.getParameter("p_cant_a_empacar_final"));
-                    dao.gestionarConsumoEnvase(idOrdenActiva, cantAEmpacar);
-                    mensaje = "Producción final y consumo de envases registrado. Cantidad empacada: " + cantAEmpacar;
-                } else {
-                    mensaje = "Consumo de envases registrado (simulado).";
-                }
+                int idArticuloConsumido = Integer.parseInt(request.getParameter("p_id_articulo_consumido"));
+                BigDecimal cantidadAConsumir = new BigDecimal(request.getParameter("p_cantidad_consumida"));
+                int idUnidad = Integer.parseInt(request.getParameter("p_id_unidad"));
+                boolean esEnvase = "true".equalsIgnoreCase(request.getParameter("p_es_envase"));
 
+                dao.registrarConsumoComponente(idOrdenActiva, idArticuloConsumido, cantidadAConsumir, idUnidad, esEnvase);
+                mensaje = "Consumo manual registrado en la Orden " + idOrdenActiva + ".";
+
+            } else if (action.equals("registrar_merma_y_cierre_empaque")) {
+                if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa.");
+
+                BigDecimal mermaCantidad = new BigDecimal(request.getParameter("p_merma_cantidad"));
+                BigDecimal envasesSueltos = new BigDecimal(request.getParameter("p_envases_sueltos"));
+
+                dao.gestionarConsumoEnvase(idOrdenActiva, mermaCantidad, envasesSueltos);
+                mensaje = "Merma (" + mermaCantidad + ") y envases sueltos registrados. Etapa de empaque cerrada.";
 
             } else if (action.equals("registrar_multiples_lotes")) {
                 if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa para registrar lotes.");
@@ -201,6 +209,18 @@ public class ProduccionServlet extends HttpServlet {
                     response.setContentType("application/json");
                     response.setCharacterEncoding("UTF-8");
                     response.getWriter().write(gson.toJson(presentaciones));
+
+                } else if (action.equals("obtener_receta_por_nombre_generico")) {
+                    String nombreGenerico = request.getParameter("nombre_generico");
+                    if (nombreGenerico == null || nombreGenerico.isEmpty()) {
+                        throw new IllegalArgumentException("El nombre genérico es requerido.");
+                    }
+
+                    List<Map<String, Object>> detalles = dao.obtenerRecetaPorNombreGenerico(nombreGenerico);
+
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write(gson.toJson(detalles));
 
                 } else {
                     throw new IllegalArgumentException("Acción de búsqueda o consulta no válida.");
