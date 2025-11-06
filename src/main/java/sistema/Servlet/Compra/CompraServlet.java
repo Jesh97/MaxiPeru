@@ -31,6 +31,10 @@ public class CompraServlet extends HttpServlet {
     private final ObjectMapper mapper = new ObjectMapper();
     private final Gson gson = new Gson();
 
+    private static final int MAX_RETRIES = 3;
+    private static final long RETRY_DELAY_MS = 300;
+    private static final int DEADLOCK_ERROR_CODE = 1213;
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
@@ -138,7 +142,6 @@ public class CompraServlet extends HttpServlet {
 
             compra.setObservacion(root.path("observation").asText("").trim());
 
-            // Mapeo de Totales (Nombres en JS: subtotalSinIgv, totalIgv, totalAPagar)
             compra.setSubtotal(BigDecimal.valueOf(root.path("subtotalSinIgv").asDouble(0)));
             compra.setIgv(BigDecimal.valueOf(root.path("totalIgv").asDouble(0)));
             compra.setTotal(BigDecimal.valueOf(root.path("totalAPagar").asDouble(0)));
@@ -288,34 +291,65 @@ public class CompraServlet extends HttpServlet {
                 }
             }
 
-            int idCompra = compraController.registrarCompra(
-                    compra, guia, docRef, detalles, descuentos, cajasCompra, detallesCajaMap, regla
-            );
+            int retryCount = 0;
+            boolean success = false;
+            int idCompra = 0;
 
-            String tipoComprobante = root.path("tipoComprobanteId").asText();
-            String serie = compra.getSerie();
-            String correlativo = compra.getCorrelativo();
-            String descripcion = String.format("Registro de nueva COMPRA exitoso. ID: %d. Comprobante: %s-%s (TipoID: %s). ProveedorID: %d. Total: %.2f",
-                    idCompra, serie, correlativo, tipoComprobante, compra.getIdProveedor(), compra.getTotal().doubleValue());
-            Auditoria.registrar(request, "CREACION", descripcion);
+            while (retryCount < MAX_RETRIES && !success) {
+                try {
+                    idCompra = compraController.registrarCompra(
+                            compra, guia, docRef, detalles, descuentos, cajasCompra, detallesCajaMap, regla
+                    );
+                    success = true;
+                } catch (SQLException e) {
+                    boolean isDeadlock = (e.getErrorCode() == DEADLOCK_ERROR_CODE) ||
+                            (e.getMessage() != null && e.getMessage().toLowerCase().contains("deadlock found"));
 
-            response.getWriter().write(gson.toJson(Map.of("success", true, "idCompra", idCompra, "message", "Compra registrada con ID: " + idCompra)));
+                    if (isDeadlock && retryCount < MAX_RETRIES - 1) {
+                        retryCount++;
+                        try {
+                            Thread.sleep(RETRY_DELAY_MS);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            throw e;
+                        }
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+
+            if (success) {
+                String tipoComprobante = root.path("tipoComprobanteId").asText();
+                String serie = compra.getSerie();
+                String correlativo = compra.getCorrelativo();
+                String descripcion = String.format("Registro de nueva COMPRA exitoso. ID: %d. Comprobante: %s-%s (TipoID: %s). ProveedorID: %d. Total: %.2f",
+                        idCompra, serie, correlativo, tipoComprobante, compra.getIdProveedor(), compra.getTotal().doubleValue());
+                Auditoria.registrar(request, "CREACION", descripcion);
+
+                response.getWriter().write(gson.toJson(Map.of("success", true, "idCompra", idCompra, "message", "Compra registrada con ID: " + idCompra)));
+                return;
+            }
 
         } catch (IllegalArgumentException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(gson.toJson(Map.of("success", false, "message", e.getMessage())));
         } catch (SQLIntegrityConstraintViolationException e) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
-            String specificMessage = "Error de Integridad SQL: Verifique que no exista un comprobante duplicado (Serie/Correlativo).";
-            if (e.getMessage().toLowerCase().contains("compra_ibfk_5") || e.getMessage().toLowerCase().contains("id_moneda")) {
-                specificMessage = "El ID de Moneda seleccionado no es válido o no existe en la base de datos.";
+            String specificMessage = "Error de Integridad SQL: Verifique que no exista un comprobante duplicado (Serie/Correlativo) o un código de Lote duplicado.";
+            if (e.getMessage() != null) {
+                if (e.getMessage().toLowerCase().contains("compra_ibfk_5") || e.getMessage().toLowerCase().contains("id_moneda")) {
+                    specificMessage = "El ID de Moneda seleccionado no es válido o no existe en la base de datos.";
+                } else if (e.getMessage().toLowerCase().contains("duplicate entry")) {
+                    specificMessage = "Error de Clave Única: Se intentó registrar un valor duplicado (ej. Número de Lote o Comprobante ya existente).";
+                }
             }
             response.getWriter().write(gson.toJson(Map.of("success", false, "message", specificMessage)));
         }
         catch (SQLException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 
-            String errorMessage = "Error de Base de Datos: " + e.getMessage();
+            String errorMessage = "Error de Base de Datos: La transacción falló permanentemente tras " + MAX_RETRIES + " intentos. " + e.getMessage();
             Throwable cause = e.getCause();
             if (cause != null) {
                 errorMessage += " [Causa Raíz: " + cause.getMessage() + "]";
