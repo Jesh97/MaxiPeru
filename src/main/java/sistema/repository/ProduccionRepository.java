@@ -7,7 +7,7 @@ import java.util.Map;
 
 public interface ProduccionRepository {
 
-    int crearReceta(int idProductoMaestro, String descripcion, BigDecimal cantProd, int idUniProd) throws SQLException;
+    int crearReceta(int idProductoMaestro, BigDecimal cantProd, int idUniProd) throws SQLException;
 
     void agregarDetalleReceta(int idReceta, int idArtInsumo, BigDecimal cantReq, int idUniInsumo) throws SQLException;
 

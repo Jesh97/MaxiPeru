@@ -31,14 +31,7 @@ $(document).ready(function() {
         select: function(event, ui) {
             $("#buscar_art_ter").val(ui.item.label);
             $('input[name="p_id_art_ter_hidden"]').val(ui.item.id);
-            // Se mantiene el id_unidad para que el backend sepa cuál es la unidad de PT,
-            // pero se IGNORA para la Cantidad Base de la Fórmula.
             $('input[name="p_id_uni_prod_hidden"]').val(ui.item.id_unidad);
-
-            // ELIMINADO: Ya no se modifica el texto de la unidad base, se queda fijo en 'L/Kg'
-            // $('#unidad_base_display').text(ui.item.unidad_nombre);
-            // $('#p_nombre_uni_prod').val(ui.item.unidad_nombre);
-
             return false;
         }
     });
@@ -304,8 +297,10 @@ function assignTapaToRow(rowId) {
 
 function saveFullRecipe(event) {
     event.preventDefault();
+    const form = event.target;
     const artTerId = $('input[name="p_id_art_ter_hidden"]').val();
     const rows = document.getElementById('insumo-rows').querySelectorAll('tr');
+
     if (!artTerId) {
         alert("ERROR: Debe seleccionar un Producto Terminado.");
         return;
@@ -314,9 +309,8 @@ function saveFullRecipe(event) {
         alert("Agregue al menos un insumo componente antes de guardar la Fórmula Completa.");
         return;
     }
-    // Asegurar que el valor fijo de 1.00 se envíe, ya que el campo está disabled.
-    const form = event.target;
-    let cantProdHidden = form.querySelector('input[name="p_cant_prod_sent"]');
+
+    let cantProdHidden = form.querySelector('input[name="p_cant_prod"]');
     if (!cantProdHidden) {
         cantProdHidden = document.createElement('input');
         cantProdHidden.type = 'hidden';
@@ -325,46 +319,41 @@ function saveFullRecipe(event) {
     }
     cantProdHidden.value = '1.00';
 
-    // Asegurar que el valor de la unidad base fijo (L) se envíe, ya que el campo visible no lo hace.
-    let unidadBaseHidden = form.querySelector('input[name="p_nombre_uni_prod"]');
-    if (unidadBaseHidden) {
-        unidadBaseHidden.value = 'L';
-    } else {
-        unidadBaseHidden = document.createElement('input');
-        unidadBaseHidden.type = 'hidden';
-        unidadBaseHidden.name = 'p_nombre_uni_prod';
-        unidadBaseHidden.value = 'L';
-        form.appendChild(unidadBaseHidden);
-    }
-
     const formData = new FormData(form);
 
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+            return response.text().then(html => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                document.body.appendChild(tempDiv);
+                throw new Error("El servidor devolvió un script de alerta.");
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             alert("Fórmula Base y Componentes Guardados. El ID de Receta es: " + data.id_receta);
             document.getElementById('buscar_art_ter').value = '';
             $('input[name="p_id_art_ter_hidden"]').val('');
             $('input[name="p_id_uni_prod_hidden"]').val('');
-            // Se mantiene el display fijo
-            // $('#unidad_base_display').text('L/Kg');
-            // $('#p_nombre_uni_prod').val('L');
             document.getElementById('insumo-rows').innerHTML = '';
-            // Eliminar el campo hidden temporal si existe para futuras llamadas
-            if (cantProdHidden) cantProdHidden.remove();
         } else {
-            alert("Error al guardar la fórmula: " + data.message);
-            // Eliminar el campo hidden temporal si existe para futuras llamadas
-            if (cantProdHidden) cantProdHidden.remove();
+            alert("Error al guardar la fórmula: " + (data.message || "Detalle desconocido."));
         }
     })
     .catch(error => {
-        alert("Error de comunicación con el servidor al guardar la fórmula.");
-        // Eliminar el campo hidden temporal si existe para futuras llamadas
+        if (!error.message.includes("script de alerta")) {
+            alert("Error de comunicación con el servidor al guardar la fórmula. Verifique la conexión o el backend.");
+        }
+    })
+    .finally(() => {
         if (cantProdHidden) cantProdHidden.remove();
     });
 }
@@ -420,7 +409,7 @@ function loadInsumosForOrder(idOrden) {
                 const totalReq = insumo.cantidad_teorica_total;
                 const newRow = tableBody.insertRow();
                 newRow.innerHTML = `
-                    <form action="${PRODUCTION_SERVLET_URL}" method="POST" onsubmit="handleInsumoConsumption(event)">
+                    <form action="" method="POST" onsubmit="handleInsumoConsumption(event)">
                         <input type="hidden" name="action" value="registrar_consumo_manual_produccion">
                         <input type="hidden" name="p_id_orden" value="${idOrden}">
                         <input type="hidden" name="p_id_articulo_insumo" value="${insumo.id_articulo}">

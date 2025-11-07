@@ -58,7 +58,7 @@ public class ProduccionController implements ProduccionRepository {
     }
 
     @Override
-    public int crearReceta(int idProductoMaestro, String descripcion, BigDecimal cantProd, int idUniProd) throws SQLException {
+    public int crearReceta(int idProductoMaestro, BigDecimal cantProd, int idUniProd) throws SQLException {
         int idReceta = -1;
         String sql = "{CALL sp_crear_receta(?, ?, ?)}";
 

@@ -20,7 +20,7 @@
         <button class="tab-button" data-color-suffix="secondary" onclick="openProtectedTab(event, 'ListarOrdenes', 'secondary')"><i class="fas fa-search"></i> 6. Listar Órdenes Producción</button>
     </div>
     <div id="Receta" class="tab-content active">
-        <form action="/ProduccionServlet" method="POST" onsubmit="saveFullRecipe(event)">
+        <form action="" method="POST" onsubmit="saveFullRecipe(event)">
             <input type="hidden" name="action" value="crear_receta_y_componentes">
             <input type="hidden" name="p_id_art_ter_hidden" id="p_id_art_ter_hidden" value="">
             <input type="hidden" name="p_id_uni_prod_hidden"
@@ -89,7 +89,7 @@
     <div id="OrdenConsumo" class="tab-content">
         <div class="form-group-section">
             <h2 class="section-header header-warning">Generar Nueva Orden de Producción</h2>
-            <form action="/ProduccionServlet" method="POST" onsubmit="saveOrden(event)">
+            <form action="" method="POST" onsubmit="saveOrden(event)">
                 <input type="hidden" name="action" value="crear_orden">
                 <input type="hidden" name="p_id_receta_orden_hidden" id="p_id_receta_orden_hidden" value="">
                 <div class="compact-fields-grid" style="grid-template-columns: repeat(2, 1fr);">
@@ -208,7 +208,7 @@
                 </div>
             </div>
             <input type="hidden" id="p_id_etiqueta_principal_hidden" name="p_id_etiqueta_principal" required>
-            <form action="/ProduccionServlet" method="POST" onsubmit="submitPackagingStep(event, 'combined_envasado')">
+            <form action="" method="POST" onsubmit="submitPackagingStep(event, 'combined_envasado')">
                 <input type="hidden" name="action" value="consumo_envase_tapa_etiqueta_multiple_step">
                 <input type="hidden" id="hidden_orden_envasado" name="p_codigo_orden"
                        required>
@@ -237,7 +237,7 @@
         </div>
         <div class="form-group-section">
             <h2 class="section-header header-primary"><i class="fas fa-box"></i> 4.2 EMPAQUETADO</h2>
-            <form action="/ProduccionServlet" method="POST" onsubmit="submitPackagingStep(event, 'empaque_secundario')">
+            <form action="" method="POST" onsubmit="submitPackagingStep(event, 'empaque_secundario')">
                 <input type="hidden" name="action" value="consumo_empaque_step">
                 <input type="hidden" name="p_tipo_componente_empaque" value="3">
                 <input type="hidden" id="hidden_orden_caja" name="p_codigo_orden" required>
@@ -289,7 +289,7 @@
         </div>
         <div class="form-group-section">
             <h2 class="section-header header-primary">Merma y Cierre de Etapa</h2>
-            <form action="/ProduccionServlet" method="POST">
+            <form action="" method="POST" onsubmit="return false;">
                 <input type="hidden" name="action" value="registrar_merma">
                 <input type="hidden" name="p_codigo_orden" id="hidden_orden_merma_submit">
                 <div class="compact-fields-grid">
@@ -336,7 +336,7 @@
                 <input type="text" id="cod_lote_ref_lotes" value="Esperando Lote Generado" readonly class="readonly-field" style="color: var(--accent-success);
  font-weight: bold;">
             </div>
-            <form action="/ProduccionServlet" method="POST" onsubmit="submitFinalLotRegistration(event)">
+            <form action="" method="POST" onsubmit="submitFinalLotRegistration(event)">
                 <input type="hidden" name="action" value="registrar_lote_unico">
                 <input type="hidden" id="hidden_orden_lote_submit" name="p_codigo_orden_lote" required>
                 <input type="hidden" id="p_id_art_ter_lote_hidden" name="p_id_art_ter_lote" required>
@@ -362,7 +362,7 @@
         </div>
         <div class="form-group-section">
             <h2 class="section-header danger-header">Cerrar Orden de Producción</h2>
-            <form action="/ProduccionServlet" method="POST">
+            <form action="" method="POST" onsubmit="return false;">
                 <input type="hidden" name="action" value="finalizar_orden">
                 <label>Orden a Finalizar:</label>
                 <span id="display_orden_finalizar" class="orden-activa-display display-danger">Aún no hay Orden Activa</span>
