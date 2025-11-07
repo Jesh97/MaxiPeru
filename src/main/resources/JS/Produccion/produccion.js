@@ -317,9 +317,11 @@ function saveFullRecipe(event) {
         cantProdHidden.name = 'p_cant_prod';
         form.appendChild(cantProdHidden);
     }
-    cantProdHidden.value = '1.00';
+    cantProdHidden.value = document.getElementById('cant_prod') ? document.getElementById('cant_prod').value : '1.00';
 
     const formData = new FormData(form);
+
+    formData.set('action', 'crear_receta_y_componentes');
 
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
@@ -352,9 +354,6 @@ function saveFullRecipe(event) {
         if (!error.message.includes("script de alerta")) {
             alert("Error de comunicación con el servidor al guardar la fórmula. Verifique la conexión o el backend.");
         }
-    })
-    .finally(() => {
-        if (cantProdHidden) cantProdHidden.remove();
     });
 }
 
@@ -371,11 +370,23 @@ function saveOrden(event) {
         return;
     }
     const formData = new FormData(event.target);
+    formData.set('action', 'crear_orden');
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+            return response.text().then(html => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                document.body.appendChild(tempDiv);
+                throw new Error("El servidor devolvió un script de alerta.");
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success && data.id_orden) {
             activeOrdenCode = data.id_orden;
@@ -392,7 +403,9 @@ function saveOrden(event) {
         }
     })
     .catch(error => {
-        alert("Error de comunicación con el servidor al crear la orden.");
+        if (!error.message.includes("script de alerta")) {
+            alert("Error de comunicación con el servidor al crear la orden.");
+        }
     });
 }
 
@@ -410,15 +423,15 @@ function loadInsumosForOrder(idOrden) {
                 const newRow = tableBody.insertRow();
                 newRow.innerHTML = `
                     <form action="" method="POST" onsubmit="handleInsumoConsumption(event)">
-                        <input type="hidden" name="action" value="registrar_consumo_manual_produccion">
+                        <input type="hidden" name="action" value="registrar_consumo_componente">
                         <input type="hidden" name="p_id_orden" value="${idOrden}">
-                        <input type="hidden" name="p_id_articulo_insumo" value="${insumo.id_articulo}">
-                        <input type="hidden" name="p_id_unidad_insumo" value="${insumo.id_unidad}">
-                        <input type="hidden" name="p_cantidad_teorica_total" value="${totalReq}">
+                        <input type="hidden" name="p_id_articulo_consumido" value="${insumo.id_articulo}">
+                        <input type="hidden" name="p_id_unidad" value="${insumo.id_unidad}">
+                        <input type="hidden" name="p_es_envase" value="false">
                         <td>${insumo.codigo} - ${insumo.nombre_articulo}</td>
                         <td>${totalReq.toFixed(4)} ${insumo.unidad_nombre}</td>
                         <td>
-                            <input type="number" name="p_cantidad_consumida_real" value="${totalReq.toFixed(4)}" step="0.001" required>
+                            <input type="number" name="p_cantidad_consumida" value="${totalReq.toFixed(4)}" step="0.001" required>
                         </td>
                         <td>${insumo.unidad_nombre}</td>
                         <td>
@@ -444,7 +457,18 @@ function handleInsumoConsumption(event) {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+            return response.text().then(html => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                document.body.appendChild(tempDiv);
+                throw new Error("El servidor devolvió un script de alerta.");
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             alert("Consumo de insumo registrado exitosamente.");
@@ -453,7 +477,9 @@ function handleInsumoConsumption(event) {
         }
     })
     .catch(error => {
-        alert("Error de comunicación con el servidor al registrar consumo.");
+        if (!error.message.includes("script de alerta")) {
+            alert("Error de comunicación con el servidor al registrar consumo.");
+        }
     });
 }
 
@@ -537,6 +563,8 @@ function submitPackagingStep(event, stepName) {
         alert("ERROR: Debe seleccionar la Etiqueta Principal (Paso 4.1).");
         return;
     }
+    const formData = new FormData(form);
+
     if (stepName === 'combined_envasado') {
         const rows = document.getElementById('envase-tapa-rows').querySelectorAll('tr');
         if (rows.length === 0) {
@@ -560,6 +588,7 @@ function submitPackagingStep(event, stepName) {
         document.getElementById(`p_id_art_ter_envasado_hidden`).value = activeIdArtTerminado;
         document.getElementById(`p_codigo_lote_envasado_ref`).value = activeLotCode;
         message = 'Envases, Tapas y Etiqueta Principal descontados.';
+        formData.set('action', 'registrar_merma_y_cierre_empaque');
     } else if (stepName === 'empaque_secundario') {
         const componentId = document.getElementById(`p_id_componente_caja`).value;
         if (!componentId) {
@@ -569,13 +598,28 @@ function submitPackagingStep(event, stepName) {
         document.getElementById(`hidden_orden_caja`).value = activeOrdenCode;
         document.getElementById(`p_id_art_ter_caja_hidden`).value = activeIdArtTerminado;
         message = 'Empaque secundario (cajas, etc.) descontado.';
+        formData.set('action', 'registrar_empaque_secundario');
+    } else {
+        alert("Acción de empaque desconocida.");
+        return;
     }
-    const formData = new FormData(form);
+
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+            return response.text().then(html => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                document.body.appendChild(tempDiv);
+                throw new Error("El servidor devolvió un script de alerta.");
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             alert(`Paso de empaque '${stepName}' registrado. ${message}`);
@@ -584,7 +628,9 @@ function submitPackagingStep(event, stepName) {
         }
     })
     .catch(error => {
-        alert("Error de comunicación con el servidor al registrar el paso de empaque.");
+        if (!error.message.includes("script de alerta")) {
+            alert("Error de comunicación con el servidor al registrar el paso de empaque.");
+        }
     });
 }
 
@@ -599,11 +645,23 @@ function submitFinalLotRegistration(event) {
     document.getElementById('p_id_art_ter_lote_hidden').value = activeIdArtTerminado;
     document.getElementById('p_cod_lote_lote_hidden').value = activeLotCode;
     const formData = new FormData(form);
+    formData.set('action', 'registrar_multiples_lotes');
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+            return response.text().then(html => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                document.body.appendChild(tempDiv);
+                throw new Error("El servidor devolvió un script de alerta.");
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             alert("Registro final de Lote Guardado. La orden está lista para cerrarse.");
@@ -612,7 +670,9 @@ function submitFinalLotRegistration(event) {
         }
     })
     .catch(error => {
-        alert("Error de comunicación con el servidor al guardar el lote.");
+        if (!error.message.includes("script de alerta")) {
+            alert("Error de comunicación con el servidor al guardar el lote.");
+        }
     });
 }
 
@@ -659,4 +719,50 @@ function updateOrdenFields() {
         document.getElementById('p_codigo_lote_envase_hidden').value = '';
     }
     updateTotalUnitsReference();
+}
+
+function finalizeOrder() {
+    if (!activeOrdenCode) {
+        alert("ERROR: No hay una Orden de Producción activa para finalizar.");
+        return;
+    }
+    if (!confirm(`¿Está seguro de que desea FINALIZAR la Orden ${activeOrdenCode}? Esta acción es irreversible.`)) {
+        return;
+    }
+    const formData = new FormData();
+    formData.set('action', 'finalizar_orden');
+    formData.set('p_id_orden_finalizar', activeOrdenCode);
+    fetch(PRODUCTION_SERVLET_URL, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+            return response.text().then(html => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                document.body.appendChild(tempDiv);
+                throw new Error("El servidor devolvió un script de alerta.");
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert(`Orden ${activeOrdenCode} FINALIZADA con éxito.`);
+            activeOrdenCode = '';
+            activeIdArtTerminado = '';
+            activeNombreArtTerminado = '';
+            activeLotCode = '';
+            updateOrdenFields();
+        } else {
+            alert("Error al finalizar la orden: " + data.message);
+        }
+    })
+    .catch(error => {
+        if (!error.message.includes("script de alerta")) {
+            alert("Error de comunicación con el servidor al finalizar la orden.");
+        }
+    });
 }

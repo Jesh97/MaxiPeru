@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../../CSS/Produccion/produccion.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
 </head>
 <body>
 <div class="produccion-container">
@@ -20,11 +21,9 @@
         <button class="tab-button" data-color-suffix="secondary" onclick="openProtectedTab(event, 'ListarOrdenes', 'secondary')"><i class="fas fa-search"></i> 6. Listar Órdenes Producción</button>
     </div>
     <div id="Receta" class="tab-content active">
-        <form action="" method="POST" onsubmit="saveFullRecipe(event)">
-            <input type="hidden" name="action" value="crear_receta_y_componentes">
+        <form action="/ProduccionServlet" method="POST" onsubmit="saveFullRecipe(event)">
             <input type="hidden" name="p_id_art_ter_hidden" id="p_id_art_ter_hidden" value="">
-            <input type="hidden" name="p_id_uni_prod_hidden"
-                   id="p_id_uni_prod_hidden" value="">
+            <input type="hidden" name="p_id_uni_prod_hidden" id="p_id_uni_prod_hidden" value="">
             <div class="form-group-section">
                 <h2 class="section-header header-success">Definir Producto y Unidades</h2>
                 <div class="compact-fields-grid">
@@ -38,7 +37,7 @@
                     <div>
                         <label>Cantidad Base de la Fórmula (Litros/Kg):</label>
                         <div class="fixed-unit-input">
-                            <input type="number" id="cant_prod" name="p_cant_prod" value="1.00" step="0.01" required readonly disabled>
+                            <input type="number" id="cant_prod" name="p_cant_prod" value="1.00" step="0.01" required>
                             <span id="unidad_base_display">L/Kg</span>
                         </div>
                         <input type="hidden" name="p_nombre_uni_prod" id="p_nombre_uni_prod" value="L">
@@ -89,7 +88,7 @@
     <div id="OrdenConsumo" class="tab-content">
         <div class="form-group-section">
             <h2 class="section-header header-warning">Generar Nueva Orden de Producción</h2>
-            <form action="" method="POST" onsubmit="saveOrden(event)">
+            <form action="/ProduccionServlet" method="POST" onsubmit="saveOrden(event)">
                 <input type="hidden" name="action" value="crear_orden">
                 <input type="hidden" name="p_id_receta_orden_hidden" id="p_id_receta_orden_hidden" value="">
                 <div class="compact-fields-grid" style="grid-template-columns: repeat(2, 1fr);">
@@ -164,15 +163,13 @@
                 <input type="text" id="cod_lote_generado_envasado_display" value="Presione 'Generar'" readonly class="readonly-field" placeholder="Lote generado">
                 <button type="button" class="btn-submit btn-success" onclick="generateLotCode(event)"><i class="fas fa-magic"></i> Generar Lote</button>
             </div>
-            <input type="hidden" id="p_codigo_lote_envase_hidden" name="p_codigo_lote_envase"
-                   required>
+            <input type="hidden" id="p_codigo_lote_envase_hidden" name="p_codigo_lote_envase" required>
             <p class="alert-info"><i class="fas fa-tags" style="color: var(--accent-success);"></i> **IMPORTANTE:** Genere el código **ANTES** de empezar el envasado para la impresión de etiquetas.</p>
         </div>
         <div class="form-group-section">
             <h2 class="section-header header-primary"><i class="fas fa-fill-drip"></i> 4.1 REGISTRO DE ENVASADO, TAPADO Y ETIQUETADO</h2>
             <label>Producto a Envasar:</label>
-            <div class="input-wrapper" style="margin-bottom:
- 15px;">
+            <div class="input-wrapper" style="margin-bottom: 15px;">
                 <input type="text" id="producto_a_envasar" readonly class="readonly-field" placeholder="Cargado de Orden Activa">
             </div>
             <label for="buscar_envase_principal_multiple">1.
@@ -203,15 +200,13 @@
                 </div>
                 <div class="input-wrapper" style="position: relative;">
                     <input type="number" id="cant_etiquetas_total" name="p_cant_etiquetas_total" value="0" readonly class="readonly-field" placeholder="Cant. Etiquetas" style="padding-right: 120px;">
-                    <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.9em; color: #555; background-color: #eee; padding: 5px; border-radius:
- 5px;">Cant. Total</span>
+                    <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.9em; color: #555; background-color: #eee; padding: 5px; border-radius: 5px;">Cant. Total</span>
                 </div>
             </div>
             <input type="hidden" id="p_id_etiqueta_principal_hidden" name="p_id_etiqueta_principal" required>
-            <form action="" method="POST" onsubmit="submitPackagingStep(event, 'combined_envasado')">
+            <form action="/ProduccionServlet" method="POST" onsubmit="submitPackagingStep(event, 'combined_envasado')">
                 <input type="hidden" name="action" value="consumo_envase_tapa_etiqueta_multiple_step">
-                <input type="hidden" id="hidden_orden_envasado" name="p_codigo_orden"
-                       required>
+                <input type="hidden" id="hidden_orden_envasado" name="p_codigo_orden" required>
                 <input type="hidden" id="p_id_art_ter_envasado_hidden" name="p_id_art_ter_empaque" required>
                 <input type="hidden" id="p_codigo_lote_envasado_ref" name="p_codigo_lote_generado" required>
                 <div style="overflow-x: auto;">
@@ -237,7 +232,7 @@
         </div>
         <div class="form-group-section">
             <h2 class="section-header header-primary"><i class="fas fa-box"></i> 4.2 EMPAQUETADO</h2>
-            <form action="" method="POST" onsubmit="submitPackagingStep(event, 'empaque_secundario')">
+            <form action="/ProduccionServlet" method="POST" onsubmit="submitPackagingStep(event, 'empaque_secundario')">
                 <input type="hidden" name="action" value="consumo_empaque_step">
                 <input type="hidden" name="p_tipo_componente_empaque" value="3">
                 <input type="hidden" id="hidden_orden_caja" name="p_codigo_orden" required>
@@ -265,8 +260,7 @@
                                    oninput="calculateLooseContainers()">
                         </div>
                     </div>
-                    <div style="grid-column:
- span 1;">
+                    <div style="grid-column: span 1;">
                         <label for="cant_empacada_caja">Cantidad de Cajas **REALES** a consumir:</label>
                         <div class="input-wrapper">
                             <input type="number" id="cant_empacada_caja" name="p_cant_a_empacar_final" step="1" required placeholder="Ej: 5 cajas" oninput="calculateLooseContainers()">
@@ -289,7 +283,7 @@
         </div>
         <div class="form-group-section">
             <h2 class="section-header header-primary">Merma y Cierre de Etapa</h2>
-            <form action="" method="POST" onsubmit="return false;">
+            <form action="/ProduccionServlet" method="POST">
                 <input type="hidden" name="action" value="registrar_merma">
                 <input type="hidden" name="p_codigo_orden" id="hidden_orden_merma_submit">
                 <div class="compact-fields-grid">
@@ -336,7 +330,7 @@
                 <input type="text" id="cod_lote_ref_lotes" value="Esperando Lote Generado" readonly class="readonly-field" style="color: var(--accent-success);
  font-weight: bold;">
             </div>
-            <form action="" method="POST" onsubmit="submitFinalLotRegistration(event)">
+            <form action="/ProduccionServlet" method="POST" onsubmit="submitFinalLotRegistration(event)">
                 <input type="hidden" name="action" value="registrar_lote_unico">
                 <input type="hidden" id="hidden_orden_lote_submit" name="p_codigo_orden_lote" required>
                 <input type="hidden" id="p_id_art_ter_lote_hidden" name="p_id_art_ter_lote" required>
@@ -362,7 +356,7 @@
         </div>
         <div class="form-group-section">
             <h2 class="section-header danger-header">Cerrar Orden de Producción</h2>
-            <form action="" method="POST" onsubmit="return false;">
+            <form action="/ProduccionServlet" method="POST">
                 <input type="hidden" name="action" value="finalizar_orden">
                 <label>Orden a Finalizar:</label>
                 <span id="display_orden_finalizar" class="orden-activa-display display-danger">Aún no hay Orden Activa</span>
@@ -395,7 +389,6 @@
         <input type="hidden" id="protected-tab-name" value="">
     </div>
 </div>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 <script src="../../JS/Produccion/produccion.js"></script>

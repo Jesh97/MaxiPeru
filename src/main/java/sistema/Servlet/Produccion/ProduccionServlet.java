@@ -50,8 +50,8 @@ public class ProduccionServlet extends HttpServlet {
                 String cantProdStr = request.getParameter("p_cant_prod");
                 String idUniProdStr = request.getParameter("p_id_uni_prod_hidden");
 
-                if (idArtTerStr == null || idUniProdStr == null) {
-                    throw new IllegalArgumentException("Datos principales de la receta (ID de artículo o ID de unidad) están ausentes.");
+                if (idArtTerStr == null || idUniProdStr == null || cantProdStr == null) {
+                    throw new IllegalArgumentException("Datos principales de la receta (ID de artículo, cantidad o ID de unidad) están ausentes.");
                 }
 
                 int idArtTer = Integer.parseInt(idArtTerStr);
@@ -169,6 +169,17 @@ public class ProduccionServlet extends HttpServlet {
             System.err.println("❌ SQLException en doPost para acción: " + action);
             e.printStackTrace();
             mensaje = "Error de Base de Datos al procesar la acción: **" + action + "**. Detalle: " + e.getMessage() + ". Código SQL: " + e.getSQLState();
+
+            if (action != null && action.equals("crear_receta_y_componentes")) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> jsonResponse = new LinkedHashMap<>();
+                jsonResponse.put("success", false);
+                jsonResponse.put("message", mensaje);
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
+            }
+
             response.setContentType("text/html;charset=UTF-8");
             response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
 
@@ -176,6 +187,17 @@ public class ProduccionServlet extends HttpServlet {
             System.err.println("❌ NumberFormatException en doPost para acción: " + action);
             e.printStackTrace();
             mensaje = "Error de formato de número. Asegúrese de que las cantidades y IDs sean válidos. Causa probable: Dato no numérico en campo numérico. Detalle: " + e.getMessage();
+
+            if (action != null && action.equals("crear_receta_y_componentes")) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> jsonResponse = new LinkedHashMap<>();
+                jsonResponse.put("success", false);
+                jsonResponse.put("message", mensaje);
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
+            }
+
             response.setContentType("text/html;charset=UTF-8");
             response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
 
@@ -183,6 +205,17 @@ public class ProduccionServlet extends HttpServlet {
             System.err.println("❌ IllegalArgumentException en doPost para acción: " + action);
             e.printStackTrace();
             mensaje = "Error de lógica o datos faltantes: **" + e.getMessage() + "** (Verifique que todos los campos requeridos estén llenos o las sesiones activas).";
+
+            if (action != null && action.equals("crear_receta_y_componentes")) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> jsonResponse = new LinkedHashMap<>();
+                jsonResponse.put("success", false);
+                jsonResponse.put("message", mensaje);
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
+            }
+
             response.setContentType("text/html;charset=UTF-8");
             response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
 
@@ -190,6 +223,17 @@ public class ProduccionServlet extends HttpServlet {
             System.err.println("❌ Error Inesperado/Genérico en doPost para acción: " + action);
             e.printStackTrace();
             mensaje = "Error inesperado en la Aplicación. Por favor, contacte a soporte. Tipo de error: **" + e.getClass().getSimpleName() + "**. Detalle: " + e.getMessage();
+
+            if (action != null && action.equals("crear_receta_y_componentes")) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> jsonResponse = new LinkedHashMap<>();
+                jsonResponse.put("success", false);
+                jsonResponse.put("message", mensaje);
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
+            }
+
             response.setContentType("text/html;charset=UTF-8");
             response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
         }
