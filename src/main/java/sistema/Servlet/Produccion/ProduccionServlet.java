@@ -153,12 +153,9 @@ public class ProduccionServlet extends HttpServlet {
 
             } else if (action.equals("finalizar_orden")) {
                 if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa para finalizar.");
-
                 dao.finalizarOrden(idOrdenActiva);
-
                 session.removeAttribute("idRecetaActiva");
                 session.removeAttribute("idOrdenActiva");
-
                 mensaje = "Orden de Producción " + idOrdenActiva + " **FINALIZADA** con éxito.";
 
             } else {
@@ -169,22 +166,30 @@ public class ProduccionServlet extends HttpServlet {
             response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
 
         } catch (SQLException e) {
-            mensaje = "Error de Base de Datos al procesar la acción: " + action + ". Detalle: " + e.getMessage();
+            System.err.println("❌ SQLException en doPost para acción: " + action);
+            e.printStackTrace();
+            mensaje = "Error de Base de Datos al procesar la acción: **" + action + "**. Detalle: " + e.getMessage() + ". Código SQL: " + e.getSQLState();
             response.setContentType("text/html;charset=UTF-8");
             response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
 
         } catch (NumberFormatException e) {
-            mensaje = "Error de formato de número. Asegúrese de que las cantidades sean válidas. Detalle: " + e.getMessage();
+            System.err.println("❌ NumberFormatException en doPost para acción: " + action);
+            e.printStackTrace();
+            mensaje = "Error de formato de número. Asegúrese de que las cantidades y IDs sean válidos. Causa probable: Dato no numérico en campo numérico. Detalle: " + e.getMessage();
             response.setContentType("text/html;charset=UTF-8");
             response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
 
         } catch (IllegalArgumentException e) {
-            mensaje = "Error de lógica o datos faltantes: " + e.getMessage();
+            System.err.println("❌ IllegalArgumentException en doPost para acción: " + action);
+            e.printStackTrace();
+            mensaje = "Error de lógica o datos faltantes: **" + e.getMessage() + "** (Verifique que todos los campos requeridos estén llenos o las sesiones activas).";
             response.setContentType("text/html;charset=UTF-8");
             response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
 
         } catch (Exception e) {
-            mensaje = "Error inesperado en la Aplicación: " + e.getMessage();
+            System.err.println("❌ Error Inesperado/Genérico en doPost para acción: " + action);
+            e.printStackTrace();
+            mensaje = "Error inesperado en la Aplicación. Por favor, contacte a soporte. Tipo de error: **" + e.getClass().getSimpleName() + "**. Detalle: " + e.getMessage();
             response.setContentType("text/html;charset=UTF-8");
             response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
         }
@@ -237,7 +242,7 @@ public class ProduccionServlet extends HttpServlet {
 
             } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().write("{\"error\": \"Acción de consulta no válida: " + action + "\"}");
+                response.getWriter().write("{\"error\": \"Acción de consulta no válida: **" + action + "**\"}");
                 return;
             }
 
@@ -250,8 +255,21 @@ public class ProduccionServlet extends HttpServlet {
             response.getWriter().write(gson.toJson(resultados));
 
         } catch (Exception e) {
+            System.err.println("❌ Error en doGet para acción: " + action);
+            e.printStackTrace();
+
+            String errorDetalle;
+            if (e instanceof IllegalArgumentException) {
+                errorDetalle = "Error de datos: " + e.getMessage();
+            } else if (e instanceof SQLException) {
+                SQLException sqlE = (SQLException) e;
+                errorDetalle = "Error de DB: " + sqlE.getMessage() + " (SQL State: " + sqlE.getSQLState() + ")";
+            } else {
+                errorDetalle = "Error Inesperado: " + e.getMessage();
+            }
+
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"error\": \"Error al procesar la solicitud GET: " + e.getMessage().replace("\"", "\\\"") + "\"}");
+            response.getWriter().write("{\"error\": \"Error al procesar la solicitud GET (" + action + "): **" + errorDetalle.replace("\"", "\\\"") + "**\"}");
         }
     }
 }
