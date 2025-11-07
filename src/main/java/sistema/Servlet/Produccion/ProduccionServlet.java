@@ -39,16 +39,17 @@ public class ProduccionServlet extends HttpServlet {
         Integer idRecetaActiva = (Integer) session.getAttribute("idRecetaActiva");
         Integer idOrdenActiva = (Integer) session.getAttribute("idOrdenActiva");
 
+        if (action == null || action.trim().isEmpty()) {
+            action = "error_accion_no_especificada";
+        }
+
         try {
-            if (action == null) {
-                throw new IllegalArgumentException("Error: Acción no especificada.");
-            }
 
             if (action.equals("crear_receta_y_componentes")) {
 
                 String idArtTerStr = request.getParameter("p_id_art_ter_hidden");
                 String cantProdStr = request.getParameter("p_cant_prod");
-                String idUniProdStr = request.getParameter("p_id_uni_prod_hidden");
+                String idUniProdStr = request.getParameter("p_id_unidad_producir");
 
                 if (idArtTerStr == null || idUniProdStr == null || cantProdStr == null) {
                     throw new IllegalArgumentException("Datos principales de la receta (ID de artículo, cantidad o ID de unidad) están ausentes.");
@@ -157,6 +158,9 @@ public class ProduccionServlet extends HttpServlet {
                 session.removeAttribute("idRecetaActiva");
                 session.removeAttribute("idOrdenActiva");
                 mensaje = "Orden de Producción " + idOrdenActiva + " **FINALIZADA** con éxito.";
+
+            } else if (action.equals("error_accion_no_especificada")) {
+                throw new IllegalArgumentException("Error: La solicitud POST no especificó ninguna acción (parámetro 'action' nulo).");
 
             } else {
                 throw new IllegalArgumentException("Acción desconocida: " + action);
