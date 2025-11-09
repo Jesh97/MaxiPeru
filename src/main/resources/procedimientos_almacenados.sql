@@ -237,24 +237,25 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_terminados`$$
 CREATE PROCEDURE `sp_buscar_articulos_terminados`(IN p_busqueda VARCHAR(100))
 BEGIN
-    SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario,
+    SELECT a.id, a.codigo, pm.nombre_generico, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario,
         a.aroma, a.color, a.densidad, um.nombre AS unidad
     FROM articulo a
+    LEFT JOIN producto_maestro pm ON a.id_producto_maestro = pm.id_producto_maestro
     JOIN unidad_medida um ON a.id_unidad = um.id_unidad
-    WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
+    WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%') OR pm.nombre_generico LIKE CONCAT('%', p_busqueda, '%'))
       AND a.id_tipo_articulo = 1;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_insumos`$$
 CREATE PROCEDURE `sp_buscar_articulos_insumos`(IN p_busqueda VARCHAR(100))
 BEGIN
-    SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario,
-        a.aroma, a.color, a.densidad, um.nombre AS unidad
-    FROM articulo a
-    JOIN unidad_medida um ON a.id_unidad = um.id_unidad
-    WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
-      AND a.id_tipo_articulo = 2
-      AND a.cantidad > 0;
+SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario,
+a.aroma, a.color, a.densidad, um.nombre AS unidad,a.id_unidad
+FROM articulo a
+JOIN unidad_medida um ON a.id_unidad = um.id_unidad
+WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
+AND a.id_tipo_articulo = 2
+AND a.cantidad > 0;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_embalado_y_embalaje`$$
@@ -836,17 +837,14 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS sp_crear_receta$$
-CREATE PROCEDURE sp_crear_receta(
-    IN p_id_prod_maestro INT, IN p_cant_prod DECIMAL(12,2), IN p_id_uni_prod INT)
+CREATE PROCEDURE sp_crear_receta(IN p_id_prod_maestro INT, IN p_cant_prod DECIMAL(12,4), IN p_id_uni_prod INT)
 BEGIN
     INSERT INTO receta_producto (id_producto_maestro, cantidad_producir, id_unidad_producir, estado)
     VALUES (p_id_prod_maestro, p_cant_prod, p_id_uni_prod, 'Activa');
     SELECT LAST_INSERT_ID() AS id_receta;
 END $$
-
 DROP PROCEDURE IF EXISTS sp_detalle_receta$$
-CREATE PROCEDURE sp_detalle_receta(
-    IN p_id_receta INT, IN p_id_art_insumo INT, IN p_cant_req DECIMAL(12,2), IN p_id_uni_insumo INT)
+CREATE PROCEDURE sp_detalle_receta(IN p_id_receta INT, IN p_id_art_insumo INT, IN p_cant_req DECIMAL(12,6), IN p_id_uni_insumo INT)
 BEGIN
     INSERT INTO detalle_receta (id_receta, id_articulo_insumo, cantidad_requerida, id_unidad_insumo)
     VALUES (p_id_receta, p_id_art_insumo, p_cant_req, p_id_uni_insumo);

@@ -2,6 +2,8 @@ package sistema.Controller.Produccion;
 
 import sistema.Ejecucion.Conexion;
 import sistema.repository.ProduccionRepository;
+
+import java.math.RoundingMode;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -66,6 +68,7 @@ public class ProduccionController implements ProduccionRepository {
              CallableStatement cs = conn.prepareCall(sql)) {
 
             cs.setInt(1, idProductoMaestro);
+            cantProd = cantProd.setScale(4, RoundingMode.HALF_UP);
             cs.setBigDecimal(2, cantProd);
             cs.setInt(3, idUniProd);
 
@@ -86,12 +89,12 @@ public class ProduccionController implements ProduccionRepository {
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idReceta);
             cs.setInt(2, idArtInsumo);
+            cantReq = cantReq.setScale(6, RoundingMode.HALF_UP);
             cs.setBigDecimal(3, cantReq);
             cs.setInt(4, idUniInsumo);
             cs.execute();
         }
     }
-
     public List<Map<String, Object>> obtenerRecetaPorNombreGenerico(String nombreGenerico) throws SQLException {
         List<Map<String, Object>> detallesReceta = new ArrayList<>();
         String sql = "{CALL sp_obtener_receta_por_nombre_generico(?)}";

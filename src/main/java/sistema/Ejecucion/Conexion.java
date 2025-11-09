@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class Conexion {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/bd_maxiperu?useSSL=false&serverTimezone=UTC&cacheCallableStmts=false";
+    private static final String URL = "jdbc:mysql://localhost:3306/bd_maxiperu?useSSL=false&serverTimezone=UTC&cacheCallableStmts=false&useInformationSchema=true";
     private static final String USUARIO = "root";
     private static final String CONTRASENA = "";
 
@@ -32,7 +32,6 @@ public class Conexion {
         }
     }
 
-    // El método main es opcional para la funcionalidad, pero lo incluimos por completitud
     public static void main(String[] args) {
         Connection conexion = Conexion.obtenerConexion();
 
