@@ -191,6 +191,7 @@
                 <span id="selected_tapa_display" class="orden-activa-display display-primary" style="flex-grow: 1; margin-left: 10px; font-size: 0.9em;">Ninguna Tapa Seleccionada</span>
             </div>
             <input type="hidden" id="p_id_tapa_seleccionada_hidden">
+            <input type="hidden" id="p_id_unidad_tapa_hidden">
             <label for="buscar_etiqueta_principal">3.
                 Etiqueta Principal (Única para la Orden):</label>
             <div class="insumo-search-container" style="margin-bottom: 15px; display: grid; grid-template-columns: 2fr 1fr; gap: 10px; align-items: center;">
@@ -204,6 +205,7 @@
                 </div>
             </div>
             <input type="hidden" id="p_id_etiqueta_principal_hidden" name="p_id_etiqueta_principal" required>
+            <input type="hidden" id="p_id_unidad_etiqueta_hidden">
             <form action="" method="POST" onsubmit="submitPackagingStep(event, 'combined_envasado')">
                 <input type="hidden" id="hidden_orden_envasado" name="p_codigo_orden" required>
                 <input type="hidden" id="p_id_art_ter_envasado_hidden" name="p_id_art_ter_empaque" required>
@@ -236,6 +238,7 @@
                 <input type="hidden" id="hidden_orden_caja" name="p_codigo_orden" required>
                 <input type="hidden" id="p_id_art_ter_caja_hidden" name="p_id_art_ter_empaque" required>
                 <input type="hidden" id="p_id_componente_caja" name="p_id_componente_seleccionado" required>
+                <input type="hidden" id="p_id_unidad_caja_hidden">
                 <div class="compact-fields-grid" id="empaque_secundario_fields">
                     <div>
                         <label for="cant_unidades_envasadas_ref">Unidades Envasadas TOTAL (Ref.

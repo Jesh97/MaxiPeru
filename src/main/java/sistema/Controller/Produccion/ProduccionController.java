@@ -2,7 +2,6 @@ package sistema.Controller.Produccion;
 
 import sistema.Ejecucion.Conexion;
 import sistema.repository.ProduccionRepository;
-
 import java.math.RoundingMode;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -95,6 +94,8 @@ public class ProduccionController implements ProduccionRepository {
             cs.execute();
         }
     }
+
+    @Override
     public List<Map<String, Object>> obtenerRecetaPorNombreGenerico(String nombreGenerico) throws SQLException {
         List<Map<String, Object>> detallesReceta = new ArrayList<>();
         String sql = "{CALL sp_obtener_receta_por_nombre_generico(?)}";
@@ -118,6 +119,30 @@ public class ProduccionController implements ProduccionRepository {
             }
         }
         return detallesReceta;
+    }
+
+    @Override
+    public List<Map<String, Object>> obtenerInsumosPorIdReceta(int idReceta) throws SQLException {
+        List<Map<String, Object>> insumos = new ArrayList<>();
+        String sql = "{CALL sp_obtener_insumos_por_id_receta(?)}";
+
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, idReceta);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> insumo = new LinkedHashMap<>();
+                    insumo.put("id_articulo", rs.getInt("id_articulo"));
+                    insumo.put("codigo", rs.getString("codigo"));
+                    insumo.put("insumo_nombre", rs.getString("nombre_articulo"));
+                    insumo.put("insumo_cantidad_requerida", rs.getBigDecimal("cantidad_requerida"));
+                    insumo.put("id_unidad", rs.getInt("id_unidad"));
+                    insumo.put("insumo_unidad_nombre", rs.getString("unidad_nombre"));
+                    insumos.add(insumo);
+                }
+            }
+        }
+        return insumos;
     }
 
     @Override
@@ -147,8 +172,7 @@ public class ProduccionController implements ProduccionRepository {
     public void gestionarConsumoMateriaPrima(int idOrden) throws SQLException {
         String sql = "{CALL sp_gestionar_consumo_mp(?)}";
 
-        try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
 
             cs.setInt(1, idOrden);
             cs.execute();
@@ -159,15 +183,13 @@ public class ProduccionController implements ProduccionRepository {
     public void registrarConsumoComponente(int idOrden, int idArticuloConsumido, BigDecimal cantidadAConsumir, int idUnidad, boolean esEnvase) throws SQLException {
         String sql = "{CALL sp_registrar_consumo_produccion_componente(?, ?, ?, ?, ?)}";
 
-        try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
 
             cs.setInt(1, idOrden);
             cs.setInt(2, idArticuloConsumido);
             cs.setBigDecimal(3, cantidadAConsumir);
             cs.setInt(4, idUnidad);
             cs.setBoolean(5, esEnvase);
-
             cs.execute();
         }
     }
@@ -262,17 +284,11 @@ public class ProduccionController implements ProduccionRepository {
                     Map<String, Object> articulo = new LinkedHashMap<>();
 
                     try { articulo.put("id", rs.getInt("id")); } catch (SQLException e) { try { articulo.put("id", rs.getInt("id_articulo")); } catch (SQLException e2) { articulo.put("id", 0); } }
-
                     try { articulo.put("codigo", rs.getString("codigo")); } catch (SQLException e) { articulo.put("codigo", ""); }
-
                     try { articulo.put("descripcion", rs.getString("descripcion")); } catch (SQLException e) { articulo.put("descripcion", "Artículo Desconocido"); }
-
                     try { articulo.put("nombre_generico", rs.getString("nombre_generico")); } catch (SQLException e) { }
-
                     try { articulo.put("id_producto_maestro", rs.getInt("id_producto_maestro")); } catch (SQLException e) { }
-
                     try { articulo.put("id_unidad", rs.getInt("id_unidad")); } catch (SQLException e) { articulo.put("id_unidad", 0); }
-
                     try { articulo.put("unidad_nombre", rs.getString("unidad_nombre")); } catch (SQLException e) {
                         try { articulo.put("unidad_nombre", rs.getString("unidad")); } catch (SQLException e2) {
                             articulo.put("unidad_nombre", "UND");

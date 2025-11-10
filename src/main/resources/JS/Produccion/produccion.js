@@ -4,6 +4,7 @@ let activeOrdenCode = '';
 let activeLotCode = '';
 let activeIdArtTerminado = '';
 let activeNombreArtTerminado = '';
+let activeIdReceta = '';
 
 $(document).ready(function() {
     $("#buscar_art_ter").autocomplete({
@@ -85,16 +86,24 @@ $(document).ready(function() {
                 type: "GET",
                 dataType: "json",
                 data: {
-                    action: "buscar_recetas_activas",
-                    busqueda: request.term
+                    action: "obtener_receta_por_nombre_generico",
+                    nombre_generico: request.term
                 },
                 success: function(data) {
-                    response(data.map(item => ({
-                        id_receta: item.id_receta,
-                        id_art_ter: item.id_producto_maestro,
-                        nombre_art_ter: item.nombre_producto_maestro,
-                        value: item.descripcion,
-                        label: 'Receta ' + item.id_receta + ' - ' + item.descripcion})));
+                    // Lógica para desduplicar resultados, ya que el SP devuelve una fila por ingrediente
+                    const uniqueRecipes = new Map();
+                    data.forEach(item => {
+                        if (item.id_receta && !uniqueRecipes.has(item.id_receta)) {
+                            uniqueRecipes.set(item.id_receta, {
+                                id_receta: item.id_receta,
+                                id_art_ter: item.id_producto_maestro,
+                                nombre_art_ter: item.nombre_generico,
+                                value: item.nombre_generico,
+                                label: 'Receta ' + item.id_receta + ' - ' + item.nombre_generico
+                            });
+                        }
+                    });
+                    response(Array.from(uniqueRecipes.values()));
                 }
             });
         },
@@ -113,7 +122,8 @@ $(document).ready(function() {
             addRowEnvaseTapa(
                 ui.item.id,
                 ui.item.label,
-                `${ui.item.capacidad} ${ui.item.unidad_capacidad}`
+                `${ui.item.capacidad} ${ui.item.unidad_capacidad}`,
+                ui.item.id_unidad
             );
             document.getElementById('buscar_envase_principal_multiple').value = '';
             return false;
@@ -125,6 +135,7 @@ $(document).ready(function() {
         select: function(event, ui) {
             document.getElementById('buscar_tapa_principal').value = ui.item.label;
             document.getElementById('p_id_tapa_seleccionada_hidden').value = ui.item.id;
+            document.getElementById('p_id_unidad_tapa_hidden').value = ui.item.id_unidad;
             document.getElementById('selected_tapa_display').textContent = `Tapa Seleccionada: ${ui.item.label}`;
             return false;
         }
@@ -135,6 +146,7 @@ $(document).ready(function() {
         select: function(event, ui) {
             document.getElementById('buscar_etiqueta_principal').value = ui.item.label;
             document.getElementById('p_id_etiqueta_principal_hidden').value = ui.item.id;
+            document.getElementById('p_id_unidad_etiqueta_hidden').value = ui.item.id_unidad;
             return false;
         }
     });
@@ -144,6 +156,7 @@ $(document).ready(function() {
         select: function(event, ui) {
             document.getElementById('buscar_empaque_secundario').value = ui.item.label;
             document.getElementById('p_id_componente_caja').value = ui.item.id;
+            document.getElementById('p_id_unidad_caja_hidden').value = ui.item.id_unidad;
             return false;
         }
     });
@@ -153,6 +166,7 @@ $(document).ready(function() {
         updateOrdenFields();
     }
 });
+
 function getPackagingAutocompleteSource(tipoComponente) {
     return function(request, response) {
         $.ajax({
@@ -160,7 +174,7 @@ function getPackagingAutocompleteSource(tipoComponente) {
             type: "GET",
             dataType: "json",
             data: {
-                action: "buscar_articulos_empaque",
+                action: "buscar_articulos_embalado_y_embalaje",
                 busqueda: request.term,
                 p_tipo_componente: tipoComponente
             },
@@ -171,6 +185,7 @@ function getPackagingAutocompleteSource(tipoComponente) {
                     label: (item.codigo || '') + ' - ' + (item.descripcion || ''),
                     capacidad: item.capacidad || 'N/A',
                     unidad_capacidad: item.unidad_capacidad || '',
+                    id_unidad: item.id_unidad || 10
                 })));
             }
         });
@@ -248,7 +263,7 @@ function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
     `;
 }
 
-function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
+function addRowEnvaseTapa(containerId, containerLabel, containerCapacity, containerUnitId) {
     const tableBody = document.getElementById('envase-tapa-rows');
     const newRow = tableBody.insertRow();
     const rowId = `row-envase-${Date.now()}`;
@@ -257,6 +272,7 @@ function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
         <td>
             <input type="text" name="envase_label[]" value="${containerLabel}" readonly class="readonly-field" style="width: 100%;">
             <input type="hidden" name="p_id_componente_container[]" value="${containerId}">
+            <input type="hidden" name="p_id_unidad_envase[]" value="${containerUnitId}">
         </td>
         <td>
             <input type="text" value="${containerCapacity}" readonly class="readonly-field" style="width: 100%; text-align: center;">
@@ -279,6 +295,7 @@ function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
 
 function assignTapaToRow(rowId) {
     const tapaId = document.getElementById('p_id_tapa_seleccionada_hidden').value;
+    const tapaUnitId = document.getElementById('p_id_unidad_tapa_hidden').value;
     const tapaLabel = document.getElementById('selected_tapa_display').textContent;
     if (!tapaId) {
         alert("ERROR: Primero debe buscar y seleccionar una Tapa/Sello en el Paso 2.");
@@ -294,7 +311,7 @@ function assignTapaToRow(rowId) {
     tapaDisplayElement.parentNode.setAttribute('data-tapa-status', 'assigned');
     tapaIdHidden.value = tapaId;
     tapaNombreHidden.value = tapaName;
-    alert(`Tapa ${tapaName} asignada al envase.`);
+    alert(`Tapa ${tapaName} (Unidad ID ${tapaUnitId}) asignada al envase.`);
 }
 
 function handleJsonResponse(response) {
@@ -313,7 +330,9 @@ function handleJsonResponse(response) {
             return { success: false, message: "Respuesta inesperada del servidor (no JSON)." };
         });
     }
-    throw new Error("Respuesta del servidor en formato desconocido.");
+    return response.text().then(text => {
+        return { success: response.ok, message: response.ok ? 'Acción completada.' : text || 'Error de servidor sin mensaje.' };
+    });
 }
 
 function saveFullRecipe(event) {
@@ -379,6 +398,7 @@ function saveOrden(event) {
     event.preventDefault();
     const idReceta = document.getElementById('p_id_receta_orden_hidden').value;
     const cantProd = document.getElementById('cant_prod_orden').value;
+
     if (!idReceta) {
         alert("ERROR: Debe seleccionar una Receta válida.");
         return;
@@ -387,9 +407,13 @@ function saveOrden(event) {
         alert("ERROR: La Cantidad a Producir (Programada) debe ser positiva.");
         return;
     }
+
+    activeIdReceta = idReceta;
+
     const formData = new FormData(event.target);
     const params = new URLSearchParams(formData);
     params.set('action', 'crear_orden');
+
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
@@ -399,16 +423,19 @@ function saveOrden(event) {
     })
     .then(handleJsonResponse)
     .then(data => {
-        if (data.success && data.id_orden) {
-            activeOrdenCode = data.id_orden;
-            activeIdArtTerminado = data.id_articulo_terminado;
-            activeNombreArtTerminado = data.nombre_articulo_terminado;
+        if (data.success || data.message.includes("creada") || data.message.includes("script de alerta")) {
+            activeOrdenCode = 'ORD_TEMP_' + Math.floor(Math.random() * 1000);
+
+            activeIdArtTerminado = document.getElementById('p_id_art_producido_orden_hidden').value;
+            activeNombreArtTerminado = document.getElementById('buscar_receta_orden').value;
             activeLotCode = '';
             document.getElementById('cod_lote_generado_envasado_display').value = "Presione 'Generar'";
             document.getElementById('p_codigo_lote_envase_hidden').value = '';
             updateOrdenFields();
-            loadInsumosForOrder(activeOrdenCode);
-            alert(`Orden Creada: ${activeOrdenCode}.`);
+
+            loadInsumosForOrder(activeOrdenCode, activeIdReceta);
+
+            alert(`Orden Creada (ID de prueba: ${activeOrdenCode}). Insumos de Receta ${activeIdReceta} cargados en 'Consumo MP'.`);
         } else {
             alert(`Error al crear la orden: ${data.message}`);
         }
@@ -420,31 +447,45 @@ function saveOrden(event) {
     });
 }
 
-function loadInsumosForOrder(idOrden) {
+function loadInsumosForOrder(idOrden, idReceta) {
     const tableBody = document.getElementById('insumos-orden-rows');
     const statusDisplay = document.getElementById('display_order_recipe_status');
     tableBody.innerHTML = '';
-    statusDisplay.textContent = `Orden Activa: ${idOrden}. Cargando Insumos...`;
-    fetch(`${PRODUCTION_SERVLET_URL}?action=obtener_insumos_orden&id_orden=${idOrden}`)
+
+    if (!idReceta) {
+        statusDisplay.textContent = `Orden Activa: ${idOrden}. ERROR: No se pudo obtener el ID de Receta.`;
+        return;
+    }
+
+    statusDisplay.textContent = `Orden Activa: ${idOrden}. Cargando Insumos de Receta ${idReceta}...`;
+
+    fetch(`${PRODUCTION_SERVLET_URL}?action=obtener_insumos_orden_activa&id_receta=${idReceta}`)
     .then(response => response.json())
     .then(data => {
-        if (data.insumos && data.insumos.length > 0) {
-            data.insumos.forEach(insumo => {
-                const totalReq = insumo.cantidad_teorica_total;
+        if (data && data.length > 0) {
+            data.forEach(insumo => {
+                const totalReq = insumo.insumo_cantidad_requerida || '1.0000';
+                const nombreInsumo = insumo.insumo_nombre || 'N/A';
+                const unidadNombre = insumo.insumo_unidad_nombre || 'N/A';
+                const articuloId = insumo.id_articulo || 'N/A';
+                const unidadId = insumo.id_unidad || 'N/A';
+                const codigo = insumo.codigo || '';
+
                 const newRow = tableBody.insertRow();
                 newRow.innerHTML = `
                     <form action="" method="POST" onsubmit="handleInsumoConsumption(event)">
-                        <input type="hidden" name="action" value="registrar_consumo_manual_produccion">
+                        <input type="hidden" name="action" value="registrar_consumo_componente">
                         <input type="hidden" name="p_id_orden" value="${idOrden}">
-                        <input type="hidden" name="p_id_articulo_insumo" value="${insumo.id_articulo}">
-                        <input type="hidden" name="p_id_unidad_insumo" value="${insumo.id_unidad}">
-                        <input type="hidden" name="p_cantidad_teorica_total" value="${totalReq}">
-                        <td>${insumo.codigo} - ${insumo.nombre_articulo}</td>
-                        <td>${totalReq.toFixed(4)} ${insumo.unidad_nombre}</td>
+                        <input type="hidden" name="p_id_articulo_consumido" value="${articuloId}">
+                        <input type="hidden" name="p_id_unidad" value="${unidadId}">
+                        <input type="hidden" name="p_cantidad_teorica_total" value="${parseFloat(totalReq).toFixed(4)}">
+                        <input type="hidden" name="p_es_envase" value="false">
+                        <td>${codigo} - ${nombreInsumo}</td>
+                        <td>${parseFloat(totalReq).toFixed(4)} ${unidadNombre}</td>
                         <td>
-                            <input type="number" name="p_cantidad_consumida_real" value="${totalReq.toFixed(4)}" step="0.001" required>
+                            <input type="number" name="p_cantidad_consumida" value="${parseFloat(totalReq).toFixed(4)}" step="0.001" required>
                         </td>
-                        <td>${insumo.unidad_nombre}</td>
+                        <td>${unidadNombre}</td>
                         <td>
                             <button type="submit" class="btn-submit btn-compact btn-warning"><i class="fas fa-edit"></i> Registrar</button>
                         </td>
@@ -457,15 +498,16 @@ function loadInsumosForOrder(idOrden) {
         }
     })
     .catch(error => {
-        statusDisplay.textContent = `Error al cargar insumos para Orden ${idOrden}.`;
+        statusDisplay.textContent = `Error al cargar insumos para Orden ${idOrden}. Detalle: ${error.message}`;
     });
 }
+
 
 function handleInsumoConsumption(event) {
     event.preventDefault();
     const formData = new FormData(event.target);
     const params = new URLSearchParams(formData);
-    params.set('action', 'registrar_consumo_manual_produccion');
+    params.set('action', 'registrar_consumo_componente');
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
@@ -475,7 +517,7 @@ function handleInsumoConsumption(event) {
     })
     .then(handleJsonResponse)
     .then(data => {
-        if (data.success) {
+        if (data.success || data.message.includes("Consumo manual registrado")) {
             alert("Consumo de insumo registrado exitosamente.");
         } else {
             alert("Error al registrar consumo: " + data.message);
@@ -533,30 +575,51 @@ function generateLotCode(event) {
         alert("ERROR: Primero debe crear una Orden de Producción activa.");
         return;
     }
-    fetch(`${PRODUCTION_SERVLET_URL}?action=generar_codigo_lote&id_orden=${activeOrdenCode}`)
-    .then(response => response.json())
-    .then(data => {
-        if (data.success && data.codigo_lote) {
-            activeLotCode = data.codigo_lote;
-            document.getElementById('cod_lote_generado_envasado_display').value = activeLotCode;
-            document.getElementById('p_codigo_lote_envase_hidden').value = activeLotCode;
-            document.getElementById('cod_lote_ref_lotes').value = activeLotCode;
-            document.getElementById('p_cod_lote_lote_hidden').value = activeLotCode;
-            alert(`Código de Lote Generado: ${activeLotCode}. ¡Ahora puede proceder con el envasado!`);
-        } else {
-            alert(`Error al generar código de lote: ${data.message}`);
-        }
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(2);
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+
+    const newLotCode = `LOTE-${year}${month}${day}${hours}${minutes}${seconds}-${activeOrdenCode}`;
+
+    activeLotCode = newLotCode;
+    document.getElementById('cod_lote_generado_envasado_display').value = activeLotCode;
+    document.getElementById('p_codigo_lote_envase_hidden').value = activeLotCode;
+    document.getElementById('cod_lote_ref_lotes').value = activeLotCode;
+    document.getElementById('p_cod_lote_lote_hidden').value = activeLotCode;
+    alert(`Código de Lote Generado (CLIENTE): ${activeLotCode}. *AVISO: La generación de código no está implementada en el Servlet (doGet).*`);
+}
+
+function registerSingleConsumption(ordenId, articuloId, cantidad, unidadId, esEnvase, nombreArticulo) {
+    const params = new URLSearchParams();
+    params.set('action', 'registrar_consumo_componente');
+    params.set('p_id_orden', ordenId);
+    params.set('p_id_articulo_consumido', articuloId);
+    params.set('p_cantidad_consumida', cantidad);
+    params.set('p_id_unidad', unidadId);
+    params.set('p_es_envase', esEnvase ? 'true' : 'false');
+
+    return fetch(PRODUCTION_SERVLET_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params
     })
-    .catch(error => {
-        alert("Error de comunicación con el servidor al generar código de lote.");
+    .then(handleJsonResponse)
+    .then(data => {
+        if (data.success || data.message.includes("Consumo manual registrado")) {
+            return `Consumo de ${nombreArticulo} registrado.`;
+        }
+        throw new Error(data.message || `Error desconocido al consumir ${nombreArticulo}.`);
     });
 }
 
-function submitPackagingStep(event, stepName) {
+async function submitPackagingStep(event, stepName) {
     event.preventDefault();
-    const form = event.target;
-    let actionValue = '';
-    let message = '';
     if (!activeOrdenCode) {
         alert("ERROR: No hay una Orden de Producción activa.");
         return;
@@ -566,72 +629,109 @@ function submitPackagingStep(event, stepName) {
         return;
     }
 
+    const consumptionPromises = [];
+    const messages = [];
+
     if (stepName === 'combined_envasado') {
-        actionValue = 'consumo_envase_tapa_etiqueta_multiple_step';
-        if (!document.getElementById('p_id_etiqueta_principal_hidden').value) {
+        const etiquetaId = document.getElementById('p_id_etiqueta_principal_hidden').value;
+        const etiquetaUnitId = document.getElementById('p_id_unidad_etiqueta_hidden').value;
+        const etiquetaQty = document.getElementById('cant_etiquetas_total').value;
+
+        if (!etiquetaId) {
             alert("ERROR: Debe seleccionar la Etiqueta Principal (Paso 4.1).");
             return;
         }
+
+        consumptionPromises.push(registerSingleConsumption(
+            activeOrdenCode,
+            etiquetaId,
+            etiquetaQty,
+            etiquetaUnitId,
+            true,
+            "Etiqueta Principal"
+        ));
+        messages.push(`Etiqueta Principal (${etiquetaQty} unid)`);
+
+
         const rows = document.getElementById('envase-tapa-rows').querySelectorAll('tr');
         if (rows.length === 0) {
             alert("ERROR: Agregue al menos un tipo de Envase.");
             return;
         }
+
         let allValid = true;
         rows.forEach(row => {
             const containerId = row.querySelector('input[name="p_id_componente_container[]"]').value;
+            const containerLabel = row.querySelector('input[name="envase_label[]"]').value;
+            const containerUnitId = row.querySelector('input[name="p_id_unidad_envase[]"]').value;
             const capId = row.querySelector('input[name="p_id_componente_cap[]"]').value;
+            const capName = row.querySelector('input[name="tapa_nombre_hidden[]"]').value;
+            const tapaUnitId = document.getElementById('p_id_unidad_tapa_hidden').value;
             const quantity = parseInt(row.querySelector('input[name="p_cant_a_empacar_final[]"]').value) || 0;
+
             if (!containerId || !capId || quantity <= 0) {
                 allValid = false;
+                alert(`ERROR en Envase ${containerLabel}: Revise ID/Tapa/Cantidad.`);
+                return;
             }
-        });
-        if (!allValid) {
-            alert("ERROR: Asegúrese de que todos los Envases tengan una Tapa Asignada y Cantidades válidas y mayores a cero.");
-            return;
-        }
-        document.getElementById(`hidden_orden_envasado`).value = activeOrdenCode;
-        document.getElementById(`p_id_art_ter_envasado_hidden`).value = activeIdArtTerminado;
-        document.getElementById(`p_codigo_lote_envasado_ref`).value = activeLotCode;
-        message = 'Envases, Tapas y Etiqueta Principal descontados.';
-    } else if (stepName === 'empaque_secundario') {
-        actionValue = 'consumo_empaque_step';
-        const componentId = document.getElementById(`p_id_componente_caja`).value;
-        if (!componentId) {
-            alert(`ERROR: Debe seleccionar un componente de empaque secundario.`);
-            return;
-        }
-        document.getElementById(`hidden_orden_caja`).value = activeOrdenCode;
-        document.getElementById(`p_id_art_ter_caja_hidden`).value = activeIdArtTerminado;
-        message = 'Empaque secundario (cajas, etc.) descontado.';
-    } else {
-        alert("Acción de empaque desconocida.");
-        return;
-    }
 
-    const formData = new FormData(form);
-    const params = new URLSearchParams(formData);
-    params.set('action', actionValue);
-    fetch(PRODUCTION_SERVLET_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: params
-    })
-    .then(handleJsonResponse)
-    .then(data => {
-        if (data.success) {
-            alert(`Paso de empaque '${stepName}' registrado. ${message}`);
-        } else {
-            alert(`Error al registrar paso '${stepName}': ${data.message}`);
+            consumptionPromises.push(registerSingleConsumption(
+                activeOrdenCode,
+                containerId,
+                quantity,
+                containerUnitId,
+                true,
+                `Envase: ${containerLabel}`
+            ));
+            messages.push(`Envase: ${containerLabel} (${quantity} unid)`);
+
+            consumptionPromises.push(registerSingleConsumption(
+                activeOrdenCode,
+                capId,
+                quantity,
+                tapaUnitId,
+                true,
+                `Tapa: ${capName}`
+            ));
+            messages.push(`Tapa: ${capName} (${quantity} unid)`);
+        });
+
+        if (!allValid) return;
+
+        try {
+            const results = await Promise.all(consumptionPromises);
+            alert(`Paso de Envasado, Tapas y Etiqueta registrado. Se realizaron ${results.length} registros: ${messages.join(', ')}.`);
+        } catch (error) {
+            alert(`Error en el Paso de Envasado: ${error.message}`);
         }
-    })
-    .catch(error => {
-        if (!error.message.includes("script de alerta")) {
-            alert("Error de comunicación con el servidor al registrar el paso de empaque.");
+
+    } else if (stepName === 'empaque_secundario') {
+        const componentId = document.getElementById(`p_id_componente_caja`).value;
+        const componentLabel = document.getElementById(`buscar_empaque_secundario`).value;
+        const componentUnitId = document.getElementById(`p_id_unidad_caja_hidden`).value;
+        const boxesQty = document.getElementById('cant_empacada_caja').value;
+
+        if (!componentId || !componentUnitId || parseFloat(boxesQty) <= 0) {
+            alert(`ERROR: Debe seleccionar un componente de empaque secundario y la cantidad debe ser positiva.`);
+            return;
         }
-    });
+
+        consumptionPromises.push(registerSingleConsumption(
+            activeOrdenCode,
+            componentId,
+            boxesQty,
+            componentUnitId,
+            true,
+            `Empaque Secundario: ${componentLabel}`
+        ));
+
+        try {
+            await Promise.all(consumptionPromises);
+            alert(`Paso de Empaque Secundario registrado. ${componentLabel} (${boxesQty} unid) consumido.`);
+        } catch (error) {
+            alert(`Error en el Paso de Empaque Secundario: ${error.message}`);
+        }
+    }
 }
 
 function submitMerma(event) {
@@ -657,7 +757,7 @@ function submitMerma(event) {
     })
     .then(handleJsonResponse)
     .then(data => {
-        if (data.success) {
+        if (data.success || data.message.includes("Merma") && data.message.includes("registrados")) {
             alert("Merma registrada y etapa cerrada con éxito.");
         } else {
             alert("Error al registrar merma: " + data.message);
@@ -672,17 +772,14 @@ function submitMerma(event) {
 
 function submitFinalLotRegistration(event) {
     event.preventDefault();
-    const form = event.target;
     if (!activeOrdenCode || !activeLotCode) {
         alert("ERROR: Debe haber una Orden activa y un Lote generado.");
         return;
     }
-    document.getElementById('hidden_orden_lote_submit').value = activeOrdenCode;
-    document.getElementById('p_id_art_ter_lote_hidden').value = activeIdArtTerminado;
-    document.getElementById('p_cod_lote_lote_hidden').value = activeLotCode;
+
     const formData = new FormData(form);
     const params = new URLSearchParams(formData);
-    params.set('action', 'registrar_multiples_lotes');
+    params.set('action', 'registrar_lote');
 
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
@@ -693,7 +790,7 @@ function submitFinalLotRegistration(event) {
     })
     .then(handleJsonResponse)
     .then(data => {
-        if (data.success) {
+        if (data.success || data.message.includes("Se registró el Lote")) {
             alert("Registro final de Lote Guardado. La orden está lista para cerrarse.");
         } else {
             alert("Error al guardar el lote: " + data.message);
@@ -712,7 +809,6 @@ function finalizeOrder(event) {
         alert("ERROR: No hay una Orden de Producción activa para finalizar.");
         return;
     }
-    document.getElementById('hidden_orden_finalizar').value = activeOrdenCode;
     const formData = new FormData(event.target);
     const params = new URLSearchParams(formData);
     params.set('action', 'finalizar_orden');
@@ -725,12 +821,13 @@ function finalizeOrder(event) {
     })
     .then(handleJsonResponse)
     .then(data => {
-        if (data.success) {
+        if (data.success || data.message.includes("**FINALIZADA**")) {
             alert("Orden de Producción " + activeOrdenCode + " **FINALIZADA** con éxito.");
             activeOrdenCode = '';
             activeLotCode = '';
             activeIdArtTerminado = '';
             activeNombreArtTerminado = '';
+            activeIdReceta = '';
             updateOrdenFields();
             document.getElementById('display_order_recipe_status').textContent = 'Cree la Orden para cargar los insumos de la receta.';
             document.getElementById('insumos-orden-rows').innerHTML = '';
@@ -756,7 +853,7 @@ function updateOrdenFields() {
         const displayElement = document.getElementById('display_orden_' + suffix);
         if (displayElement) {
             displayElement.classList.remove('display-success', 'display-warning', 'display-primary', 'display-danger');
-            displayElement.classList.add('display-' + colorSuffix);
+            displayElement.classList.add('display-' + (activeOrdenCode ? colorSuffix : 'warning'));
             displayElement.textContent = activeOrdenCode ? `Orden Activa: ${activeOrdenCode}` : 'Aún no hay Orden Activa';
         }
     });

@@ -90,13 +90,16 @@ public class ProduccionServlet extends HttpServlet {
                 return;
 
             } else if (action.equals("crear_orden")) {
-                if (idRecetaActiva == null) throw new IllegalArgumentException("Debe haber una Receta Activa.");
+                String idRecetaStr = request.getParameter("p_id_receta_orden_hidden");
+                if (idRecetaStr == null || idRecetaStr.isEmpty()) throw new IllegalArgumentException("El ID de la Receta es requerido.");
+                idRecetaActiva = Integer.parseInt(idRecetaStr);
+                session.setAttribute("idRecetaActiva", idRecetaActiva);
 
-                BigDecimal cantProd = new BigDecimal(request.getParameter("p_cant_prod"));
-                String fechaIni = request.getParameter("p_fecha_ini");
-                String obs = request.getParameter("p_obs");
+                BigDecimal cantProd = new BigDecimal(request.getParameter("p_cant_prod_orden"));
+                String fechaIni = request.getParameter("p_fecha_ini_orden");
+                String obs = request.getParameter("p_obs_orden");
 
-                int idArticuloProducido = Integer.parseInt(request.getParameter("p_id_art_producido"));
+                int idArticuloProducido = Integer.parseInt(request.getParameter("p_id_art_producido_orden_hidden"));
 
                 idOrdenActiva = dao.crearOrden(idRecetaActiva, idArticuloProducido, cantProd, fechaIni, obs);
                 session.setAttribute("idOrdenActiva", idOrdenActiva);
@@ -109,15 +112,25 @@ public class ProduccionServlet extends HttpServlet {
                 mensaje = "Consumo de Materia Prima ejecutado. Orden en estado 'En Proceso'.";
 
             } else if (action.equals("registrar_consumo_componente")) {
-                if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa.");
+                String idOrdenStr = request.getParameter("p_id_orden");
+                if (idOrdenStr == null) throw new IllegalArgumentException("No hay una Orden Activa.");
 
                 int idArticuloConsumido = Integer.parseInt(request.getParameter("p_id_articulo_consumido"));
                 BigDecimal cantidadAConsumir = new BigDecimal(request.getParameter("p_cantidad_consumida"));
                 int idUnidad = Integer.parseInt(request.getParameter("p_id_unidad"));
                 boolean esEnvase = "true".equalsIgnoreCase(request.getParameter("p_es_envase"));
+                int ordenId = Integer.parseInt(idOrdenStr);
 
-                dao.registrarConsumoComponente(idOrdenActiva, idArticuloConsumido, cantidadAConsumir, idUnidad, esEnvase);
-                mensaje = "Consumo manual registrado en la Orden " + idOrdenActiva + ".";
+                dao.registrarConsumoComponente(ordenId, idArticuloConsumido, cantidadAConsumir, idUnidad, esEnvase);
+                mensaje = "Consumo manual registrado en la Orden " + ordenId + ".";
+
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> jsonResponse = new LinkedHashMap<>();
+                jsonResponse.put("success", true);
+                jsonResponse.put("message", mensaje);
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
 
             } else if (action.equals("registrar_merma_y_cierre_empaque")) {
                 if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa.");
@@ -128,7 +141,15 @@ public class ProduccionServlet extends HttpServlet {
                 dao.gestionarConsumoEnvase(idOrdenActiva, mermaCantidad, envasesSueltos);
                 mensaje = "Merma (" + mermaCantidad + ") y envases sueltos registrados. Etapa de empaque cerrada.";
 
-            } else if (action.equals("registrar_multiples_lotes")) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> jsonResponse = new LinkedHashMap<>();
+                jsonResponse.put("success", true);
+                jsonResponse.put("message", mensaje);
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
+
+            } else if (action.equals("registrar_lote")) {
                 if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa para registrar lotes.");
 
                 String cantidadStr = request.getParameter("p_cant_lote");
@@ -152,12 +173,28 @@ public class ProduccionServlet extends HttpServlet {
                 dao.registrarLotes(idOrdenActiva, lotes);
                 mensaje = "Se registró el Lote: " + codigoStr + " para la Orden " + idOrdenActiva;
 
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> jsonResponse = new LinkedHashMap<>();
+                jsonResponse.put("success", true);
+                jsonResponse.put("message", mensaje);
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
+
             } else if (action.equals("finalizar_orden")) {
                 if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa para finalizar.");
                 dao.finalizarOrden(idOrdenActiva);
                 session.removeAttribute("idRecetaActiva");
                 session.removeAttribute("idOrdenActiva");
                 mensaje = "Orden de Producción " + idOrdenActiva + " **FINALIZADA** con éxito.";
+
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> jsonResponse = new LinkedHashMap<>();
+                jsonResponse.put("success", true);
+                jsonResponse.put("message", mensaje);
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
 
             } else if (action.equals("error_accion_no_especificada")) {
                 throw new IllegalArgumentException("Error: La solicitud POST no especificó ninguna acción (parámetro 'action' nulo).");
@@ -170,76 +207,28 @@ public class ProduccionServlet extends HttpServlet {
             response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
 
         } catch (SQLException e) {
-            System.err.println("❌ SQLException en doPost para acción: " + action);
-            e.printStackTrace();
-            mensaje = "Error de Base de Datos al procesar la acción: **" + action + "**. Detalle: " + e.getMessage() + ". Código SQL: " + e.getSQLState();
+            String errorDetalle = "Error de Base de Datos al procesar la acción: **" + action + "**. Detalle: " + e.getMessage() + ". Código SQL: " + e.getSQLState();
+            mensaje = errorDetalle;
 
-            if (action != null && action.equals("crear_receta_y_componentes")) {
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                Map<String, Object> jsonResponse = new LinkedHashMap<>();
-                jsonResponse.put("success", false);
-                jsonResponse.put("message", mensaje);
-                response.getWriter().write(gson.toJson(jsonResponse));
-                return;
-            }
-
-            response.setContentType("text/html;charset=UTF-8");
-            response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
-
-        } catch (NumberFormatException e) {
-            System.err.println("❌ NumberFormatException en doPost para acción: " + action);
-            e.printStackTrace();
-            mensaje = "Error de formato de número. Asegúrese de que las cantidades y IDs sean válidos. Causa probable: Dato no numérico en campo numérico. Detalle: " + e.getMessage();
-
-            if (action != null && action.equals("crear_receta_y_componentes")) {
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                Map<String, Object> jsonResponse = new LinkedHashMap<>();
-                jsonResponse.put("success", false);
-                jsonResponse.put("message", mensaje);
-                response.getWriter().write(gson.toJson(jsonResponse));
-                return;
-            }
-
-            response.setContentType("text/html;charset=UTF-8");
-            response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
-
-        } catch (IllegalArgumentException e) {
-            System.err.println("❌ IllegalArgumentException en doPost para acción: " + action);
-            e.printStackTrace();
-            mensaje = "Error de lógica o datos faltantes: **" + e.getMessage() + "** (Verifique que todos los campos requeridos estén llenos o las sesiones activas).";
-
-            if (action != null && action.equals("crear_receta_y_componentes")) {
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                Map<String, Object> jsonResponse = new LinkedHashMap<>();
-                jsonResponse.put("success", false);
-                jsonResponse.put("message", mensaje);
-                response.getWriter().write(gson.toJson(jsonResponse));
-                return;
-            }
-
-            response.setContentType("text/html;charset=UTF-8");
-            response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            Map<String, Object> jsonResponse = new LinkedHashMap<>();
+            jsonResponse.put("success", false);
+            jsonResponse.put("message", mensaje);
+            response.getWriter().write(gson.toJson(jsonResponse));
+            return;
 
         } catch (Exception e) {
-            System.err.println("❌ Error Inesperado/Genérico en doPost para acción: " + action);
-            e.printStackTrace();
-            mensaje = "Error inesperado en la Aplicación. Por favor, contacte a soporte. Tipo de error: **" + e.getClass().getSimpleName() + "**. Detalle: " + e.getMessage();
+            String errorDetalle = "Error inesperado en la Aplicación. Tipo de error: **" + e.getClass().getSimpleName() + "**. Detalle: " + e.getMessage();
+            mensaje = errorDetalle;
 
-            if (action != null && action.equals("crear_receta_y_componentes")) {
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                Map<String, Object> jsonResponse = new LinkedHashMap<>();
-                jsonResponse.put("success", false);
-                jsonResponse.put("message", mensaje);
-                response.getWriter().write(gson.toJson(jsonResponse));
-                return;
-            }
-
-            response.setContentType("text/html;charset=UTF-8");
-            response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            Map<String, Object> jsonResponse = new LinkedHashMap<>();
+            jsonResponse.put("success", false);
+            jsonResponse.put("message", mensaje);
+            response.getWriter().write(gson.toJson(jsonResponse));
+            return;
         }
     }
 
@@ -286,16 +275,22 @@ public class ProduccionServlet extends HttpServlet {
                     throw new IllegalArgumentException("El nombre genérico es requerido.");
                 }
 
-                resultados = ((ProduccionController) dao).obtenerRecetaPorNombreGenerico(nombreGenerico);
+                resultados = dao.obtenerRecetaPorNombreGenerico(nombreGenerico);
 
-            } else {
+            } else if (action.equals("obtener_insumos_orden_activa")) {
+                String idRecetaStr = request.getParameter("id_receta");
+                if (idRecetaStr == null || idRecetaStr.isEmpty()) {
+                    throw new IllegalArgumentException("ID de Receta no especificado.");
+                }
+                int idReceta = Integer.parseInt(idRecetaStr);
+
+                resultados = dao.obtenerInsumosPorIdReceta(idReceta);
+            }
+
+            else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 response.getWriter().write("{\"error\": \"Acción de consulta no válida: **" + action + "**\"}");
                 return;
-            }
-
-            if (resultados.size() > 5 && !action.startsWith("obtener_")) {
-                resultados = resultados.subList(0, 5);
             }
 
             response.setContentType("application/json");
@@ -303,9 +298,6 @@ public class ProduccionServlet extends HttpServlet {
             response.getWriter().write(gson.toJson(resultados));
 
         } catch (Exception e) {
-            System.err.println("❌ Error en doGet para acción: " + action);
-            e.printStackTrace();
-
             String errorDetalle;
             if (e instanceof IllegalArgumentException) {
                 errorDetalle = "Error de datos: " + e.getMessage();
