@@ -111,9 +111,6 @@ public class ProduccionController implements ProduccionRepository {
                     detalle.put("id_receta", rs.getInt("id_receta"));
                     detalle.put("receta_cantidad_base", rs.getBigDecimal("receta_cantidad_base"));
                     detalle.put("unidad_producir_nombre", rs.getString("unidad_producir_nombre"));
-                    detalle.put("insumo_nombre", rs.getString("insumo_nombre"));
-                    detalle.put("insumo_cantidad_requerida", rs.getBigDecimal("insumo_cantidad_requerida"));
-                    detalle.put("insumo_unidad_nombre", rs.getString("insumo_unidad_nombre"));
                     detallesReceta.add(detalle);
                 }
             }
@@ -284,11 +281,17 @@ public class ProduccionController implements ProduccionRepository {
                     Map<String, Object> articulo = new LinkedHashMap<>();
 
                     try { articulo.put("id", rs.getInt("id")); } catch (SQLException e) { try { articulo.put("id", rs.getInt("id_articulo")); } catch (SQLException e2) { articulo.put("id", 0); } }
+
                     try { articulo.put("codigo", rs.getString("codigo")); } catch (SQLException e) { articulo.put("codigo", ""); }
+
                     try { articulo.put("descripcion", rs.getString("descripcion")); } catch (SQLException e) { articulo.put("descripcion", "Artículo Desconocido"); }
+
                     try { articulo.put("nombre_generico", rs.getString("nombre_generico")); } catch (SQLException e) { }
+
                     try { articulo.put("id_producto_maestro", rs.getInt("id_producto_maestro")); } catch (SQLException e) { }
+
                     try { articulo.put("id_unidad", rs.getInt("id_unidad")); } catch (SQLException e) { articulo.put("id_unidad", 0); }
+
                     try { articulo.put("unidad_nombre", rs.getString("unidad_nombre")); } catch (SQLException e) {
                         try { articulo.put("unidad_nombre", rs.getString("unidad")); } catch (SQLException e2) {
                             articulo.put("unidad_nombre", "UND");

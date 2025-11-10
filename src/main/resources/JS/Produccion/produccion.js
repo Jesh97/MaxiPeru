@@ -90,20 +90,12 @@ $(document).ready(function() {
                     nombre_generico: request.term
                 },
                 success: function(data) {
-                    // Lógica para desduplicar resultados, ya que el SP devuelve una fila por ingrediente
-                    const uniqueRecipes = new Map();
-                    data.forEach(item => {
-                        if (item.id_receta && !uniqueRecipes.has(item.id_receta)) {
-                            uniqueRecipes.set(item.id_receta, {
-                                id_receta: item.id_receta,
-                                id_art_ter: item.id_producto_maestro,
-                                nombre_art_ter: item.nombre_generico,
-                                value: item.nombre_generico,
-                                label: 'Receta ' + item.id_receta + ' - ' + item.nombre_generico
-                            });
-                        }
-                    });
-                    response(Array.from(uniqueRecipes.values()));
+                    response(data.map(item => ({
+                        id_receta: item.id_receta,
+                        id_art_ter: item.id_producto_maestro,
+                        nombre_art_ter: item.nombre_generico,
+                        value: item.nombre_generico,
+                        label: item.nombre_generico})));
                 }
             });
         },
@@ -113,6 +105,13 @@ $(document).ready(function() {
             document.getElementById('p_id_art_producido_orden_hidden').value = ui.item.id_art_ter;
             document.getElementById('buscar_receta_orden').value = ui.item.value;
             return false;
+        },
+        change: function (event, ui) {
+            if (ui.item === null) {
+                document.getElementById('p_id_receta_orden_hidden').value = '';
+                document.getElementById('p_id_art_producido_orden_hidden').value = '';
+                document.getElementById('buscar_receta_orden').value = '';
+            }
         }
     });
     $("#buscar_envase_principal_multiple").autocomplete({
@@ -772,6 +771,7 @@ function submitMerma(event) {
 
 function submitFinalLotRegistration(event) {
     event.preventDefault();
+    const form = event.target;
     if (!activeOrdenCode || !activeLotCode) {
         alert("ERROR: Debe haber una Orden activa y un Lote generado.");
         return;
