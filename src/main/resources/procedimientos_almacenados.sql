@@ -254,8 +254,7 @@ a.aroma, a.color, a.densidad, um.nombre AS unidad,a.id_unidad
 FROM articulo a
 JOIN unidad_medida um ON a.id_unidad = um.id_unidad
 WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
-AND a.id_tipo_articulo = 2
-AND a.cantidad > 0;
+AND a.id_tipo_articulo = 2;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_embalado_y_embalaje`$$

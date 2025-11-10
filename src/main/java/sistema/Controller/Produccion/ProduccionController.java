@@ -269,6 +269,8 @@ public class ProduccionController implements ProduccionRepository {
 
                     try { articulo.put("nombre_generico", rs.getString("nombre_generico")); } catch (SQLException e) { }
 
+                    try { articulo.put("id_producto_maestro", rs.getInt("id_producto_maestro")); } catch (SQLException e) { }
+
                     try { articulo.put("id_unidad", rs.getInt("id_unidad")); } catch (SQLException e) { articulo.put("id_unidad", 0); }
 
                     try { articulo.put("unidad_nombre", rs.getString("unidad_nombre")); } catch (SQLException e) {

@@ -410,7 +410,7 @@ CONSTRAINT CHK_Descuento_Tipo CHECK (
 CREATE TABLE receta_producto (
 id_receta INT AUTO_INCREMENT PRIMARY KEY,
 id_producto_maestro INT NOT NULL,
-cantidad_producir DECIMAL(12,8) NOT NULL,
+cantidad_producir DECIMAL(12,5) NOT NULL,
 id_unidad_producir INT NOT NULL,
 estado ENUM('Activa', 'Inactiva', 'Borrador') NOT NULL DEFAULT 'Activa',
 FOREIGN KEY (id_producto_maestro) REFERENCES producto_maestro(id_producto_maestro) ON DELETE RESTRICT,
@@ -421,7 +421,7 @@ CREATE TABLE detalle_receta (
 id_detalle_receta INT AUTO_INCREMENT PRIMARY KEY,
 id_receta INT NOT NULL,
 id_articulo_insumo INT NOT NULL,
-cantidad_requerida DECIMAL(12,8) NOT NULL,
+cantidad_requerida DECIMAL(12,5) NOT NULL,
 id_unidad_insumo INT NOT NULL,
 FOREIGN KEY (id_receta) REFERENCES receta_producto(id_receta) ON DELETE CASCADE,
 FOREIGN KEY (id_articulo_insumo) REFERENCES articulo(id) ON DELETE RESTRICT,

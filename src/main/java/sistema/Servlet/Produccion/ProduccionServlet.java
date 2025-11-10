@@ -47,19 +47,19 @@ public class ProduccionServlet extends HttpServlet {
 
             if (action.equals("crear_receta_y_componentes")) {
 
-                String idArtTerStr = request.getParameter("p_id_art_ter_hidden");
+                String idProdMaestroStr = request.getParameter("p_id_prod_maestro_hidden");
                 String cantProdStr = request.getParameter("p_cant_prod");
                 String idUniProdStr = request.getParameter("p_id_unidad_producir");
 
-                if (idArtTerStr == null || idUniProdStr == null || cantProdStr == null) {
-                    throw new IllegalArgumentException("Datos principales de la receta (ID de artículo, cantidad o ID de unidad) están ausentes.");
+                if (idProdMaestroStr == null || idUniProdStr == null || cantProdStr == null) {
+                    throw new IllegalArgumentException("Datos principales de la receta (ID de producto maestro, cantidad o ID de unidad) están ausentes.");
                 }
 
-                int idArtTer = Integer.parseInt(idArtTerStr);
+                int idProductoMaestro = Integer.parseInt(idProdMaestroStr);
                 BigDecimal cantProd = new BigDecimal(cantProdStr);
                 int idUniProd = Integer.parseInt(idUniProdStr);
 
-                idRecetaActiva = dao.crearReceta(idArtTer, cantProd, idUniProd);
+                idRecetaActiva = dao.crearReceta(idProductoMaestro, cantProd, idUniProd);
                 session.setAttribute("idRecetaActiva", idRecetaActiva);
 
                 String[] idArtInsumoArr = request.getParameterValues("p_id_art_insumo_hidden[]");

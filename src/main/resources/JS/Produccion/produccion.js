@@ -19,6 +19,7 @@ $(document).ready(function() {
                 success: function(data) {
                     response(data.map(item => ({
                         id: item.id,
+                        id_producto_maestro: item.id_producto_maestro,
                         value: item.nombre_generico || item.descripcion,
                         label: (item.codigo || '') + ' - ' + (item.nombre_generico),
                         id_unidad: item.id_unidad,
@@ -31,6 +32,7 @@ $(document).ready(function() {
         select: function(event, ui) {
             $("#buscar_art_ter").val(ui.item.label);
             $('input[name="p_id_art_ter_hidden"]').val(ui.item.id);
+            $('input[name="p_id_prod_maestro_hidden"]').val(ui.item.id_producto_maestro);
             $('input[name="p_id_unidad_producir"]').val('1');
             return false;
         }
@@ -151,7 +153,6 @@ $(document).ready(function() {
         updateOrdenFields();
     }
 });
-
 function getPackagingAutocompleteSource(tipoComponente) {
     return function(request, response) {
         $.ajax({
@@ -318,12 +319,11 @@ function handleJsonResponse(response) {
 function saveFullRecipe(event) {
     event.preventDefault();
     const form = event.target;
-    // Obtener el ID del artículo terminado
-    const artTerId = $('input[name="p_id_art_ter_hidden"]').val();
+    const prodMaestroId = $('input[name="p_id_prod_maestro_hidden"]').val();
     const rows = document.getElementById('insumo-rows').querySelectorAll('tr');
 
-    if (!artTerId) {
-        alert("ERROR: Debe seleccionar un Producto Terminado.");
+    if (!prodMaestroId) {
+        alert("ERROR: Debe seleccionar un Producto Terminado (y su Producto Maestro).");
         return;
     }
     if (rows.length === 0) {
@@ -343,9 +343,7 @@ function saveFullRecipe(event) {
     const formData = new FormData(form);
     const params = new URLSearchParams(formData);
     params.set('action', 'crear_receta_y_componentes');
-
-    // **CORRECCIÓN:** Asegurar que los campos principales se envíen de forma explícita
-    params.set('p_id_art_ter_hidden', artTerId);
+    params.set('p_id_prod_maestro_hidden', prodMaestroId);
     params.set('p_cant_prod', cantProd);
     params.set('p_nombre_uni_prod', nombreUniProd);
     params.set('p_id_unidad_producir', idUnidadProducir);
@@ -363,6 +361,7 @@ function saveFullRecipe(event) {
             alert("Fórmula Base y Componentes Guardados. El ID de Receta es: " + data.id_receta);
             document.getElementById('buscar_art_ter').value = '';
             $('input[name="p_id_art_ter_hidden"]').val('');
+            $('input[name="p_id_prod_maestro_hidden"]').val('');
             $('input[name="p_id_unidad_producir"]').val('1');
             document.getElementById('insumo-rows').innerHTML = '';
         } else {
@@ -391,7 +390,6 @@ function saveOrden(event) {
     const formData = new FormData(event.target);
     const params = new URLSearchParams(formData);
     params.set('action', 'crear_orden');
-
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
@@ -468,7 +466,6 @@ function handleInsumoConsumption(event) {
     const formData = new FormData(event.target);
     const params = new URLSearchParams(formData);
     params.set('action', 'registrar_consumo_manual_produccion');
-
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
@@ -560,7 +557,6 @@ function submitPackagingStep(event, stepName) {
     const form = event.target;
     let actionValue = '';
     let message = '';
-
     if (!activeOrdenCode) {
         alert("ERROR: No hay una Orden de Producción activa.");
         return;
@@ -616,7 +612,6 @@ function submitPackagingStep(event, stepName) {
     const formData = new FormData(form);
     const params = new URLSearchParams(formData);
     params.set('action', actionValue);
-
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
@@ -721,7 +716,6 @@ function finalizeOrder(event) {
     const formData = new FormData(event.target);
     const params = new URLSearchParams(formData);
     params.set('action', 'finalizar_orden');
-
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
