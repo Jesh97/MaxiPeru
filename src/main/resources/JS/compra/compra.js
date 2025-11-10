@@ -743,9 +743,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalIgvCalculado = totalIgvPorItem;
         const costeTransporteCalculado = costeTransporteProductos;
 
-        // --- MODIFICACIÓN INICIA AQUÍ ---
-
-        // La base del descuento global es el subtotal sin IGV más el costo adicional (si aplica).
         const subtotalConCostoAdicional = subtotalSinIgvCalculado + costoAdicionalAplicado;
         let descuentoGlobalMonto = 0;
 
@@ -755,34 +752,18 @@ document.addEventListener('DOMContentLoaded', () => {
             let valorDescuento = parseFloat(valorDescuentoInputVal.replace('%', '')) || 0;
 
             if (tipoValor === 'porcentaje') {
-                // Aplicar porcentaje al subtotal con costo adicional
                 descuentoGlobalMonto = subtotalConCostoAdicional * (valorDescuento / 100);
             } else {
-                // Aplicar valor fijo
                 descuentoGlobalMonto = valorDescuento;
             }
         }
 
-        // El descuento global no puede ser mayor que la base a la que se aplica
         descuentoGlobalMonto = Math.min(descuentoGlobalMonto, subtotalConCostoAdicional);
 
-        // Nuevo Subtotal después de descuento global
         const subtotalDespuesDescuento = subtotalSinIgvCalculado - descuentoGlobalMonto;
-        const igvDespuesDescuento = totalIgvCalculado; // El IGV se mantiene igual si el descuento es al subtotal (base imponible)
-
-        // El costo adicional se resta del descuento ya que se considera en la base,
-        // o se puede tratar por separado. Aquí se mantiene la lógica de que el descuento
-        // es *contra* el subtotal, por lo que el costo adicional debe sumarse después.
-
-        // Nota: El descuento se aplica al subtotal (base imponible).
-        // Si aplica el costo adicional (ej. flete mínimo), este se suma al final para el total a pagar.
-        // Base de cálculo para el total final: (Subtotal - Descuento Global) + IGV + Coste Transporte + Costo Adicional
-
+        const igvDespuesDescuento = totalIgvCalculado;
         const totalCompraFinalCalculado = subtotalDespuesDescuento + igvDespuesDescuento;
         const totalAPagarCalculado = totalCompraFinalCalculado + costeTransporteCalculado + costoAdicionalAplicado;
-
-        // --- MODIFICACIÓN TERMINA AQUÍ ---
-
         const resumenCostoAdicional = $('#resumenCostoAdicional');
         const filaCostoAdicional = $('#filaCostoAdicional');
 
@@ -1038,8 +1019,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 hayBonificacion: bonifSi?.checked,
                 hayTraslado: trasladoSi?.checked,
                 observation: $('#observacionesGenerales')?.value,
-
-                // Usamos la función de limpieza para que se envíe el valor numérico puro.
                 subtotalSinIgv: limpiarYConvertir('#subtotalSinIgv', 'S/'),
                 totalIgv: limpiarYConvertir('#totalIgv', 'S/'),
                 totalAPagar: limpiarYConvertir('#totalAPagar', 'S/'),
@@ -1267,6 +1246,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modalReferencia.hide();
         });
     }
+
     if (igvSi && igvNo) {
         igvSi.addEventListener('change', actualizarTotales);
         igvNo.addEventListener('change', actualizarTotales);
@@ -1292,6 +1272,11 @@ document.addEventListener('DOMContentLoaded', () => {
         btnGuardarDistribucion.addEventListener('click', () => {
             actualizarResumenCajasEnGuia();
             modalCajas.hide();
+
+            setTimeout(() => {
+                $('body').removeClass('modal-open');
+                $('.modal-backdrop').remove();
+            }, 50);
         });
     }
 
@@ -1602,18 +1587,15 @@ document.addEventListener('DOMContentLoaded', () => {
             $$('.productos-en-caja .list-group-item', cajaEl).forEach(productoEl => {
                 const filaId = productoEl.dataset.filaId;
                 const trGeneral = $(`#tablaProductosGeneral tr[data-fila-id="${filaId}"]`);
-                const idArticulo = trGeneral ? trGeneral.dataset.idArticulo : filaId; // Usa idArticulo
+                const idArticulo = trGeneral ? trGeneral.dataset.idArticulo : filaId;
 
                 const cantidad = parseInt(productoEl.querySelector('.cantidad-caja').value, 10) || 0;
                 const descripcion = productoEl.querySelector('.nombre-producto-caja').textContent;
                 const costoTransporteProducto = costoUnitarioDistribucion * cantidad;
-
-                // Se usa idArticulo en lugar de filaId para la estructura final
                 productosEnCaja.push({ idArticulo, filaId, cantidad, descripcion, costoUnitarioDistribucion, costoTransporte: costoTransporteProducto });
             });
 
             if (productosEnCaja.length > 0) {
-                // Se agrega el nombre de la caja
                 cajas.push({ id: idCaja, nombre: nombreCaja, fleteTotal: fleteCajaTotal, productos: productosEnCaja });
                 costeTotalTransporteCalculado += fleteCajaTotal;
             }

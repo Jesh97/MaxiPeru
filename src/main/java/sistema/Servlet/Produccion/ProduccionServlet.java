@@ -286,7 +286,7 @@ public class ProduccionServlet extends HttpServlet {
                     throw new IllegalArgumentException("El nombre genérico es requerido.");
                 }
 
-                resultados = dao.obtenerRecetaPorNombreGenerico(nombreGenerico);
+                resultados = ((ProduccionController) dao).obtenerRecetaPorNombreGenerico(nombreGenerico);
 
             } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
