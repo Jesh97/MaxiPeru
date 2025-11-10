@@ -86,8 +86,8 @@ $(document).ready(function() {
                 type: "GET",
                 dataType: "json",
                 data: {
-                    action: "obtener_receta_por_nombre_generico",
-                    nombre_generico: request.term
+                    action: "obtener_receta_por_nombre_generico", // <--- ACCIÓN CORREGIDA
+                    nombre_generico: request.term                 // <--- PARÁMETRO CORREGIDO
                 },
                 success: function(data) {
                     response(data.map(item => ({
@@ -95,7 +95,8 @@ $(document).ready(function() {
                         id_art_ter: item.id_producto_maestro,
                         nombre_art_ter: item.nombre_generico,
                         value: item.nombre_generico,
-                        label: item.nombre_generico})));
+                        label: item.nombre_generico // Muestra solo el nombre del producto (sin ID de receta)
+                    })));
                 }
             });
         },
