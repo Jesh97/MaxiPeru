@@ -59,6 +59,12 @@ public class ProduccionController implements ProduccionRepository {
     }
 
     @Override
+    public String generarCodigoLote(int idOrden) throws SQLException {
+        int idArticuloProducido = obtenerIdArticuloProducidoPorOrden(idOrden);
+        return generarCodigoLoteDB(idArticuloProducido);
+    }
+
+    @Override
     public int crearReceta(int idProductoMaestro, BigDecimal cantProd, int idUniProd) throws SQLException {
         int idReceta = -1;
         String sql = "{CALL sp_crear_receta(?, ?, ?)}";

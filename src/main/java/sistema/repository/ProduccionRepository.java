@@ -21,4 +21,5 @@ public interface ProduccionRepository {
     List<Map<String, Object>> buscarArticulosTerminados(String busqueda) throws SQLException;
     List<Map<String, Object>> buscarArticulosInsumos(String busqueda) throws SQLException;
     List<Map<String, Object>> buscarArticulosEmbalaje(String busqueda) throws SQLException;
+    String generarCodigoLote(int idOrden) throws SQLException;
 }

@@ -91,38 +91,40 @@
             <h2 class="section-header header-warning">Generar Nueva Orden de Producción</h2>
             <form action="" method="POST" onsubmit="saveOrden(event)">
                 <input type="hidden" name="p_id_receta_orden_hidden" id="p_id_receta_orden_hidden" value="">
-                <input type="hidden" name="p_id_art_producido" id="p_id_art_producido_orden_hidden" value=""> <div class="compact-fields-grid" style="grid-template-columns: repeat(2, 1fr);">
-                <div>
-                    <label for="buscar_receta_orden">Fórmula a Usar:</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="buscar_receta_orden" name="p_nombre_receta" placeholder="Buscar Fórmula (por nombre)" required class="search-input-icon">
-                        <i class="fas fa-search search-icon"></i>
+                <input type="hidden" name="p_id_art_producido_orden_hidden" id="p_id_art_producido_orden_hidden" value="">
+                <input type="hidden" name="p_receta_cantidad_base_hidden" id="p_receta_cantidad_base_hidden" value="">
+                <div class="compact-fields-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div>
+                        <label for="buscar_receta_orden">Fórmula a Usar:</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="buscar_receta_orden" name="p_nombre_receta" placeholder="Buscar Fórmula (por nombre)" required class="search-input-icon">
+                            <i class="fas fa-search search-icon"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="cant_prod_orden">Cantidad a Producir
+                            (Litros/Kg Programados):</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="cant_prod_orden" name="p_cant_prod_orden" step="0.01" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="cant_prod_final_real">Cantidad Producido FINAL:</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="cant_prod_final_real" name="p_cant_producida_final_real" step="0.01" value="0.00" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="fecha_ini">Fecha de
+                            Inicio Programada:</label>
+                        <div class="input-wrapper">
+                            <input type="date" id="fecha_ini" name="p_fecha_ini_orden" required>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <label for="cant_prod_orden">Cantidad a Producir
-                        (Litros/Kg Programados):</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="cant_prod_orden" name="p_cant_prod" step="0.01" required>
-                    </div>
-                </div>
-                <div>
-                    <label for="cant_prod_final_real">Cantidad Producido FINAL:</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="cant_prod_final_real" name="p_cant_producida_final_real" step="0.01" value="0.00" required>
-                    </div>
-                </div>
-                <div>
-                    <label for="fecha_ini">Fecha de
-                        Inicio Programada:</label>
-                    <div class="input-wrapper">
-                        <input type="date" id="fecha_ini" name="p_fecha_ini">
-                    </div>
-                </div>
-            </div>
                 <label for="obs_orden">Observaciones:</label>
                 <div class="input-wrapper">
-                    <textarea id="obs_orden" name="p_obs" rows="3"></textarea>
+                    <textarea id="obs_orden" name="p_obs_orden" rows="3"></textarea>
                 </div>
                 <button type="submit" class="btn-submit btn-tab-action"><i class="fas fa-file-alt"></i> Crear Orden</button>
                 <p class="alert-info"><i class="fas fa-info-circle"></i> La orden será usada automáticamente en los siguientes pasos.</p>
@@ -200,7 +202,7 @@
                     <i class="fas fa-search search-icon"></i>
                 </div>
                 <div class="input-wrapper" style="position: relative;">
-                    <input type="number" id="cant_etiquetas_total" name="p_cant_etiquetas_total" value="0" readonly class="readonly-field" placeholder="Cant. Etiquetas" style="padding-right: 120px;">
+                    <input type="number" id="cant_etiquetas_total" name="p_cant_etiquetas_total" value="0" step="1" readonly class="readonly-field" placeholder="Cant. Etiquetas" style="padding-right: 120px;">
                     <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.9em; color: #555; background-color: #eee; padding: 5px; border-radius: 5px;">Cant. Total</span>
                 </div>
             </div>
@@ -215,11 +217,10 @@
                         <thead>
                         <tr>
                             <th style="width: 20%;">Envase (Unidad)</th>
-                            <th style="width: 15%;">Capacidad</th>
-                            <th style="width: 15%;">Cant.
-                                a Envasar (Unidades)</th>
+                            <th style="width: 25%;">Capacidad (Valor y Unidad)</th>
+                            <th style="width: 15%;">Cantidad de Envases (Unidades)</th>
                             <th style="width: 30%;">Tapa/Sello Asignada</th>
-                            <th style="width: 20%;">Acción</th>
+                            <th style="width: 10%;">Acción</th>
                         </tr>
                         </thead>
                         <tbody id="envase-tapa-rows">
@@ -241,8 +242,8 @@
                 <input type="hidden" id="p_id_unidad_caja_hidden">
                 <div class="compact-fields-grid" id="empaque_secundario_fields">
                     <div>
-                        <label for="cant_unidades_envasadas_ref">Unidades Envasadas TOTAL (Ref.
-                            Envases):</label>
+                        <label for="cant_unidades_envasadas_ref">Total de Envases Físicos (Ref.
+                            4.1):</label>
                         <div class="input-wrapper">
                             <input type="number" id="cant_unidades_envasadas_ref" value="0" step="1" readonly class="readonly-field" placeholder="Desde paso 4.1">
                         </div>
@@ -255,7 +256,7 @@
                         </div>
                     </div>
                     <div style="grid-column: span 1;">
-                        <label for="unidad_por_caja_manual">Unidades por Caja (Temporal):</label>
+                        <label for="unidad_por_caja_manual">Envases por Caja (Temporal):</label>
                         <div class="input-wrapper">
                             <input type="number" id="unidad_por_caja_manual" value="1" step="1" required
                                    oninput="calculateLooseContainers()">
@@ -283,7 +284,7 @@
             </form>
         </div>
         <div class="form-group-section">
-            <h2 class="section-header header-primary">Merma y Cierre de Etapa</h2>
+            <h2 class="section-header primary-header">Merma y Cierre de Etapa</h2>
             <form action="" method="POST" onsubmit="submitMerma(event)">
                 <input type="hidden" name="p_codigo_orden" id="hidden_orden_merma_submit">
                 <input type="hidden" name="p_envases_sueltos" id="p_envases_sueltos_hidden"> <div class="compact-fields-grid">

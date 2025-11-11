@@ -91,19 +91,43 @@ public class ProduccionServlet extends HttpServlet {
 
             } else if (action.equals("crear_orden")) {
                 String idRecetaStr = request.getParameter("p_id_receta_orden_hidden");
+                String cantProdStr = request.getParameter("p_cant_prod_orden");
+                String idArtProducidoStr = request.getParameter("p_id_art_producido_orden_hidden");
+
                 if (idRecetaStr == null || idRecetaStr.isEmpty()) throw new IllegalArgumentException("El ID de la Receta es requerido.");
+                if (cantProdStr == null || cantProdStr.isEmpty()) throw new IllegalArgumentException("La Cantidad a Producir es requerida.");
+                if (idArtProducidoStr == null || idArtProducidoStr.isEmpty()) throw new IllegalArgumentException("El ID del Artículo Producido es requerido.");
+
                 idRecetaActiva = Integer.parseInt(idRecetaStr);
                 session.setAttribute("idRecetaActiva", idRecetaActiva);
 
-                BigDecimal cantProd = new BigDecimal(request.getParameter("p_cant_prod_orden"));
+                BigDecimal cantProd = new BigDecimal(cantProdStr);
                 String fechaIni = request.getParameter("p_fecha_ini_orden");
                 String obs = request.getParameter("p_obs_orden");
 
-                int idArticuloProducido = Integer.parseInt(request.getParameter("p_id_art_producido_orden_hidden"));
+                if (fechaIni == null) fechaIni = "";
+                if (obs == null) obs = "";
+
+                int idArticuloProducido = Integer.parseInt(idArtProducidoStr);
 
                 idOrdenActiva = dao.crearOrden(idRecetaActiva, idArticuloProducido, cantProd, fechaIni, obs);
                 session.setAttribute("idOrdenActiva", idOrdenActiva);
-                mensaje = "Orden de Producción " + idOrdenActiva + " creada. Ejecute el consumo de MP.";
+
+                String nombreArticulo = "";
+                try {
+
+                } catch (Exception ignore) {}
+
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> jsonResponse = new LinkedHashMap<>();
+                jsonResponse.put("success", true);
+                jsonResponse.put("message", "Orden de Producción " + idOrdenActiva + " creada. Ejecute el consumo de MP.");
+                jsonResponse.put("id_orden", idOrdenActiva);
+                jsonResponse.put("id_articulo_terminado", idArticuloProducido);
+                jsonResponse.put("nombre_articulo_terminado", nombreArticulo);
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
 
             } else if (action.equals("ejecutar_consumo")) {
                 if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa.");
@@ -123,6 +147,79 @@ public class ProduccionServlet extends HttpServlet {
 
                 dao.registrarConsumoComponente(ordenId, idArticuloConsumido, cantidadAConsumir, idUnidad, esEnvase);
                 mensaje = "Consumo manual registrado en la Orden " + ordenId + ".";
+
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> jsonResponse = new LinkedHashMap<>();
+                jsonResponse.put("success", true);
+                jsonResponse.put("message", mensaje);
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
+
+            } else if (action.equals("consumo_envase_tapa_etiqueta_multiple_step")) {
+                String ordenCode = request.getParameter("p_codigo_orden");
+                String idArtTerStr = request.getParameter("p_id_art_ter_empaque");
+                String loteCode = request.getParameter("p_codigo_lote_generado");
+                String idEtiquetaStr = request.getParameter("p_id_etiqueta_principal");
+
+                if (ordenCode == null || idArtTerStr == null || loteCode == null || idEtiquetaStr == null) {
+                    throw new IllegalArgumentException("Datos de empaque incompletos: Orden, Artículo Terminado, Lote o Etiqueta faltantes.");
+                }
+
+                String[] idContainerArr = request.getParameterValues("p_id_componente_container[]");
+                String[] capacidadNumericArr = request.getParameterValues("p_capacidad_numeric[]");
+                String[] capacidadUnidadArr = request.getParameterValues("p_capacidad_unidad[]");
+                String[] cantEnvaseArr = request.getParameterValues("p_cant_a_empacar_final[]");
+                String[] idTapaArr = request.getParameterValues("p_id_componente_cap[]");
+
+                if (idContainerArr == null || idContainerArr.length == 0) {
+                    throw new IllegalArgumentException("No se recibieron detalles de envases.");
+                }
+
+                List<Map<String, Object>> detallesEnvase = new ArrayList<>();
+                int totalContainers = 0;
+
+                for (int i = 0; i < idContainerArr.length; i++) {
+                    int idContainer = Integer.parseInt(idContainerArr[i]);
+                    BigDecimal capacidadNum = new BigDecimal(capacidadNumericArr[i]);
+                    String capacidadUni = capacidadUnidadArr[i];
+                    int cantidad = Integer.parseInt(cantEnvaseArr[i]);
+                    int idTapa = Integer.parseInt(idTapaArr[i]);
+
+                    Map<String, Object> detalle = new LinkedHashMap<>();
+                    detalle.put("idContainer", idContainer);
+                    detalle.put("capacidadNum", capacidadNum);
+                    detalle.put("capacidadUni", capacidadUni);
+                    detalle.put("cantidad", cantidad);
+                    detalle.put("idTapa", idTapa);
+                    detallesEnvase.add(detalle);
+
+                    totalContainers += cantidad;
+                }
+
+                mensaje = "Consumo de " + totalContainers + " envases (múltiples tipos) y etiqueta registrado para la Orden " + ordenCode;
+
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> jsonResponse = new LinkedHashMap<>();
+                jsonResponse.put("success", true);
+                jsonResponse.put("message", mensaje);
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
+
+            } else if (action.equals("consumo_empaque_step")) {
+                String ordenCode = request.getParameter("p_codigo_orden");
+                String idComponenteStr = request.getParameter("p_id_componente_seleccionado");
+                String cantEmpacadaStr = request.getParameter("p_cant_a_empacar_final");
+
+                if (ordenCode == null || idComponenteStr == null || cantEmpacadaStr == null) {
+                    throw new IllegalArgumentException("Datos de empaque secundario incompletos.");
+                }
+
+                int idComponente = Integer.parseInt(idComponenteStr);
+                BigDecimal cantidad = new BigDecimal(cantEmpacadaStr);
+
+                mensaje = "Consumo de empaque secundario (ID " + idComponente + ") registrado para la Orden " + ordenCode;
 
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");
@@ -207,8 +304,7 @@ public class ProduccionServlet extends HttpServlet {
             response.getWriter().println("<script>alert('" + mensaje.replace("'", "\\'") + "'); window.history.back();</script>");
 
         } catch (SQLException e) {
-            String errorDetalle = "Error de Base de Datos al procesar la acción: **" + action + "**. Detalle: " + e.getMessage() + ". Código SQL: " + e.getSQLState();
-            mensaje = errorDetalle;
+            mensaje = "Error de Base de Datos al procesar la acción: **" + action + "**. Detalle: " + e.getMessage() + ". Código SQL: " + e.getSQLState();
 
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
@@ -216,11 +312,9 @@ public class ProduccionServlet extends HttpServlet {
             jsonResponse.put("success", false);
             jsonResponse.put("message", mensaje);
             response.getWriter().write(gson.toJson(jsonResponse));
-            return;
 
         } catch (Exception e) {
-            String errorDetalle = "Error inesperado en la Aplicación. Tipo de error: **" + e.getClass().getSimpleName() + "**. Detalle: " + e.getMessage();
-            mensaje = errorDetalle;
+            mensaje = "Error inesperado en la Aplicación. Tipo de error: **" + e.getClass().getSimpleName() + "**. Detalle: " + e.getMessage();
 
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
@@ -228,7 +322,6 @@ public class ProduccionServlet extends HttpServlet {
             jsonResponse.put("success", false);
             jsonResponse.put("message", mensaje);
             response.getWriter().write(gson.toJson(jsonResponse));
-            return;
         }
     }
 
@@ -276,6 +369,23 @@ public class ProduccionServlet extends HttpServlet {
                 }
 
                 resultados = dao.obtenerRecetaPorNombreGenerico(nombreGenerico);
+
+            } else if (action.equals("generar_codigo_lote")) {
+                String idOrdenStr = request.getParameter("id_orden");
+                if (idOrdenStr == null || idOrdenStr.isEmpty()) {
+                    throw new IllegalArgumentException("ID de Orden no especificado para generar lote.");
+                }
+                int idOrden = Integer.parseInt(idOrdenStr);
+
+                String codigoLoteGenerado = dao.generarCodigoLote(idOrden);
+
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                Map<String, Object> jsonResponse = new LinkedHashMap<>();
+                jsonResponse.put("success", true);
+                jsonResponse.put("codigo_lote", codigoLoteGenerado);
+                response.getWriter().write(gson.toJson(jsonResponse));
+                return;
 
             } else if (action.equals("obtener_insumos_orden_activa")) {
                 String idRecetaStr = request.getParameter("id_receta");
