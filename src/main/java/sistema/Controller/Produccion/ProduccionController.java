@@ -137,10 +137,10 @@ public class ProduccionController implements ProduccionRepository {
                     Map<String, Object> insumo = new LinkedHashMap<>();
                     insumo.put("id_articulo", rs.getInt("id_articulo"));
                     insumo.put("codigo", rs.getString("codigo"));
-                    insumo.put("insumo_nombre", rs.getString("nombre_articulo"));
-                    insumo.put("insumo_cantidad_requerida", rs.getBigDecimal("cantidad_requerida"));
+                    insumo.put("nombre_articulo", rs.getString("nombre_articulo"));
+                    insumo.put("cantidad_requerida", rs.getBigDecimal("cantidad_requerida"));
                     insumo.put("id_unidad", rs.getInt("id_unidad"));
-                    insumo.put("insumo_unidad_nombre", rs.getString("unidad_nombre"));
+                    insumo.put("unidad_nombre", rs.getString("unidad_nombre"));
                     insumos.add(insumo);
                 }
             }

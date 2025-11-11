@@ -288,7 +288,6 @@ function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
     const tableBody = document.getElementById('envase-tapa-rows');
     const newRow = tableBody.insertRow();
     const rowId = `row-envase-${Date.now()}`;
-
     const capacityDetails = extractNumericCapacity(containerCapacity);
 
     newRow.id = rowId;
@@ -300,10 +299,14 @@ function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
         <td style="display: flex; align-items: center;">
             <input type="number" name="p_capacidad_numeric[]" value="${capacityDetails.value}" step="0.0001" required style="width: 60%; text-align: right; display: inline-block;">
             <select name="p_capacidad_unidad[]" required style="width: 35%; margin-left: 5px; display: inline-block;">
-                <option value="Litro" ${capacityDetails.unit === 'Litro' ? 'selected' : ''}>Litro</option>
-                <option value="ml" ${capacityDetails.unit === 'ml' ? 'selected' : ''}>ml</option>
-                <option value="Kg" ${capacityDetails.unit === 'Kg' ? 'selected' : ''}>Kg</option>
-                <option value="gr" ${capacityDetails.unit === 'gr' ? 'selected' : ''}>gr</option>
+                <option value="Litro" ${capacityDetails.unit === 'Litro' ?
+'selected' : ''}>Litro</option>
+                <option value="ml" ${capacityDetails.unit === 'ml' ?
+'selected' : ''}>ml</option>
+                <option value="Kg" ${capacityDetails.unit === 'Kg' ?
+'selected' : ''}>Kg</option>
+                <option value="gr" ${capacityDetails.unit === 'gr' ?
+'selected' : ''}>gr</option>
             </select>
         </td>
         <td>
@@ -366,7 +369,6 @@ function saveFullRecipe(event) {
     const form = event.target;
     const artTerId = $('input[name="p_id_art_ter_hidden"]').val();
     const rows = document.getElementById('insumo-rows').querySelectorAll('tr');
-
     if (!artTerId) {
         alert("ERROR: Debe seleccionar un Producto Terminado.");
         return;
@@ -455,11 +457,9 @@ function saveOrden(event) {
     const cantProdOrder = parseFloat(cantProdStr);
     const cantBaseReceta = parseFloat(cantBaseRecetaStr);
     activeIdReceta = idReceta;
-
     const formData = new FormData(event.target);
     const params = new URLSearchParams(formData);
     params.set('action', 'crear_orden');
-
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
@@ -496,47 +496,52 @@ function loadInsumosForOrder(idOrden, idReceta, cantProdOrder, cantBaseReceta) {
     tableBody.innerHTML = '';
 
     const displayProductName = activeNombreArtTerminado || `Orden: ${idOrden}`;
-
     if (cantProdOrder === undefined || cantBaseReceta === undefined || cantBaseReceta === 0) {
-        statusDisplay.textContent = `${displayProductName} (Cód: ${idOrden}). Error: No se puede calcular la cantidad teórica, faltan datos de la receta/orden.`;
+        statusDisplay.textContent = `${displayProductName} (Cód: ${idOrden}).
+Error: No se puede calcular la cantidad teórica, faltan datos de la receta/orden.`;
         return;
     }
 
     const scaleFactor = cantProdOrder / cantBaseReceta;
 
     statusDisplay.textContent = `${displayProductName} (Cód: ${idOrden}). Cargando Insumos de Receta ${idReceta}...`;
-
     fetch(`${PRODUCTION_SERVLET_URL}?action=obtener_insumos_orden_activa&id_receta=${idReceta}`)
     .then(response => response.json())
     .then(data => {
         if (data.length > 0) {
             data.forEach(insumo => {
                 const baseReq = parseFloat(insumo.cantidad_requerida);
-                const totalReq = (baseReq * scaleFactor).toFixed(4);
+                const totalReq = parseFloat((baseReq * scaleFactor).toFixed(4));
 
                 const newRow = tableBody.insertRow();
+
                 newRow.innerHTML = `
                  <form action="" method="POST" onsubmit="handleInsumoConsumption(event)">
                         <input type="hidden" name="action" value="registrar_consumo_componente">
                         <input type="hidden" name="p_id_orden" value="${idOrden}">
+
                         <input type="hidden" name="p_id_articulo_consumido" value="${insumo.id_articulo}">
                         <input type="hidden" name="p_id_unidad" value="${insumo.id_unidad}">
                         <input type="hidden" name="p_es_envase" value="false">
-                        <td>${insumo.codigo} - ${insumo.nombre_articulo}</td>
-                        <td>${totalReq} ${insumo.unidad_nombre}</td>
+                        <td>${insumo.codigo}</td>
+
+                        <td>${totalReq}</td>
                         <td>
                             <input type="number" name="p_cantidad_consumida" value="${totalReq}" step="0.001" required>
+
                         </td>
                         <td>${insumo.unidad_nombre}</td>
                         <td>
                             <button type="submit" class="btn-submit btn-compact btn-warning"><i class="fas fa-edit"></i> Registrar</button>
+
                         </td>
                  </form>
                 `;
             });
             statusDisplay.textContent = `Orden Activa: ${displayProductName} (Cód: ${idOrden}). Insumos cargados (Teórico para ${cantProdOrder.toFixed(2)} unidades). Registre consumo Real.`;
         } else {
-            statusDisplay.textContent = `Orden Activa: ${displayProductName} (Cód: ${idOrden}). No se encontraron insumos para esta receta.`;
+            statusDisplay.textContent = `Orden Activa: ${displayProductName} (Cód: ${idOrden}).
+No se encontraron insumos para esta receta.`;
         }
     })
     .catch(error => {
@@ -600,7 +605,6 @@ function updateTotalUnitsReference() {
         const quantityContainers = parseInt(row.querySelector('input[name="p_cant_a_empacar_final[]"]').value) || 0;
         totalContainers += quantityContainers;
     });
-
     const totalContainersFixed = totalContainers.toFixed(0);
     const refField = document.getElementById('cant_unidades_envasadas_ref');
     if (refField) refField.value = totalContainersFixed;
@@ -728,7 +732,8 @@ function submitMerma(event) {
 
     const formData = new FormData(event.target);
     const params = new URLSearchParams(formData);
-    const envasesSueltos = document.getElementById('envases_sueltos_cantidad').value || '0.00';
+    const envasesSueltos = document.getElementById('envases_sueltos_cantidad').value ||
+'0.00';
 
     params.set('action', 'registrar_merma_y_cierre_empaque');
     params.set('p_envases_sueltos', envasesSueltos);
