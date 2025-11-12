@@ -46,7 +46,7 @@
                         <input type="hidden" name="p_nombre_uni_prod" id="p_nombre_uni_prod" value="Litro">
                     </div>
                 </div>
-                <p class="alert-info"><i class="fas fa-info-circle" style="color: var(--accent-success);"></i> La cantidad base **se usa para el cálculo**. El sistema debe devolver el ID de la fórmula recién creada.</p>
+                <p class="alert-info"><i class="fas fa-info-circle" style="color: var(--accent-success);"></i> La cantidad base se usa para el cálculo. El sistema debe devolver el ID de la fórmula recién creada.</p>
             </div>
             <div class="form-group-section">
                 <h2 class="section-header header-success">Componentes Requeridos (Insumos)</h2>
@@ -162,7 +162,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="alert-warning"><i class="fas fa-exclamation-triangle"></i> NOTA: La cantidad real consumida se registra por insumo. Al registrar, la Orden pasa a **'En Proceso'**.</p>
+            <p class="alert-warning"><i class="fas fa-exclamation-triangle"></i> NOTA: La cantidad real consumida se registra por insumo. Al registrar, la Orden pasa a 'En Proceso'.</p>
         </div>
     </div>
     <div id="Empaque" class="tab-content">
@@ -176,7 +176,7 @@
                 <button type="button" class="btn-submit btn-success" onclick="generateLotCode(event)"><i class="fas fa-magic"></i> Generar Lote</button>
             </div>
             <input type="hidden" id="p_codigo_lote_envase_hidden" name="p_codigo_lote_envase" required>
-            <p class="alert-info"><i class="fas fa-tags" style="color: var(--accent-success);"></i> **IMPORTANTE:** Genere el código **ANTES** de empezar el envasado para la impresión de etiquetas.</p>
+            <p class="alert-info"><i class="fas fa-tags" style="color: var(--accent-success);"></i> IMPORTANTE: Genere el código ANTES de empezar el envasado para la impresión de etiquetas.</p>
         </div>
         <div class="form-group-section">
             <h2 class="section-header header-primary"><i class="fas fa-fill-drip"></i> 4.1 REGISTRO DE ENVASADO, TAPADO Y ETIQUETADO</h2>
@@ -235,7 +235,7 @@
                     </table>
                 </div>
                 <button type="submit" class="btn-submit btn-tab-action btn-primary"><i class="fas fa-box-open"></i> Registrar Consumo de Envases y Tapas</button>
-                <p class="alert-info"><i class="fas fa-info-circle"></i> Registre el tipo de envase y su **tapa específica** por cada lote de unidades a envasar. La etiqueta se consume de forma global según el total de unidades.</p>
+                <p class="alert-info"><i class="fas fa-info-circle"></i> Registre el tipo de envase y su tapa específica por cada lote de unidades a envasar. La etiqueta se consume de forma global según el total de unidades.</p>
             </form>
         </div>
         <div class="form-group-section">
@@ -267,7 +267,7 @@
                         </div>
                     </div>
                     <div style="grid-column: span 1;">
-                        <label for="cant_empacada_caja">Cantidad de Cajas **REALES** a consumir:</label>
+                        <label for="cant_empacada_caja">Cantidad de Cajas REALES a consumir:</label>
                         <div class="input-wrapper">
                             <input type="number" id="cant_empacada_caja" name="p_cant_a_empacar_final" step="1" required placeholder="Ej: 5 cajas" oninput="calculateLooseContainers()">
                         </div>
@@ -278,10 +278,10 @@
                     <div class="input-wrapper">
                         <input type="number" id="envases_sueltos_cantidad" value="0" readonly class="readonly-field" style="color: var(--accent-danger);">
                     </div>
-                    <p class="alert-info" style="color: var(--accent-danger);"><i class="fas fa-question-circle" style="color: var(--accent-danger);"></i> **ACCIÓN REQUERIDA:** Estos envases se almacenan como stock suelto o se marcan como unidades para la próxima orden/reempaque. No se descuenta su caja.</p>
+                    <p class="alert-info" style="color: var(--accent-danger);"><i class="fas fa-question-circle" style="color: var(--accent-danger);"></i> ACCIÓN REQUERIDA: Estos envases se almacenan como stock suelto o se marcan como unidades para la próxima orden/reempaque. No se descuenta su caja.</p>
                 </div>
                 <button type="submit" class="btn-submit btn-tab-action btn-primary"><i class="fas fa-boxes"></i> Consumir Empaque Secundario</button>
-                <p class="alert-info"><i class="fas fa-info-circle"></i> Registra el consumo de **unidades de empaque secundario (Cajas)** en el sistema. Ingrese la cantidad real de cajas utilizadas, no el número de envases.</p>
+                <p class="alert-info"><i class="fas fa-info-circle"></i> Registra el consumo de unidades de empaque secundario (Cajas) en el sistema. Ingrese la cantidad real de cajas utilizadas, no el número de envases.</p>
             </form>
         </div>
         <div class="form-group-section">
@@ -353,7 +353,7 @@
                 <span id="display_orden_finalizar" class="orden-activa-display display-danger">Aún no hay Orden Activa</span>
                 <input type="hidden" id="hidden_orden_finalizar" name="p_codigo_orden_finalizar" required>
                 <button type="submit" class="btn-submit btn-tab-action btn-danger"><i class="fas fa-power-off"></i> Finalizar Orden</button>
-                <p class="alert-info"><i class="fas fa-check"></i> Marca la orden como **'Terminada'** en el sistema.</p>
+                <p class="alert-info"><i class="fas fa-check"></i> Marca la orden como 'Terminada' en el sistema.</p>
             </form>
         </div>
     </div>

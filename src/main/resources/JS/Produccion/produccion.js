@@ -278,7 +278,7 @@ function deleteRow(btn) {
 }
 
 function addRowFromSearch() {
-    alert("La adición de insumos se realiza automáticamente al **seleccionar** un elemento de la lista desplegable de búsqueda.");
+    alert("La adición de insumos se realiza automáticamente al seleccionar un elemento de la lista desplegable de búsqueda.");
 }
 
 function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
