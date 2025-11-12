@@ -102,6 +102,64 @@ public class ProduccionController implements ProduccionRepository {
     }
 
     @Override
+    public List<Map<String, Object>> listarRecetasConDetalles() throws SQLException {
+        List<Map<String, Object>> recetas = new ArrayList<>();
+        String sql = "{CALL sp_listar_recetas_con_detalles()}";
+
+        try (Connection conn = getConnection();
+             CallableStatement cs = conn.prepareCall(sql);
+             ResultSet rs = cs.executeQuery()) {
+
+            while (rs.next()) {
+                Map<String, Object> receta = new LinkedHashMap<>();
+                receta.put("id_receta", rs.getInt("id_receta"));
+                receta.put("id_producto_maestro", rs.getInt("id_producto_maestro"));
+                receta.put("nombre_generico", rs.getString("nombre_generico"));
+                receta.put("receta_cantidad_base", rs.getBigDecimal("receta_cantidad_base"));
+                receta.put("unidad_producir_nombre", rs.getString("unidad_producir_nombre"));
+                receta.put("fecha_creacion", rs.getString("fecha_creacion"));
+                receta.put("estado", rs.getString("estado"));
+
+                recetas.add(receta);
+            }
+        }
+        return recetas;
+    }
+
+    @Override
+    public void actualizarInsumoReceta(int idDetalleReceta, BigDecimal cantReq, int idUniInsumo) throws SQLException {
+        String sql = "{CALL sp_actualizar_insumo_receta(?, ?, ?)}";
+
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, idDetalleReceta);
+            cantReq = cantReq.setScale(6, RoundingMode.HALF_UP);
+            cs.setBigDecimal(2, cantReq);
+            cs.setInt(3, idUniInsumo);
+            cs.execute();
+        }
+    }
+
+    @Override
+    public void eliminarDetalleRecetaIndividual(int idDetalleReceta) throws SQLException {
+        String sql = "{CALL sp_eliminar_detalle_receta_individual(?)}";
+
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, idDetalleReceta);
+            cs.execute();
+        }
+    }
+
+    @Override
+    public void desactivarReceta(int idReceta) throws SQLException {
+        String sql = "{CALL sp_desactivar_receta(?)}";
+
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, idReceta);
+            cs.execute();
+        }
+    }
+
+    @Override
     public List<Map<String, Object>> obtenerRecetaPorNombreGenerico(String nombreGenerico) throws SQLException {
         List<Map<String, Object>> detallesReceta = new ArrayList<>();
         String sql = "{CALL sp_obtener_receta_por_nombre_generico(?)}";

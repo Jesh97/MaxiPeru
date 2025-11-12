@@ -9,6 +9,10 @@ public interface ProduccionRepository {
 
     int crearReceta(int idProductoMaestro, BigDecimal cantProd, int idUniProd) throws SQLException;
     void agregarDetalleReceta(int idReceta, int idArtInsumo, BigDecimal cantReq, int idUniInsumo) throws SQLException;
+    List<Map<String, Object>> listarRecetasConDetalles() throws SQLException;
+    void actualizarInsumoReceta(int idDetalleReceta, BigDecimal cantReq, int idUniInsumo) throws SQLException;
+    void eliminarDetalleRecetaIndividual(int idDetalleReceta) throws SQLException;
+    void desactivarReceta(int idReceta) throws SQLException;
     List<Map<String, Object>> obtenerRecetaPorNombreGenerico(String nombreGenerico) throws SQLException;
     List<Map<String, Object>> obtenerInsumosPorIdReceta(int idReceta) throws SQLException;
     int crearOrden(int idReceta, int idArticuloProducido, BigDecimal cantProd, String fechaIni, String obs) throws SQLException;

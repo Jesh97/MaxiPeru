@@ -4,6 +4,10 @@ let activeOrdenCode = '';
 let activeLotCode = '';
 let activeIdArtTerminado = '';
 let activeNombreArtTerminado = '';
+let activeIdReceta = '';
+let activeNombreReceta = '';
+let activeCantBaseReceta = 0;
+let activeUnidadBaseReceta = '';
 
 function getCurrentDateFormatted() {
     const today = new Date();
@@ -51,11 +55,13 @@ $(document).ready(function() {
                     action: "buscar_articulos_terminados",
                     busqueda: request.term
                 },
-                success: function(data) {
+                success:
+                function(data) {
                     response(data.map(item => ({
                         id: item.id,
                         value: item.nombre_generico || item.descripcion,
-                        label: (item.codigo || '') + ' - ' + (item.nombre_generico),
+                        label:
+                        (item.codigo || '') + ' - ' + (item.nombre_generico),
                         id_unidad: item.id_unidad,
                         unidad_nombre: item.unidad_nombre
                     })));
@@ -76,7 +82,8 @@ $(document).ready(function() {
                 url: PRODUCTION_SERVLET_URL,
                 type: "GET",
                 dataType: "json",
-                data: {
+                data:
+                {
                     action: "buscar_articulos_insumos",
                     busqueda: request.term
                 },
@@ -132,6 +139,7 @@ $(document).ready(function() {
                     })));
                 }
             });
+
         },
         minLength: 2,
         select: function(event, ui) {
@@ -183,12 +191,16 @@ $(document).ready(function() {
             return false;
         }
     });
+
     openTab(null, 'Receta');
     if (typeof window.activeOrdenCodeFromServlet !== 'undefined') {
         activeOrdenCode = window.activeOrdenCodeFromServlet;
         updateOrdenFields();
     }
+
+    document.getElementById('edit-detalle-form').addEventListener('submit', submitEditDetalleReceta);
 });
+
 function getPackagingAutocompleteSource(tipoComponente) {
     return function(request, response) {
         $.ajax({
@@ -231,6 +243,9 @@ function checkPasswordAndOpenTab() {
     if (passwordInput.value === ACCESS_PASSWORD) {
         closePasswordModal();
         openTab(null, tabName);
+        if (tabName === 'ListarRecetas') {
+            loadRecetasList();
+        }
     } else {
         errorDisplay.textContent = 'Contraseña incorrecta. Intente de nuevo.';
     }
@@ -263,10 +278,7 @@ function deleteRow(btn) {
 }
 
 function addRowFromSearch() {
-    const searchInput = document.getElementById('buscar_insumo');
-    if (!searchInput.value.trim()) {
-        alert("Por favor, ingrese un valor de búsqueda.");
-    }
+    alert("La adición de insumos se realiza automáticamente al **seleccionar** un elemento de la lista desplegable de búsqueda.");
 }
 
 function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
@@ -279,7 +291,8 @@ function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
         <td><input type="text" name="p_nombre_uni_insumo[]" value="${unitName}" readonly class="readonly-field" placeholder="Unidad"></td>
         <td><input type="number" name="p_densidad[]" value="${density}" step="0.00000001" required placeholder="0.00" class="readonly-field" readonly></td>
         <td><button type="button" class="remove-row" onclick="deleteRow(this)"><i class="fas fa-trash"></i></button></td>
-        <input type="hidden" name="p_id_art_insumo_hidden[]" value="${insumoId}">
+        <input
+        type="hidden" name="p_id_art_insumo_hidden[]" value="${insumoId}">
         <input type="hidden" name="p_id_uni_insumo_hidden[]" value="${unitId}">
     `;
 }
@@ -299,14 +312,10 @@ function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
         <td style="display: flex; align-items: center;">
             <input type="number" name="p_capacidad_numeric[]" value="${capacityDetails.value}" step="0.0001" required style="width: 60%; text-align: right; display: inline-block;">
             <select name="p_capacidad_unidad[]" required style="width: 35%; margin-left: 5px; display: inline-block;">
-                <option value="Litro" ${capacityDetails.unit === 'Litro' ?
-'selected' : ''}>Litro</option>
-                <option value="ml" ${capacityDetails.unit === 'ml' ?
-'selected' : ''}>ml</option>
-                <option value="Kg" ${capacityDetails.unit === 'Kg' ?
-'selected' : ''}>Kg</option>
-                <option value="gr" ${capacityDetails.unit === 'gr' ?
-'selected' : ''}>gr</option>
+                <option value="Litro" ${capacityDetails.unit === 'Litro' ? 'selected' : ''}>Litro</option>
+                <option value="ml" ${capacityDetails.unit === 'ml' ? 'selected' : ''}>ml</option>
+                <option value="Kg" ${capacityDetails.unit === 'Kg' ? 'selected' : ''}>Kg</option>
+                <option value="gr" ${capacityDetails.unit === 'gr' ? 'selected' : ''}>gr</option>
             </select>
         </td>
         <td>
@@ -319,7 +328,8 @@ function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
         </td>
         <td>
             <button type="button" class="btn-submit btn-compact btn-primary" onclick="assignTapaToRow('${rowId}')"><i class="fas fa-hand-pointer"></i> Asignar Tapa Seleccionada</button>
-            <button type="button" class="remove-row" onclick="deleteRow(this); updateTotalUnitsReference()"><i class="fas fa-trash"></i></button>
+            <button type="button" class="remove-row" onclick="deleteRow(this);
+            updateTotalUnitsReference()"><i class="fas fa-trash"></i></button>
         </td>
     `;
     updateTotalUnitsReference();
@@ -356,6 +366,7 @@ function handleJsonResponse(response) {
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = html;
                 document.body.appendChild(tempDiv);
+
                 throw new Error("El servidor devolvió un script de alerta.");
             }
             return { success: false, message: "Respuesta inesperada del servidor (no JSON)." };
@@ -414,6 +425,7 @@ function saveFullRecipe(event) {
             alert("Error al guardar la fórmula: " + (data.message || "Detalle desconocido."));
         }
     })
+
     .catch(error => {
         if (!error.message.includes("script de alerta")) {
             alert("Error de comunicación con el servidor al guardar la fórmula. Verifique la conexión o el backend.");
@@ -471,6 +483,7 @@ function saveOrden(event) {
     .then(data => {
         if (data.success && data.id_orden) {
             activeOrdenCode = data.id_orden;
+
             activeIdArtTerminado = data.id_articulo_terminado;
             activeNombreArtTerminado = data.nombre_articulo_terminado;
             activeLotCode = '';
@@ -498,7 +511,7 @@ function loadInsumosForOrder(idOrden, idReceta, cantProdOrder, cantBaseReceta) {
     const displayProductName = activeNombreArtTerminado || `Orden: ${idOrden}`;
     if (cantProdOrder === undefined || cantBaseReceta === undefined || cantBaseReceta === 0) {
         statusDisplay.textContent = `${displayProductName} (Cód: ${idOrden}).
-Error: No se puede calcular la cantidad teórica, faltan datos de la receta/orden.`;
+            Error: No se puede calcular la cantidad teórica, faltan datos de la receta/orden.`;
         return;
     }
 
@@ -520,28 +533,32 @@ Error: No se puede calcular la cantidad teórica, faltan datos de la receta/orde
                         <input type="hidden" name="action" value="registrar_consumo_componente">
                         <input type="hidden" name="p_id_orden" value="${idOrden}">
 
+
                         <input type="hidden" name="p_id_articulo_consumido" value="${insumo.id_articulo}">
                         <input type="hidden" name="p_id_unidad" value="${insumo.id_unidad}">
                         <input type="hidden" name="p_es_envase" value="false">
                         <td>${insumo.codigo}</td>
+
 
                         <td>${totalReq}</td>
                         <td>
                             <input type="number" name="p_cantidad_consumida" value="${totalReq}" step="0.001" required>
 
                         </td>
+
                         <td>${insumo.unidad_nombre}</td>
                         <td>
                             <button type="submit" class="btn-submit btn-compact btn-warning"><i class="fas fa-edit"></i> Registrar</button>
 
-                        </td>
+
+                       </td>
                  </form>
                 `;
             });
             statusDisplay.textContent = `Orden Activa: ${displayProductName} (Cód: ${idOrden}). Insumos cargados (Teórico para ${cantProdOrder.toFixed(2)} unidades). Registre consumo Real.`;
         } else {
             statusDisplay.textContent = `Orden Activa: ${displayProductName} (Cód: ${idOrden}).
-No se encontraron insumos para esta receta.`;
+                No se encontraron insumos para esta receta.`;
         }
     })
     .catch(error => {
@@ -566,6 +583,7 @@ function handleInsumoConsumption(event) {
         if (data.success) {
             alert("Consumo de insumo registrado exitosamente.");
         } else {
+
             alert("Error al registrar consumo: " + data.message);
         }
     })
@@ -631,6 +649,7 @@ function generateLotCode(event) {
             document.getElementById('p_codigo_lote_envase_hidden').value = activeLotCode;
             document.getElementById('cod_lote_ref_lotes').value = activeLotCode;
             document.getElementById('p_cod_lote_lote_hidden').value = activeLotCode;
+
             alert(`Código de Lote Generado: ${activeLotCode}. ¡Ahora puede proceder con el envasado!`);
         } else {
             alert(`Error al generar código de lote: ${data.message}`);
@@ -674,6 +693,7 @@ function submitPackagingStep(event, stepName) {
             if (!containerId || !capId || quantity <= 0) {
                 allValid = false;
             }
+
         });
         if (!allValid) {
             alert("ERROR: Asegúrese de que todos los Envases tengan una Tapa Asignada y Cantidades válidas y mayores a cero.");
@@ -712,7 +732,8 @@ function submitPackagingStep(event, stepName) {
     .then(data => {
         if (data.success) {
             alert(`Paso de empaque '${stepName}' registrado. ${message}`);
-        } else {
+        } else
+        {
             alert(`Error al registrar paso '${stepName}': ${data.message}`);
         }
     })
@@ -733,7 +754,7 @@ function submitMerma(event) {
     const formData = new FormData(event.target);
     const params = new URLSearchParams(formData);
     const envasesSueltos = document.getElementById('envases_sueltos_cantidad').value ||
-'0.00';
+    '0.00';
 
     params.set('action', 'registrar_merma_y_cierre_empaque');
     params.set('p_envases_sueltos', envasesSueltos);
@@ -749,6 +770,7 @@ function submitMerma(event) {
     .then(data => {
         if (data.success) {
             alert("Merma registrada y etapa cerrada con éxito.");
+
         } else {
             alert("Error al registrar merma: " + data.message);
         }
@@ -817,6 +839,7 @@ function finalizeOrder(event) {
     .then(data => {
         if (data.success) {
             alert("Orden de Producción " + activeOrdenCode + " **FINALIZADA** con éxito.");
+
             activeOrdenCode = '';
             activeLotCode = '';
             activeIdArtTerminado = '';
@@ -850,6 +873,7 @@ function updateOrdenFields() {
 
         if (displayElement) {
             displayElement.classList.remove('display-success', 'display-warning', 'display-primary', 'display-danger');
+
             displayElement.classList.add('display-' + colorSuffix);
             displayElement.textContent = displayText;
         }
@@ -883,4 +907,224 @@ function updateOrdenFields() {
         document.getElementById('p_codigo_lote_envase_hidden').value = '';
     }
     updateTotalUnitsReference();
+}
+
+function loadRecetasList() {
+    const tableBody = document.getElementById('recetas-list-rows');
+    const params = new URLSearchParams({
+        action: 'listar_recetas'
+    });
+
+    tableBody.innerHTML = '<tr><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Cargando listado de recetas...</td></tr>';
+
+    fetch(`${PRODUCTION_SERVLET_URL}?${params.toString()}`)
+    .then(handleJsonResponse)
+    .then(data => {
+        tableBody.innerHTML = '';
+        const recetas = Array.isArray(data) ? data : [];
+
+        const uniqueRecetas = new Map();
+
+        recetas.forEach(receta => {
+            if (receta.id_receta && !uniqueRecetas.has(receta.id_receta)) {
+                uniqueRecetas.set(receta.id_receta, receta);
+            }
+        });
+
+        const finalRecetas = Array.from(uniqueRecetas.values());
+
+        if (finalRecetas.length > 0) {
+            finalRecetas.forEach(receta => {
+                const nombreGenerico = (receta.nombre_generico || 'Nombre Desconocido').replace(/'/g, "\\'");
+                const cantidadBase = parseFloat(receta.receta_cantidad_base) || 0.00;
+                const unidadNombre = receta.unidad_nombre || 'Unidad';
+                const fechaCreacion = receta.fecha_creacion || 'Fecha Desconocida';
+
+                const newRow = tableBody.insertRow();
+                newRow.innerHTML = `
+                    <td>${nombreGenerico}</td>
+                    <td>${cantidadBase.toFixed(2)}</td>
+                    <td>${unidadNombre}</td>
+                    <td>${fechaCreacion}</td>
+                    <td>
+                        <button type="button" class="btn-submit btn-compact btn-info" onclick="loadRecetaDetalle(${receta.id_receta}, '${nombreGenerico}', ${cantidadBase}, '${unidadNombre}')"><i class="fas fa-eye"></i> Ver Detalle</button>
+                        <button type="button" class="btn-submit btn-compact btn-danger" onclick="confirmDeactivateReceta(${receta.id_receta}, '${nombreGenerico}')"><i class="fas fa-power-off"></i> Desactivar</button>
+                    </td>
+                `;
+            });
+        } else {
+            tableBody.innerHTML = `<tr><td colspan="5">No se encontraron recetas activas.</td></tr>`;
+        }
+    })
+    .catch(error => {
+        tableBody.innerHTML = `<tr><td colspan="5">Error de comunicación al cargar recetas: ${error.message}</td></tr>`;
+    });
+}
+
+function loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase) {
+    const tableBody = document.getElementById('modal-detalle-receta-rows');
+
+    activeIdReceta = idReceta;
+    activeNombreReceta = nombreReceta;
+    activeCantBaseReceta = cantBase;
+    activeUnidadBaseReceta = unidadBase;
+
+    document.getElementById('modal_detalle_receta_id_display').textContent = `ID ${idReceta}`;
+    document.getElementById('modal_detalle_receta_info').innerHTML = `Producto Maestro: <b>${nombreReceta}</b> | Cantidad Base: <b>${cantBase.toFixed(2)} ${unidadBase}</b>`;
+    tableBody.innerHTML = '<tr><td colspan="4"><i class="fas fa-spinner fa-spin"></i> Cargando componentes...</td></tr>';
+    document.getElementById('view-recipe-modal').style.display = 'flex';
+
+    fetch(`${PRODUCTION_SERVLET_URL}?action=obtener_insumos_orden_activa&id_receta=${idReceta}`)
+    .then(handleJsonResponse)
+    .then(data => {
+        tableBody.innerHTML = '';
+        if (data.length > 0) {
+            data.forEach(insumo => {
+                const newRow = tableBody.insertRow();
+                const insumoNombreEscapado = insumo.nombre_articulo.replace(/'/g, "\\'");
+                const nombreRecetaEscapado = nombreReceta.replace(/'/g, "\\'");
+                newRow.innerHTML = `
+                    <td>${insumo.codigo} - ${insumo.nombre_articulo}</td>
+                    <td>${parseFloat(insumo.cantidad_requerida).toFixed(4)}</td>
+                    <td>${insumo.unidad_nombre}</td>
+                    <td>
+                        <button type="button" class="btn-submit btn-compact btn-primary" onclick="openEditModal({
+                            id_detalle: ${insumo.id_detalle_receta},
+                            nombre_insumo: '${insumoNombreEscapado}',
+                            cantidad: ${insumo.cantidad_requerida},
+                            unidad: '${insumo.unidad_nombre}'
+                        })"><i class="fas fa-pencil-alt"></i> Editar</button>
+                        <button type="button" class="btn-submit btn-compact btn-danger" onclick="confirmDeleteDetalle(${insumo.id_detalle_receta}, '${insumoNombreEscapado}', ${idReceta}, '${nombreRecetaEscapado}', ${cantBase}, '${unidadBase}')"><i class="fas fa-trash"></i> Quitar</button>
+                    </td>
+                `;
+            });
+        } else {
+            tableBody.innerHTML = `<tr><td colspan="4">No se encontraron insumos para esta receta.</td></tr>`;
+        }
+    })
+    .catch(error => {
+        tableBody.innerHTML = `<tr><td colspan="4">Error de comunicación al cargar detalle: ${error.message}</td></tr>`;
+    });
+}
+
+function closeViewRecipeModal() {
+    document.getElementById('view-recipe-modal').style.display = 'none';
+}
+
+function openEditModal(detalle) {
+    document.getElementById('edit_id_detalle_receta').value = detalle.id_detalle;
+    document.getElementById('edit_nombre_insumo').value = detalle.nombre_insumo;
+    document.getElementById('edit_cant_req').value = parseFloat(detalle.cantidad).toFixed(4);
+    document.getElementById('edit_nombre_unidad').value = detalle.unidad;
+    document.getElementById('edit-error-message').textContent = '';
+    document.getElementById('edit-detalle-modal').style.display = 'flex';
+}
+
+function closeEditModal() {
+    document.getElementById('edit-detalle-modal').style.display = 'none';
+}
+
+function submitEditDetalleReceta(event) {
+    event.preventDefault();
+    const idDetalle = document.getElementById('edit_id_detalle_receta').value;
+    const nuevaCantidad = document.getElementById('edit_cant_req').value;
+    const errorDisplay = document.getElementById('edit-error-message');
+
+    if (parseFloat(nuevaCantidad) <= 0) {
+        errorDisplay.textContent = 'La cantidad debe ser mayor a cero.';
+        return;
+    }
+
+    const params = new URLSearchParams({
+        action: 'actualizar_detalle_receta',
+        p_id_detalle_receta: idDetalle,
+        p_cant_req: nuevaCantidad
+    });
+
+    fetch(PRODUCTION_SERVLET_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params
+    })
+    .then(handleJsonResponse)
+    .then(data => {
+        if (data.success) {
+            alert("Detalle de receta actualizado correctamente.");
+            closeEditModal();
+            loadRecetaDetalle(activeIdReceta, activeNombreReceta, activeCantBaseReceta, activeUnidadBaseReceta);
+        } else {
+            errorDisplay.textContent = data.message || "Error desconocido al actualizar.";
+        }
+    })
+    .catch(error => {
+        errorDisplay.textContent = `Error de comunicación: ${error.message}`;
+    });
+}
+
+function confirmDeleteDetalle(idDetalle, nombreInsumo, idReceta, nombreReceta, cantBase, unidadBase) {
+    if (confirm(`¿Está seguro de QUITAR el insumo "${nombreInsumo}" (ID Detalle: ${idDetalle}) de la receta ${idReceta}?`)) {
+        deleteDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase);
+    }
+}
+
+function deleteDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase) {
+    const params = new URLSearchParams({
+        action: 'eliminar_detalle_receta',
+        p_id_detalle_receta: idDetalle
+    });
+
+    fetch(PRODUCTION_SERVLET_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params
+    })
+    .then(handleJsonResponse)
+    .then(data => {
+        if (data.success) {
+            alert("Insumo quitado de la receta exitosamente.");
+            loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase);
+        } else {
+            alert("Error al quitar el insumo: " + (data.message || "Detalle desconocido."));
+        }
+    })
+    .catch(error => {
+        alert("Error de comunicación al quitar insumo: " + error.message);
+    });
+}
+
+function confirmDeactivateReceta(idReceta, nombreReceta) {
+    if (confirm(`ADVERTENCIA: ¿Está seguro de DESACTIVAR la Receta "${nombreReceta}" (ID: ${idReceta})? Esto impedirá su uso en nuevas órdenes.`)) {
+        deactivateReceta(idReceta);
+    }
+}
+
+function deactivateReceta(idReceta) {
+    const params = new URLSearchParams({
+        action: 'desactivar_receta',
+        p_id_receta: idReceta
+    });
+
+    fetch(PRODUCTION_SERVLET_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params
+    })
+    .then(handleJsonResponse)
+    .then(data => {
+        if (data.success) {
+            alert(`Receta ${idReceta} desactivada correctamente.`);
+            loadRecetasList();
+        } else {
+            alert("Error al desactivar la receta: " + (data.message || "Detalle desconocido."));
+        }
+    })
+    .catch(error => {
+        alert("Error de comunicación al desactivar receta: " + error.message);
+    });
 }

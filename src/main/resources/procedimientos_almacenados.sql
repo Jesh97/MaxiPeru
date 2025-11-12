@@ -237,13 +237,13 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_terminados`$$
 CREATE PROCEDURE `sp_buscar_articulos_terminados`(IN p_busqueda VARCHAR(100))
 BEGIN
-    SELECT a.id, a.codigo, pm.nombre_generico, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario,
-        a.aroma, a.color, a.densidad, um.nombre AS unidad
-    FROM articulo a
-    LEFT JOIN producto_maestro pm ON a.id_producto_maestro = pm.id_producto_maestro
-    JOIN unidad_medida um ON a.id_unidad = um.id_unidad
-    WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%') OR pm.nombre_generico LIKE CONCAT('%', p_busqueda, '%'))
-      AND a.id_tipo_articulo = 1;
+SELECT a.id, a.codigo, pm.id_producto_maestro, pm.nombre_generico, a.cantidad, a.precio_compra,
+        a.precio_venta, a.peso_unitario, a.aroma, a.color, a.densidad, um.nombre AS unidad
+        FROM articulo a
+        LEFT JOIN producto_maestro pm ON a.id_producto_maestro = pm.id_producto_maestro
+        JOIN unidad_medida um ON a.id_unidad = um.id_unidad
+        WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%') OR pm.nombre_generico LIKE CONCAT('%', p_busqueda, '%'))
+        AND a.id_tipo_articulo = 1;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_insumos`$$
@@ -852,22 +852,34 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_obtener_receta_por_nombre_generico`$$
 CREATE PROCEDURE `sp_obtener_receta_por_nombre_generico`(IN p_nombre_generico VARCHAR(150))
 BEGIN
-    SELECT
-        pm.id_producto_maestro, pm.nombre_generico,
-        rp.id_receta, rp.cantidad_producir AS receta_cantidad_base,
-        um_prod.nombre AS unidad_producir_nombre,
-        rp.estado AS receta_estado, dr.id_detalle_receta,
-        a_insumo.id AS id_articulo_insumo, a_insumo.codigo AS insumo_codigo, a_insumo.descripcion AS insumo_nombre,
-        dr.cantidad_requerida AS insumo_cantidad_requerida,
-        um_insumo.nombre AS insumo_unidad_nombre
+    SELECT DISTINCT pm.id_producto_maestro, pm.nombre_generico, rp.id_receta
+    FROM producto_maestro pm
+    INNER JOIN receta_producto rp ON pm.id_producto_maestro = rp.id_producto_maestro
+    WHERE pm.nombre_generico LIKE CONCAT('%', p_nombre_generico, '%')
+    ORDER BY pm.nombre_generico, rp.id_receta;
+END$$
+
+DROP PROCEDURE IF EXISTS `sp_obtener_receta_por_nombre_generico`$$
+CREATE PROCEDURE `sp_obtener_receta_por_nombre_generico`(IN p_nombre_generico VARCHAR(150))
+BEGIN
+    SELECT DISTINCT pm.id_producto_maestro, pm.nombre_generico, rp.id_receta,
+        rp.cantidad_producir AS receta_cantidad_base, um_prod.nombre AS unidad_producir_nombre
     FROM producto_maestro pm
     INNER JOIN receta_producto rp ON pm.id_producto_maestro = rp.id_producto_maestro
     INNER JOIN unidad_medida um_prod ON rp.id_unidad_producir = um_prod.id_unidad
-    INNER JOIN detalle_receta dr ON rp.id_receta = dr.id_receta
-    INNER JOIN articulo a_insumo ON dr.id_articulo_insumo = a_insumo.id
-    INNER JOIN unidad_medida um_insumo ON dr.id_unidad_insumo = um_insumo.id_unidad
-    WHERE pm.nombre_generico = p_nombre_generico
-    ORDER BY rp.id_receta, dr.id_detalle_receta;
+    WHERE pm.nombre_generico LIKE CONCAT('%', p_nombre_generico, '%')
+    ORDER BY pm.nombre_generico;
+END$$
+
+DROP PROCEDURE IF EXISTS sp_obtener_insumos_por_id_receta$$
+CREATE PROCEDURE sp_obtener_insumos_por_id_receta(IN p_id_receta INT)
+BEGIN
+    SELECT a.id AS id_articulo, a.codigo, a.descripcion AS nombre_articulo,
+        dr.cantidad_requerida, dr.id_unidad_insumo AS id_unidad, um.nombre AS unidad_nombre
+    FROM detalle_receta dr
+    INNER JOIN articulo a ON dr.id_articulo_insumo = a.id
+    INNER JOIN unidad_medida um ON dr.id_unidad_insumo = um.id_unidad
+    WHERE dr.id_receta = p_id_receta;
 END$$
 
 DROP PROCEDURE IF EXISTS sp_crear_orden$$
