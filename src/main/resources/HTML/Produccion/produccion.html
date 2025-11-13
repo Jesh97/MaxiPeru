@@ -7,8 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="../../CSS/Produccion/produccion.css">
 </head>
 <body>
@@ -352,20 +350,36 @@
         </div>
         <div class="form-group-section">
             <h2 class="section-header danger-header">Cerrar Orden de Producción</h2>
-            <form action="" method="POST" onsubmit="finalizeOrder(event)">
+            <form action="" method="POST" onsubmit="finalizeOrden()">
                 <label>Orden a Finalizar:</label>
                 <span id="display_orden_finalizar" class="orden-activa-display display-danger">Aún no hay Orden Activa</span>
                 <input type="hidden" id="hidden_orden_finalizar" name="p_codigo_orden_finalizar" required>
-                <button type="submit" class="btn-submit btn-tab-action btn-danger"><i class="fas fa-power-off"></i> Finalizar Orden</button>
+                <button type="button" class="btn-submit btn-tab-action btn-danger" onclick="confirmFinalizeOrden()"><i class="fas fa-power-off"></i> Finalizar Orden</button>
                 <p class="alert-info"><i class="fas fa-check"></i> Marca la orden como 'Terminada' en el sistema.</p>
             </form>
         </div>
     </div>
     <div id="ListarOrdenes" class="tab-content">
         <h2 class="section-header header-secondary"><i class="fas fa-search"></i> 6. Listado de Órdenes de Producción</h2>
-        <p>Este es el contenido de la pestaña **Listar Órdenes Producción**. Aquí se cargaría el listado de órdenes mediante una solicitud AJAX al servidor después de ingresar la contraseña.</p>
-        <div style="border: 1px dashed #607D8B; padding: 15px; margin-top: 20px;">
-            **CONTENIDO DE LISTADO DE ÓRDENES**
+        <div class="form-group-section">
+            <div style="overflow-x: auto;">
+                <table class="detalle-table" id="ordenes-list-table">
+                    <thead>
+                    <tr>
+                        <th style="width: 15%;">Código</th>
+                        <th style="width: 25%;">Producto</th>
+                        <th style="width: 15%;">Cant. Prog.</th>
+                        <th style="width: 15%;">Fecha Creación</th>
+                        <th style="width: 10%;">Estado</th>
+                        <th style="width: 10%;">Lote</th>
+                        <th style="width: 10%;">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="ordenes-list-rows">
+                    <tr><td colspan="7">Se cargarán las órdenes activas aquí.</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -392,7 +406,7 @@
         </div>
 
         <div class="modal-actions">
-            <button type="button" class="btn-cancel" onclick="closeViewRecipeModal()">Cerrar</button>
+            <button type="button" class="btn-cancel" onclick="closeRecipeDetailModal()">Cerrar</button>
         </div>
     </div>
 </div>
@@ -401,28 +415,36 @@
     <div class="modal-content">
         <h3><i class="fas fa-edit"></i> Editar Insumo de Receta</h3>
         <form id="edit-detalle-form">
-            <input type="hidden" id="edit_id_detalle_receta" name="p_id_detalle_receta">
-            <input type="hidden" id="edit_id_unidad_insumo_hidden">
+            <input type="hidden" id="edit_p_id_detalle_receta" name="p_id_detalle_receta">
+            <input type="hidden" id="edit_p_id_receta" name="p_id_receta">
+            <input type="hidden" id="edit_nombre_receta">
+            <input type="hidden" id="edit_cant_base_receta">
+            <input type="hidden" id="edit_unidad_base_receta">
+            <input type="hidden" id="edit_p_id_articulo" name="p_id_articulo">
+            <input type="hidden" id="edit_p_id_unidad" name="p_id_unidad">
+            <input type="hidden" id="edit_p_densidad" name="p_densidad">
 
-            <label for="edit_nombre_insumo">Insumo:</label>
-            <input type="text" id="edit_nombre_insumo" readonly class="readonly-field">
+            <label for="edit_p_nombre_articulo">Insumo:</label>
+            <input type="text" id="edit_p_nombre_articulo" readonly class="readonly-field">
+            <p id="edit-detalle-modal-info"></p>
 
-            <label for="edit_cant_req">Nueva Cantidad Requerida:</label>
-            <input type="number" id="edit_cant_req" name="p_cant_req" step="0.001" required>
+            <label for="edit_p_cantidad_requerida">Nueva Cantidad Requerida:</label>
+            <input type="number" id="edit_p_cantidad_requerida" name="p_cantidad_requerida" step="0.0001" required>
 
-            <label for="edit_nombre_unidad">Unidad:</label>
+            <label for="edit_p_nombre_unidad">Unidad:</label>
             <div class="input-wrapper">
-                <input type="text" id="edit_nombre_unidad" readonly class="readonly-field">
+                <input type="text" id="edit_p_nombre_unidad" readonly class="readonly-field">
             </div>
 
             <div class="modal-actions">
                 <button type="button" class="btn-cancel" onclick="closeEditModal()">Cerrar</button>
                 <button type="submit" class="btn-submit btn-info"><i class="fas fa-save"></i> Guardar Cambios</button>
             </div>
-            <p id="edit-error-message" class="error-message"></p>
+            <p id="edit-detalle-modal-status" class="error-message"></p>
         </form>
     </div>
 </div>
+
 <div id="password-modal-overlay" class="modal-overlay">
     <div class="modal-content">
         <h3 id="modal-title"><i class="fas fa-lock"></i> Acceso Restringido</h3>
@@ -437,6 +459,8 @@
         <input type="hidden" id="protected-tab-color" value="">
     </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 <script src="../../JS/Produccion/produccion.js"></script>
 </body>
 </html>
