@@ -82,8 +82,6 @@
     <div id="ListarRecetas" class="tab-content">
         <h2 class="section-header header-info"><i class="fas fa-list"></i> 2. Listado de Fórmulas y Recetas</h2>
         <div class="form-group-section">
-            <h3 class="section-header header-info-secondary">Recetas Activas</h3>
-            <button type="button" class="btn-submit btn-info" onclick="loadRecetasList()" style="margin-bottom: 15px;"><i class="fas fa-sync-alt"></i> Listar Todas las Recetas</button>
             <div style="overflow-x: auto;">
                 <table class="detalle-table" id="recetas-list-table">
                     <thead>
@@ -96,7 +94,7 @@
                     </tr>
                     </thead>
                     <tbody id="recetas-list-rows">
-                    <tr><td colspan="5">Utilice el botón "Listar Todas las Recetas" para cargar los datos.</td></tr>
+                    <tr><td colspan="5">Utilice un botón que liste o refresque los datos (si fuera necesario).</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -105,18 +103,23 @@
     <div id="OrdenConsumo" class="tab-content">
         <div class="form-group-section">
             <h2 class="section-header header-warning">Generar Nueva Orden de Producción</h2>
-            <form action="" method="POST" onsubmit="saveOrden(event)">
+            <form action="" method="POST" onsubmit="saveOrden(event)" id="orden-produccion-form">
                 <input type="hidden" name="p_id_receta_orden_hidden" id="p_id_receta_orden_hidden" value="">
                 <input type="hidden" name="p_id_art_producido_orden_hidden" id="p_id_art_producido_orden_hidden" value="">
                 <input type="hidden" name="p_receta_cantidad_base_hidden" id="p_receta_cantidad_base_hidden" value="">
-                <div class="compact-fields-grid" style="grid-template-columns: repeat(2, 1fr);">
-                    <div>
+                <div class="compact-fields-grid" style="grid-template-columns: 2fr 1fr;">
+                    <div style="grid-column: span 1;">
                         <label for="buscar_receta_orden">Fórmula a Usar:</label>
                         <div class="input-wrapper">
                             <input type="text" id="buscar_receta_orden" name="p_nombre_receta" placeholder="Buscar Fórmula (por nombre)" required class="search-input-icon">
                             <i class="fas fa-search search-icon"></i>
                         </div>
                     </div>
+                    <div style="grid-column: span 1; display: flex; align-items: flex-end;">
+                        <button type="button" class="btn-submit btn-info" onclick="loadInsumosForRecipe()"><i class="fas fa-search-plus"></i> Cargar Insumos</button>
+                    </div>
+                </div>
+                <div class="compact-fields-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 15px;">
                     <div>
                         <label for="cant_prod_orden">Cantidad a Producir (Litros/Kg Programados):</label>
                         <div class="input-wrapper">
@@ -140,29 +143,30 @@
                 <div class="input-wrapper">
                     <textarea id="obs_orden" name="p_obs_orden" rows="3"></textarea>
                 </div>
-                <button type="submit" class="btn-submit btn-tab-action btn-warning"><i class="fas fa-file-alt"></i> Crear Orden</button>
-                <p class="alert-info"><i class="fas fa-info-circle"></i> La orden será usada automáticamente en los siguientes pasos.</p>
+                <p class="alert-info"><i class="fas fa-info-circle"></i> Complete la información de consumo de insumos en la siguiente sección y luego presione **Crear Orden** al final de la pestaña.</p>
             </form>
         </div>
         <div class="form-group-section">
             <h2 class="section-header header-warning">Insumos Requeridos y Consumo Real</h2>
-            <span id="display_order_recipe_status" class="orden-activa-display display-warning">Cree la Orden para cargar los insumos de la receta.</span>
+            <span id="display_order_recipe_status" class="orden-activa-display display-warning">Utilice el botón "Cargar Insumos" para preparar el consumo.</span>
             <div style="overflow-x: auto;">
                 <table class="detalle-table" style="margin-top: 15px;">
                     <thead>
                     <tr>
-                        <th style="width: 20%;">Código</th>
-                        <th style="width: 25%;">Cant. Teórica Total</th>
-                        <th style="width: 30%;">Cant. a Consumir REAL (Merma/Adición)</th>
-                        <th style="width: 15%;">Unidad</th>
-                        <th style="width: 10%;">Acción</th>
+                        <th style="width: 25%;">Insumo/Código</th>
+                        <th style="width: 15%;">Cant. Teórica Total</th>
+                        <th style="width: 20%;">Cant. a Consumir REAL (Merma/Adición)</th>
+                        <th style="width: 20%;">Cant. Total Consumida (con Unidad)</th>
+                        <th style="width: 20%;">Acción</th>
                     </tr>
                     </thead>
                     <tbody id="insumos-orden-rows">
                     </tbody>
                 </table>
             </div>
-            <p class="alert-warning"><i class="fas fa-exclamation-triangle"></i> NOTA: La cantidad real consumida se registra por insumo. Al registrar, la Orden pasa a 'En Proceso'.</p>
+            <p class="alert-warning"><i class="fas fa-exclamation-triangle"></i> NOTA: La cantidad real consumida se registra por insumo. El valor de "Merma/Adición" se suma a la "Cant. Teórica Total" para obtener la cantidad final a descontar de inventario.</p>
+
+            <button type="submit" form="orden-produccion-form" class="btn-submit btn-tab-action btn-warning"><i class="fas fa-file-alt"></i> Crear Orden</button>
         </div>
     </div>
     <div id="Empaque" class="tab-content">
