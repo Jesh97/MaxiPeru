@@ -126,7 +126,8 @@ $(document).ready(function() {
                 },
                 success: function(data) {
                     response(data.map(item => ({
-                        id: item.id,
+                        id_maestro: item.id_producto_maestro,
+                        id_articulo: item.id,
                         value: item.nombre_generico || item.descripcion,
                         label: (item.codigo || '') + ' - ' + (item.nombre_generico),
                         id_unidad: item.id_unidad,
@@ -138,7 +139,7 @@ $(document).ready(function() {
         minLength: 2,
         select: function(event, ui) {
             $("#buscar_art_ter").val(ui.item.label);
-            $('input[name="p_id_art_ter_hidden"]').val(ui.item.id);
+            $('input[name="p_id_art_ter_hidden"]').val(ui.item.id_maestro);
             $('input[name="p_id_unidad_producir"]').val('1');
             return false;
         }
