@@ -9,6 +9,10 @@ let activeNombreReceta = '';
 let activeCantBaseReceta = 0;
 let activeUnidadBaseReceta = '';
 let insumosCargadosPreviamente = false;
+function escapeJsStringForHtml(str) {
+    if (typeof str !== 'string') return str;
+    return str.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/"/g, '&quot;');
+}
 function getCurrentDateFormatted() {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -111,13 +115,11 @@ $(document).ready(function() {
                     action: "buscar_articulos_terminados",
                     busqueda: request.term
                 },
-                success:
-                function(data) {
+                success: function(data) {
                     response(data.map(item => ({
                         id: item.id,
                         value: item.nombre_generico || item.descripcion,
-                        label:
-                        (item.codigo || '') + ' - ' + (item.nombre_generico),
+                        label: (item.codigo || '') + ' - ' + (item.nombre_generico),
                         id_unidad: item.id_unidad,
                         unidad_nombre: item.unidad_nombre
                     })));
@@ -138,8 +140,7 @@ $(document).ready(function() {
                 url: PRODUCTION_SERVLET_URL,
                 type: "GET",
                 dataType: "json",
-                data:
-                {
+                data: {
                     action: "buscar_articulos_insumos",
                     busqueda: request.term
                 },
@@ -151,8 +152,7 @@ $(document).ready(function() {
                         codigo: item.codigo,
                         id_unidad: item.id_unidad,
                         unidad_nombre: item.unidad_nombre,
-                        densidad: item.densidad ||
-                        '1.00000000'
+                        densidad: item.densidad || '1.00000000'
                     })));
                 }
             });
@@ -302,9 +302,7 @@ function checkPasswordAndOpenTab() {
     if (passwordInput.value === ACCESS_PASSWORD) {
         closePasswordModal();
         openTab(null, tabName);
-        if (tabName === 'ListarRecetas') {
-            loadRecetasList();
-        } else if (tabName === 'ListarOrdenes') {
+        if (tabName === 'ListarOrdenes') {
             loadOrdenesList();
         }
     } else {
@@ -445,8 +443,7 @@ function saveFullRecipe(event) {
         return;
     }
     const idUnidadProducir = document.getElementById('p_id_unidad_producir').value;
-    const cantProd = document.getElementById('cant_prod') ?
-    document.getElementById('cant_prod').value : '1.00';
+    const cantProd = document.getElementById('cant_prod') ? document.getElementById('cant_prod').value : '1.00';
     const nombreUniProd = 'Litro';
     if (!idUnidadProducir || idUnidadProducir !== '1') {
         alert("ERROR CRÍTICO: La Unidad de Producción debe ser Litro (ID 1). Revise el campo oculto p_id_unidad_producir.");
@@ -455,7 +452,7 @@ function saveFullRecipe(event) {
     const formData = new FormData(form);
     const params = new URLSearchParams(formData);
     params.set('action', 'crear_receta_y_componentes');
-    params.set('p_id_art_ter_hidden', artTerId);
+    params.set('p_id_prod_maestro_hidden', artTerId);
     params.set('p_cant_prod', cantProd);
     params.set('p_nombre_uni_prod', nombreUniProd);
     params.set('p_id_unidad_producir', idUnidadProducir);
@@ -515,8 +512,7 @@ function loadInsumosForRecipe() {
             data.forEach(insumo => {
                 const baseReq = parseFloat(insumo.cantidad_requerida);
                 const totalReq = baseReq * scaleFactor;
-                const formattedTeorica =
-                formatTeorica(totalReq);
+                const formattedTeorica = formatTeorica(totalReq);
                 const inputId = `real-cons-${insumo.id_articulo}-${Date.now()}`;
                 const initialTotalConsumedDisplay = formatQuantityDisplay(totalReq, insumo.unidad_nombre);
                 const newRow = tableBody.insertRow();
@@ -624,19 +620,24 @@ function handleInsumoConsumption(event, rowOverride = null) {
         alert("ADVERTENCIA: Primero debe CREAR la Orden de Producción.");
         return;
     }
-    const formData = new FormData(formRow.querySelector('form'));
-    const params = new URLSearchParams(formData);
-    params.set('action', 'registrar_consumo_componente');
-    params.set('p_cantidad_consumida', totalConsumed.toFixed(4));
-    params.delete('p_cantidad_adicional');
-    params.delete('p_cantidad_teorica');
-    params.delete('p_id_orden_temp');
-    params.delete('p_operacion_ajuste');
-    params.set('p_id_orden', idOrden);
+    const idArticuloConsumido = formRow.querySelector('input[name="p_id_articulo_consumido"]').value;
+    const idUnidad = formRow.querySelector('input[name="p_id_unidad"]').value;
     const submitButton = formRow.querySelector('button[type="submit"]');
+    if (submitButton.disabled && !rowOverride) {
+        alert("Este insumo ya fue registrado.");
+        return;
+    }
     const originalContent = submitButton.innerHTML;
-    submitButton.innerHTML = '<i class="fas fa-sync fa-spin"></i>';
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     submitButton.disabled = true;
+    const params = new URLSearchParams({
+        action: 'registrar_consumo_componente',
+        p_id_orden: idOrden,
+        p_id_articulo_consumido: idArticuloConsumido,
+        p_cantidad_consumida: totalConsumed,
+        p_id_unidad: idUnidad,
+        p_es_envase: false
+    });
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
@@ -705,9 +706,19 @@ function submitEditDetalleReceta(event) {
     const nombreReceta = document.getElementById('edit_nombre_receta').value;
     const cantBase = parseFloat(document.getElementById('edit_cant_base_receta').value);
     const unidadBase = document.getElementById('edit_unidad_base_receta').value;
-    const formData = new FormData(event.target);
-    const params = new URLSearchParams(formData);
-    params.set('action', 'modificar_insumo_receta');
+    const idDetalle = document.getElementById('edit_p_id_detalle_receta').value;
+    const cantReq = document.getElementById('edit_p_cantidad_requerida').value;
+    const idUnidad = document.getElementById('edit_p_id_unidad').value;
+    if (!idDetalle || !cantReq || !idUnidad) {
+        alert("Error: Faltan datos para la actualización.");
+        return;
+    }
+    const params = new URLSearchParams({
+        action: 'actualizar_detalle_receta',
+        p_id_detalle_receta: idDetalle,
+        p_cant_req: cantReq,
+        p_id_uni_insumo: idUnidad
+    });
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
@@ -718,25 +729,25 @@ function submitEditDetalleReceta(event) {
     .then(handleJsonResponse)
     .then(data => {
         if (data.success) {
-            alert("Detalle de insumo modificado con éxito.");
-            document.getElementById('edit-detalle-modal').style.display = 'none';
+            alert("Detalle actualizado correctamente.");
+            closeEditModal();
             loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase);
         } else {
-            alert("Error al modificar detalle: " + (data.message || "Detalle desconocido."));
+            alert("Error al actualizar detalle: " + (data.message || "Detalle desconocido."));
         }
     })
     .catch(error => {
-        alert("Error de comunicación al modificar insumo: " + error.message);
+        alert("Error de comunicación al actualizar detalle: " + error.message);
     });
 }
-function confirmDeleteDetalle(idDetalle, nombreInsumo, idReceta, nombreReceta, cantBase, unidadBase) {
-    if (confirm(`¿Está seguro de QUITAR el insumo "${nombreInsumo}" de la receta "${nombreReceta}"?`)) {
-        deleteDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase);
+function confirmRemoveDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase) {
+    if (confirm("¿Está seguro de QUITAR este insumo de la receta?")) {
+        removeDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase);
     }
 }
-function deleteDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase) {
+function removeDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase) {
     const params = new URLSearchParams({
-        action: 'quitar_insumo_receta',
+        action: 'eliminar_detalle_receta',
         p_id_detalle_receta: idDetalle
     });
     fetch(PRODUCTION_SERVLET_URL, {
@@ -749,10 +760,10 @@ function deleteDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidad
     .then(handleJsonResponse)
     .then(data => {
         if (data.success) {
-            alert("Insumo quitado de la receta exitosamente.");
+            alert("Insumo quitado de la receta.");
             loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase);
         } else {
-            alert("Error al quitar el insumo: " + (data.message || "Detalle desconocido."));
+            alert("Error al quitar insumo: " + (data.message || "Detalle desconocido."));
         }
     })
     .catch(error => {
@@ -792,8 +803,13 @@ function deactivateReceta(idReceta) {
 function loadRecetasList() {
     const tableBody = document.getElementById('recetas-list-rows');
     tableBody.innerHTML = '<tr><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Cargando recetas...</td></tr>';
-    fetch(`${PRODUCTION_SERVLET_URL}?action=obtener_recetas_activas`)
-    .then(response => response.json())
+    fetch(`${PRODUCTION_SERVLET_URL}?action=listar_recetas`)
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(error => { throw new Error(error.error || `Error HTTP ${response.status}`); });
+        }
+        return response.json();
+    })
     .then(recetas => {
         tableBody.innerHTML = '';
         const uniqueRecetas = new Map();
@@ -805,10 +821,12 @@ function loadRecetasList() {
         const finalRecetas = Array.from(uniqueRecetas.values());
         if (finalRecetas.length > 0) {
             finalRecetas.forEach(receta => {
-                const nombreGenerico = (receta.nombre_generico || 'Nombre Desconocido').replace(/'/g, "\\'");
+                const nombreGenerico = receta.nombre_generico || 'Nombre Desconocido';
                 const cantidadBase = parseFloat(receta.receta_cantidad_base) || 0.00;
-                const unidadNombre = receta.unidad_nombre || 'Unidad';
+                const unidadNombre = receta.unidad_producir_nombre || 'Unidad';
                 const fechaCreacion = receta.fecha_creacion || 'Fecha Desconocida';
+                const nombreGenericoEscaped = escapeJsStringForHtml(nombreGenerico);
+                const unidadNombreEscaped = escapeJsStringForHtml(unidadNombre);
                 const newRow = tableBody.insertRow();
                 newRow.innerHTML = `
                     <td>${nombreGenerico}</td>
@@ -816,48 +834,50 @@ function loadRecetasList() {
                     <td>${unidadNombre}</td>
                     <td>${fechaCreacion}</td>
                     <td>
-                        <button type="button" class="btn-submit btn-compact btn-info" onclick="loadRecetaDetalle(${receta.id_receta}, '${nombreGenerico}', ${cantidadBase}, '${unidadNombre}')"><i class="fas fa-eye"></i> Ver Detalle</button>
-                        <button type="button" class="btn-submit btn-compact btn-danger" onclick="confirmDeactivateReceta(${receta.id_receta}, '${nombreGenerico}')"><i class="fas fa-times"></i> Desactivar</button>
+                        <button type="button" class="btn-submit btn-compact btn-info" onclick="loadRecetaDetalle(${receta.id_receta}, '${nombreGenericoEscaped}', ${cantidadBase}, '${unidadNombreEscaped}')"><i class="fas fa-eye"></i> Ver Detalle</button>
+                        <button type="button" class="btn-submit btn-compact btn-danger" onclick="confirmDeactivateReceta(${receta.id_receta}, '${nombreGenericoEscaped}')"><i class="fas fa-times"></i> Desactivar</button>
                     </td>
                 `;
             });
         } else {
-            tableBody.innerHTML = `<tr><td colspan="5">No se encontraron recetas.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center">No hay recetas activas registradas.</td></tr>`;
         }
     })
     .catch(error => {
-        tableBody.innerHTML = `<tr><td colspan="5">Error de comunicación al cargar listado: ${error.message}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error al cargar recetas: ${error.message}. Verifique la URL del Servlet.</td></tr>`;
     });
 }
 function loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase) {
+    document.getElementById('view-recipe-modal-title').textContent = `Detalle de Receta: ${nombreReceta} (Base: ${cantBase.toFixed(2)} ${unidadBase})`;
+    document.getElementById('recipe-detail-status').textContent = 'Cargando insumos...';
+    document.getElementById('recipe-detail-rows').innerHTML = '';
     document.getElementById('view-recipe-modal').style.display = 'flex';
-    document.getElementById('modal_detalle_receta_info').textContent = `Receta: ${nombreReceta} (Base: ${cantBase.toFixed(2)} ${unidadBase})`;
-    document.getElementById('modal_detalle_receta_id_display').textContent = `ID: ${idReceta}`;
-    const tableBody = document.getElementById('modal-detalle-receta-rows');
-    tableBody.innerHTML = '<tr><td colspan="4"><i class="fas fa-spinner fa-spin"></i> Cargando detalles...</td></tr>';
-    fetch(`${PRODUCTION_SERVLET_URL}?action=obtener_detalle_receta&id_receta=${idReceta}`)
+    fetch(`${PRODUCTION_SERVLET_URL}?action=obtener_insumos_receta&id_receta=${idReceta}`)
     .then(response => response.json())
     .then(data => {
+        const tableBody = document.getElementById('recipe-detail-rows');
         tableBody.innerHTML = '';
         if (data.length > 0) {
             data.forEach(insumo => {
                 const newRow = tableBody.insertRow();
+                const cantidadReq = parseFloat(insumo.cantidad_requerida);
                 newRow.innerHTML = `
-                    <td>${insumo.codigo} - ${insumo.nombre_articulo}</td>
-                    <td>${parseFloat(insumo.cantidad_requerida).toFixed(4)}</td>
-                    <td>${insumo.unidad_nombre}</td>
+                    <td>${insumo.codigo}</td>
+                    <td>${insumo.nombre_articulo}</td>
+                    <td>${cantidadReq.toFixed(4).replace(/\.?0+$/, '')} ${insumo.unidad_nombre}</td>
                     <td>
-                        <button type="button" class="btn-submit btn-compact btn-warning" onclick="loadInsumoDetalleForEdit(${insumo.id_detalle_receta}, ${idReceta}, '${nombreReceta.replace(/'/g, "\\'")}', ${cantBase}, '${unidadBase}')"><i class="fas fa-edit"></i> Editar</button>
-                        <button type="button" class="btn-submit btn-compact btn-danger" onclick="confirmDeleteDetalle(${insumo.id_detalle_receta}, '${insumo.nombre_articulo.replace(/'/g, "\\'")}', ${idReceta}, '${nombreReceta.replace(/'/g, "\\'")}', ${cantBase}, '${unidadBase}')"><i class="fas fa-trash"></i> Quitar</button>
+                        <button type="button" class="btn-submit btn-compact btn-warning" onclick="loadInsumoDetalleForEdit(${insumo.id_detalle_receta}, ${idReceta}, '${escapeJsStringForHtml(nombreReceta)}', ${cantBase}, '${escapeJsStringForHtml(unidadBase)}')"><i class="fas fa-edit"></i> Editar</button>
+                        <button type="button" class="btn-submit btn-compact btn-danger" onclick="confirmRemoveDetalleReceta(${insumo.id_detalle_receta}, ${idReceta}, '${escapeJsStringForHtml(nombreReceta)}', ${cantBase}, '${escapeJsStringForHtml(unidadBase)}')"><i class="fas fa-trash"></i> Quitar</button>
                     </td>
                 `;
             });
+            document.getElementById('recipe-detail-status').textContent = 'Detalles cargados.';
         } else {
-            tableBody.innerHTML = `<tr><td colspan="4">Esta receta no tiene insumos.</td></tr>`;
+            document.getElementById('recipe-detail-status').textContent = `Esta receta no tiene insumos.`;
         }
     })
     .catch(error => {
-        tableBody.innerHTML = `<tr><td colspan="4">Error de comunicación: ${error.message}</td></tr>`;
+        document.getElementById('recipe-detail-status').textContent = `Error de comunicación: ${error.message}`;
     });
 }
 function loadOrdenesList() {
@@ -878,11 +898,8 @@ function loadOrdenesList() {
                     <td>${orden.estado_produccion}</td>
                     <td>${orden.codigo_lote || 'N/A'}</td>
                     <td>
-                        <button type="button" class="btn-submit btn-compact btn-info" onclick="loadDetalleOrden('${orden.codigo_orden}', '${orden.nombre_articulo_terminado}', '${orden.estado_produccion}')"><i class="fas fa-eye"></i> Ver</button>
-                        ${orden.estado_produccion === 'PENDIENTE' ?
-                            `<button type="button" class="btn-submit btn-compact btn-danger" onclick="confirmCancelOrden('${orden.codigo_orden}')"><i class="fas fa-times"></i> Cancelar</button>` :
-                            ''
-                        }
+                        <button type="button" class="btn-submit btn-compact btn-info" onclick="loadDetalleOrden('${orden.codigo_orden}', '${escapeJsStringForHtml(orden.nombre_articulo_terminado)}', '${orden.estado_produccion}')"><i class="fas fa-eye"></i> Ver</button>
+                        ${orden.estado_produccion === 'PENDIENTE' ? `<button type="button" class="btn-submit btn-compact btn-danger" onclick="confirmCancelOrden('${orden.codigo_orden}')"><i class="fas fa-times"></i> Cancelar</button>` : '' }
                     </td>
                 `;
             });
@@ -928,35 +945,12 @@ function cancelOrden(codigoOrden) {
     });
 }
 function calculateLooseContainers() {
-    const rows = document.getElementById('envase-tapa-rows').querySelectorAll('tr');
-    let totalCapacity = 0;
-    let totalContainers = 0;
-    const cantProdStr = document.getElementById('cant_prod_orden').value;
-    const cantProd = parseFloat(cantProdStr) || 0;
-    rows.forEach(row => {
-        const capacityInput = row.querySelector('input[name="p_capacidad_numeric[]"]');
-        const unitSelect = row.querySelector('select[name="p_capacidad_unidad[]"]');
-        const quantityInput = row.querySelector('input[name="p_cant_a_empacar_final[]"]');
-        const capacity = parseFloat(capacityInput.value) || 0;
-        const unit = unitSelect.value;
-        const quantity = parseInt(quantityInput.value) || 0;
-        let capacityInLitres = 0;
-        if (unit === 'Litro') {
-            capacityInLitres = capacity;
-        } else if (unit === 'ml') {
-            capacityInLitres = capacity / 1000;
-        } else if (unit === 'Kg') {
-            capacityInLitres = capacity;
-        } else if (unit === 'gr') {
-            capacityInLitres = capacity / 1000;
-        }
-        totalCapacity += capacityInLitres * quantity;
-        totalContainers += quantity;
-    });
-    const difference = cantProd - totalCapacity;
-    const looseDisplay = document.getElementById('loose_containers_display');
-    const looseInput = document.getElementById('envases_sueltos_cantidad');
+    const cantProd = parseFloat(document.getElementById('cant_prod_orden_empaque').value) || 0;
+    const totalContainers = parseFloat(document.getElementById('cant_unidades_envasadas_ref').value) || 0;
+    const looseDisplay = document.getElementById('loose-containers-display');
+    const looseInput = document.getElementById('p_envases_sueltos');
     const looseInputHidden = document.getElementById('p_envases_sueltos_hidden');
+    const difference = cantProd - totalContainers;
     if (difference >= 0.001) {
         looseDisplay.style.display = 'grid';
         looseInput.value = difference.toFixed(4);
@@ -1022,34 +1016,22 @@ function submitPackagingStep(event, stepName) {
     }
     if (stepName === 'combined_envasado') {
         actionValue = 'consumo_envase_tapa_etiqueta_multiple_step';
-        if (!document.getElementById('envase-tapa-rows').querySelector('tr')) {
-            alert("ERROR: Debe agregar al menos un envase para registrar el envasado.");
-            return;
-        }
-        document.getElementById('hidden_orden_envasado').value = activeOrdenCode;
-        document.getElementById('p_id_art_ter_envasado_hidden').value = activeIdArtTerminado;
-        message = 'Envases, Tapas y Etiquetas descontados.';
+        message = 'Envase/Tapa/Etiqueta registrado correctamente.';
     } else if (stepName === 'empaque_secundario') {
-        actionValue = 'consumo_caja_step';
-        const componentId = document.getElementById('p_id_componente_caja').value;
-        if (!componentId) {
-            alert(`ERROR: Debe seleccionar un componente de empaque secundario.`);
-            return;
-        }
-        document.getElementById('hidden_orden_caja').value = activeOrdenCode;
-        document.getElementById('p_id_art_ter_caja_hidden').value = activeIdArtTerminado;
-        message = 'Empaque Secundario (Cajas) descontado.';
+        actionValue = 'consumo_empaque_step';
+        message = 'Empaque Secundario registrado correctamente.';
     } else {
-        alert("Acción de envasado no reconocida.");
+        alert("ERROR: Paso de envasado no reconocido.");
         return;
     }
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalContent = submitButton.innerHTML;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+    submitButton.disabled = true;
     const formData = new FormData(form);
     const params = new URLSearchParams(formData);
     params.set('action', actionValue);
-    const submitButton = form.querySelector('button[type="submit"]');
-    const originalContent = submitButton.innerHTML;
-    submitButton.innerHTML = '<i class="fas fa-sync fa-spin"></i>';
-    submitButton.disabled = true;
+    params.set('p_codigo_orden', activeOrdenCode);
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
@@ -1059,7 +1041,7 @@ function submitPackagingStep(event, stepName) {
     })
     .then(handleJsonResponse)
     .then(data => {
-        submitButton.innerHTML = '<i class="fas fa-check"></i> ' + (stepName === 'combined_envasado' ? 'Envase Registrado' : 'Empaque Registrado');
+        submitButton.innerHTML = (stepName === 'combined_envasado' ? 'Envase Registrado' : 'Empaque Registrado');
         submitButton.classList.remove('btn-primary');
         submitButton.classList.add('btn-success');
         if (data.success) {
@@ -1122,7 +1104,7 @@ function submitFinalLotRegistration(event) {
     document.getElementById('p_cod_lote_lote_hidden').value = activeLotCode;
     const formData = new FormData(form);
     const params = new URLSearchParams(formData);
-    params.set('action', 'registrar_lote_final');
+    params.set('action', 'registrar_lote');
     const tableBody = document.getElementById('lotes-finales-rows');
     const newRow = tableBody.insertRow();
     newRow.innerHTML = `
@@ -1137,40 +1119,28 @@ function submitFinalLotRegistration(event) {
     })
     .then(handleJsonResponse)
     .then(data => {
+        tableBody.innerHTML = '';
         if (data.success) {
-            newRow.innerHTML = `
-                <td>${activeLotCode}</td>
-                <td>${document.getElementById('cant_envases_final').value}</td>
-                <td>${document.getElementById('cant_final_litros_kg').value}</td>
-                <td>${document.getElementById('cant_etiquetas_total').value}</td>
-                <td><span class="readonly-field" style="background-color: var(--accent-success); color: white; padding: 5px;">REGISTRADO</span></td>
-            `;
-            alert(`Lote Final ${activeLotCode} registrado con éxito.`);
-            closeDetalleLoteModal();
+            alert("Lote final registrado con éxito.");
+            document.getElementById('lotes-finales-rows').innerHTML = `<tr><td colspan="5" class="text-success">Lote ${activeLotCode} registrado.</td></tr>`;
         } else {
-            newRow.innerHTML = `<td colspan="5" style="color: var(--accent-danger);">Error al registrar lote: ${data.message}</td>`;
-            alert("Error al registrar lote: " + data.message);
+            alert("Error al registrar lote final: " + data.message);
+            document.getElementById('lotes-finales-rows').innerHTML = `<tr><td colspan="5" class="text-danger">Error: ${data.message}</td></tr>`;
         }
     })
     .catch(error => {
-        newRow.innerHTML = `<td colspan="5" style="color: var(--accent-danger);">Error de comunicación: ${error.message}</td>`;
-        alert("Error de comunicación al registrar lote.");
+        tableBody.innerHTML = `<tr><td colspan="5" class="text-danger">Error de comunicación: ${error.message}</td></tr>`;
     });
 }
-function closeDetalleLoteModal() {
-    document.getElementById('registrar-lote-final-modal').style.display = 'none';
-}
-function confirmFinalizeOrden() {
-    if (confirm(`ADVERTENCIA: ¿Está seguro de FINALIZAR la Orden de Producción ${activeOrdenCode}? Esto cerrará la orden.`)) {
-        finalizeOrden();
-    }
-}
-function finalizeOrden() {
+function submitFinalizarOrden(event) {
+    event.preventDefault();
     if (!activeOrdenCode) {
         alert("ERROR: No hay una Orden de Producción activa para finalizar.");
         return;
     }
-    document.getElementById('hidden_orden_finalizar').value = activeOrdenCode;
+    if (!confirm(`¿Confirma FINALIZAR la Orden de Producción ${activeOrdenCode}?`)) {
+        return;
+    }
     const formData = new FormData(document.getElementById('finalizar-orden-form'));
     const params = new URLSearchParams(formData);
     params.set('action', 'finalizar_orden');
@@ -1209,23 +1179,32 @@ function updateOrdenFields() {
         { suffix: 'finalizar', colorSuffix: 'danger' },
         { suffix: 'lote', colorSuffix: 'success' },
     ];
-    fields.forEach(({ suffix, colorSuffix }) => {
-        const displayElement = document.getElementById('display_orden_' + suffix);
-        const displayText = activeOrdenCode ? `Orden Activa: ${activeNombreArtTerminado} (Cód: ${activeOrdenCode})` : 'Aún no hay Orden Activa';
+    document.getElementById('active-orden-code-display').textContent = activeOrdenCode || 'N/A';
+    fields.forEach(f => {
+        const displayElement = document.getElementById(`display_orden_${f.suffix}`);
+        const hiddenElement = document.getElementById(`hidden_orden_${f.suffix}`);
         if (displayElement) {
-            displayElement.classList.remove('display-success', 'display-warning', 'display-primary', 'display-danger', 'display-info', 'display-secondary');
-            displayElement.classList.add('display-' + colorSuffix);
-            displayElement.textContent = displayText;
+            displayElement.textContent = activeOrdenCode || 'Aún no hay Orden Activa';
+            if (activeOrdenCode) {
+                displayElement.classList.remove(`display-${f.colorSuffix}`);
+                displayElement.classList.add(`display-${f.colorSuffix}`);
+            } else {
+                displayElement.classList.add(`display-${f.colorSuffix}`);
+            }
         }
+        if (hiddenElement) hiddenElement.value = activeOrdenCode;
     });
-    if (activeOrdenCode) {
-        document.getElementById('hidden_orden_envasado').value = activeOrdenCode;
-        document.getElementById('hidden_orden_caja').value = activeOrdenCode;
-        document.getElementById('hidden_orden_lote_submit').value = activeOrdenCode;
-        document.getElementById('hidden_orden_finalizar').value = activeOrdenCode;
-        document.getElementById('hidden_orden_merma_submit').value = activeOrdenCode;
-    } else {
-        ['hidden_orden_envasado', 'hidden_orden_caja', 'hidden_orden_lote_submit', 'hidden_orden_finalizar', 'hidden_orden_merma_submit'].forEach(id => {
+    document.getElementById('producto_a_envasar').value = activeNombreArtTerminado || 'Cargado de Orden Activa';
+    const cleanFields = [
+        'buscar_receta_orden',
+        'cant_prod_orden',
+        'p_id_receta_orden_hidden',
+        'p_id_art_producido_orden_hidden',
+        'p_receta_cantidad_base_hidden',
+        'cant_prod_orden_empaque',
+    ];
+    if (!activeOrdenCode) {
+        cleanFields.forEach(id => {
             const element = document.getElementById(id);
             if (element) element.value = '';
         });
@@ -1235,12 +1214,14 @@ function updateOrdenFields() {
         document.getElementById('p_id_art_ter_envasado_hidden').value = activeIdArtTerminado;
         document.getElementById('p_id_art_ter_caja_hidden').value = activeIdArtTerminado;
         document.getElementById('p_id_art_ter_lote_hidden').value = activeIdArtTerminado;
+        document.getElementById('p_id_art_ter_empaque').value = activeIdArtTerminado;
     } else {
         const defaultText = 'Cargado de Orden Activa';
         document.getElementById('producto_a_envasar').value = defaultText;
         document.getElementById('p_id_art_ter_envasado_hidden').value = '';
         document.getElementById('p_id_art_ter_caja_hidden').value = '';
         document.getElementById('p_id_art_ter_lote_hidden').value = '';
+        document.getElementById('p_id_art_ter_empaque').value = '';
     }
     if (activeLotCode) {
         document.getElementById('cod_lote_ref_lotes').value = activeLotCode;
@@ -1249,7 +1230,4 @@ function updateOrdenFields() {
         document.getElementById('cod_lote_ref_lotes').value = 'Generar';
         document.getElementById('p_cod_lote_lote_hidden').value = '';
     }
-    document.getElementById('cant_envases_final').value = '';
-    document.getElementById('cant_final_litros_kg').value = '';
-    document.getElementById('cant_etiquetas_total').value = '';
 }

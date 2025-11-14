@@ -47,7 +47,7 @@ public class ProduccionServlet extends HttpServlet {
         try {
             switch (action) {
                 case "crear_receta_y_componentes" -> {
-                    String idProdMaestroStr = request.getParameter("p_id_prod_maestro_hidden");
+                    String idProdMaestroStr = request.getParameter("p_id_art_ter_hidden");
                     String cantProdStr = request.getParameter("p_cant_prod");
                     String idUniProdStr = request.getParameter("p_id_unidad_producir");
 
@@ -396,7 +396,7 @@ public class ProduccionServlet extends HttpServlet {
                     response.getWriter().write(gson.toJson(jsonResponse));
                     return;
                 }
-                case "obtener_insumos_orden_activa" -> {
+                case "obtener_insumos_receta" -> {
                     String idRecetaStr = request.getParameter("id_receta");
                     if (idRecetaStr == null || idRecetaStr.isEmpty()) {
                         throw new IllegalArgumentException("ID de Receta no especificado.");
