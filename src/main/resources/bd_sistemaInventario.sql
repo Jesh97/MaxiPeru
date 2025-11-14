@@ -413,6 +413,7 @@ id_producto_maestro INT NOT NULL,
 cantidad_producir DECIMAL(12,5) NOT NULL,
 id_unidad_producir INT NOT NULL,
 estado ENUM('Activa', 'Inactiva', 'Borrador') NOT NULL DEFAULT 'Activa',
+fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(),
 FOREIGN KEY (id_producto_maestro) REFERENCES producto_maestro(id_producto_maestro) ON DELETE RESTRICT,
 FOREIGN KEY (id_unidad_producir) REFERENCES unidad_medida(id_unidad) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

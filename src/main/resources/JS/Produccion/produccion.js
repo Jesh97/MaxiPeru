@@ -1,5 +1,6 @@
 const ACCESS_PASSWORD = '1234';
 const PRODUCTION_SERVLET_URL = '/ProduccionServlet';
+
 let activeOrdenCode = '';
 let activeLotCode = '';
 let activeIdArtTerminado = '';
@@ -9,10 +10,12 @@ let activeNombreReceta = '';
 let activeCantBaseReceta = 0;
 let activeUnidadBaseReceta = '';
 let insumosCargadosPreviamente = false;
+
 function escapeJsStringForHtml(str) {
     if (typeof str !== 'string') return str;
     return str.replace(/\\/g, '\\\\').replace(/'/g, '\\\'').replace(/"/g, '&quot;');
 }
+
 function getCurrentDateFormatted() {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -20,6 +23,7 @@ function getCurrentDateFormatted() {
     const dd = String(today.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
 }
+
 function extractNumericCapacity(capacityString) {
     if (typeof capacityString !== 'string') return { value: 1.0, unit: 'Litro' };
     const numericCapacityMatch = capacityString.match(/^(\d+(\.\d+)?)/);
@@ -39,11 +43,13 @@ function extractNumericCapacity(capacityString) {
     }
     return { value: numericValue, unit: unitValue };
 }
+
 function formatTeorica(num) {
     if (typeof num !== 'number') return num;
     let formatted = num.toFixed(8).replace(/\.?0+$/, '');
     return formatted.replace('.', ',');
 }
+
 function formatQuantityDisplay(qty, unitName) {
     let formattedQty = qty.toFixed(4);
     formattedQty = formattedQty.replace(/\.?0+$/, '');
@@ -62,6 +68,7 @@ function formatQuantityDisplay(qty, unitName) {
     }
     return `${formattedQty} ${abbreviatedUnit}`;
 }
+
 function calculateTotalConsumption(row) {
     const theoreticalCell = row.querySelector('.teorica-quantity');
     const realInput = row.querySelector('.real-consumption');
@@ -85,6 +92,7 @@ function calculateTotalConsumption(row) {
     const finalTotalDisplay = formatQuantityDisplay(totalQty, unit);
     totalDisplay.textContent = finalTotalDisplay;
 }
+
 function adjustQuantity(inputId, delta, isConsumption) {
     const input = document.getElementById(inputId);
     let currentValue = parseFloat(input.value) || 0;
@@ -100,6 +108,7 @@ function adjustQuantity(inputId, delta, isConsumption) {
         updateTotalUnitsReference();
     }
 }
+
 $(document).ready(function() {
     const fechaIniInput = document.getElementById('fecha_ini');
     if (fechaIniInput && !fechaIniInput.value) {
@@ -262,6 +271,7 @@ $(document).ready(function() {
     }
     document.getElementById('edit-detalle-form').addEventListener('submit', submitEditDetalleReceta);
 });
+
 function getPackagingAutocompleteSource(tipoComponente) {
     return function(request, response) {
         $.ajax({
@@ -285,6 +295,7 @@ function getPackagingAutocompleteSource(tipoComponente) {
         });
     };
 }
+
 function showPasswordModal(tabName, colorSuffix) {
     document.getElementById('password-modal-overlay').style.display = 'flex';
     document.getElementById('protected-tab-name').value = tabName;
@@ -292,9 +303,11 @@ function showPasswordModal(tabName, colorSuffix) {
     document.getElementById('password-input').value = '';
     document.getElementById('password-error').textContent = '';
 }
+
 function closePasswordModal() {
     document.getElementById('password-modal-overlay').style.display = 'none';
 }
+
 function checkPasswordAndOpenTab() {
     const passwordInput = document.getElementById('password-input');
     const errorDisplay = document.getElementById('password-error');
@@ -309,9 +322,11 @@ function checkPasswordAndOpenTab() {
         errorDisplay.textContent = 'Contraseña incorrecta. Intente de nuevo.';
     }
 }
+
 function openProtectedTab(evt, tabName, colorSuffix) {
     showPasswordModal(tabName, colorSuffix);
 }
+
 function openTab(evt, tabName) {
     const tabContent = document.getElementsByClassName("tab-content");
     for (let i = 0; i < tabContent.length; i++) {
@@ -329,12 +344,15 @@ function openTab(evt, tabName) {
     }
     updateOrdenFields();
 }
+
 function deleteRow(btn) {
     btn.parentNode.parentNode.remove();
 }
+
 function addRowFromSearch() {
     alert("La adición de insumos se realiza automáticamente al seleccionar un elemento de la lista desplegable de búsqueda.");
 }
+
 function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
     const tableBody = document.getElementById(tableId);
     const newRow = tableBody.insertRow();
@@ -344,7 +362,7 @@ function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
         <td><input type="text" name="p_nombre_art_insumo[]" value="${name}" required placeholder="Nombre Insumo"></td>
         <td class="quantity-control-receta">
             <button type="button" class="btn-qty-minus" onclick="adjustQuantity('${inputId}', -1)">-</button>
-            <input type="number" id="${inputId}" name="p_cant_req[]" value="${qty}" step="0.0001" required placeholder="Cantidad">
+            <input type="number" id="${inputId}" name="p_cant_req[]" value="${qty}" step="0.00001" required placeholder="Cantidad">
             <button type="button" class="btn-qty-plus" onclick="adjustQuantity('${inputId}', 1)">+</button>
         </td>
         <td><input type="text" name="p_nombre_uni_insumo[]" value="${unitName}" readonly class="readonly-field" placeholder="Unidad"></td>
@@ -355,6 +373,7 @@ function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
         <input type="hidden" name="p_id_uni_insumo_hidden[]" value="${unitId}">
     `;
 }
+
 function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
     const tableBody = document.getElementById('envase-tapa-rows');
     const newRow = tableBody.insertRow();
@@ -392,6 +411,7 @@ function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
     `;
     updateTotalUnitsReference();
 }
+
 function assignTapaToRow(rowId) {
     const tapaId = document.getElementById('p_id_tapa_seleccionada_hidden').value;
     const tapaLabel = document.getElementById('selected_tapa_display').textContent;
@@ -411,6 +431,7 @@ function assignTapaToRow(rowId) {
     tapaNombreHidden.value = tapaName;
     alert(`Tapa ${tapaName} asignada al envase.`);
 }
+
 function handleJsonResponse(response) {
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
@@ -429,6 +450,7 @@ function handleJsonResponse(response) {
     }
     throw new Error("Respuesta del servidor en formato desconocido.");
 }
+
 function saveFullRecipe(event) {
     event.preventDefault();
     const form = event.target;
@@ -481,6 +503,7 @@ function saveFullRecipe(event) {
         }
     });
 }
+
 function loadInsumosForRecipe() {
     const idReceta = document.getElementById('p_id_receta_orden_hidden').value;
     const cantProdStr = document.getElementById('cant_prod_orden').value;
@@ -556,6 +579,7 @@ function loadInsumosForRecipe() {
         statusDisplay.textContent = `Error al cargar insumos: ${error.message}.`;
     });
 }
+
 function saveOrden(event) {
     event.preventDefault();
     const idReceta = document.getElementById('p_id_receta_orden_hidden').value;
@@ -610,6 +634,7 @@ function saveOrden(event) {
         }
     });
 }
+
 function handleInsumoConsumption(event, rowOverride = null) {
     event.preventDefault();
     const formRow = rowOverride || event.target.closest('tr');
@@ -664,9 +689,11 @@ function handleInsumoConsumption(event, rowOverride = null) {
         }
     });
 }
+
 function closeRecipeDetailModal() {
     document.getElementById('view-recipe-modal').style.display = 'none';
 }
+
 function loadInsumoDetalleForEdit(idDetalle, idReceta, nombreReceta, cantBase, unidadBase) {
     document.getElementById('edit-detalle-modal-info').textContent = `Receta: ${nombreReceta} (Base: ${cantBase.toFixed(2)} ${unidadBase})`;
     document.getElementById('edit_p_id_receta').value = idReceta;
@@ -697,9 +724,11 @@ function loadInsumoDetalleForEdit(idDetalle, idReceta, nombreReceta, cantBase, u
     });
     document.getElementById('edit-detalle-modal').style.display = 'flex';
 }
+
 function closeEditModal() {
     document.getElementById('edit-detalle-modal').style.display = 'none';
 }
+
 function submitEditDetalleReceta(event) {
     event.preventDefault();
     const idReceta = document.getElementById('edit_p_id_receta').value;
@@ -740,11 +769,13 @@ function submitEditDetalleReceta(event) {
         alert("Error de comunicación al actualizar detalle: " + error.message);
     });
 }
+
 function confirmRemoveDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase) {
     if (confirm("¿Está seguro de QUITAR este insumo de la receta?")) {
         removeDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase);
     }
 }
+
 function removeDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase) {
     const params = new URLSearchParams({
         action: 'eliminar_detalle_receta',
@@ -770,11 +801,13 @@ function removeDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidad
         alert("Error de comunicación al quitar insumo: " + error.message);
     });
 }
+
 function confirmDeactivateReceta(idReceta, nombreReceta) {
     if (confirm(`ADVERTENCIA: ¿Está seguro de DESACTIVAR la Receta "${nombreReceta}" (ID: ${idReceta})? Esto impedirá su uso en nuevas órdenes.`)) {
         deactivateReceta(idReceta);
     }
 }
+
 function deactivateReceta(idReceta) {
     const params = new URLSearchParams({
         action: 'desactivar_receta',
@@ -800,6 +833,7 @@ function deactivateReceta(idReceta) {
         alert("Error de comunicación al desactivar receta: " + error.message);
     });
 }
+
 function loadRecetasList() {
     const tableBody = document.getElementById('recetas-list-rows');
     tableBody.innerHTML = '<tr><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Cargando recetas...</td></tr>';
@@ -847,6 +881,7 @@ function loadRecetasList() {
         tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error al cargar recetas: ${error.message}. Verifique la URL del Servlet.</td></tr>`;
     });
 }
+
 function loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase) {
     document.getElementById('view-recipe-modal-title').textContent = `Detalle de Receta: ${nombreReceta} (Base: ${cantBase.toFixed(2)} ${unidadBase})`;
     document.getElementById('recipe-detail-status').textContent = 'Cargando insumos...';
@@ -880,6 +915,7 @@ function loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase) {
         document.getElementById('recipe-detail-status').textContent = `Error de comunicación: ${error.message}`;
     });
 }
+
 function loadOrdenesList() {
     const tableBody = document.getElementById('ordenes-list-rows');
     tableBody.innerHTML = '<tr><td colspan="7"><i class="fas fa-spinner fa-spin"></i> Cargando órdenes...</td></tr>';
@@ -911,14 +947,17 @@ function loadOrdenesList() {
         tableBody.innerHTML = `<tr><td colspan="7">Error de comunicación al cargar listado: ${error.message}</td></tr>`;
     });
 }
+
 function loadDetalleOrden(codigoOrden, nombreArticulo, estado) {
     alert(`Cargando detalle de la Orden: ${codigoOrden} (${nombreArticulo}, Estado: ${estado})`);
 }
+
 function confirmCancelOrden(codigoOrden) {
     if (confirm(`¿Está seguro de CANCELAR la Orden de Producción ${codigoOrden}? Esta acción no se puede deshacer.`)) {
         cancelOrden(codigoOrden);
     }
 }
+
 function cancelOrden(codigoOrden) {
     const params = new URLSearchParams({
         action: 'cancelar_orden',
@@ -944,6 +983,7 @@ function cancelOrden(codigoOrden) {
         alert("Error de comunicación al cancelar orden: " + error.message);
     });
 }
+
 function calculateLooseContainers() {
     const cantProd = parseFloat(document.getElementById('cant_prod_orden_empaque').value) || 0;
     const totalContainers = parseFloat(document.getElementById('cant_unidades_envasadas_ref').value) || 0;
@@ -961,6 +1001,7 @@ function calculateLooseContainers() {
         looseDisplay.style.display = 'none';
     }
 }
+
 function updateTotalUnitsReference() {
     const rows = document.getElementById('envase-tapa-rows').querySelectorAll('tr');
     let totalContainers = 0;
@@ -977,6 +1018,7 @@ function updateTotalUnitsReference() {
     if (cantFinalLotes) cantFinalLotes.value = totalContainersFixed;
     calculateLooseContainers();
 }
+
 function generateLotCode(event) {
     event.preventDefault();
     if (!activeOrdenCode) {
@@ -1001,6 +1043,7 @@ function generateLotCode(event) {
         alert("Error de comunicación con el servidor al generar código de lote.");
     });
 }
+
 function submitPackagingStep(event, stepName) {
     event.preventDefault();
     const form = event.target;
@@ -1060,6 +1103,7 @@ function submitPackagingStep(event, stepName) {
         }
     });
 }
+
 function submitMerma(event) {
     event.preventDefault();
     if (!activeOrdenCode || !activeLotCode) {
@@ -1092,6 +1136,7 @@ function submitMerma(event) {
         }
     });
 }
+
 function submitFinalLotRegistration(event) {
     event.preventDefault();
     const form = event.target;
@@ -1132,6 +1177,7 @@ function submitFinalLotRegistration(event) {
         tableBody.innerHTML = `<tr><td colspan="5" class="text-danger">Error de comunicación: ${error.message}</td></tr>`;
     });
 }
+
 function submitFinalizarOrden(event) {
     event.preventDefault();
     if (!activeOrdenCode) {
@@ -1173,6 +1219,7 @@ function submitFinalizarOrden(event) {
         }
     });
 }
+
 function updateOrdenFields() {
     const fields = [
         { suffix: 'envase', colorSuffix: 'primary' },

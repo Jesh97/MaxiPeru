@@ -838,15 +838,50 @@ END$$
 DROP PROCEDURE IF EXISTS sp_crear_receta$$
 CREATE PROCEDURE sp_crear_receta(IN p_id_prod_maestro INT, IN p_cant_prod DECIMAL(12,4), IN p_id_uni_prod INT)
 BEGIN
-    INSERT INTO receta_producto (id_producto_maestro, cantidad_producir, id_unidad_producir, estado)
-    VALUES (p_id_prod_maestro, p_cant_prod, p_id_uni_prod, 'Activa');
-    SELECT LAST_INSERT_ID() AS id_receta;
+INSERT INTO receta_producto (id_producto_maestro, cantidad_producir, id_unidad_producir, estado)
+VALUES (p_id_prod_maestro, p_cant_prod, p_id_uni_prod, 'Activa');
+SELECT LAST_INSERT_ID() AS id_receta;
 END $$
+
 DROP PROCEDURE IF EXISTS sp_detalle_receta$$
 CREATE PROCEDURE sp_detalle_receta(IN p_id_receta INT, IN p_id_art_insumo INT, IN p_cant_req DECIMAL(12,6), IN p_id_uni_insumo INT)
 BEGIN
-    INSERT INTO detalle_receta (id_receta, id_articulo_insumo, cantidad_requerida, id_unidad_insumo)
-    VALUES (p_id_receta, p_id_art_insumo, p_cant_req, p_id_uni_insumo);
+INSERT INTO detalle_receta (id_receta, id_articulo_insumo, cantidad_requerida, id_unidad_insumo)
+VALUES (p_id_receta, p_id_art_insumo, p_cant_req, p_id_uni_insumo);
+END$$
+
+DROP PROCEDURE IF EXISTS sp_listar_recetas_con_detalles$$
+CREATE PROCEDURE sp_listar_recetas_con_detalles()
+BEGIN
+    SELECT RP.id_receta, RP.id_producto_maestro, PM.nombre_generico, RP.cantidad_producir AS receta_cantidad_base,
+        UM.nombre AS unidad_producir_nombre, RP.fecha_creacion AS fecha_creacion, RP.estado
+    FROM receta_producto RP
+    JOIN producto_maestro PM ON RP.id_producto_maestro = PM.id_producto_maestro
+    JOIN unidad_medida UM ON RP.id_unidad_producir = UM.id_unidad
+    ORDER BY RP.id_receta DESC;
+END$$
+
+DROP PROCEDURE IF EXISTS sp_actualizar_insumo_receta$$
+CREATE PROCEDURE sp_actualizar_insumo_receta(IN p_id_detalle_receta INT, IN p_cant_req DECIMAL(12,6), IN p_id_uni_insumo INT)
+BEGIN
+UPDATE detalle_receta
+SET cantidad_requerida = p_cant_req, id_unidad_insumo = p_id_uni_insumo
+WHERE id_detalle_receta = p_id_detalle_receta;
+END$$
+
+DROP PROCEDURE IF EXISTS sp_eliminar_detalle_receta_individual$$
+CREATE PROCEDURE sp_eliminar_detalle_receta_individual(IN p_id_detalle_receta INT)
+BEGIN
+DELETE FROM detalle_receta
+WHERE id_detalle_receta = p_id_detalle_receta;
+END$$
+
+DROP PROCEDURE IF EXISTS sp_desactivar_receta$$
+CREATE PROCEDURE sp_desactivar_receta(IN p_id_receta INT)
+BEGIN
+UPDATE receta_producto
+SET estado = 'Inactiva'
+WHERE id_receta = p_id_receta;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_obtener_receta_por_nombre_generico`$$
