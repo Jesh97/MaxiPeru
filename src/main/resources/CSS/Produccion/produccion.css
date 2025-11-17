@@ -5,15 +5,16 @@
     --text-color-medium: #6b7280;
     --border-color-light: #d1d5db;
     --accent-primary: #1e40af;
-    --accent-success: #059669;
     --accent-warning: #d97706;
     --accent-danger: #dc2626;
-    --spacing-large: 30px;
-    --spacing-medium: 20px;
-    --spacing-small: 15px;
+    --spacing-large: 25px;
+    --spacing-medium: 15px;
+    --spacing-small: 10px;
     --font-base: 14px;
     --font-small: 0.85em;
     --padding-page: 20px;
+    --shadow-elevation-1: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    --shadow-elevation-2: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 html, body {
@@ -47,15 +48,15 @@ h1 {
     font-weight: 800;
     font-size: 2.2em;
     text-align: left;
-    border-bottom: 2px solid var(--border-color-light);
-    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color-light);
+    padding-bottom: 10px;
     display: flex;
     align-items: center;
 }
 
 h1 i {
-    margin-right: 12px;
-    color: var(--accent-success);
+    margin-right: 10px;
+    color: var(--accent-primary);
     font-size: 1.1em;
 }
 
@@ -63,7 +64,7 @@ h1 i {
     font-size: 1.4em;
     font-weight: 700;
     color: var(--accent-primary);
-    padding: 8px 0;
+    padding: 6px 0;
     margin: 0 0 var(--spacing-medium) 0;
     border-bottom: 1px solid var(--border-color-light);
     display: flex;
@@ -74,8 +75,8 @@ h1 i {
     border-bottom-color: var(--accent-danger);
 }
 .section-header.header-success {
-    color: var(--accent-success);
-    border-bottom-color: var(--accent-success);
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
 }
 .section-header.header-warning {
     color: var(--accent-warning);
@@ -92,15 +93,15 @@ h1 i {
     margin-bottom: var(--spacing-large);
     flex-wrap: wrap;
     background-color: var(--container-bg);
-    border-radius: 6px;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    box-shadow: var(--shadow-elevation-1);
     overflow: hidden;
 }
 
 .tab-button {
     display: flex;
     align-items: center;
-    padding: 12px 18px;
+    padding: 10px 15px;
     cursor: pointer;
     border: none;
     background-color: transparent;
@@ -114,7 +115,7 @@ h1 i {
 }
 
 .tab-button i {
-    margin-right: 6px;
+    margin-right: 5px;
     font-size: 0.95em;
 }
 
@@ -130,8 +131,8 @@ h1 i {
     background-color: var(--global-bg);
 }
 .tab-button.active-success {
-    color: var(--accent-success);
-    border-bottom: 3px solid var(--accent-success);
+    color: var(--accent-primary);
+    border-bottom: 3px solid var(--accent-primary);
 }
 .tab-button.active-warning {
     color: var(--accent-warning);
@@ -181,11 +182,11 @@ h1 i {
 
 .form-group-section label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     font-weight: 600;
     color: var(--text-color-dark);
     font-size: 0.95em;
-    margin-top: 15px;
+    margin-top: 12px;
 }
 .form-group-section label:first-of-type {
     margin-top: 0;
@@ -193,14 +194,14 @@ h1 i {
 
 .input-wrapper {
     position: relative;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .input-wrapper input,
 .input-wrapper select,
 .input-wrapper textarea {
     width: 100%;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border: 1px solid var(--border-color-light);
     border-radius: 6px;
     box-sizing: border-box;
@@ -214,7 +215,7 @@ h1 i {
 .input-wrapper textarea:focus,
 .input-wrapper select:focus {
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    box-shadow: 0 0 0 2px var(--accent-primary)1A;
     outline: none;
 }
 
@@ -229,12 +230,12 @@ h1 i {
     border-right: none;
     border-radius: 6px 0 0 6px;
     cursor: not-allowed;
-    padding: 10px 8px;
+    padding: 8px 8px;
 }
 .fixed-unit-input span {
-    padding: 10px 12px;
+    padding: 8px 10px;
     background-color: #e5e7eb;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--border-color-light);
     border-left: none;
     border-radius: 0 6px 6px 0;
     color: var(--text-color-medium);
@@ -244,8 +245,8 @@ h1 i {
 
 .compact-fields-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 15px 25px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px 20px;
     margin-bottom: var(--spacing-medium);
 }
 .compact-fields-grid label {
@@ -256,13 +257,13 @@ h1 i {
 }
 
 .search-input-icon {
-    padding-right: 40px !important;
+    padding-right: 35px !important;
 }
 
 .input-wrapper .search-icon {
     position: absolute;
     top: 50%;
-    right: 12px;
+    right: 10px;
     transform: translateY(-50%);
     color: var(--text-color-medium);
     pointer-events: none;
@@ -274,8 +275,8 @@ h1 i {
     align-items: center;
     justify-content: center;
     background-color: var(--accent-primary);
-    color: white;
-    padding: 10px 20px;
+    color: var(--container-bg);
+    padding: 8px 18px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -283,14 +284,14 @@ h1 i {
     font-weight: 700;
     margin-top: var(--spacing-medium);
     transition: background-color 0.3s ease, transform 0.2s, box-shadow 0.3s;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    min-width: 120px;
+    box-shadow: var(--shadow-elevation-1);
+    min-width: 100px;
 }
 .btn-submit.btn-tab-action {
     background-color: var(--accent-primary);
 }
 .btn-submit.btn-success {
-    background-color: var(--accent-success);
+    background-color: var(--accent-primary);
 }
 .btn-submit.btn-warning {
     background-color: var(--accent-warning);
@@ -299,14 +300,14 @@ h1 i {
     background-color: var(--accent-danger);
 }
 .btn-submit.btn-add {
-    padding: 8px 12px;
+    padding: 6px 10px;
     min-width: auto;
     margin-top: 0;
 }
 
 
 .btn-submit i {
-    margin-right: 8px;
+    margin-right: 6px;
 }
 
 .btn-submit:hover {
@@ -316,13 +317,13 @@ h1 i {
 }
 .detalle-table .remove-row {
     background-color: var(--accent-danger);
-    color: white;
+    color: var(--container-bg);
     border: none;
-    padding: 6px 8px;
+    padding: 4px 6px;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    font-size: var(--font-small);
+    font-size: 0.8em;
 }
 .detalle-table .remove-row:hover {
     background-color: #b91c1c;
@@ -330,19 +331,19 @@ h1 i {
 
 .detalle-table {
     width: 100%;
-    border-collapse: separate;
+    border-collapse: collapse;
     border-spacing: 0;
     margin-top: var(--spacing-medium);
     border-radius: 6px;
     overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-elevation-1);
 }
 
 .detalle-table th, .detalle-table td {
     border: 1px solid var(--border-color-light);
-    padding: 10px 10px;
+    padding: 6px 8px;
     text-align: left;
-    font-size: var(--font-small);
+    font-size: 0.85em;
     color: var(--text-color-dark);
     vertical-align: middle;
 }
@@ -358,15 +359,16 @@ h1 i {
 }
 
 .detalle-table input {
-    padding: 6px 8px !important;
-    border-color: #d1d5db !important;
+    padding: 4px 6px !important;
+    border-color: var(--border-color-light) !important;
     margin: 0 !important;
     border-radius: 4px;
-    background-color: #fff !important;
+    background-color: var(--container-bg) !important;
     width: 100%;
     box-sizing: border-box;
     text-align: left;
-    font-size: 1em !important;
+    font-size: 0.95em !important;
+    height: auto;
 }
 
 .detalle-table input[type="number"] {
@@ -375,7 +377,7 @@ h1 i {
 
 .detalle-table input.readonly-field {
     border: none !important;
-    background: #f3f4f6 !important;
+    background: var(--global-bg) !important;
     color: var(--text-color-medium) !important;
     box-shadow: none !important;
     cursor: default;
@@ -383,7 +385,7 @@ h1 i {
 
 .insumo-search-container {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: flex-end;
     margin-bottom: var(--spacing-medium);
     padding-bottom: 0;
@@ -402,13 +404,13 @@ h1 i {
 }
 
 .readonly-field:not(.detalle-table input) {
-    background-color: #f3f4f6 !important;
+    background-color: var(--global-bg) !important;
     color: var(--text-color-medium) !important;
     cursor: default;
 }
 
 .orden-activa-display {
-    padding: 12px;
+    padding: 10px;
     background-color: #eff6ff;
     border: 1px solid var(--accent-primary);
     font-weight: 700;
@@ -420,9 +422,9 @@ h1 i {
     text-align: center;
 }
 .orden-activa-display.display-success {
-    border-color: var(--accent-success);
-    color: var(--accent-success);
-    background-color: #ecfdf5;
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background-color: #eff6ff;
 }
 .orden-activa-display.display-warning {
     border-color: var(--accent-warning);
@@ -446,19 +448,19 @@ h1 i {
     margin-top: var(--spacing-medium);
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-elevation-2);
 }
 
 .formula-table th, .formula-table td {
-    padding: 12px 15px;
+    padding: 8px 10px;
     text-align: left;
     border-bottom: 1px solid #e0e0e0;
-    font-size: var(--font-small);
+    font-size: 0.9em;
 }
 
 .formula-table th {
     background-color: var(--accent-primary);
-    color: white;
+    color: var(--container-bg);
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.85em;
@@ -479,8 +481,8 @@ h1 i {
 }
 
 .formula-actions button {
-    margin-left: 8px;
-    padding: 6px 10px;
+    margin-left: 6px;
+    padding: 4px 8px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -491,7 +493,7 @@ h1 i {
 
 .formula-actions .btn-view {
     background-color: var(--accent-primary);
-    color: white;
+    color: var(--container-bg);
 }
 .formula-actions .btn-view:hover {
     background-color: #1c3383;
@@ -507,7 +509,7 @@ h1 i {
 
 .formula-actions .btn-delete {
     background-color: var(--accent-danger);
-    color: white;
+    color: var(--container-bg);
 }
 .formula-actions .btn-delete:hover {
     background-color: #991b1b;
@@ -522,20 +524,20 @@ h1 i {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.7);
-    backdrop-filter: blur(4px);
+    background-color: rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
     justify-content: center;
     align-items: center;
 }
 
 .modal-content {
-    background-color: #fff;
+    background-color: var(--container-bg);
     padding: 25px;
-    border: none;
+    border: 2px solid var(--accent-primary); /* Borde de color primario */
     width: 90%;
-    max-width: 800px;
-    border-radius: 12px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    max-width: 650px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 0 5px rgba(30, 64, 175, 0.1); /* Sombra más fuerte y sutil glow */
     position: relative;
     animation: fadeIn 0.3s ease-out;
     max-height: 90vh;
@@ -543,28 +545,28 @@ h1 i {
     text-align: left;
 }
 @keyframes fadeIn {
-    from {opacity: 0; transform: scale(0.95);}
-    to {opacity: 1; transform: scale(1);}
+    from {opacity: 0; transform: translateY(-20px) scale(0.98);}
+    to {opacity: 1; transform: translateY(0) scale(1);}
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--accent-primary);
-    padding-bottom: 15px;
-    margin-bottom: 20px;
+    border-bottom: 3px solid var(--accent-primary); /* Borde inferior más grueso */
+    padding-bottom: 10px;
+    margin-bottom: 15px;
 }
 .modal-title-detail {
     color: var(--accent-primary);
-    font-size: 1.8em;
+    font-size: 1.7em;
     font-weight: 800;
     margin: 0;
 }
 .modal-close-btn {
     background: none;
     border: none;
-    font-size: 1.8em;
+    font-size: 1.7em;
     color: var(--text-color-medium);
     cursor: pointer;
     line-height: 1;
@@ -576,24 +578,24 @@ h1 i {
 
 .formula-detail-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px 30px;
-    margin-bottom: 25px;
-    padding: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px 20px;
+    margin-bottom: 20px;
+    padding: 8px;
     border: 1px solid #f0f0f0;
     border-radius: 6px;
     background-color: #fcfdff;
 }
 
 .detail-item {
-    font-size: var(--font-small);
+    font-size: 0.85em;
 }
 
 .detail-item strong {
     display: block;
     color: var(--text-color-dark);
     font-weight: 700;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
     font-size: 1.05em;
 }
 
@@ -607,17 +609,17 @@ h1 i {
     width: 100%;
     border-collapse: collapse;
     border-spacing: 0;
-    margin-top: 20px;
+    margin-top: 15px;
     border-radius: 6px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .modal-detail-table th, .modal-detail-table td {
-    padding: 8px 12px;
+    padding: 6px 8px;
     text-align: left;
     border: 1px solid #e0e0e0;
-    font-size: 0.85em;
+    font-size: 0.8em;
     vertical-align: middle;
 }
 
@@ -636,41 +638,45 @@ h1 i {
 .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 30px;
-    padding-top: 15px;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 10px;
     border-top: 1px solid #e0e0e0;
 }
 .modal-actions button {
     flex-grow: 0;
-    padding: 10px 20px;
+    padding: 8px 18px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
     font-size: 1em;
-    transition: background-color 0.2s, transform 0.1s;
+    transition: background-color 0.2s ease, transform 0.1s, box-shadow 0.2s;
+    box-shadow: var(--shadow-elevation-1);
 }
 
 .btn-cancel {
-    background-color: #6b7280;
-    color: white;
+    background-color: var(--text-color-medium);
+    color: var(--container-bg);
 }
 .btn-cancel:hover {
     background-color: #4b5563;
+    transform: translateY(-1px);
 }
 .modal-actions .btn-primary {
     background-color: var(--accent-primary);
-    color: white;
+    color: var(--container-bg);
 }
 .modal-actions .btn-primary:hover {
     background-color: #1c3383;
+    transform: translateY(-1px);
 }
 
 .error-message {
-    color: #f44336;
-    margin-top: 10px;
+    color: var(--accent-danger);
+    margin-top: 8px;
     font-weight: 500;
+    font-size: 0.95em;
 }
 .danger-text {
     color: var(--accent-danger);
@@ -678,28 +684,34 @@ h1 i {
 }
 
 .password-modal-content {
-    max-width: 450px !important;
+    background-color: var(--container-bg);
+    max-width: 320px !important;
+    padding: 15px !important;
+    border-radius: 10px !important;
     text-align: center;
+    border: 3px solid var(--accent-primary); /* Borde grueso para énfasis */
+    box-shadow: 0 0 15px rgba(30, 64, 175, 0.4), 0 4px 10px rgba(0, 0, 0, 0.1); /* Sombra enfocada en el primario */
 }
 #modal-title {
     color: var(--accent-primary);
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     font-size: 1.5em;
     font-weight: 700;
 }
 #password-input {
     width: calc(100% - 20px);
-    padding: 12px;
-    margin: 10px 0 20px 0;
+    padding: 10px;
+    margin: 8px 0 15px 0;
     box-sizing: border-box;
-    border: 2px solid #ccc;
+    border: 2px solid var(--border-color-light);
     border-radius: 8px;
-    font-size: 1.1em;
+    font-size: 1.05em;
     text-align: center;
 }
 #password-input:focus {
     border-color: var(--accent-primary);
     outline: none;
+    box-shadow: 0 0 0 3px var(--accent-primary)30;
 }
 .password-modal-content .modal-actions {
     border-top: none;
@@ -710,18 +722,19 @@ h1 i {
 .password-modal-content .modal-actions button {
     flex-grow: 1;
     flex-basis: 0;
-    padding: 14px 0;
+    padding: 12px 0;
+    font-size: 1em;
 }
 .password-modal-content .btn-cancel {
-    background-color: #f44336;
-    color: white;
+    background-color: var(--accent-danger);
+    color: var(--container-bg);
 }
 .password-modal-content .btn-cancel:hover {
     background-color: #d32f2f;
 }
 .password-modal-content .modal-actions .btn-primary {
     background-color: var(--accent-primary);
-    color: white;
+    color: var(--container-bg);
 }
 .password-modal-content .modal-actions .btn-primary:hover {
     background-color: #0056b3;
@@ -729,13 +742,14 @@ h1 i {
 
 
 .edit-insumo-modal {
-    max-width: 500px !important;
-    padding: 30px !important;
+    max-width: 450px !important;
+    padding: 25px !important;
+    border-color: var(--accent-warning) !important; /* Borde de color de advertencia */
 }
 
 .edit-insumo-modal .modal-header {
     border-bottom-color: var(--accent-warning);
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .edit-insumo-modal .modal-title-detail {
@@ -744,24 +758,25 @@ h1 i {
 }
 
 .edit-insumo-modal form .input-wrapper {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .edit-insumo-modal form label {
-    margin-top: 10px;
+    margin-top: 8px;
     font-size: 1em;
 }
 
 .edit-insumo-modal .modal-actions {
     justify-content: space-between;
-    margin-top: 25px;
-    padding-top: 15px;
+    margin-top: 20px;
+    padding-top: 10px;
     border-top: 1px solid #e0e0e0;
 }
 
 .edit-insumo-modal .modal-actions button {
     flex-grow: 1;
-    margin: 0 5px;
+    margin: 0 4px;
+    padding: 8px 12px;
 }
 
 .edit-insumo-modal .btn-primary {
@@ -802,18 +817,19 @@ h1 i {
         gap: 0;
     }
     .compact-fields-grid .input-wrapper {
-         margin-bottom: 15px;
+         margin-bottom: 12px;
     }
     .formula-detail-grid {
         grid-template-columns: 1fr;
     }
     .modal-content {
         max-width: 95%;
-        padding: 20px;
+        padding: 15px;
     }
     .formula-table th, .formula-table td,
     .modal-detail-table th, .modal-detail-table td {
-        padding: 8px;
+        padding: 6px;
+        font-size: 0.8em;
     }
     .edit-insumo-modal {
         max-width: 95% !important;
