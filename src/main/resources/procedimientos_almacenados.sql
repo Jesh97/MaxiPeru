@@ -835,13 +835,15 @@ BEGIN
     VALUES (p_id_detalle_compra, p_id_detalle_venta, p_motivo, 'item', p_tipo_valor, p_valor, p_tasa_igv);
 END$$
 
+DELIMITER $$
+
 DROP PROCEDURE IF EXISTS sp_crear_receta$$
 CREATE PROCEDURE sp_crear_receta(IN p_id_prod_maestro INT, IN p_cant_prod DECIMAL(12,4), IN p_id_uni_prod INT)
 BEGIN
 INSERT INTO receta_producto (id_producto_maestro, cantidad_producir, id_unidad_producir, estado)
 VALUES (p_id_prod_maestro, p_cant_prod, p_id_uni_prod, 'Activa');
 SELECT LAST_INSERT_ID() AS id_receta;
-END $$
+END$$
 
 DROP PROCEDURE IF EXISTS sp_detalle_receta$$
 CREATE PROCEDURE sp_detalle_receta(IN p_id_receta INT, IN p_id_art_insumo INT, IN p_cant_req DECIMAL(12,6), IN p_id_uni_insumo INT)
@@ -882,16 +884,6 @@ BEGIN
 UPDATE receta_producto
 SET estado = 'Inactiva'
 WHERE id_receta = p_id_receta;
-END$$
-
-DROP PROCEDURE IF EXISTS `sp_obtener_receta_por_nombre_generico`$$
-CREATE PROCEDURE `sp_obtener_receta_por_nombre_generico`(IN p_nombre_generico VARCHAR(150))
-BEGIN
-    SELECT DISTINCT pm.id_producto_maestro, pm.nombre_generico, rp.id_receta
-    FROM producto_maestro pm
-    INNER JOIN receta_producto rp ON pm.id_producto_maestro = rp.id_producto_maestro
-    WHERE pm.nombre_generico LIKE CONCAT('%', p_nombre_generico, '%')
-    ORDER BY pm.nombre_generico, rp.id_receta;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_obtener_receta_por_nombre_generico`$$
@@ -938,27 +930,47 @@ END$$
 DROP PROCEDURE IF EXISTS sp_consumir_stock_general_produccion$$
 CREATE PROCEDURE sp_consumir_stock_general_produccion(
     IN p_id_orden INT, IN p_id_articulo INT,
-    IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT, IN p_es_envase BOOLEAN)
+    IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT,
+    IN p_es_envase BOOLEAN,
+    IN p_comentario_consumo TEXT,
+    IN p_cant_req_orden_base DECIMAL(12,8),
+    IN p_id_unidad_req_receta INT
+)
 BEGIN
     DECLARE v_stock_actual DECIMAL(12,8);
     DECLARE v_densidad DECIMAL(12,8);
+    DECLARE v_factor_conversion_consumo DECIMAL(12,8);
+    DECLARE v_factor_conversion_req DECIMAL(12,8);
     DECLARE v_cant_en_kg DECIMAL(12,8);
-    DECLARE v_factor_conversion DECIMAL(12,8);
+    DECLARE v_cant_req_en_kg DECIMAL(12,8);
+    DECLARE v_desviacion_kg DECIMAL(12,8);
     DECLARE v_id_unidad_kg INT;
 
     SELECT id_unidad INTO v_id_unidad_kg FROM unidad_medida WHERE abreviatura = 'KG' LIMIT 1;
 
     SELECT a.densidad, u.factor_a_kg
-    INTO v_densidad, v_factor_conversion
+    INTO v_densidad, v_factor_conversion_consumo
     FROM articulo a
     JOIN unidad_medida u ON p_id_unidad = u.id_unidad
     WHERE a.id = p_id_articulo;
 
+    SELECT factor_a_kg INTO v_factor_conversion_req
+    FROM unidad_medida
+    WHERE id_unidad = p_id_unidad_req_receta;
+
     IF p_id_unidad = 3 THEN
         SET v_cant_en_kg = p_cantidad_a_consumir * v_densidad / 1000;
     ELSE
-        SET v_cant_en_kg = p_cantidad_a_consumir * v_factor_conversion;
+        SET v_cant_en_kg = p_cantidad_a_consumir * v_factor_conversion_consumo;
     END IF;
+
+    IF p_id_unidad_req_receta = 3 THEN
+        SET v_cant_req_en_kg = p_cant_req_orden_base * v_densidad / 1000;
+    ELSE
+        SET v_cant_req_en_kg = p_cant_req_orden_base * v_factor_conversion_req;
+    END IF;
+
+    SET v_desviacion_kg = v_cant_en_kg - v_cant_req_en_kg;
 
     SELECT cantidad INTO v_stock_actual FROM articulo WHERE id = p_id_articulo;
 
@@ -966,15 +978,27 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Stock insuficiente en inventario general (en KG).';
     ELSE
         UPDATE articulo SET cantidad = cantidad - v_cant_en_kg WHERE id = p_id_articulo;
-        INSERT INTO consumo_produccion (id_orden, id_articulo_consumido, cantidad_consumida, id_unidad_consumida, es_envase_embalaje)
-        VALUES (p_id_orden, p_id_articulo, v_cant_en_kg, v_id_unidad_kg, p_es_envase);
+
+        INSERT INTO consumo_produccion (
+            id_orden, id_articulo_consumido, cantidad_consumida, id_unidad_consumida, es_envase_embalaje, comentario_consumo,
+            cantidad_requerida_kg, desviacion_kg
+        )
+        VALUES (
+            p_id_orden, p_id_articulo, v_cant_en_kg, v_id_unidad_kg, p_es_envase, p_comentario_consumo,
+            v_cant_req_en_kg, v_desviacion_kg
+        );
     END IF;
 END$$
 
 DROP PROCEDURE IF EXISTS sp_consumir_stock_lote_produccion$$
 CREATE PROCEDURE sp_consumir_stock_lote_produccion(
     IN p_id_orden INT, IN p_id_articulo INT,
-    IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT, IN p_es_envase BOOLEAN)
+    IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT,
+    IN p_es_envase BOOLEAN,
+    IN p_comentario_consumo TEXT,
+    IN p_cant_req_orden_base DECIMAL(12,8),
+    IN p_id_unidad_req_receta INT
+)
 BEGIN
     DECLARE v_cantidad_restante DECIMAL(12,8);
     DECLARE v_id_lote_actual INT;
@@ -982,9 +1006,12 @@ BEGIN
     DECLARE v_cantidad_consumida DECIMAL(12,8);
     DECLARE v_cantidad_total_en_kg DECIMAL(12,8);
     DECLARE v_densidad DECIMAL(12,8);
-    DECLARE v_factor_conversion DECIMAL(12,8);
+    DECLARE v_factor_conversion_consumo DECIMAL(12,8);
+    DECLARE v_factor_conversion_req DECIMAL(12,8);
     DECLARE finished BOOLEAN DEFAULT FALSE;
     DECLARE v_id_unidad_kg INT;
+    DECLARE v_cant_req_en_kg DECIMAL(12,8);
+    DECLARE v_desviacion_kg DECIMAL(12,8);
 
     DECLARE cur_lotes CURSOR FOR
         SELECT id_lote, cantidad_disponible
@@ -996,16 +1023,28 @@ BEGIN
     SELECT id_unidad INTO v_id_unidad_kg FROM unidad_medida WHERE abreviatura = 'KG' LIMIT 1;
 
     SELECT a.densidad, u.factor_a_kg
-    INTO v_densidad, v_factor_conversion
+    INTO v_densidad, v_factor_conversion_consumo
     FROM articulo a
     JOIN unidad_medida u ON p_id_unidad = u.id_unidad
     WHERE a.id = p_id_articulo;
 
+    SELECT factor_a_kg INTO v_factor_conversion_req
+    FROM unidad_medida
+    WHERE id_unidad = p_id_unidad_req_receta;
+
     IF p_id_unidad = 3 THEN
         SET v_cantidad_total_en_kg = p_cantidad_a_consumir * v_densidad / 1000;
     ELSE
-        SET v_cantidad_total_en_kg = p_cantidad_a_consumir * v_factor_conversion;
+        SET v_cantidad_total_en_kg = p_cantidad_a_consumir * v_factor_conversion_consumo;
     END IF;
+
+    IF p_id_unidad_req_receta = 3 THEN
+        SET v_cant_req_en_kg = p_cant_req_orden_base * v_densidad / 1000;
+    ELSE
+        SET v_cant_req_en_kg = p_cant_req_orden_base * v_factor_conversion_req;
+    END IF;
+
+    SET v_desviacion_kg = v_cantidad_total_en_kg - v_cant_req_en_kg;
 
     SET v_cantidad_restante = v_cantidad_total_en_kg;
     OPEN cur_lotes;
@@ -1017,8 +1056,14 @@ BEGIN
         SET v_cantidad_consumida = LEAST(v_cantidad_restante, v_disponible_lote);
         UPDATE inventario_lote SET cantidad_disponible = cantidad_disponible - v_cantidad_consumida WHERE id_lote = v_id_lote_actual;
 
-        INSERT INTO consumo_produccion (id_orden, id_articulo_consumido, id_lote_consumido, cantidad_consumida, id_unidad_consumida, es_envase_embalaje)
-        VALUES (p_id_orden, p_id_articulo, v_id_lote_actual, v_cantidad_consumida, v_id_unidad_kg, p_es_envase);
+        INSERT INTO consumo_produccion (
+            id_orden, id_articulo_consumido, id_lote_consumido, cantidad_consumida, id_unidad_consumida, es_envase_embalaje, comentario_consumo,
+            cantidad_requerida_kg, desviacion_kg
+        )
+        VALUES (
+            p_id_orden, p_id_articulo, v_id_lote_actual, v_cantidad_consumida, v_id_unidad_kg, p_es_envase, p_comentario_consumo,
+            v_cant_req_en_kg, v_desviacion_kg
+        );
 
         SET v_cantidad_restante = v_cantidad_restante - v_cantidad_consumida;
     END LOOP lote_consumo_prod_loop;
@@ -1076,9 +1121,9 @@ BEGIN
         ) INTO v_usa_lotes;
 
         IF v_usa_lotes THEN
-            CALL sp_consumir_stock_lote_produccion(p_id_orden, v_id_articulo_insumo, v_cantidad_a_consumir, v_id_unidad_insumo, FALSE);
+            CALL sp_consumir_stock_lote_produccion(p_id_orden, v_id_articulo_insumo, v_cantidad_a_consumir, v_id_unidad_insumo, FALSE, NULL, v_cantidad_a_consumir, v_id_unidad_insumo);
         ELSE
-            CALL sp_consumir_stock_general_produccion(p_id_orden, v_id_articulo_insumo, v_cantidad_a_consumir, v_id_unidad_insumo, FALSE);
+            CALL sp_consumir_stock_general_produccion(p_id_orden, v_id_articulo_insumo, v_cantidad_a_consumir, v_id_unidad_insumo, FALSE, NULL, v_cantidad_a_consumir, v_id_unidad_insumo);
         END IF;
     END LOOP mp_consumo_loop;
     CLOSE cur_detalles;
@@ -1089,18 +1134,56 @@ END$$
 DROP PROCEDURE IF EXISTS sp_registrar_consumo_produccion_componente$$
 CREATE PROCEDURE sp_registrar_consumo_produccion_componente(
     IN p_id_orden INT, IN p_id_articulo_consumido INT,
-    IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT, IN p_es_envase BOOLEAN)
+    IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT,
+    IN p_es_envase BOOLEAN,
+    IN p_comentario_consumo TEXT
+)
 BEGIN
     DECLARE v_usa_lotes BOOLEAN;
+    DECLARE v_id_receta INT;
+    DECLARE v_cantidad_a_producir DECIMAL(12,2);
+    DECLARE v_cantidad_base_receta DECIMAL(12,2);
+    DECLARE v_factor_escala DECIMAL(12,8);
+    DECLARE v_cant_req_receta DECIMAL(12,8);
+    DECLARE v_id_unidad_req_receta INT;
+    DECLARE v_cant_req_orden_base DECIMAL(12,8);
+
+    SELECT op.id_receta, op.cantidad_a_producir, rp.cantidad_producir
+    INTO v_id_receta, v_cantidad_a_producir, v_cantidad_base_receta
+    FROM orden_produccion op
+    JOIN receta_producto rp ON op.id_receta = rp.id_receta
+    WHERE op.id_orden = p_id_orden;
+
+    IF v_cantidad_base_receta IS NULL OR v_cantidad_base_receta = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Receta no válida o cantidad base cero.';
+    END IF;
+    SET v_factor_escala = v_cantidad_a_producir / v_cantidad_base_receta;
+
+    SELECT dr.cantidad_requerida, dr.id_unidad_insumo
+    INTO v_cant_req_receta, v_id_unidad_req_receta
+    FROM detalle_receta dr
+    WHERE dr.id_receta = v_id_receta AND dr.id_articulo_insumo = p_id_articulo_consumido;
+
+    IF v_cant_req_receta IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: El artículo consumido no es parte de la receta.';
+    END IF;
+
+    SET v_cant_req_orden_base = v_cant_req_receta * v_factor_escala;
 
     SELECT EXISTS (
         SELECT 1 FROM inventario_lote WHERE id_articulo = p_id_articulo_consumido AND cantidad_disponible > 0)
         INTO v_usa_lotes;
 
     IF v_usa_lotes THEN
-        CALL sp_consumir_stock_lote_produccion(p_id_orden, p_id_articulo_consumido, p_cantidad_a_consumir, p_id_unidad, p_es_envase);
+        CALL sp_consumir_stock_lote_produccion(
+            p_id_orden, p_id_articulo_consumido, p_cantidad_a_consumir, p_id_unidad, p_es_envase, p_comentario_consumo,
+            v_cant_req_orden_base, v_id_unidad_req_receta
+        );
     ELSE
-        CALL sp_consumir_stock_general_produccion(p_id_orden, p_id_articulo_consumido, p_cantidad_a_consumir, p_id_unidad, p_es_envase);
+        CALL sp_consumir_stock_general_produccion(
+            p_id_orden, p_id_articulo_consumido, p_cantidad_a_consumir, p_id_unidad, p_es_envase, p_comentario_consumo,
+            v_cant_req_orden_base, v_id_unidad_req_receta
+        );
     END IF;
 
     UPDATE orden_produccion
@@ -1161,7 +1244,7 @@ BEGIN
 
         UPDATE orden_produccion
         SET cantidad_producida_final_real = p_cant_envases
-        WHERE id = p_id_orden;
+        WHERE id_orden = p_id_orden;
 
         SELECT 'Lote registrado y stock actualizado.' AS resultado;
     ELSE
@@ -1170,13 +1253,11 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS sp_generar_siguiente_codigo_lote$$
-CREATE PROCEDURE sp_generar_siguiente_codigo_lote(
-    IN p_id_articulo INT, OUT p_codigo_lote_generado VARCHAR(50))
+CREATE PROCEDURE sp_generar_siguiente_codigo_lote(IN p_id_articulo INT, OUT p_codigo_lote_generado VARCHAR(50))
 BEGIN
     DECLARE v_abreviatura VARCHAR(10); DECLARE v_hora_min_seg VARCHAR(6); DECLARE v_fecha_hoy DATE; DECLARE v_nuevo_num_remesa INT;
 
-    SELECT pm.abreviatura
-    INTO v_abreviatura
+    SELECT pm.abreviatura INTO v_abreviatura
     FROM articulo a
     INNER JOIN producto_maestro pm ON a.id_producto_maestro = pm.id_producto_maestro
     WHERE a.id = p_id_articulo;
@@ -1201,6 +1282,24 @@ BEGIN
     SET p_codigo_lote_generado = CONCAT(v_abreviatura, v_hora_min_seg, '-', LPAD(v_nuevo_num_remesa, 2, '0'));
 
     COMMIT;
+END$$
+
+DROP PROCEDURE IF EXISTS sp_obtener_consumo_total_por_orden$$
+CREATE PROCEDURE sp_obtener_consumo_total_por_orden(IN p_id_orden INT)
+BEGIN
+    SELECT CP.id_articulo_consumido, A.descripcion AS nombre_articulo,
+        SUM(CP.cantidad_consumida) AS cantidad_total_consumida_kg, MAX(CP.cantidad_requerida_kg) AS cantidad_requerida_kg,
+        MAX(CP.desviacion_kg) AS desviacion_neta_kg, UM.nombre AS unidad_medida_base,
+        (SELECT comentario_consumo FROM consumo_produccion
+         WHERE id_orden = p_id_orden AND id_articulo_consumido = CP.id_articulo_consumido
+         ORDER BY id_consumo DESC
+         LIMIT 1) AS ultimo_comentario_desviacion
+    FROM consumo_produccion CP
+    JOIN articulo A ON CP.id_articulo_consumido = A.id
+    JOIN unidad_medida UM ON CP.id_unidad_consumida = UM.id_unidad
+    WHERE CP.id_orden = p_id_orden
+    GROUP BY CP.id_articulo_consumido, A.descripcion, UM.id_unidad, UM.nombre
+    ORDER BY A.descripcion;
 END$$
 
 DELIMITER ;

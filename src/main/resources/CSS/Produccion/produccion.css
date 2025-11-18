@@ -15,6 +15,7 @@
     --padding-page: 20px;
     --shadow-elevation-1: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
     --shadow-elevation-2: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --accent-success: #059669; /* Añadido */
 }
 
 html, body {
@@ -215,7 +216,7 @@ h1 i {
 .input-wrapper textarea:focus,
 .input-wrapper select:focus {
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 2px var(--accent-primary)1A;
+    box-shadow: 0 0 0 2px #1e40af1A;
     outline: none;
 }
 
@@ -291,7 +292,7 @@ h1 i {
     background-color: var(--accent-primary);
 }
 .btn-submit.btn-success {
-    background-color: var(--accent-primary);
+    background-color: var(--accent-success); /* CORREGIDO */
 }
 .btn-submit.btn-warning {
     background-color: var(--accent-warning);
@@ -304,7 +305,21 @@ h1 i {
     min-width: auto;
     margin-top: 0;
 }
-
+.btn-submit.btn-primary {
+    background-color: var(--accent-primary);
+}
+.btn-submit.btn-secondary {
+    background-color: var(--text-color-medium);
+}
+.btn-submit.btn-secondary:hover {
+    background-color: #4b5563;
+}
+.btn-submit.btn-info {
+    background-color: #10b981;
+}
+.btn-submit.btn-info:hover {
+    background-color: #059669;
+}
 
 .btn-submit i {
     margin-right: 6px;
@@ -329,33 +344,87 @@ h1 i {
     background-color: #b91c1c;
 }
 
+/* REEMPLAZO Y OPTIMIZACIÓN DE ESTILOS DE LA TABLA DETALLE */
+
 .detalle-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
     border-spacing: 0;
     margin-top: var(--spacing-medium);
-    border-radius: 6px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: var(--shadow-elevation-1);
+    box-shadow: var(--shadow-elevation-2);
+    table-layout: fixed; /* CLAVE: Fuerza a respetar los anchos */
+}
+
+.detalle-table th:nth-child(1), .detalle-table td:nth-child(1) {
+    width: auto; /* Dejará que tome el espacio sobrante */
+    min-width: 120px;
+    text-align: left;
+}
+.detalle-table th:nth-child(2), .detalle-table td:nth-child(2) { /* Capacidad - AUMENTADO */
+    width: 130px;
+    min-width: 130px;
+}
+.detalle-table th:nth-child(3), .detalle-table td:nth-child(3) { /* Cant. Env. - AUMENTADO */
+    width: 90px;
+    min-width: 90px;
+}
+.detalle-table th:nth-child(4), .detalle-table td:nth-child(4) { /* Tapa/Sello */
+    width: auto; /* Dejará que tome el espacio sobrante */
+    min-width: 120px;
+}
+.detalle-table th:nth-child(5), .detalle-table td:nth-child(5) { /* Acción - AUMENTADO */
+    width: 200px;
+    min-width: 200px;
 }
 
 .detalle-table th, .detalle-table td {
-    border: 1px solid var(--border-color-light);
-    padding: 6px 8px;
-    text-align: left;
-    font-size: 0.85em;
-    color: var(--text-color-dark);
+    padding: 4px 6px;
+    text-align: center;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 0.8em;
     vertical-align: middle;
+    box-sizing: border-box; /* Asegura que el padding no añada ancho extra */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .detalle-table th {
-    background-color: #e9ecef;
+    background-color: var(--accent-primary);
+    color: var(--container-bg);
     font-weight: 700;
-    color: var(--accent-primary);
+    text-transform: uppercase;
+    font-size: 0.8em;
+    border-top: none;
+    border-bottom: 2px solid var(--accent-primary);
+}
+.detalle-table th:first-child { border-radius: 8px 0 0 0; border-left: 1px solid var(--accent-primary); }
+.detalle-table th:last-child { border-radius: 0 8px 0 0; border-right: 1px solid var(--accent-primary); }
+.detalle-table tbody tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+.detalle-table tbody tr:last-child td:last-child { border-radius: 0 0 8px 0; }
+
+
+.detalle-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.detalle-table tbody tr:hover {
+    background-color: #f0f4ff;
+    transition: background-color 0.3s ease;
 }
 
 .detalle-table td {
     background-color: var(--container-bg);
+    color: var(--text-color-dark);
+    border: 1px solid var(--border-color-light);
+    border-top: none;
+}
+.detalle-table td:last-child {
+    border-right: 1px solid var(--border-color-light);
 }
 
 .detalle-table input {
@@ -382,6 +451,7 @@ h1 i {
     box-shadow: none !important;
     cursor: default;
 }
+/* FIN REEMPLAZO DE ESTILOS BASE DE TABLA */
 
 .insumo-search-container {
     display: flex;
@@ -533,11 +603,11 @@ h1 i {
 .modal-content {
     background-color: var(--container-bg);
     padding: 25px;
-    border: 2px solid var(--accent-primary); /* Borde de color primario */
+    border: 2px solid var(--accent-primary);
     width: 90%;
     max-width: 650px;
     border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 0 5px rgba(30, 64, 175, 0.1); /* Sombra más fuerte y sutil glow */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 0 5px rgba(30, 64, 175, 0.1);
     position: relative;
     animation: fadeIn 0.3s ease-out;
     max-height: 90vh;
@@ -553,7 +623,7 @@ h1 i {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 3px solid var(--accent-primary); /* Borde inferior más grueso */
+    border-bottom: 3px solid var(--accent-primary);
     padding-bottom: 10px;
     margin-bottom: 15px;
 }
@@ -689,8 +759,8 @@ h1 i {
     padding: 15px !important;
     border-radius: 10px !important;
     text-align: center;
-    border: 3px solid var(--accent-primary); /* Borde grueso para énfasis */
-    box-shadow: 0 0 15px rgba(30, 64, 175, 0.4), 0 4px 10px rgba(0, 0, 0, 0.1); /* Sombra enfocada en el primario */
+    border: 3px solid var(--accent-primary);
+    box-shadow: 0 0 15px rgba(30, 64, 175, 0.4), 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 #modal-title {
     color: var(--accent-primary);
@@ -711,7 +781,7 @@ h1 i {
 #password-input:focus {
     border-color: var(--accent-primary);
     outline: none;
-    box-shadow: 0 0 0 3px var(--accent-primary)30;
+    box-shadow: 0 0 0 3px #1e40af30;
 }
 .password-modal-content .modal-actions {
     border-top: none;
@@ -744,7 +814,7 @@ h1 i {
 .edit-insumo-modal {
     max-width: 450px !important;
     padding: 25px !important;
-    border-color: var(--accent-warning) !important; /* Borde de color de advertencia */
+    border-color: var(--accent-warning) !important;
 }
 
 .edit-insumo-modal .modal-header {
@@ -792,6 +862,109 @@ h1 i {
     background-color: #4b5563 !important;
 }
 
+/* 1. COMPACTACIÓN DE CAMPOS NUMÉRICOS (MÁXIMA RESTRICCIÓN DE ANCHO) */
+.detalle-table .capacity-field-group,
+.detalle-table .quantity-control-compact {
+    width: 100%;
+    padding: 3px !important;
+    overflow: hidden;
+}
+
+.detalle-table .capacity-field-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Campos de Capacidad (Input y Select) - AUMENTADOS */
+.detalle-table .capacity-field-group input {
+    width: 60px !important; /* Más ancho */
+    min-width: 60px !important;
+    text-align: right !important;
+    padding: 3px 4px !important;
+    margin: 0 1px 0 0 !important;
+    font-size: 0.95em !important; /* Más grande */
+    height: 28px; /* Altura ajustada */
+}
+
+.detalle-table .capacity-field-group select {
+    width: 60px !important; /* Más ancho */
+    min-width: 60px !important;
+    padding: 3px 1px !important;
+    font-size: 0.9em !important; /* Más grande */
+    height: 28px; /* Altura ajustada */
+}
+
+/* Campo de Cantidad (Input) - AUMENTADO */
+.detalle-table .quantity-control-compact input {
+    width: 70px !important; /* Más ancho */
+    min-width: 70px !important;
+    padding: 3px 4px !important;
+    font-size: 0.95em !important; /* Más grande */
+    height: 28px;
+}
+
+/* 2. ESTILOS DE PÍLDORAS DE TAPA/SELLO */
+.detalle-table .tapa-display-container {
+    margin: 1px 0;
+    display: block;
+}
+
+.detalle-table .tapa-status-tag {
+    display: inline-block;
+    width: auto;
+    min-width: 90%;
+    padding: 1px 3px;
+    font-size: 0.6em;
+    font-weight: 700;
+    text-align: center;
+    border-radius: 9999px;
+    text-transform: uppercase;
+}
+.detalle-table .tapa-status-tag.tag-unassigned {
+    background-color: #fca5a5;
+    color: var(--accent-danger);
+    border: 1px solid var(--accent-danger);
+}
+.detalle-table .tapa-status-tag.tag-assigned {
+    background-color: #a7f3d0;
+    color: var(--accent-success);
+    border: 1px solid var(--accent-success);
+}
+
+/* 3. LAYOUT DE ACCIONES EN CUADRÍCULA 2X2 */
+.detalle-table .actions-cell-grid-container {
+    padding: 4px 6px !important; /* Más padding para los botones */
+    /* El ancho es forzado en los selectores :nth-child(5) */
+}
+
+.actions-grid-compact {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px; /* Más espacio entre botones */
+}
+
+/* Botones de Acción (btn-xs) - AUMENTADOS */
+.btn-xs {
+    padding: 3px 5px !important;
+    font-size: 0.9em !important; /* Tamaño de fuente más visible */
+    font-weight: 700 !important; /* Negrita más marcada */
+    min-width: 100% !important;
+    height: 28px; /* Altura consistente */
+    margin: 0 !important;
+    box-shadow: none !important;
+    white-space: nowrap;
+}
+
+.actions-grid-compact .btn-submit i {
+    display: none;
+}
+.remove-row.btn-xs.btn-danger i {
+    display: inline;
+    margin-right: 3px;
+}
+
+/* Media Queries (Sin cambios) */
 @media (max-width: 768px) {
     .produccion-container {
         padding: var(--spacing-medium) var(--spacing-small);

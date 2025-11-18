@@ -464,6 +464,12 @@ FOREIGN KEY (id_unidad_consumida) REFERENCES unidad_medida(id_unidad) ON DELETE 
 FOREIGN KEY (id_lote_consumido) REFERENCES inventario_lote(id_lote) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- MODIFICACIÓN PARA AGREGAR LOS CAMPOS DE DESVIACIÓN Y COMENTARIO
+ALTER TABLE consumo_produccion
+ADD COLUMN cantidad_requerida_kg DECIMAL(12,8) AFTER cantidad_consumida,
+ADD COLUMN desviacion_kg DECIMAL(12,8) AFTER cantidad_requerida_kg,
+ADD COLUMN comentario_consumo TEXT NULL AFTER fecha_consumo;
+
 CREATE TABLE produccion_realizada (
 id_produccion INT AUTO_INCREMENT PRIMARY KEY,
 id_orden INT NOT NULL,
