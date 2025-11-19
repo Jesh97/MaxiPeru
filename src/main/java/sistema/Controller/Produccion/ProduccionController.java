@@ -207,15 +207,17 @@ public class ProduccionController implements ProduccionRepository {
     }
 
     @Override
-    public int crearOrden(int idReceta, int idArticuloProducido, BigDecimal cantProd, String fechaIni, String obs) throws SQLException {
+    public int crearOrden(int idReceta, int idArticuloProducido, BigDecimal cantProd, BigDecimal cantProdFinalReal, String fechaIni, String obs) throws SQLException {
         int idOrden = -1;
         String sql = "{CALL sp_crear_orden(?, ?, ?, ?, ?, ?)}";
 
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idReceta);
             cs.setInt(2, idArticuloProducido);
+            cantProd = cantProd.setScale(2, RoundingMode.HALF_UP);
             cs.setBigDecimal(3, cantProd);
-            cs.setBigDecimal(4, BigDecimal.ZERO);
+            cantProdFinalReal = cantProdFinalReal.setScale(2, RoundingMode.HALF_UP);
+            cs.setBigDecimal(4, cantProdFinalReal);
             cs.setDate(5, fechaIni != null ? Date.valueOf(fechaIni) : null);
             cs.setString(6, obs);
 

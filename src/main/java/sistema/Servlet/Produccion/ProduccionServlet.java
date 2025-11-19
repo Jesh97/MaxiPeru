@@ -135,6 +135,7 @@ public class ProduccionServlet extends HttpServlet {
                     String idRecetaStr = request.getParameter("p_id_receta_orden_hidden");
                     String cantProdStr = request.getParameter("p_cant_prod_orden");
                     String idArtProducidoStr = request.getParameter("p_id_art_producido_orden_hidden");
+                    String cantProdFinalRealStr = request.getParameter("p_cant_prod_final_real");
 
                     if (idRecetaStr == null || idRecetaStr.isEmpty())
                         throw new IllegalArgumentException("El ID de la Receta es requerido.");
@@ -142,11 +143,14 @@ public class ProduccionServlet extends HttpServlet {
                         throw new IllegalArgumentException("La Cantidad a Producir es requerida.");
                     if (idArtProducidoStr == null || idArtProducidoStr.isEmpty())
                         throw new IllegalArgumentException("El ID del Artículo Producido es requerido.");
+                    if (cantProdFinalRealStr == null || cantProdFinalRealStr.isEmpty())
+                        throw new IllegalArgumentException("La Cantidad Producida Final es requerida.");
 
                     idRecetaActiva = Integer.parseInt(idRecetaStr);
                     session.setAttribute("idRecetaActiva", idRecetaActiva);
 
                     BigDecimal cantProd = new BigDecimal(cantProdStr);
+                    BigDecimal cantProdFinalReal = new BigDecimal(cantProdFinalRealStr);
                     String fechaIni = request.getParameter("p_fecha_ini_orden");
                     String obs = request.getParameter("p_obs_orden");
 
@@ -155,7 +159,7 @@ public class ProduccionServlet extends HttpServlet {
 
                     int idArticuloProducido = Integer.parseInt(idArtProducidoStr);
 
-                    idOrdenActiva = dao.crearOrden(idRecetaActiva, idArticuloProducido, cantProd, fechaIni, obs);
+                    idOrdenActiva = dao.crearOrden(idRecetaActiva, idArticuloProducido, cantProd, cantProdFinalReal, fechaIni, obs);
                     session.setAttribute("idOrdenActiva", idOrdenActiva);
 
                     Auditoria.registrar(request, "CREACION", "Orden de Producción creada. ID: " + idOrdenActiva + ". Receta ID: " + idRecetaActiva);

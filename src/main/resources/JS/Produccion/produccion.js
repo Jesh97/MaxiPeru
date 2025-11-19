@@ -637,23 +637,57 @@ function loadInsumosForRecipe() {
         statusDisplay.textContent = `Error al cargar insumos: ${error.message}.`;
     });
 }
+
+function showSwingAlert(message) {
+    const modal = document.getElementById('swingAlertModal');
+    const messageContainer = document.getElementById('swingAlertMessage');
+
+    if (messageContainer) {
+        messageContainer.textContent = message;
+    }
+
+    if (modal) {
+        modal.style.display = 'flex';
+    } else {
+        console.error('El elemento modal swingAlertModal no fue encontrado.');
+        alert(message);
+    }
+}
+
+function closeSwingAlert() {
+    const modal = document.getElementById('swingAlertModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
 function saveOrden(event) {
     event.preventDefault();
     const idReceta = document.getElementById('p_id_receta_orden_hidden').value;
     const cantProdStr = document.getElementById('cant_prod_orden').value;
     const idArtProducido = document.getElementById('p_id_art_producido_orden_hidden').value;
     const fechaIni = document.getElementById('fecha_ini').value;
+    const cantProdFinalRealStr = document.getElementById('p_cant_prod_final_real').value;
+
     if (!idReceta || !insumosCargadosPreviamente) {
-        alert("ERROR: Debe seleccionar una Receta y Cargar los Insumos primero.");
+        showSwingAlert("ERROR: Debe seleccionar una Receta y Cargar los Insumos primero.");
         return;
     }
     if (!cantProdStr || parseFloat(cantProdStr) <= 0) {
-        alert("ERROR: La Cantidad a Producir (Programada) debe ser positiva.");
+        showSwingAlert("ERROR: La Cantidad a Producir (Programada) debe ser positiva.");
         return;
     }
+    if (!cantProdFinalRealStr || parseFloat(cantProdFinalRealStr) <= 0) {
+        showSwingAlert("ERROR: La Cantidad Producida Final Real es requerida y debe ser positiva.");
+        return;
+    }
+
     const formData = new FormData(event.target);
     const params = new URLSearchParams(formData);
+
     params.set('action', 'crear_orden');
+    params.set('p_cant_prod_final_real', cantProdFinalRealStr);
+
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
@@ -671,7 +705,7 @@ function saveOrden(event) {
             document.getElementById('cod_lote_generado_envasado_display').value = "Presione 'Generar'";
             document.getElementById('p_codigo_lote_envase_hidden').value = '';
             updateOrdenFields();
-            alert(`Orden Creada: ${activeOrdenCode}. Ahora se registrará el consumo de insumos.`);
+            showSwingAlert(`Orden Creada: ${activeOrdenCode}. Ahora se registrará el consumo de insumos.`);
             const rows = document.getElementById('insumos-orden-rows').querySelectorAll('tr');
             rows.forEach(row => {
                 const form = row.querySelector('form');
@@ -682,15 +716,16 @@ function saveOrden(event) {
             });
             document.getElementById('display_order_recipe_status').textContent = `Orden Activa Creada: ${activeOrdenCode}. Consumo de insumos en proceso de registro.`;
         } else {
-            alert(`Error al crear la orden: ${data.message}`);
+            showSwingAlert(`Error al crear la orden: ${data.message}`);
         }
     })
     .catch(error => {
         if (!error.message.includes("script de alerta")) {
-            alert("Error de comunicación con el servidor al crear la orden.");
+            showSwingAlert("Error de comunicación con el servidor al crear la orden.");
         }
     });
 }
+
 function handleInsumoConsumption(event, rowOverride = null) {
     event.preventDefault();
     const formRow = rowOverride || event.target.closest('tr');
