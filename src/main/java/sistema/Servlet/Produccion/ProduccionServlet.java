@@ -184,8 +184,9 @@ public class ProduccionServlet extends HttpServlet {
                     BigDecimal cantidadAConsumir = new BigDecimal(request.getParameter("p_cantidad_consumida"));
                     int idUnidad = Integer.parseInt(request.getParameter("p_id_unidad"));
                     boolean esEnvase = "true".equalsIgnoreCase(request.getParameter("p_es_envase"));
+                    String comentarioConsumo = request.getParameter("p_comentario_consumo");
                     int ordenId = Integer.parseInt(idOrdenStr);
-                    dao.registrarConsumoComponente(ordenId, idArticuloConsumido, cantidadAConsumir, idUnidad, esEnvase);
+                    dao.registrarConsumoComponente(ordenId, idArticuloConsumido, cantidadAConsumir, idUnidad, esEnvase, comentarioConsumo);
                     Auditoria.registrar(request, "OPERACION", "Consumo manual en Orden ID: " + ordenId + ". Artículo: " + idArticuloConsumido + ". Cantidad: " + cantidadAConsumir);
                     mensaje = "Consumo manual registrado en la Orden " + ordenId + ".";
                     jsonResponse.put("success", true);
@@ -326,15 +327,17 @@ public class ProduccionServlet extends HttpServlet {
             jsonResponse.put("success", false);
             jsonResponse.put("message", mensaje);
 
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write(gson.toJson(jsonResponse));
 
         } catch (Exception e) {
-            mensaje = "Error inesperado en la Aplicación. Tipo de error: **" + e.getClass().getSimpleName() + "**. Detalle: " + e.getMessage();
+            mensaje = "Error inesperado en la Aplicación. Tipo de error: **" + e.getClass().getName() + "**. Detalle: " + e.getMessage();
             jsonResponse.put("success", false);
             jsonResponse.put("message", mensaje);
 
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write(gson.toJson(jsonResponse));
@@ -405,6 +408,14 @@ public class ProduccionServlet extends HttpServlet {
 
                     resultados = dao.obtenerInsumosPorIdReceta(idReceta);
                 }
+                case "obtener_consumo_total_orden" -> {
+                    String idOrdenStr = request.getParameter("id_orden");
+                    if (idOrdenStr == null || idOrdenStr.isEmpty()) {
+                        throw new IllegalArgumentException("ID de Orden no especificado.");
+                    }
+                    int idOrden = Integer.parseInt(idOrdenStr);
+                    resultados = dao.obtenerConsumoTotalPorOrden(idOrden);
+                }
                 default -> throw new IllegalArgumentException("Acción de consulta no válida: **" + action + "**");
             }
 
@@ -413,11 +424,11 @@ public class ProduccionServlet extends HttpServlet {
         } catch (Exception e) {
             String errorDetalle;
             if (e instanceof IllegalArgumentException) {
-                errorDetalle = "Error de datos: " + e.getMessage();
+                errorDetalle = "Error de Datos/Argumento: " + e.getMessage();
             } else if (e instanceof SQLException sqlE) {
-                errorDetalle = "Error de DB: " + sqlE.getMessage() + " (SQL State: " + sqlE.getSQLState() + ")";
+                errorDetalle = "Error de Base de Datos: " + sqlE.getMessage() + " (SQL State: " + sqlE.getSQLState() + ")";
             } else {
-                errorDetalle = "Error Inesperado: " + e.getMessage();
+                errorDetalle = "Error Inesperado (" + e.getClass().getName() + "): " + e.getMessage();
             }
 
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

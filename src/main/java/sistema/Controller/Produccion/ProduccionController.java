@@ -241,8 +241,8 @@ public class ProduccionController implements ProduccionRepository {
     }
 
     @Override
-    public void registrarConsumoComponente(int idOrden, int idArticuloConsumido, BigDecimal cantidadAConsumir, int idUnidad, boolean esEnvase) throws SQLException {
-        String sql = "{CALL sp_registrar_consumo_produccion_componente(?, ?, ?, ?, ?)}";
+    public void registrarConsumoComponente(int idOrden, int idArticuloConsumido, BigDecimal cantidadAConsumir, int idUnidad, boolean esEnvase, String comentarioConsumo) throws SQLException {
+        String sql = "{CALL sp_registrar_consumo_produccion_componente(?, ?, ?, ?, ?, ?)}";
 
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
 
@@ -251,8 +251,34 @@ public class ProduccionController implements ProduccionRepository {
             cs.setBigDecimal(3, cantidadAConsumir);
             cs.setInt(4, idUnidad);
             cs.setBoolean(5, esEnvase);
+            cs.setString(6, comentarioConsumo);
             cs.execute();
         }
+    }
+
+    @Override
+    public List<Map<String, Object>> obtenerConsumoTotalPorOrden(int idOrden) throws SQLException {
+        List<Map<String, Object>> consumoTotal = new ArrayList<>();
+        String sql = "{CALL sp_obtener_consumo_total_por_orden(?)}";
+
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, idOrden);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> consumo = new LinkedHashMap<>();
+                    consumo.put("id_articulo_consumido", rs.getInt("id_articulo_consumido"));
+                    consumo.put("nombre_articulo", rs.getString("nombre_articulo"));
+                    consumo.put("cantidad_total_consumida_kg", rs.getBigDecimal("cantidad_total_consumida_kg"));
+                    consumo.put("cantidad_requerida_kg", rs.getBigDecimal("cantidad_requerida_kg"));
+                    consumo.put("desviacion_neta_kg", rs.getBigDecimal("desviacion_neta_kg"));
+                    consumo.put("unidad_medida_base", rs.getString("unidad_medida_base"));
+                    consumo.put("ultimo_comentario_desviacion", rs.getString("ultimo_comentario_desviacion"));
+                    consumoTotal.add(consumo);
+                }
+            }
+        }
+        return consumoTotal;
     }
 
     @Override
