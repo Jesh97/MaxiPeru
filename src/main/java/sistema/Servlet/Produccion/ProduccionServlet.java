@@ -37,6 +37,11 @@ public class ProduccionServlet extends HttpServlet {
 
         int idRecetaActiva;
         Integer idOrdenActiva = (Integer) session.getAttribute("idOrdenActiva");
+        String nombreArticuloActivo = (String) session.getAttribute("nombreArticuloActivo");
+
+        if (nombreArticuloActivo == null) {
+            nombreArticuloActivo = "Artículo Desconocido";
+        }
 
         if (action == null || action.trim().isEmpty()) {
             action = "error_accion_no_especificada";
@@ -50,6 +55,7 @@ public class ProduccionServlet extends HttpServlet {
                     String idProdMaestroStr = request.getParameter("p_id_art_ter_hidden");
                     String cantProdStr = request.getParameter("p_cant_prod");
                     String idUniProdStr = request.getParameter("p_id_unidad_producir");
+                    String nombreProductoReceta = request.getParameter("p_nombre_art_ter_receta");
 
                     if (idProdMaestroStr == null || idUniProdStr == null || cantProdStr == null) {
                         throw new IllegalArgumentException("Datos principales de la receta (ID de producto maestro, cantidad o ID de unidad) están ausentes.");
@@ -79,7 +85,7 @@ public class ProduccionServlet extends HttpServlet {
                     }
 
                     Auditoria.registrar(request, "CREACION", "Receta de Producción creada. ID: " + idRecetaActiva + ". Componentes: " + componentesGuardados);
-                    mensaje = "Fórmula y sus " + componentesGuardados + " componentes guardados con éxito en Receta ID: " + idRecetaActiva;
+                    mensaje = "Fórmula para **" + (nombreProductoReceta != null ? nombreProductoReceta : "Receta ID: " + idRecetaActiva) + "** y sus " + componentesGuardados + " componentes guardados con éxito.";
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
                     jsonResponse.put("id_receta", idRecetaActiva);
@@ -88,6 +94,7 @@ public class ProduccionServlet extends HttpServlet {
                     String idDetalleRecetaStr = request.getParameter("p_id_detalle_receta");
                     String cantReqStr = request.getParameter("p_cant_req");
                     String idUniInsumoStr = request.getParameter("p_id_uni_insumo");
+                    String nombreInsumo = request.getParameter("p_nombre_insumo");
 
                     if (idDetalleRecetaStr == null || cantReqStr == null || idUniInsumoStr == null) {
                         throw new IllegalArgumentException("Datos para actualizar el detalle de la receta están incompletos.");
@@ -99,12 +106,13 @@ public class ProduccionServlet extends HttpServlet {
 
                     dao.actualizarInsumoReceta(idDetalleReceta, cantReq, idUniInsumo);
                     Auditoria.registrar(request, "MODIFICACION", "Insumo de Receta actualizado. Detalle ID: " + idDetalleReceta + ". Nueva Cantidad: " + cantReqStr);
-                    mensaje = "Detalle de Receta ID " + idDetalleReceta + " actualizado correctamente.";
+                    mensaje = "El insumo **" + (nombreInsumo != null ? nombreInsumo : "Detalle ID " + idDetalleReceta) + "** fue actualizado correctamente.";
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
                 }
                 case "eliminar_detalle_receta" -> {
                     String idDetalleRecetaStr = request.getParameter("p_id_detalle_receta");
+                    String nombreInsumo = request.getParameter("p_nombre_insumo");
 
                     if (idDetalleRecetaStr == null) {
                         throw new IllegalArgumentException("ID de Detalle de Receta para eliminar está ausente.");
@@ -113,12 +121,13 @@ public class ProduccionServlet extends HttpServlet {
                     int idDetalleReceta = Integer.parseInt(idDetalleRecetaStr);
                     dao.eliminarDetalleRecetaIndividual(idDetalleReceta);
                     Auditoria.registrar(request, "ELIMINACION", "Insumo de Receta eliminado. Detalle ID: " + idDetalleReceta);
-                    mensaje = "Insumo (Detalle ID " + idDetalleReceta + ") eliminado de la receta.";
+                    mensaje = "El insumo **" + (nombreInsumo != null ? nombreInsumo : "Detalle ID " + idDetalleReceta) + "** fue eliminado de la receta.";
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
                 }
                 case "desactivar_receta" -> {
                     String idRecetaStr = request.getParameter("p_id_receta");
+                    String nombreReceta = request.getParameter("p_nombre_receta");
 
                     if (idRecetaStr == null) {
                         throw new IllegalArgumentException("ID de Receta para desactivar está ausente.");
@@ -127,7 +136,7 @@ public class ProduccionServlet extends HttpServlet {
                     int idReceta = Integer.parseInt(idRecetaStr);
                     dao.desactivarReceta(idReceta);
                     Auditoria.registrar(request, "MODIFICACION", "Receta desactivada. ID: " + idReceta);
-                    mensaje = "Receta ID " + idReceta + " desactivada correctamente.";
+                    mensaje = "Receta **" + (nombreReceta != null ? nombreReceta : "ID " + idReceta) + "** desactivada correctamente.";
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
                 }
@@ -136,6 +145,7 @@ public class ProduccionServlet extends HttpServlet {
                     String cantProdStr = request.getParameter("p_cant_prod_orden");
                     String idArtProducidoStr = request.getParameter("p_id_art_producido_orden_hidden");
                     String cantProdFinalRealStr = request.getParameter("p_cant_prod_final_real");
+                    String nombreArticulo = request.getParameter("p_nombre_art_producido_orden_hidden");
 
                     if (idRecetaStr == null || idRecetaStr.isEmpty())
                         throw new IllegalArgumentException("El ID de la Receta es requerido.");
@@ -145,6 +155,8 @@ public class ProduccionServlet extends HttpServlet {
                         throw new IllegalArgumentException("El ID del Artículo Producido es requerido.");
                     if (cantProdFinalRealStr == null || cantProdFinalRealStr.isEmpty())
                         throw new IllegalArgumentException("La Cantidad Producida Final es requerida.");
+                    if (nombreArticulo == null || nombreArticulo.isEmpty())
+                        throw new IllegalArgumentException("El Nombre del Artículo Producido es requerido.");
 
                     idRecetaActiva = Integer.parseInt(idRecetaStr);
                     session.setAttribute("idRecetaActiva", idRecetaActiva);
@@ -161,12 +173,12 @@ public class ProduccionServlet extends HttpServlet {
 
                     idOrdenActiva = dao.crearOrden(idRecetaActiva, idArticuloProducido, cantProd, cantProdFinalReal, fechaIni, obs);
                     session.setAttribute("idOrdenActiva", idOrdenActiva);
+                    session.setAttribute("nombreArticuloActivo", nombreArticulo);
 
                     Auditoria.registrar(request, "CREACION", "Orden de Producción creada. ID: " + idOrdenActiva + ". Receta ID: " + idRecetaActiva);
 
-                    String nombreArticulo = "";
                     jsonResponse.put("success", true);
-                    jsonResponse.put("message", "Orden de Producción " + idOrdenActiva + " creada. Ejecute el consumo de MP.");
+                    jsonResponse.put("message", "Orden de Producción para **" + nombreArticulo + "** (" + idOrdenActiva + ") creada. Ejecute el consumo de MP.");
                     jsonResponse.put("id_orden", idOrdenActiva);
                     jsonResponse.put("id_articulo_terminado", idArticuloProducido);
                     jsonResponse.put("nombre_articulo_terminado", nombreArticulo);
@@ -176,7 +188,7 @@ public class ProduccionServlet extends HttpServlet {
                     if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa.");
                     dao.gestionarConsumoMateriaPrima(idOrdenActiva);
                     Auditoria.registrar(request, "PROCESO", "Consumo automático de Materia Prima ejecutado para Orden ID: " + idOrdenActiva);
-                    mensaje = "Consumo de Materia Prima ejecutado. Orden en estado 'En Proceso'.";
+                    mensaje = "Consumo de Materia Prima ejecutado para **" + nombreArticuloActivo + "**. Orden en estado 'En Proceso'.";
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
                 }
@@ -189,10 +201,12 @@ public class ProduccionServlet extends HttpServlet {
                     int idUnidad = Integer.parseInt(request.getParameter("p_id_unidad"));
                     boolean esEnvase = "true".equalsIgnoreCase(request.getParameter("p_es_envase"));
                     String comentarioConsumo = request.getParameter("p_comentario_consumo");
+                    String nombreArticuloConsumido = request.getParameter("p_nombre_articulo_consumido");
                     int ordenId = Integer.parseInt(idOrdenStr);
+
                     dao.registrarConsumoComponente(ordenId, idArticuloConsumido, cantidadAConsumir, idUnidad, esEnvase, comentarioConsumo);
                     Auditoria.registrar(request, "OPERACION", "Consumo manual en Orden ID: " + ordenId + ". Artículo: " + idArticuloConsumido + ". Cantidad: " + cantidadAConsumir);
-                    mensaje = "Consumo manual registrado en la Orden " + ordenId + ".";
+                    mensaje = "Consumo manual del artículo **" + nombreArticuloConsumido + "** registrado en la Orden de **" + nombreArticuloActivo + ".";
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
                 }
@@ -240,7 +254,7 @@ public class ProduccionServlet extends HttpServlet {
 
                     Auditoria.registrar(request, "OPERACION", "Registro de empaque múltiple (Envases/Tapas/Etiquetas) para Orden: " + ordenCode);
 
-                    mensaje = "Consumo de " + totalContainers + " envases (múltiples tipos) y etiqueta registrado para la Orden " + ordenCode;
+                    mensaje = "Consumo de " + totalContainers + " envases (múltiples tipos) y etiqueta registrado para el producto **" + nombreArticuloActivo + "**.";
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
 
@@ -249,6 +263,7 @@ public class ProduccionServlet extends HttpServlet {
                     String ordenCode = request.getParameter("p_codigo_orden");
                     String idComponenteStr = request.getParameter("p_id_componente_seleccionado");
                     String cantEmpacadaStr = request.getParameter("p_cant_a_empacar_final");
+                    String nombreComponente = request.getParameter("p_nombre_componente_seleccionado");
 
                     if (ordenCode == null || idComponenteStr == null || cantEmpacadaStr == null) {
                         throw new IllegalArgumentException("Datos de empaque secundario incompletos.");
@@ -256,7 +271,7 @@ public class ProduccionServlet extends HttpServlet {
 
                     int idComponente = Integer.parseInt(idComponenteStr);
                     Auditoria.registrar(request, "OPERACION", "Consumo de empaque secundario ID: " + idComponente + " para Orden: " + ordenCode);
-                    mensaje = "Consumo de empaque secundario (ID " + idComponente + ") registrado para la Orden " + ordenCode;
+                    mensaje = "Consumo de empaque secundario **" + (nombreComponente != null ? nombreComponente : "ID " + idComponente) + "** registrado para el producto **" + nombreArticuloActivo + "**. ";
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
                 }
@@ -268,7 +283,7 @@ public class ProduccionServlet extends HttpServlet {
 
                     dao.gestionarConsumoEnvase(idOrdenActiva, mermaCantidad, envasesSueltos);
                     Auditoria.registrar(request, "PROCESO", "Merma (" + mermaCantidad + ") y envases sueltos registrados. Cierre de empaque para Orden ID: " + idOrdenActiva);
-                    mensaje = "Merma (" + mermaCantidad + ") y envases sueltos registrados. Etapa de empaque cerrada.";
+                    mensaje = "Merma (" + mermaCantidad + ") y envases sueltos registrados. Etapa de empaque cerrada para **" + nombreArticuloActivo + "**.";
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
                 }
@@ -298,7 +313,7 @@ public class ProduccionServlet extends HttpServlet {
 
                     Auditoria.registrar(request, "OPERACION", "Lote registrado. Código: " + codigoStr + " para Orden ID: " + idOrdenActiva);
 
-                    mensaje = "Se registró el Lote: " + codigoStr + " para la Orden " + idOrdenActiva;
+                    mensaje = "Se registró el Lote: **" + codigoStr + "** para la Orden de **" + nombreArticuloActivo + "**.";
 
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
@@ -312,7 +327,8 @@ public class ProduccionServlet extends HttpServlet {
 
                     session.removeAttribute("idRecetaActiva");
                     session.removeAttribute("idOrdenActiva");
-                    mensaje = "Orden de Producción " + idOrdenActiva + " **FINALIZADA** con éxito.";
+                    session.removeAttribute("nombreArticuloActivo");
+                    mensaje = "Orden de Producción de **" + nombreArticuloActivo + "** (" + idOrdenActiva + ") **FINALIZADA** con éxito.";
 
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
@@ -357,7 +373,10 @@ public class ProduccionServlet extends HttpServlet {
 
         if (action == null || action.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"error\": \"Acción no especificada en GET.\"}");
+            Map<String, Object> jsonErrorResponse = new LinkedHashMap<>();
+            jsonErrorResponse.put("success", false);
+            jsonErrorResponse.put("message", "Error al procesar la solicitud GET: **Acción no especificada en GET.**");
+            response.getWriter().write(gson.toJson(jsonErrorResponse));
             return;
         }
 
@@ -436,7 +455,10 @@ public class ProduccionServlet extends HttpServlet {
             }
 
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"error\": \"Error al procesar la solicitud GET (" + action + "): **" + errorDetalle.replace("\"", "\\\"") + "**\"}");
+            Map<String, Object> jsonErrorResponse = new LinkedHashMap<>();
+            jsonErrorResponse.put("success", false);
+            jsonErrorResponse.put("message", "Error al procesar la solicitud GET (" + action + "): **" + errorDetalle.replace("\"", "\\\"") + "**");
+            response.getWriter().write(gson.toJson(jsonErrorResponse));
         }
     }
 }
