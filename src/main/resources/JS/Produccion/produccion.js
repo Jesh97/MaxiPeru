@@ -1,5 +1,6 @@
 const ACCESS_PASSWORD = '1234';
 const PRODUCTION_SERVLET_URL = '/ProduccionServlet';
+
 let activeOrdenCode = '';
 let activeLotCode = '';
 let activeIdArtTerminado = '';
@@ -50,6 +51,7 @@ function escapeJsStringForHtml(str) {
     escaped = escaped.replace(/"/g, '\\"');
     return escaped;
 }
+
 function getCurrentDateFormatted() {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -57,6 +59,7 @@ function getCurrentDateFormatted() {
     const dd = String(today.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
 }
+
 function extractNumericCapacity(capacityString) {
     if (typeof capacityString !== 'string') return { value: 1.0, unit: 'Litro' };
     const numericCapacityMatch = capacityString.match(/^(\d+(\.\d+)?)/);
@@ -76,11 +79,13 @@ function extractNumericCapacity(capacityString) {
     }
     return { value: numericValue, unit: unitValue };
 }
+
 function formatTeorica(num) {
     if (typeof num !== 'number') return num;
     let formatted = num.toFixed(8).replace(/\.?0+$/, '');
     return formatted.replace('.', ',');
 }
+
 function formatQuantityDisplay(qty, unitName) {
     let formattedQty = qty.toFixed(4);
     formattedQty = formattedQty.replace(/\.?0+$/, '');
@@ -99,6 +104,7 @@ function formatQuantityDisplay(qty, unitName) {
     }
     return `${formattedQty} ${abbreviatedUnit}`;
 }
+
 function calculateTotalConsumption(row) {
     const theoreticalCell = row.querySelector('.teorica-quantity');
     const realInput = row.querySelector('.real-consumption');
@@ -122,6 +128,7 @@ function calculateTotalConsumption(row) {
     const finalTotalDisplay = formatQuantityDisplay(totalQty, unit);
     totalDisplay.textContent = finalTotalDisplay;
 }
+
 function adjustQuantity(inputId, delta, isConsumption) {
     const input = document.getElementById(inputId);
     let currentValue = parseFloat(input.value) || 0;
@@ -137,6 +144,7 @@ function adjustQuantity(inputId, delta, isConsumption) {
         updateTotalUnitsReference();
     }
 }
+
 $(document).ready(function() {
     const fechaIniInput = document.getElementById('fecha_ini');
     if (fechaIniInput && !fechaIniInput.value) {
@@ -324,6 +332,7 @@ $(document).ready(function() {
         }
     });
 });
+
 function getPackagingAutocompleteSource(tipoComponente) {
     return function(request, response) {
         $.ajax({
@@ -347,6 +356,7 @@ function getPackagingAutocompleteSource(tipoComponente) {
         });
     };
 }
+
 function showPasswordModal(tabName, colorSuffix) {
     document.getElementById('password-modal-overlay').style.display = 'flex';
     document.getElementById('protected-tab-name').value = tabName;
@@ -354,9 +364,11 @@ function showPasswordModal(tabName, colorSuffix) {
     document.getElementById('password-input').value = '';
     document.getElementById('password-error').textContent = '';
 }
+
 function closePasswordModal() {
     document.getElementById('password-modal-overlay').style.display = 'none';
 }
+
 function checkPasswordAndOpenTab() {
     const passwordInput = document.getElementById('password-input');
     const errorDisplay = document.getElementById('password-error');
@@ -371,9 +383,11 @@ function checkPasswordAndOpenTab() {
         errorDisplay.textContent = 'Contraseña incorrecta. Intente de nuevo.';
     }
 }
+
 function openProtectedTab(evt, tabName, colorSuffix) {
     showPasswordModal(tabName, colorSuffix);
 }
+
 function openTab(evt, tabName) {
     const tabContent = document.getElementsByClassName("tab-content");
     for (let i = 0; i < tabContent.length; i++) {
@@ -391,12 +405,15 @@ function openTab(evt, tabName) {
     }
     updateOrdenFields();
 }
+
 function deleteRow(btn) {
     btn.parentNode.parentNode.remove();
 }
+
 function addRowFromSearch() {
     showSwalAlert("La adición de insumos se realiza automáticamente al seleccionar un elemento de la lista desplegable de búsqueda.", 'info', 'Información');
 }
+
 function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
     const tableBody = document.getElementById(tableId);
     const newRow = tableBody.insertRow();
@@ -415,6 +432,7 @@ step="0.00000001" required placeholder="0.00" class="readonly-field" readonly></
         <input type="hidden" name="p_id_uni_insumo_hidden[]" value="${unitId}">
     `;
 }
+
 function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
     const tableBody = document.getElementById('envase-tapa-rows');
     const newRow = tableBody.insertRow();
@@ -467,6 +485,7 @@ updateTotalUnitsReference()"><i class="fas fa-trash"></i> Fila</button>
     `;
     updateTotalUnitsReference();
 }
+
 function assignTapaToRow(rowId, capType) {
     const globalIdHidden = 'p_id_tapa_seleccionada_hidden';
     const globalDisplayId = 'selected_tapa_display';
@@ -502,6 +521,7 @@ function assignTapaToRow(rowId, capType) {
     nombreHidden.value = assignedName;
     showSwalAlert(`${assignmentName} ${assignedName} asignada al envase.`, 'success', 'Asignación Exitosa');
 }
+
 function removeAssignedTapa(rowId, capType) {
     if (capType !== 'contratapa') {
         showSwalAlert("Solo la Contratapa/Sello (Opcional) puede ser removida individualmente.", 'warning', 'Advertencia');
@@ -516,24 +536,118 @@ function removeAssignedTapa(rowId, capType) {
     nombreHidden.value = '';
     showSwalAlert("Asignación de Contratapa/Sello removida.", 'info', 'Información');
 }
+
 function handleJsonResponse(response) {
+    if (!response.ok) {
+        return response.json().then(error => {
+            throw new Error(error.error || error.message || `Error HTTP ${response.status}: ${response.statusText}`);
+        }).catch(() => {
+            throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+        });
+    }
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
         return response.json();
     }
-    if (contentType && contentType.includes("text/html")) {
-        return response.text().then(html => {
-            if (html.includes('<script>alert')) {
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-                document.body.appendChild(tempDiv);
-                throw new Error("El servidor devolvió un script de alerta.");
-            }
-            return { success: false, message: "Respuesta inesperada del servidor (no JSON)." };
-        });
-    }
-    throw new Error("Respuesta del servidor en formato desconocido.");
+    return {};
 }
+
+function openAddInsumoModal(idReceta, nombreReceta, cantBase, unidadBase) {
+    document.getElementById('add_p_id_receta').value = idReceta;
+    document.getElementById('add-insumo-recipe-title').textContent = `${nombreReceta} (Base: ${cantBase.toFixed(2)} ${unidadBase})`;
+    document.getElementById('add-insumo-info').textContent = `Cantidad base de la receta: ${cantBase.toFixed(2)} ${unidadBase}`;
+
+    $("#buscar_insumo_add").autocomplete({
+        source: function(request, response) {
+            $.ajax({
+                url: PRODUCTION_SERVLET_URL,
+                type: "GET",
+                dataType: "json",
+                data: {
+                    action: "buscar_articulos_insumos",
+                    busqueda: request.term
+                },
+                success: function(data) {
+                    response(data.map(item => ({
+                        id: item.id,
+                        value: item.descripcion,
+                        label: (item.codigo || '') + ' - ' + (item.descripcion || ''),
+                        codigo: item.codigo,
+                        id_unidad: item.id_unidad,
+                        unidad_nombre: item.unidad_nombre,
+                        densidad: item.densidad || '1.00000000'
+                    })));
+                }
+            });
+        },
+        minLength: 2,
+        select: function(event, ui) {
+            const selectedItem = ui.item;
+            document.getElementById('buscar_insumo_add').value = selectedItem.value;
+
+            document.getElementById('add_p_id_articulo').value = selectedItem.id;
+            document.getElementById('add_p_id_unidad').value = selectedItem.id_unidad;
+            document.getElementById('add_p_densidad').value = selectedItem.densidad;
+            document.getElementById('add_p_nombre_unidad').value = selectedItem.unidad_nombre;
+
+            return false;
+        }
+    });
+
+    document.getElementById('add-insumo-form').reset();
+    document.getElementById('add-insumo-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAddInsumoModal() {
+    document.getElementById('add-insumo-modal').style.display = 'none';
+    document.getElementById('add-insumo-form').reset();
+    document.body.style.overflow = 'auto';
+}
+
+function saveNewInsumoToRecipe(event) {
+    event.preventDefault();
+    const form = event.target;
+    const idReceta = document.getElementById('add_p_id_receta').value;
+    const nombreRecetaElement = document.getElementById('add-insumo-recipe-title');
+    const fullInfo = nombreRecetaElement.textContent;
+    const nombreRecetaMatch = fullInfo.match(/^(.*) \(Base:/);
+    const nombreReceta = nombreRecetaMatch ? nombreRecetaMatch[1].trim() : '';
+    const cantBaseMatch = fullInfo.match(/Base: ([\d.]+)\s*([a-zA-Z]+)/);
+    const cantBase = cantBaseMatch ? parseFloat(cantBaseMatch[1]) : 1.0;
+    const unidadBase = cantBaseMatch ? cantBaseMatch[2].trim() : 'Unidad';
+
+    if (!document.getElementById('add_p_id_articulo').value) {
+        showSwalAlert("Debe seleccionar un insumo válido.", 'error', 'Error de Insumo');
+        return;
+    }
+
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData);
+    params.set('action', 'agregar_detalle_receta');
+
+    fetch(PRODUCTION_SERVLET_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params
+    })
+    .then(handleJsonResponse)
+    .then(data => {
+        if (data.success) {
+            showSwalAlert("Nuevo insumo agregado correctamente a la receta.", 'success', 'Adición Exitosa');
+            closeAddInsumoModal();
+            loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase);
+        } else {
+            showSwalAlert("Error al agregar insumo: " + (data.message || "Detalle desconocido."), 'error', 'Error al Guardar');
+        }
+    })
+    .catch(error => {
+        showSwalAlert("Error de comunicación al agregar insumo: " + error.message, 'error', 'Error de Conexión');
+    });
+}
+
 function saveFullRecipe(event) {
     event.preventDefault();
     const form = event.target;
@@ -581,11 +695,10 @@ function saveFullRecipe(event) {
         }
     })
     .catch(error => {
-        if (!error.message.includes("script de alerta")) {
-            showSwalAlert("Error de comunicación con el servidor al guardar la fórmula. Verifique la conexión o el backend.", 'error', 'Error de Conexión');
-        }
+        showSwalAlert("Error de comunicación con el servidor al guardar la fórmula. Verifique la conexión o el backend.", 'error', 'Error de Conexión');
     });
 }
+
 function loadInsumosForRecipe() {
     const idReceta = document.getElementById('p_id_receta_orden_hidden').value;
     const cantProdStr = document.getElementById('cant_prod_orden').value;
@@ -611,7 +724,7 @@ function loadInsumosForRecipe() {
     statusDisplay.textContent = `Fórmula Activa: ${activeNombreReceta}. Cargando insumos...`;
     insumosCargadosPreviamente = true;
     fetch(`${PRODUCTION_SERVLET_URL}?action=obtener_insumos_receta&id_receta=${idReceta}`)
-    .then(response => response.json())
+    .then(handleJsonResponse)
     .then(data => {
         if (data.length > 0) {
             data.forEach(insumo => {
@@ -673,6 +786,7 @@ fa-edit"></i> Registrar</button>
         statusDisplay.textContent = `Error al cargar insumos: ${error.message}.`;
     });
 }
+
 function saveOrden(event) {
     event.preventDefault();
     const idReceta = document.getElementById('p_id_receta_orden_hidden').value;
@@ -728,11 +842,10 @@ function saveOrden(event) {
         }
     })
     .catch(error => {
-        if (!error.message.includes("script de alerta")) {
-            showSwalAlert("Error de comunicación con el servidor al crear la orden. Verifique la conexión o el backend.", 'error', 'Error de Conexión');
-        }
+        showSwalAlert("Error de comunicación con el servidor al crear la orden. Verifique la conexión o el backend.", 'error', 'Error de Conexión');
     });
 }
+
 function handleInsumoConsumption(event, rowOverride = null) {
     event.preventDefault();
     const row = rowOverride || event.target.closest('tr');
@@ -754,7 +867,7 @@ function handleInsumoConsumption(event, rowOverride = null) {
     }
     const totalConsumedStr = totalConsumedMatch[1].replace(',', '.');
     const totalConsumed = parseFloat(totalConsumedStr);
-    const comentarioInput = row.querySelector(`#comment-cons-${idArticuloConsumido}-`);
+    const comentarioInput = row.querySelector(`[id^="comment-cons-${idArticuloConsumido}-"]`);
     const comentario = comentarioInput ? comentarioInput.value : '';
     const params = new URLSearchParams({
         action: 'registrar_consumo_componente',
@@ -786,66 +899,76 @@ function handleInsumoConsumption(event, rowOverride = null) {
         submitButton.classList.add('btn-warning');
         submitButton.classList.remove('btn-success');
         submitButton.disabled = false;
-        if (!error.message.includes("script de alerta")) {
-            showSwalAlert("Error de comunicación con el servidor al registrar el consumo.", 'error', 'Error de Conexión');
-        }
+        showSwalAlert("Error de comunicación con el servidor al registrar el consumo.", 'error', 'Error de Conexión');
     });
 }
+
 function closeRecipeDetailModal() {
     document.getElementById('view-recipe-modal').style.display = 'none';
     document.body.style.overflow = 'auto';
 }
+
 function loadInsumoDetalleForEdit(idDetalle, idReceta, nombreReceta, cantBase, unidadBase) {
     document.getElementById('edit-detalle-modal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    document.getElementById('edit-detalle-modal-info').textContent = `Receta: ${nombreReceta} (Base: ${cantBase.toFixed(2)} ${unidadBase})`;
-    document.getElementById('edit_p_id_receta').value = idReceta;
-    document.getElementById('edit_nombre_receta').value = nombreReceta;
-    document.getElementById('edit_cant_base_receta').value = cantBase;
-    document.getElementById('edit_unidad_base_receta').value = unidadBase;
-    document.getElementById('edit-detalle-form').reset();
+    document.getElementById('edit-detalle-modal-info').textContent = `Editando Insumo de: ${nombreReceta} (Base: ${cantBase.toFixed(2)} ${unidadBase})`;
     document.getElementById('edit_p_id_detalle_receta').value = idDetalle;
-    document.getElementById('edit-detalle-modal-status').textContent = 'Cargando detalle...';
+    document.getElementById('edit_p_id_receta').value = idReceta;
+
+    document.getElementById('edit-detalle-form').reset();
+    document.getElementById('edit-detalle-form').style.opacity = 0.5;
+
     fetch(`${PRODUCTION_SERVLET_URL}?action=obtener_detalle_insumo_receta&p_id_detalle_receta=${idDetalle}`)
-    .then(response => response.json())
+    .then(handleJsonResponse)
     .then(data => {
-        if (data && data.length > 0) {
-            const insumo = data[0];
-            document.getElementById('edit_p_id_articulo').value = insumo.id_articulo;
-            document.getElementById('edit_p_nombre_articulo').value = `${insumo.codigo} - ${insumo.nombre_articulo}`;
+        const insumo = data.length > 0 ? data[0] : null;
+
+        if (insumo) {
+            document.getElementById('edit_p_nombre_articulo').value = insumo.nombre_articulo || '';
             document.getElementById('edit_p_cantidad_requerida').value = parseFloat(insumo.cantidad_requerida).toFixed(4);
-            document.getElementById('edit_p_nombre_unidad').value = insumo.unidad_nombre;
             document.getElementById('edit_p_densidad').value = insumo.densidad || '1.00000000';
+
+            document.getElementById('edit_p_nombre_unidad').value = insumo.unidad_nombre || 'Unidad';
+
+            document.getElementById('edit_p_id_articulo').value = insumo.id_articulo;
             document.getElementById('edit_p_id_unidad').value = insumo.id_unidad;
-            document.getElementById('edit-detalle-modal-status').textContent = 'Detalle cargado.';
+
+            document.getElementById('edit_nombre_receta').value = nombreReceta;
+            document.getElementById('edit_cant_base_receta').value = cantBase;
+            document.getElementById('edit_unidad_base_receta').value = unidadBase;
+
+            document.getElementById('edit-detalle-form').style.opacity = 1;
         } else {
-            document.getElementById('edit-detalle-modal-status').textContent = 'Error: No se encontró el detalle del insumo.';
-            setTimeout(() => {
-                closeEditDetalleModal();
-            }, 1000);
+            showSwalAlert('No se pudo cargar el detalle del insumo. El servidor devolvió un objeto vacío.', 'error', 'Datos No Encontrados');
+            closeEditModal();
         }
     })
     .catch(error => {
-        document.getElementById('edit-detalle-modal-status').textContent = `Error de comunicación: ${error.message}`;
-        setTimeout(() => {
-            closeEditDetalleModal();
-        }, 1000);
+        showSwalAlert(`Error al cargar datos para edición: ${error.message}`, 'error', 'Error de Conexión o Servidor');
+        closeEditModal();
     });
 }
-function closeEditDetalleModal() {
+
+function closeEditModal() {
     document.getElementById('edit-detalle-modal').style.display = 'none';
     document.body.style.overflow = 'auto';
 }
-function submitEditDetalleReceta(event) {
+
+function saveEditedDetalle(event) {
     event.preventDefault();
     const form = event.target;
     const idReceta = document.getElementById('edit_p_id_receta').value;
     const nombreReceta = document.getElementById('edit_nombre_receta').value;
     const cantBase = parseFloat(document.getElementById('edit_cant_base_receta').value);
     const unidadBase = document.getElementById('edit_unidad_base_receta').value;
+
     const formData = new FormData(form);
     const params = new URLSearchParams(formData);
     params.set('action', 'modificar_detalle_receta');
+
+    params.set('p_cantidad_requerida', document.getElementById('edit_p_cantidad_requerida').value);
+    params.set('p_densidad', document.getElementById('edit_p_densidad').value);
+
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
@@ -857,7 +980,7 @@ function submitEditDetalleReceta(event) {
     .then(data => {
         if (data.success) {
             showSwalAlert("Insumo de receta actualizado correctamente.", 'success', 'Actualización Exitosa');
-            closeEditDetalleModal();
+            closeEditModal();
             loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase);
         } else {
             showSwalAlert("Error al editar insumo: " + (data.message || "Detalle desconocido."), 'error', 'Error de Edición');
@@ -867,6 +990,7 @@ function submitEditDetalleReceta(event) {
         showSwalAlert("Error de comunicación al editar insumo: " + error.message, 'error', 'Error de Conexión');
     });
 }
+
 function confirmRemoveDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase) {
     Swal.fire({
         title: 'Confirmar Eliminación',
@@ -883,6 +1007,7 @@ function confirmRemoveDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase,
         }
     });
 }
+
 function removeDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase) {
     const params = new URLSearchParams({
         action: 'quitar_detalle_receta',
@@ -908,6 +1033,7 @@ function removeDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidad
         showSwalAlert("Error de comunicación al quitar insumo: " + error.message, 'error', 'Error de Conexión');
     });
 }
+
 function confirmDeactivateReceta(idReceta, nombreReceta) {
     Swal.fire({
         title: 'ADVERTENCIA',
@@ -924,6 +1050,7 @@ function confirmDeactivateReceta(idReceta, nombreReceta) {
         }
     });
 }
+
 function deactivateReceta(idReceta) {
     const params = new URLSearchParams({
         action: 'desactivar_receta',
@@ -949,9 +1076,11 @@ function deactivateReceta(idReceta) {
         showSwalAlert("Error de comunicación al desactivar receta: " + error.message, 'error', 'Error de Conexión');
     });
 }
+
 function loadRecetasList() {
     const tableBody = document.getElementById('recetas-list-rows');
     tableBody.innerHTML = '<tr><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Cargando recetas...</td></tr>';
+
     fetch(`${PRODUCTION_SERVLET_URL}?action=listar_recetas`)
     .then(response => {
         if (!response.ok) {
@@ -961,15 +1090,19 @@ function loadRecetasList() {
         }
         return response.json();
     })
-    .then(recetas => {
+    .then(data => {
         tableBody.innerHTML = '';
         const uniqueRecetas = new Map();
+        const recetas = Array.isArray(data) ? data : (data.recetas || []);
+
         recetas.forEach(receta => {
             if (receta.id_receta && !uniqueRecetas.has(receta.id_receta)) {
                 uniqueRecetas.set(receta.id_receta, receta);
             }
         });
+
         const finalRecetas = Array.from(uniqueRecetas.values());
+
         if (finalRecetas.length > 0) {
             finalRecetas.forEach(receta => {
                 const nombreGenerico = receta.nombre_generico || 'Nombre Desconocido';
@@ -979,6 +1112,7 @@ function loadRecetasList() {
                 const nombreGenericoEscaped = escapeJsStringForHtml(nombreGenerico);
                 const unidadNombreEscaped = escapeJsStringForHtml(unidadNombre);
                 const newRow = tableBody.insertRow();
+
                 newRow.innerHTML = `
                     <td>${nombreGenerico}</td>
                     <td>${cantidadBase.toFixed(2)}</td>
@@ -998,26 +1132,34 @@ function loadRecetasList() {
         tableBody.innerHTML = `<tr><td colspan="5">Error al cargar recetas: ${error.message}</td></tr>`;
     });
 }
+
 function loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase) {
     document.getElementById('view-recipe-modal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
     document.getElementById('recipe-detail-info').textContent = `Receta: ${nombreReceta} (Base: ${cantBase.toFixed(2)} ${unidadBase})`;
-    document.getElementById('recipe-detail-rows').innerHTML = '<tr><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Cargando insumos...</td></tr>';
+
+    const addButton = document.getElementById('add-insumo-to-recipe-btn');
+    if (addButton) {
+        addButton.setAttribute('onclick', `openAddInsumoModal(${idReceta}, '${escapeJsStringForHtml(nombreReceta)}', ${cantBase}, '${escapeJsStringForHtml(unidadBase)}')`);
+    }
+
+    const tableBody = document.getElementById('recipe-detail-rows');
+    tableBody.innerHTML = '<tr><td colspan="4"><i class="fas fa-spinner fa-spin"></i> Cargando insumos...</td></tr>';
     document.getElementById('recipe-detail-status').textContent = 'Cargando detalles...';
+
     fetch(`${PRODUCTION_SERVLET_URL}?action=obtener_insumos_receta&id_receta=${idReceta}`)
-    .then(response => response.json())
+    .then(handleJsonResponse)
     .then(insumos => {
-        const tableBody = document.getElementById('recipe-detail-rows');
         tableBody.innerHTML = '';
         if (insumos.length > 0) {
             insumos.forEach(insumo => {
                 const requiredQuantityDisplay = formatQuantityDisplay(parseFloat(insumo.cantidad_requerida), insumo.unidad_nombre);
                 const newRow = tableBody.insertRow();
+
                 newRow.innerHTML = `
                     <td>${insumo.codigo}</td>
                     <td>${insumo.nombre_articulo}</td>
                     <td>${requiredQuantityDisplay}</td>
-                    <td></td>
                     <td>
                         <button type="button" class="btn-submit btn-compact btn-warning" onclick="loadInsumoDetalleForEdit(${insumo.id_detalle_receta}, ${idReceta}, '${escapeJsStringForHtml(nombreReceta)}', ${cantBase}, '${escapeJsStringForHtml(unidadBase)}')"><i class="fas fa-edit"></i> Editar</button>
                         <button type="button" class="btn-submit btn-compact btn-danger" onclick="confirmRemoveDetalleReceta(${insumo.id_detalle_receta}, ${idReceta}, '${escapeJsStringForHtml(nombreReceta)}', ${cantBase}, '${escapeJsStringForHtml(unidadBase)}')"><i class="fas fa-trash"></i> Quitar</button>
@@ -1026,16 +1168,18 @@ function loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase) {
             });
             document.getElementById('recipe-detail-status').textContent = 'Detalles cargados.';
         } else {
-            document.getElementById('recipe-detail-rows').innerHTML = '<tr><td colspan="5">Esta receta no tiene insumos.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="4">Esta receta no tiene insumos.</td></tr>';
             document.getElementById('recipe-detail-status').textContent = 'Fórmula vacía.';
         }
     })
     .catch(error => {
-        document.getElementById('recipe-detail-rows').innerHTML = `<tr><td colspan="5">Error al cargar insumos: ${error.message}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="4">Error al cargar insumos: ${error.message}</td></tr>`;
         document.getElementById('recipe-detail-status').textContent = `Error de comunicación.`;
     });
 }
+
 function closeOrdenDetailModal() { document.getElementById('view-orden-modal').style.display = 'none'; }
+
 function loadOrdenesList() {
     const tableBody = document.getElementById('ordenes-list-rows');
     tableBody.innerHTML = '<tr><td colspan="7"><i class="fas fa-spinner fa-spin"></i> Cargando órdenes...</td></tr>';
@@ -1067,6 +1211,7 @@ function loadOrdenesList() {
         tableBody.innerHTML = `<tr><td colspan="7">Error al cargar órdenes: ${error.message}</td></tr>`;
     });
 }
+
 function confirmCancelOrden(codigoOrden) {
     Swal.fire({
         title: 'Confirmar Cancelación',
@@ -1083,6 +1228,7 @@ function confirmCancelOrden(codigoOrden) {
         }
     });
 }
+
 function cancelOrden(codigoOrden) {
     const params = new URLSearchParams({
         action: 'cancelar_orden',
@@ -1108,6 +1254,7 @@ function cancelOrden(codigoOrden) {
         showSwalAlert("Error de comunicación al cancelar orden: " + error.message, 'error', 'Error de Conexión');
     });
 }
+
 function loadDetalleOrden(codigoOrden, nombreArtTerminado, estado) {
     document.getElementById('view-orden-modal-info').textContent = `Orden: ${codigoOrden} - ${nombreArtTerminado} (Estado: ${estado})`;
     document.getElementById('orden-detalle-insumos-body').innerHTML = '<tr><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Cargando insumos...</td></tr>';
@@ -1138,7 +1285,9 @@ function loadDetalleOrden(codigoOrden, nombreArtTerminado, estado) {
         document.getElementById('orden-detalle-status').textContent = `Error de comunicación: ${error.message}`;
     });
 }
+
 function closeOrdenDetailModal() { document.getElementById('view-orden-modal').style.display = 'none'; }
+
 function calculateLooseContainers() {
     const finalProducedQtyInput = document.getElementById('cant_producida_final_envasado');
     const finalProducedQty = parseFloat(finalProducedQtyInput.value) ||
@@ -1181,6 +1330,7 @@ function calculateLooseContainers() {
     const mermaValue = finalProducedQty - totalContainersCapacity;
     mermaCantidad.value = mermaValue.toFixed(2);
 }
+
 function updateTotalUnitsReference() {
     const rows = document.getElementById('envase-tapa-rows').querySelectorAll('tr');
     let totalUnits = 0;
@@ -1193,6 +1343,7 @@ function updateTotalUnitsReference() {
         totalUnitsDisplay.textContent = totalUnits;
     }
 }
+
 function submitPackagingStep(event, stepAction, message) {
     event.preventDefault();
     const form = event.target;
@@ -1218,6 +1369,7 @@ function submitPackagingStep(event, stepAction, message) {
         showSwalAlert(`Error de comunicación con el servidor en el paso de empaque: ${error.message}`, 'error', 'Error de Conexión');
     });
 }
+
 function submitMerma(event) {
     event.preventDefault();
     if (!activeOrdenCode) {
@@ -1252,6 +1404,7 @@ function submitMerma(event) {
         showSwalAlert("Error de comunicación con el servidor al registrar merma: " + error.message, 'error', 'Error de Conexión');
     });
 }
+
 function submitFinalLotRegistration(event) {
     event.preventDefault();
     const form = event.target;
@@ -1289,6 +1442,7 @@ function submitFinalLotRegistration(event) {
         showSwalAlert("Error de comunicación con el servidor al registrar el lote final: " + error.message, 'error', 'Error de Conexión');
     });
 }
+
 function generateLotCode(event) {
     event.preventDefault();
     if (!activeOrdenCode) {
@@ -1333,6 +1487,7 @@ function generateLotCode(event) {
         showSwalAlert("Error de comunicación con el servidor al generar el lote: " + error.message, 'error', 'Error de Conexión');
     });
 }
+
 function updateOrdenFields(forceClear = false) {
     if (forceClear) {
         activeOrdenCode = '';
@@ -1401,6 +1556,7 @@ function updateOrdenFields(forceClear = false) {
         idArtTerEmpaqueFields.forEach(field => field.value = '');
     }
 }
+
 function openCommentModal(buttonElement) {
     const commentId = buttonElement.getAttribute('data-comment-id');
     const insumoName = buttonElement.getAttribute('data-insumo-nombre');
@@ -1410,12 +1566,14 @@ function openCommentModal(buttonElement) {
     document.getElementById('commentInput').value = hiddenCommentInput.value;
     document.getElementById('commentModal').style.display = 'flex';
 }
+
 function closeCommentModal() {
     document.getElementById('commentModal').style.display = 'none';
     document.getElementById('commentInput').value = '';
     document.getElementById('modal-input-id-ref').value = '';
     document.getElementById('modal-insumo-name').textContent = '';
 }
+
 function saveComment() {
     const commentId = document.getElementById('modal-input-id-ref').value;
     const commentValue = document.getElementById('commentInput').value;

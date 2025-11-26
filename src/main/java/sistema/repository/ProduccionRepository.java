@@ -15,6 +15,7 @@ public interface ProduccionRepository {
     void desactivarReceta(int idReceta) throws SQLException;
     List<Map<String, Object>> obtenerRecetaPorNombreGenerico(String nombreGenerico) throws SQLException;
     List<Map<String, Object>> obtenerInsumosPorIdReceta(int idReceta) throws SQLException;
+    List<Map<String, Object>> obtenerDetalleInsumoReceta(int idDetalleReceta) throws SQLException;
     int crearOrden(int idReceta, int idArticuloProducido, BigDecimal cantProd, BigDecimal cantProdFinalReal, String fechaIni, String obs) throws SQLException;
     void gestionarConsumoMateriaPrima(int idOrden) throws SQLException;
     void registrarConsumoComponente(int idOrden, int idArticuloConsumido, BigDecimal cantidadAConsumir, int idUnidad, boolean esEnvase, String comentarioConsumo) throws SQLException;

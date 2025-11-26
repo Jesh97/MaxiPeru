@@ -207,6 +207,30 @@ public class ProduccionController implements ProduccionRepository {
     }
 
     @Override
+    public List<Map<String, Object>> obtenerDetalleInsumoReceta(int idDetalleReceta) throws SQLException {
+        List<Map<String, Object>> insumoDetalle = new ArrayList<>();
+        String sql = "{CALL sp_obtener_detalle_insumo_receta(?)}";
+
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, idDetalleReceta);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> insumo = new LinkedHashMap<>();
+                    insumo.put("id_articulo", rs.getInt("id_articulo"));
+                    insumo.put("nombre_articulo", rs.getString("nombre_articulo"));
+                    insumo.put("cantidad_requerida", rs.getBigDecimal("cantidad_requerida"));
+                    insumo.put("id_unidad", rs.getInt("id_unidad"));
+                    insumo.put("unidad_nombre", rs.getString("unidad_nombre"));
+                    insumo.put("densidad", rs.getBigDecimal("densidad"));
+                    insumoDetalle.add(insumo);
+                }
+            }
+        }
+        return insumoDetalle;
+    }
+
+    @Override
     public int crearOrden(int idReceta, int idArticuloProducido, BigDecimal cantProd, BigDecimal cantProdFinalReal, String fechaIni, String obs) throws SQLException {
         int idOrden = -1;
         String sql = "{CALL sp_crear_orden(?, ?, ?, ?, ?, ?)}";

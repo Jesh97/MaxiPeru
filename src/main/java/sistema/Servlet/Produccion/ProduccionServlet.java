@@ -90,11 +90,30 @@ public class ProduccionServlet extends HttpServlet {
                     jsonResponse.put("message", mensaje);
                     jsonResponse.put("id_receta", idRecetaActiva);
                 }
-                case "actualizar_detalle_receta" -> {
+
+                // NUEVA ACCIÓN: Agregar un solo insumo a una receta ya existente (para compatibilidad con JS)
+                case "agregar_detalle_receta" -> {
+                    idRecetaActiva = Integer.parseInt(request.getParameter("p_id_receta"));
+                    int idArtInsumo = Integer.parseInt(request.getParameter("p_id_articulo"));
+                    int idUniInsumo = Integer.parseInt(request.getParameter("p_id_unidad"));
+                    BigDecimal cantReq = new BigDecimal(request.getParameter("p_cantidad_requerida"));
+                    String nombreArticulo = request.getParameter("p_nombre_articulo");
+
+                    dao.agregarDetalleReceta(idRecetaActiva, idArtInsumo, cantReq, idUniInsumo);
+
+                    Auditoria.registrar(request, "MODIFICACION", "Insumo agregado a Receta ID: " + idRecetaActiva + ". Artículo: " + idArtInsumo);
+                    mensaje = "Insumo **" + (nombreArticulo != null ? nombreArticulo : "Artículo ID: " + idArtInsumo) + "** agregado a la receta con éxito.";
+                    jsonResponse.put("success", true);
+                    jsonResponse.put("message", mensaje);
+                    jsonResponse.put("id_receta", idRecetaActiva);
+                }
+
+                // ACCIÓN COMBINADA: Actualizar detalle de receta (para compatibilidad con JS)
+                case "actualizar_detalle_receta", "modificar_detalle_receta" -> {
                     String idDetalleRecetaStr = request.getParameter("p_id_detalle_receta");
-                    String cantReqStr = request.getParameter("p_cant_req");
-                    String idUniInsumoStr = request.getParameter("p_id_uni_insumo");
-                    String nombreInsumo = request.getParameter("p_nombre_insumo");
+                    String cantReqStr = request.getParameter("p_cantidad_requerida"); // El JS usa 'p_cantidad_requerida'
+                    String idUniInsumoStr = request.getParameter("p_id_unidad");       // El JS usa 'p_id_unidad'
+                    String nombreInsumo = request.getParameter("p_nombre_articulo");   // El JS usa 'p_nombre_articulo'
 
                     if (idDetalleRecetaStr == null || cantReqStr == null || idUniInsumoStr == null) {
                         throw new IllegalArgumentException("Datos para actualizar el detalle de la receta están incompletos.");
@@ -110,7 +129,9 @@ public class ProduccionServlet extends HttpServlet {
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
                 }
-                case "eliminar_detalle_receta" -> {
+
+                // ACCIÓN COMBINADA: Eliminar detalle de receta (para compatibilidad con JS)
+                case "eliminar_detalle_receta", "quitar_detalle_receta" -> {
                     String idDetalleRecetaStr = request.getParameter("p_id_detalle_receta");
                     String nombreInsumo = request.getParameter("p_nombre_insumo");
 
@@ -125,6 +146,7 @@ public class ProduccionServlet extends HttpServlet {
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
                 }
+
                 case "desactivar_receta" -> {
                     String idRecetaStr = request.getParameter("p_id_receta");
                     String nombreReceta = request.getParameter("p_nombre_receta");
@@ -430,6 +452,15 @@ public class ProduccionServlet extends HttpServlet {
                     int idReceta = Integer.parseInt(idRecetaStr);
 
                     resultados = dao.obtenerInsumosPorIdReceta(idReceta);
+                }
+                case "obtener_detalle_insumo_receta" -> {
+                    String idDetalleRecetaStr = request.getParameter("p_id_detalle_receta");
+                    if (idDetalleRecetaStr == null || idDetalleRecetaStr.isEmpty()) {
+                        throw new IllegalArgumentException("ID de Detalle de Receta no especificado para obtener detalle.");
+                    }
+                    int idDetalleReceta = Integer.parseInt(idDetalleRecetaStr);
+
+                    resultados = dao.obtenerDetalleInsumoReceta(idDetalleReceta);
                 }
                 case "obtener_consumo_total_orden" -> {
                     String idOrdenStr = request.getParameter("id_orden");
