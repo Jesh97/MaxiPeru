@@ -426,7 +426,7 @@ function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
         </td>
         <td><input type="text" name="p_nombre_uni_insumo[]" value="${unitName}" readonly class="readonly-field" placeholder="Unidad"></td>
         <td><input type="number" name="p_densidad[]" value="${density}"
-step="0.00000001" required placeholder="0.00" class="readonly-field" readonly></td>
+step="0.000001" required placeholder="0.00" class="readonly-field" readonly></td>
         <td><button type="button" class="remove-row" onclick="deleteRow(this)"><i class="fas fa-trash"></i></button></td>
         <input type="hidden" name="p_id_art_insumo_hidden[]" value="${insumoId}">
         <input type="hidden" name="p_id_uni_insumo_hidden[]" value="${unitId}">
@@ -671,7 +671,8 @@ function saveFullRecipe(event) {
     const formData = new FormData(form);
     const params = new URLSearchParams(formData);
     params.set('action', 'crear_receta_y_componentes');
-    params.set('p_id_prod_maestro_hidden', artTerId);
+    // CORRECCIÓN: Usar p_id_art_ter_hidden para coincidir con el Servlet
+    params.set('p_id_art_ter_hidden', artTerId);
     params.set('p_cant_prod', cantProd);
     params.set('p_nombre_uni_prod', nombreUniProd);
     params.set('p_id_unidad_producir', idUnidadProducir);
@@ -790,26 +791,48 @@ fa-edit"></i> Registrar</button>
 function saveOrden(event) {
     event.preventDefault();
     const idReceta = document.getElementById('p_id_receta_orden_hidden').value;
-    const cantProdStr = document.getElementById('cant_prod_orden').value;
+    let cantProdStr = document.getElementById('cant_prod_orden').value;
     const idArtProducido = document.getElementById('p_id_art_producido_orden_hidden').value;
     const fechaIni = document.getElementById('fecha_ini').value;
-    const cantProdFinalRealStr = document.getElementById('p_cant_prod_final_real').value;
+    let cantProdFinalRealStr = document.getElementById('p_cant_prod_final_real').value;
+    const nombreArticulo = document.getElementById('p_nombre_art_producido_orden_hidden').value;
+    const obs = document.getElementById('obs_orden').value;
+
     if (!idReceta || !insumosCargadosPreviamente) {
         showSwalAlert("Debe seleccionar una Receta y Cargar los Insumos primero.", 'error', 'Error de Pre-requisitos');
         return;
     }
+
+    cantProdStr = cantProdStr.replace(',', '.').trim();
+    cantProdFinalRealStr = cantProdFinalRealStr.replace(',', '.').trim();
+
     if (!cantProdStr || parseFloat(cantProdStr) <= 0) {
         showSwalAlert("La Cantidad a Producir (Programada) debe ser positiva.", 'error', 'Error de Cantidad');
         return;
     }
+
     if (!cantProdFinalRealStr || parseFloat(cantProdFinalRealStr) <= 0) {
         showSwalAlert("La Cantidad Producida Final Real es requerida y debe ser positiva.", 'error', 'Error de Cantidad');
         return;
     }
-    const formData = new FormData(event.target);
+
+    if (!nombreArticulo) {
+        showSwalAlert("Error de datos: El nombre del Artículo Producido (p_nombre_art_producido_orden_hidden) está vacío. Verifique la selección de la Fórmula.", 'error', 'Error de Datos');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('p_id_receta_orden_hidden', idReceta);
+    formData.append('p_cant_prod_orden', cantProdStr);
+    formData.append('p_id_art_producido_orden_hidden', idArtProducido);
+    formData.append('p_cant_prod_final_real', cantProdFinalRealStr);
+    formData.append('p_fecha_ini_orden', fechaIni);
+    formData.append('p_obs_orden', obs);
+    formData.append('p_nombre_art_producido_orden_hidden', nombreArticulo);
+
     const params = new URLSearchParams(formData);
     params.set('action', 'crear_orden');
-    params.set('p_cant_prod_final_real', cantProdFinalRealStr);
+
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
         headers: {
@@ -867,8 +890,11 @@ function handleInsumoConsumption(event, rowOverride = null) {
     }
     const totalConsumedStr = totalConsumedMatch[1].replace(',', '.');
     const totalConsumed = parseFloat(totalConsumedStr);
+    const codigoArticulo = row.querySelector('td:nth-child(1)').textContent;
+    const nombreArticuloConsumido = codigoArticulo;
     const comentarioInput = row.querySelector(`[id^="comment-cons-${idArticuloConsumido}-"]`);
     const comentario = comentarioInput ? comentarioInput.value : '';
+
     const params = new URLSearchParams({
         action: 'registrar_consumo_componente',
         p_id_orden: idOrden,
@@ -876,7 +902,8 @@ function handleInsumoConsumption(event, rowOverride = null) {
         p_cantidad_consumida: totalConsumed,
         p_id_unidad: idUnidad,
         p_es_envase: false,
-        p_comentario_desviacion: comentario
+        p_comentario_consumo: comentario,
+        p_nombre_articulo_consumido: nombreArticuloConsumido
     });
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
@@ -911,40 +938,41 @@ function closeRecipeDetailModal() {
 function loadInsumoDetalleForEdit(idDetalle, idReceta, nombreReceta, cantBase, unidadBase) {
     document.getElementById('edit-detalle-modal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    document.getElementById('edit-detalle-modal-info').textContent = `Editando Insumo de: ${nombreReceta} (Base: ${cantBase.toFixed(2)} ${unidadBase})`;
+    document.getElementById('edit-detalle-modal-info').textContent = `Editando Insumo de: ${nombreReceta} (Base: ${cantBase.toFixed(4)} ${unidadBase})`;
     document.getElementById('edit_p_id_detalle_receta').value = idDetalle;
     document.getElementById('edit_p_id_receta').value = idReceta;
-
     document.getElementById('edit-detalle-form').reset();
     document.getElementById('edit-detalle-form').style.opacity = 0.5;
 
     fetch(`${PRODUCTION_SERVLET_URL}?action=obtener_detalle_insumo_receta&p_id_detalle_receta=${idDetalle}`)
-    .then(handleJsonResponse)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
-        const insumo = data.length > 0 ? data[0] : null;
+        const insumo = Array.isArray(data) && data.length > 0 ? data[0] : null;
 
         if (insumo) {
             document.getElementById('edit_p_nombre_articulo').value = insumo.nombre_articulo || '';
             document.getElementById('edit_p_cantidad_requerida').value = parseFloat(insumo.cantidad_requerida).toFixed(4);
             document.getElementById('edit_p_densidad').value = insumo.densidad || '1.00000000';
-
             document.getElementById('edit_p_nombre_unidad').value = insumo.unidad_nombre || 'Unidad';
-
             document.getElementById('edit_p_id_articulo').value = insumo.id_articulo;
             document.getElementById('edit_p_id_unidad').value = insumo.id_unidad;
-
             document.getElementById('edit_nombre_receta').value = nombreReceta;
             document.getElementById('edit_cant_base_receta').value = cantBase;
             document.getElementById('edit_unidad_base_receta').value = unidadBase;
 
             document.getElementById('edit-detalle-form').style.opacity = 1;
         } else {
-            showSwalAlert('No se pudo cargar el detalle del insumo. El servidor devolvió un objeto vacío.', 'error', 'Datos No Encontrados');
+            Swal.fire('Datos No Encontrados', 'No se pudo cargar el detalle del insumo. El servidor devolvió un objeto vacío.', 'error');
             closeEditModal();
         }
     })
     .catch(error => {
-        showSwalAlert(`Error al cargar datos para edición: ${error.message}`, 'error', 'Error de Conexión o Servidor');
+        Swal.fire('Error de Conexión o Servidor', `Error al cargar datos para edición: ${error.message}`, 'error');
         closeEditModal();
     });
 }
@@ -956,18 +984,22 @@ function closeEditModal() {
 
 function saveEditedDetalle(event) {
     event.preventDefault();
-    const form = event.target;
     const idReceta = document.getElementById('edit_p_id_receta').value;
     const nombreReceta = document.getElementById('edit_nombre_receta').value;
     const cantBase = parseFloat(document.getElementById('edit_cant_base_receta').value);
     const unidadBase = document.getElementById('edit_unidad_base_receta').value;
+    const idDetalleReceta = document.getElementById('edit_p_id_detalle_receta').value;
+    const cantReq = document.getElementById('edit_p_cantidad_requerida').value;
+    const idUniInsumo = document.getElementById('edit_p_id_unidad').value;
+    const nombreInsumo = document.getElementById('edit_p_nombre_articulo').value;
 
-    const formData = new FormData(form);
-    const params = new URLSearchParams(formData);
-    params.set('action', 'modificar_detalle_receta');
-
-    params.set('p_cantidad_requerida', document.getElementById('edit_p_cantidad_requerida').value);
-    params.set('p_densidad', document.getElementById('edit_p_densidad').value);
+    const params = new URLSearchParams({
+        action: 'modificar_detalle_receta',
+        p_id_detalle_receta: idDetalleReceta,
+        p_cantidad_requerida: cantReq,
+        p_id_unidad: idUniInsumo,
+        p_nombre_articulo: nombreInsumo
+    });
 
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
@@ -976,18 +1008,21 @@ function saveEditedDetalle(event) {
         },
         body: params
     })
-    .then(handleJsonResponse)
+    .then(response => {
+        if (!response.ok) throw new Error("Network response was not ok.");
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            showSwalAlert("Insumo de receta actualizado correctamente.", 'success', 'Actualización Exitosa');
+            Swal.fire('Actualización Exitosa', "Insumo de receta actualizado correctamente.", 'success');
             closeEditModal();
             loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase);
         } else {
-            showSwalAlert("Error al editar insumo: " + (data.message || "Detalle desconocido."), 'error', 'Error de Edición');
+            Swal.fire('Error de Edición', "Error al editar insumo: " + (data.message || "Detalle desconocido."), 'error');
         }
     })
     .catch(error => {
-        showSwalAlert("Error de comunicación al editar insumo: " + error.message, 'error', 'Error de Conexión');
+        Swal.fire('Error de Conexión', "Error de comunicación al editar insumo: " + error.message, 'error');
     });
 }
 
@@ -1011,7 +1046,8 @@ function confirmRemoveDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase,
 function removeDetalleReceta(idDetalle, idReceta, nombreReceta, cantBase, unidadBase) {
     const params = new URLSearchParams({
         action: 'quitar_detalle_receta',
-        p_id_detalle_receta: idDetalle
+        p_id_detalle_receta: idDetalle,
+        p_nombre_insumo: 'Detalle ID ' + idDetalle
     });
     fetch(PRODUCTION_SERVLET_URL, {
         method: 'POST',
@@ -1153,6 +1189,7 @@ function loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase) {
         tableBody.innerHTML = '';
         if (insumos.length > 0) {
             insumos.forEach(insumo => {
+                const idDetalleReceta = insumo.id_detalle_receta || 0;
                 const requiredQuantityDisplay = formatQuantityDisplay(parseFloat(insumo.cantidad_requerida), insumo.unidad_nombre);
                 const newRow = tableBody.insertRow();
 
@@ -1161,8 +1198,8 @@ function loadRecetaDetalle(idReceta, nombreReceta, cantBase, unidadBase) {
                     <td>${insumo.nombre_articulo}</td>
                     <td>${requiredQuantityDisplay}</td>
                     <td>
-                        <button type="button" class="btn-submit btn-compact btn-warning" onclick="loadInsumoDetalleForEdit(${insumo.id_detalle_receta}, ${idReceta}, '${escapeJsStringForHtml(nombreReceta)}', ${cantBase}, '${escapeJsStringForHtml(unidadBase)}')"><i class="fas fa-edit"></i> Editar</button>
-                        <button type="button" class="btn-submit btn-compact btn-danger" onclick="confirmRemoveDetalleReceta(${insumo.id_detalle_receta}, ${idReceta}, '${escapeJsStringForHtml(nombreReceta)}', ${cantBase}, '${escapeJsStringForHtml(unidadBase)}')"><i class="fas fa-trash"></i> Quitar</button>
+                        <button type="button" class="btn-submit btn-compact btn-warning" onclick="loadInsumoDetalleForEdit(${idDetalleReceta}, ${idReceta}, '${escapeJsStringForHtml(nombreReceta)}', ${cantBase}, '${escapeJsStringForHtml(unidadBase)}')"><i class="fas fa-edit"></i> Editar</button>
+                        <button type="button" class="btn-submit btn-compact btn-danger" onclick="confirmRemoveDetalleReceta(${idDetalleReceta}, ${idReceta}, '${escapeJsStringForHtml(nombreReceta)}', ${cantBase}, '${escapeJsStringForHtml(unidadBase)}')"><i class="fas fa-trash"></i> Quitar</button>
                     </td>
                 `;
             });

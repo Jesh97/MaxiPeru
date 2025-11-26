@@ -26,6 +26,7 @@ public class ProduccionServlet extends HttpServlet {
 
     @Override
     public void init() {
+        // Asumiendo que ProduccionController implementa ProduccionRepository
         dao = new ProduccionController();
     }
 
@@ -91,7 +92,6 @@ public class ProduccionServlet extends HttpServlet {
                     jsonResponse.put("id_receta", idRecetaActiva);
                 }
 
-                // NUEVA ACCIÓN: Agregar un solo insumo a una receta ya existente (para compatibilidad con JS)
                 case "agregar_detalle_receta" -> {
                     idRecetaActiva = Integer.parseInt(request.getParameter("p_id_receta"));
                     int idArtInsumo = Integer.parseInt(request.getParameter("p_id_articulo"));
@@ -108,12 +108,11 @@ public class ProduccionServlet extends HttpServlet {
                     jsonResponse.put("id_receta", idRecetaActiva);
                 }
 
-                // ACCIÓN COMBINADA: Actualizar detalle de receta (para compatibilidad con JS)
                 case "actualizar_detalle_receta", "modificar_detalle_receta" -> {
                     String idDetalleRecetaStr = request.getParameter("p_id_detalle_receta");
-                    String cantReqStr = request.getParameter("p_cantidad_requerida"); // El JS usa 'p_cantidad_requerida'
-                    String idUniInsumoStr = request.getParameter("p_id_unidad");       // El JS usa 'p_id_unidad'
-                    String nombreInsumo = request.getParameter("p_nombre_articulo");   // El JS usa 'p_nombre_articulo'
+                    String cantReqStr = request.getParameter("p_cantidad_requerida");
+                    String idUniInsumoStr = request.getParameter("p_id_unidad");
+                    String nombreInsumo = request.getParameter("p_nombre_articulo");
 
                     if (idDetalleRecetaStr == null || cantReqStr == null || idUniInsumoStr == null) {
                         throw new IllegalArgumentException("Datos para actualizar el detalle de la receta están incompletos.");
@@ -130,7 +129,6 @@ public class ProduccionServlet extends HttpServlet {
                     jsonResponse.put("message", mensaje);
                 }
 
-                // ACCIÓN COMBINADA: Eliminar detalle de receta (para compatibilidad con JS)
                 case "eliminar_detalle_receta", "quitar_detalle_receta" -> {
                     String idDetalleRecetaStr = request.getParameter("p_id_detalle_receta");
                     String nombreInsumo = request.getParameter("p_nombre_insumo");
@@ -177,6 +175,7 @@ public class ProduccionServlet extends HttpServlet {
                         throw new IllegalArgumentException("El ID del Artículo Producido es requerido.");
                     if (cantProdFinalRealStr == null || cantProdFinalRealStr.isEmpty())
                         throw new IllegalArgumentException("La Cantidad Producida Final es requerida.");
+                    // 🚨 ESTA ES LA VALIDACIÓN QUE FALLA DEBIDO A UN PARÁMETRO VACÍO DESDE EL CLIENTE
                     if (nombreArticulo == null || nombreArticulo.isEmpty())
                         throw new IllegalArgumentException("El Nombre del Artículo Producido es requerido.");
 

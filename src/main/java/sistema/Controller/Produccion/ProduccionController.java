@@ -23,7 +23,7 @@ public class ProduccionController implements ProduccionRepository {
     }
 
     private String generarCodigoLoteDB(int idArticulo) throws SQLException {
-        String codigoLote = null;
+        String codigoLote;
         String sql = "{CALL sp_generar_siguiente_codigo_lote(?, ?)}";
 
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
@@ -222,7 +222,13 @@ public class ProduccionController implements ProduccionRepository {
                     insumo.put("cantidad_requerida", rs.getBigDecimal("cantidad_requerida"));
                     insumo.put("id_unidad", rs.getInt("id_unidad"));
                     insumo.put("unidad_nombre", rs.getString("unidad_nombre"));
-                    insumo.put("densidad", rs.getBigDecimal("densidad"));
+
+                    try {
+                        insumo.put("densidad", rs.getBigDecimal("densidad"));
+                    } catch (SQLException e) {
+                        insumo.put("densidad", BigDecimal.ONE.setScale(8, RoundingMode.HALF_UP));
+                    }
+
                     insumoDetalle.add(insumo);
                 }
             }
@@ -421,7 +427,8 @@ public class ProduccionController implements ProduccionRepository {
                     try { articulo.put("peso_unitario", rs.getDouble("peso_unitario")); } catch (SQLException e) { }
                     try { articulo.put("aroma", rs.getString("aroma")); } catch (SQLException e) { }
                     try { articulo.put("color", rs.getString("color")); } catch (SQLException e) { }
-                    try { articulo.put("densidad", rs.getDouble("densidad")); } catch (SQLException e) { articulo.put("densidad", 1.0); }
+
+                    try { articulo.put("densidad", rs.getBigDecimal("densidad")); } catch (SQLException e) { articulo.put("densidad", BigDecimal.ONE); }
 
                     articulos.add(articulo);
                 }
