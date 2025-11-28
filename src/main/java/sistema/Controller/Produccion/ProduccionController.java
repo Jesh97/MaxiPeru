@@ -1,7 +1,7 @@
 package sistema.Controller.Produccion;
 
 import sistema.Ejecucion.Conexion;
-import sistema.repository.ProduccionRepository;
+import sistema.repository.ProducionRepository;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 import java.sql.Date;
 
-public class ProduccionController implements ProduccionRepository {
+public class ProduccionController implements ProducionRepository {
 
     private Connection getConnection() throws SQLException {
         Connection conn = Conexion.obtenerConexion();
@@ -54,12 +54,6 @@ public class ProduccionController implements ProduccionRepository {
             throw new SQLException("Error: No se pudo obtener el ID del artículo producido para la orden " + idOrden);
         }
         return idArticulo;
-    }
-
-    @Override
-    public String generarCodigoLote(int idOrden) throws SQLException {
-        int idArticuloProducido = obtenerIdArticuloProducidoPorOrden(idOrden);
-        return generarCodigoLoteDB(idArticuloProducido);
     }
 
     @Override
@@ -203,32 +197,7 @@ public class ProduccionController implements ProduccionRepository {
 
     @Override
     public List<Map<String, Object>> obtenerDetalleInsumoReceta(int idDetalleReceta) throws SQLException {
-        List<Map<String, Object>> insumoDetalle = new ArrayList<>();
-        String sql = "{CALL sp_obtener_detalle_insumo_receta(?)}";
-
-        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setInt(1, idDetalleReceta);
-
-            try (ResultSet rs = cs.executeQuery()) {
-                while (rs.next()) {
-                    Map<String, Object> insumo = new LinkedHashMap<>();
-                    insumo.put("id_articulo", rs.getInt("id_articulo"));
-                    insumo.put("nombre_articulo", rs.getString("nombre_articulo"));
-                    insumo.put("cantidad_requerida", rs.getDouble("cantidad_requerida"));
-                    insumo.put("id_unidad", rs.getInt("id_unidad"));
-                    insumo.put("unidad_nombre", rs.getString("unidad_nombre"));
-
-                    try {
-                        insumo.put("densidad", rs.getDouble("densidad"));
-                    } catch (SQLException e) {
-                        insumo.put("densidad", 1.0);
-                    }
-
-                    insumoDetalle.add(insumo);
-                }
-            }
-        }
-        return insumoDetalle;
+        throw new UnsupportedOperationException("Método no implementado: SP 'sp_obtener_detalle_insumo_receta' no proporcionado.");
     }
 
     @Override
@@ -241,7 +210,7 @@ public class ProduccionController implements ProduccionRepository {
             cs.setInt(2, idArticuloProducido);
             cs.setDouble(3, cantProd);
             cs.setDouble(4, cantProdFinalReal);
-            cs.setDate(5, fechaIni != null ? Date.valueOf(fechaIni) : null);
+            cs.setDate(5, fechaIni != null && !fechaIni.isEmpty() ? Date.valueOf(fechaIni) : null);
             cs.setString(6, obs);
 
             try (ResultSet rs = cs.executeQuery()) {
@@ -259,7 +228,6 @@ public class ProduccionController implements ProduccionRepository {
         String sql = "{CALL sp_gestionar_consumo_mp(?)}";
 
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
-
             cs.setInt(1, idOrden);
             cs.execute();
         }
@@ -270,7 +238,6 @@ public class ProduccionController implements ProduccionRepository {
         String sql = "{CALL sp_registrar_consumo_produccion_componente(?, ?, ?, ?, ?, ?)}";
 
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
-
             cs.setInt(1, idOrden);
             cs.setInt(2, idArticuloConsumido);
             cs.setDouble(3, cantidadAConsumir);
@@ -322,6 +289,12 @@ public class ProduccionController implements ProduccionRepository {
     }
 
     @Override
+    public String generarCodigoLote(int idOrden) throws SQLException {
+        int idArticuloProducido = obtenerIdArticuloProducidoPorOrden(idOrden);
+        return generarCodigoLoteDB(idArticuloProducido);
+    }
+
+    @Override
     public void registrarLotes(int idOrden, List<Map<String, Object>> lotes) throws SQLException {
         String sql = "{CALL sp_reg_lote(?, ?, ?, ?)}";
 
@@ -335,7 +308,7 @@ public class ProduccionController implements ProduccionRepository {
                     double cantidad = ((Number) lote.get("cantidad")).doubleValue();
                     String codigoLote = (String) lote.get("codigo_lote");
                     String fechaVencimientoStr = (String) lote.get("fecha_vencimiento");
-                    Date fechaVencimientoSql = fechaVencimientoStr != null ? Date.valueOf(fechaVencimientoStr) : null;
+                    Date fechaVencimientoSql = fechaVencimientoStr != null && !fechaVencimientoStr.isEmpty() ? Date.valueOf(fechaVencimientoStr) : null;
 
                     if (codigoLote == null || codigoLote.isEmpty()) {
                         codigoLote = generarCodigoLoteDB(idArticuloProducido);
@@ -369,20 +342,7 @@ public class ProduccionController implements ProduccionRepository {
 
     @Override
     public List<String> obtenerPresentacionesPorProductoMaestro(int idProductoMaestro) throws SQLException {
-        List<String> presentaciones = new ArrayList<>();
-        String sql = "{CALL sp_obtener_presentaciones_por_pm(?)}";
-
-        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setInt(1, idProductoMaestro);
-
-            try (ResultSet rs = cs.executeQuery()) {
-                while (rs.next()) {
-                    String presentacion = rs.getString("presentacion_detalle");
-                    presentaciones.add(presentacion);
-                }
-            }
-        }
-        return presentaciones;
+        throw new UnsupportedOperationException("Método no implementado: SP 'sp_obtener_presentaciones_por_pm' no proporcionado.");
     }
 
     private List<Map<String, Object>> ejecutarBusqueda(String sql, String busqueda) throws SQLException {
@@ -394,6 +354,7 @@ public class ProduccionController implements ProduccionRepository {
             try (ResultSet rs = cs.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> articulo = new LinkedHashMap<>();
+
                     try { articulo.put("id", rs.getInt("id")); } catch (SQLException e) { try { articulo.put("id", rs.getInt("id_articulo")); } catch (SQLException e2) { articulo.put("id", 0); } }
                     try { articulo.put("codigo", rs.getString("codigo")); } catch (SQLException e) { articulo.put("codigo", ""); }
                     try { articulo.put("descripcion", rs.getString("descripcion")); } catch (SQLException e) { articulo.put("descripcion", "Artículo Desconocido"); }
@@ -407,14 +368,14 @@ public class ProduccionController implements ProduccionRepository {
                     }
 
                     try { articulo.put("presentacion_detalle", rs.getString("presentacion_detalle")); } catch (SQLException e) { }
-                    try { articulo.put("cantidad", rs.getInt("cantidad")); } catch (SQLException e) { }
+                    try { articulo.put("cantidad", rs.getDouble("cantidad")); } catch (SQLException e) { }
                     try { articulo.put("precio_compra", rs.getDouble("precio_compra")); } catch (SQLException e) { }
                     try { articulo.put("precio_venta", rs.getDouble("precio_venta")); } catch (SQLException e) { }
                     try { articulo.put("peso_unitario", rs.getDouble("peso_unitario")); } catch (SQLException e) { }
                     try { articulo.put("aroma", rs.getString("aroma")); } catch (SQLException e) { }
                     try { articulo.put("color", rs.getString("color")); } catch (SQLException e) { }
-
                     try { articulo.put("densidad", rs.getDouble("densidad")); } catch (SQLException e) { articulo.put("densidad", 1.0); }
+
                     articulos.add(articulo);
                 }
             }

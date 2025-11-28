@@ -807,7 +807,7 @@ function saveOrden(event) {
     }
 
     cantProdStr = cantProdStr.replace(',', '.').trim();
-    cantProdFinalRealStr = cantProdFinalRealStr.replace(',', '.').trim(); // [cite: 167]
+    cantProdFinalRealStr = cantProdFinalRealStr.replace(',', '.').trim();
 
     if (!cantProdStr || parseFloat(cantProdStr) <= 0) {
         showSwalAlert("La Cantidad a Producir (Programada) debe ser positiva.", 'error', 'Error de Cantidad');
@@ -850,10 +850,16 @@ function saveOrden(event) {
             activeIdArtTerminado = data.id_articulo_terminado;
             activeNombreArtTerminado = data.nombre_articulo_terminado;
             activeLotCode = '';
-            document.getElementById('cod_lote_generado_envasado_display').value = "Presione 'Generar'";
-            document.getElementById('p_codigo_lote_envase_hidden').value = '';
+
+            const codLoteGeneradoDisplay = document.getElementById('cod_lote_generado_envasado_display');
+            if (codLoteGeneradoDisplay) codLoteGeneradoDisplay.value = "Presione 'Generar'";
+
+            const pCodigoLoteHidden = document.getElementById('p_codigo_lote_envase_hidden');
+            if (pCodigoLoteHidden) pCodigoLoteHidden.value = '';
+
             updateOrdenFields();
             showSwalAlert(`Orden Creada: ${activeOrdenCode}. Ahora registre el consumo de insumos.`, 'success', 'Orden Creada');
+
             const rows = document.getElementById('insumos-orden-rows').querySelectorAll('tr');
             rows.forEach(row => {
                 const form = row.querySelector('form');
@@ -868,15 +874,125 @@ function saveOrden(event) {
                     }
                 }
             });
-
-            document.getElementById('display_order_recipe_status').textContent = `Orden Activa: ${activeOrdenCode}. Revise y registre el consumo real de cada insumo.`; // [cite: 177]
+            document.getElementById('display_order_recipe_status').textContent = `Orden Activa: ${activeOrdenCode}. Revise y registre el consumo real de cada insumo.`;
         } else {
-            showSwalAlert("Error al crear la orden: " + (data.message || "Detalle desconocido."), 'error', 'Error al Crear Orden'); // [cite: 179]
+            showSwalAlert("Error al crear la orden: " + (data.message || "Detalle desconocido."), 'error', 'Error al Crear Orden');
         }
     })
     .catch(error => {
         showSwalAlert("Error de comunicación con el servidor al crear la orden. Detalle: " + error.message, 'error', 'Error de Conexión');
     });
+}
+
+function updateOrdenFields(forceClear = false) {
+    if (forceClear) {
+        activeOrdenCode = '';
+        activeLotCode = '';
+        activeIdArtTerminado = '';
+        activeNombreArtTerminado = '';
+    }
+    const fields = [
+        { suffix: 'consumo', colorSuffix: 'warning' },
+        { suffix: 'envase', colorSuffix: 'primary' },
+        { suffix: 'finalizar', colorSuffix: 'danger' },
+        { suffix: 'lote', colorSuffix: 'success' },
+    ];
+    const activeOrdenDisplay = document.getElementById('active-orden-code-display');
+    if (activeOrdenDisplay) activeOrdenDisplay.textContent = activeOrdenCode || 'N/A';
+
+    fields.forEach(f => {
+        const displayElement = document.getElementById(`display_orden_${f.suffix}`);
+        const hiddenElement = document.getElementById(`hidden_orden_${f.suffix}`);
+        if (displayElement) {
+            displayElement.textContent = activeOrdenCode || 'Aún no hay Orden Activa';
+            displayElement.className = `orden-activa-display display-${activeOrdenCode ? f.colorSuffix : 'secondary'}`;
+        }
+        if (hiddenElement) hiddenElement.value = activeOrdenCode;
+    });
+
+    if (activeOrdenCode) {
+        const pIdArtTerEnvasadoHidden = document.getElementById('p_id_art_ter_envasado_hidden');
+        if (pIdArtTerEnvasadoHidden) pIdArtTerEnvasadoHidden.value = activeIdArtTerminado;
+
+        const productoAEnvasar = document.getElementById('producto_a_envasar');
+        if (productoAEnvasar) productoAEnvasar.value = activeNombreArtTerminado;
+
+        const pIdArtTerCajaHidden = document.getElementById('p_id_art_ter_caja_hidden');
+        if (pIdArtTerCajaHidden) pIdArtTerCajaHidden.value = activeIdArtTerminado;
+
+        const pNombreArtTerCaja = document.getElementById('p_nombre_art_ter_caja');
+        if (pNombreArtTerCaja) pNombreArtTerCaja.value = activeNombreArtTerminado;
+
+        const pIdArtTerLoteHidden = document.getElementById('p_id_art_ter_lote_hidden');
+        if (pIdArtTerLoteHidden) pIdArtTerLoteHidden.value = activeIdArtTerminado;
+
+        const pNombreArtTerLote = document.getElementById('p_nombre_art_ter_lote');
+        if (pNombreArtTerLote) pNombreArtTerLote.value = activeNombreArtTerminado;
+
+        const loteCodeDisplayEmpaque = document.getElementById('lote_code_display_empaque');
+        if (loteCodeDisplayEmpaque) loteCodeDisplayEmpaque.textContent = activeLotCode || 'N/A';
+
+        const loteCodeDisplayFinalizar = document.getElementById('lote_code_display_finalizar');
+        if (loteCodeDisplayFinalizar) loteCodeDisplayFinalizar.textContent = activeLotCode || 'N/A';
+
+        const codLoteRefLotes = document.getElementById('cod_lote_ref_lotes');
+        if (codLoteRefLotes) codLoteRefLotes.value = activeLotCode || 'Esperando Lote Generado';
+
+        const codLoteGeneradoEnvasadoDisplay = document.getElementById('cod_lote_generado_envasado_display');
+        if (codLoteGeneradoEnvasadoDisplay) codLoteGeneradoEnvasadoDisplay.value = activeLotCode || "Presione 'Generar'";
+
+        const cantEnvasesFinal = document.getElementById('cant_envases_final');
+        const cantUnidadesEnvasadasRef = document.getElementById('cant_unidades_envasadas_ref');
+
+        if (cantEnvasesFinal && cantUnidadesEnvasadasRef) {
+            cantEnvasesFinal.value = (parseFloat(cantUnidadesEnvasadasRef.value) || 0).toFixed(0);
+        }
+
+        const cantProducidaTotalLitros = document.getElementById('cant_producida_total_litros');
+        if (cantProducidaTotalLitros) cantProducidaTotalLitros.value = 0.00; // Valor inicial o cargado de SP
+
+    } else if (forceClear) {
+        const cleanFields = [
+            'p_id_receta_orden_hidden',
+            'p_id_art_producido_orden_hidden',
+            'p_receta_cantidad_base_hidden',
+            'buscar_receta_orden',
+            'cant_prod_orden',
+            'p_id_art_ter_envasado_hidden',
+            'producto_a_envasar',
+            'p_id_art_ter_caja_hidden',
+            'p_nombre_art_ter_caja',
+            'p_id_art_ter_lote_hidden',
+            'p_nombre_art_ter_lote',
+            'p_cant_prod_final_real',
+            'cod_lote_generado_envasado_display',
+            'p_codigo_lote_envase_hidden',
+            'cod_lote_ref_lotes',
+            'cant_envases_final',
+            'cant_unidades_envasadas_ref'
+        ];
+        cleanFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) field.value = '';
+        });
+        const insumosOrdenRows = document.getElementById('insumos-orden-rows');
+        if (insumosOrdenRows) insumosOrdenRows.innerHTML = '';
+
+        const envaseTapaRows = document.getElementById('envase-tapa-rows');
+        if (envaseTapaRows) envaseTapaRows.innerHTML = '';
+
+        const displayOrderRecipeStatus = document.getElementById('display_order_recipe_status');
+        if (displayOrderRecipeStatus) displayOrderRecipeStatus.textContent = 'Fórmula seleccionada. Use el botón "Cargar Insumos" para preparar el consumo.';
+
+        const loteCodeDisplayEmpaque = document.getElementById('lote_code_display_empaque');
+        if (loteCodeDisplayEmpaque) loteCodeDisplayEmpaque.textContent = 'N/A';
+
+        const loteCodeDisplayFinalizar = document.getElementById('lote_code_display_finalizar');
+        if (loteCodeDisplayFinalizar) loteCodeDisplayFinalizar.textContent = 'N/A';
+
+        const idArtTerEmpaqueFields = document.querySelectorAll('#p_id_art_ter_envasado_hidden, #p_id_art_ter_caja_hidden');
+        idArtTerEmpaqueFields.forEach(field => field.value = '');
+    }
 }
 
 function handleInsumoConsumption(event, rowOverride = null) {

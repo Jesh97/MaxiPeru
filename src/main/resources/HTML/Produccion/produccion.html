@@ -189,7 +189,7 @@
             <h2 class="section-header header-primary"><i class="fas fa-fill-drip"></i> 4.1 REGISTRO DE ENVASADO, TAPADO Y ETIQUETADO</h2>
             <label>Producto a Envasar:</label>
             <div class="input-wrapper" style="margin-bottom: 15px;">
-                <input type="text" id="producto_a_envasar" readonly class="readonly-field" placeholder="Cargado de Orden Activa">
+                <input type="text" id="p_nombre_art_ter_envasado" readonly class="readonly-field" placeholder="Cargado de Orden Activa">
             </div>
             <label for="buscar_envase_principal_multiple">1. Envases y Capacidades a Usar (Múltiples):</label>
             <div class="insumo-search-container" style="margin-bottom: 15px;">
@@ -243,82 +243,6 @@
                 </div>
                 <button type="submit" class="btn-submit btn-tab-action btn-primary"><i class="fas fa-box-open"></i> Registrar Consumo de Envases y Tapas</button>
                 <p class="alert-info"><i class="fas fa-info-circle"></i> Registre el tipo de envase y su tapa específica por cada lote de unidades a envasar. La etiqueta se consume de forma global según el total de unidades.</p>
-            </form>
-        </div>
-        <div class="form-group-section">
-            <h2 class="section-header header-primary"><i class="fas fa-box"></i> 4.2 EMPAQUETADO</h2>
-            <form action="" method="POST" onsubmit="submitPackagingStep(event, 'empaque_secundario')">
-                <input type="hidden" name="p_tipo_componente_empaque" value="3">
-                <input type="hidden" id="hidden_orden_caja" name="p_codigo_orden" required>
-                <input type="hidden" id="p_id_art_ter_caja_hidden" name="p_id_art_ter_empaque" required>
-                <input type="hidden" id="p_id_componente_caja" name="p_id_componente_seleccionado" required>
-                <input type="hidden" id="p_id_unidad_caja_hidden">
-                <div class="compact-fields-grid" id="empaque_secundario_fields">
-                    <div>
-                        <label for="cant_unidades_envasadas_ref">Total de Envases Físicos (Ref. 4.1):</label>
-                        <div class="input-wrapper">
-                            <input type="number" id="cant_unidades_envasadas_ref" value="0" step="1" readonly class="readonly-field" placeholder="Desde paso 4.1">
-                        </div>
-                    </div>
-                    <div>
-                        <label for="buscar_empaque_secundario">Buscar Empaque Secundario (Caja):</label>
-                        <div class="input-wrapper">
-                            <input type="text" id="buscar_empaque_secundario" placeholder="Buscar Caja, Cartón, Film" required class="search-input-icon">
-                            <i class="fas fa-search search-icon"></i>
-                        </div>
-                    </div>
-                    <div style="grid-column: span 1;">
-                        <label for="unidad_por_caja_manual">Envases por Caja (Temporal):</label>
-                        <div class="input-wrapper">
-                            <input type="number" id="unidad_por_caja_manual" value="1" step="1" required oninput="calculateLooseContainers()">
-                        </div>
-                    </div>
-                    <div style="grid-column: span 1;">
-                        <label for="cant_empacada_caja">Cantidad de Cajas REALES a consumir:</label>
-                        <div class="input-wrapper">
-                            <input type="number" id="cant_empacada_caja" name="p_cant_a_empacar_final" step="1" required placeholder="Ej: 5 cajas" oninput="calculateLooseContainers()">
-                        </div>
-                    </div>
-                </div>
-                <div id="loose_containers_display" class="merma-field" style="display: none; margin-top: 15px; border: 1px solid var(--accent-danger); padding: 10px; border-radius: 8px; background-color: #ffeaea;">
-                    <label for="envases_sueltos_cantidad" class="danger-text"><i class="fas fa-exclamation-triangle"></i> Envases Sueltos/Sobrantes (Sin Empaque Secundario):</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="envases_sueltos_cantidad" value="0" readonly class="readonly-field" style="color: var(--accent-danger);">
-                    </div>
-                    <p class="alert-info" style="color: var(--accent-danger);"><i class="fas fa-question-circle" style="color: var(--accent-danger);"></i> ACCIÓN REQUERIDA: Estos envases se almacenan como stock suelto o se marcan como unidades para la próxima orden/reempaque. No se descuenta su caja.</p>
-                </div>
-                <button type="submit" class="btn-submit btn-tab-action btn-primary"><i class="fas fa-boxes"></i> Consumir Empaque Secundario</button>
-                <p class="alert-info"><i class="fas fa-info-circle"></i> Registra el consumo de unidades de empaque secundario (Cajas) en el sistema. Ingrese la cantidad real de cajas utilizadas, no el número de envases.</p>
-            </form>
-        </div>
-        <div class="form-group-section">
-            <h2 class="section-header primary-header">Merma y Cierre de Etapa</h2>
-            <form action="" method="POST" onsubmit="submitMerma(event)">
-                <input type="hidden" name="p_codigo_orden" id="hidden_orden_merma_submit">
-                <input type="hidden" name="p_envases_sueltos" id="p_envases_sueltos_hidden">
-                <div class="compact-fields-grid">
-                    <div>
-                        <label for="cant_producida_total_litros">Litros Producidos Totales (Automático desde MP):</label>
-                        <div class="input-wrapper">
-                            <input type="number" id="cant_producida_total_litros" value="0.00" step="0.01" readonly class="readonly-field" placeholder="Cálculo de Consumo de MP">
-                        </div>
-                    </div>
-                    <div>
-                        <label for="cant_total_empacada">Total Litros/Kg Empacados (Acumulado):</label>
-                        <div class="input-wrapper">
-                            <input type="number" id="cant_total_empacada" value="0.00" step="0.01" readonly class="readonly-field" placeholder="Cálculo de Empaque">
-                        </div>
-                    </div>
-                </div>
-                <div class="merma-field">
-                    <label for="merma_cantidad"><i class="fas fa-trash-alt"></i> Cantidad de Merma/Sobrante (Litros):</label>
-                    <div class="input-wrapper" style="margin-bottom: 0;">
-                        <input type="number" id="merma_cantidad" name="p_merma_cantidad" value="0.00" step="0.01" readonly class="readonly-field">
-                    </div>
-                    <p class="alert-info" style="color: var(--accent-danger);"><i class="fas fa-calculator" style="color: var(--accent-danger);"></i> Campo automático: (Producido Total - Empacado Total).</p>
-                </div>
-                <button type="submit" class="btn-submit btn-tab-action btn-primary"><i class="fas fa-check"></i> Registrar Merma y Cerrar Etapa</button>
-                <p class="alert-info"><i class="fas fa-info-circle"></i> Finaliza la etapa de empaque de esta orden.</p>
             </form>
         </div>
     </div>
