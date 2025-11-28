@@ -10,7 +10,6 @@ import sistema.Controller.Produccion.ProduccionController;
 import sistema.repository.ProduccionRepository;
 import sistema.Ejecucion.Auditoria;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -26,8 +25,12 @@ public class ProduccionServlet extends HttpServlet {
 
     @Override
     public void init() {
-        // Asumiendo que ProduccionController implementa ProduccionRepository
         dao = new ProduccionController();
+    }
+
+    private double parseDoubleSafe(String value) {
+        if (value == null || value.trim().isEmpty()) return 0.0;
+        return Double.parseDouble(value.replace(',', '.').trim());
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -63,7 +66,7 @@ public class ProduccionServlet extends HttpServlet {
                     }
 
                     int idProductoMaestro = Integer.parseInt(idProdMaestroStr);
-                    BigDecimal cantProd = new BigDecimal(cantProdStr);
+                    double cantProd = parseDoubleSafe(cantProdStr);
                     int idUniProd = Integer.parseInt(idUniProdStr);
 
                     idRecetaActiva = dao.crearReceta(idProductoMaestro, cantProd, idUniProd);
@@ -78,7 +81,7 @@ public class ProduccionServlet extends HttpServlet {
                         for (int i = 0; i < idArtInsumoArr.length; i++) {
                             int idArtInsumo = Integer.parseInt(idArtInsumoArr[i]);
                             int idUniInsumo = Integer.parseInt(idUniInsumoArr[i]);
-                            BigDecimal cantReq = new BigDecimal(cantReqArr[i]);
+                            double cantReq = parseDoubleSafe(cantReqArr[i]);
 
                             dao.agregarDetalleReceta(idRecetaActiva, idArtInsumo, cantReq, idUniInsumo);
                             componentesGuardados++;
@@ -96,7 +99,7 @@ public class ProduccionServlet extends HttpServlet {
                     idRecetaActiva = Integer.parseInt(request.getParameter("p_id_receta"));
                     int idArtInsumo = Integer.parseInt(request.getParameter("p_id_articulo"));
                     int idUniInsumo = Integer.parseInt(request.getParameter("p_id_unidad"));
-                    BigDecimal cantReq = new BigDecimal(request.getParameter("p_cantidad_requerida"));
+                    double cantReq = parseDoubleSafe(request.getParameter("p_cantidad_requerida"));
                     String nombreArticulo = request.getParameter("p_nombre_articulo");
 
                     dao.agregarDetalleReceta(idRecetaActiva, idArtInsumo, cantReq, idUniInsumo);
@@ -119,7 +122,7 @@ public class ProduccionServlet extends HttpServlet {
                     }
 
                     int idDetalleReceta = Integer.parseInt(idDetalleRecetaStr);
-                    BigDecimal cantReq = new BigDecimal(cantReqStr);
+                    double cantReq = parseDoubleSafe(cantReqStr);
                     int idUniInsumo = Integer.parseInt(idUniInsumoStr);
 
                     dao.actualizarInsumoReceta(idDetalleReceta, cantReq, idUniInsumo);
@@ -160,6 +163,7 @@ public class ProduccionServlet extends HttpServlet {
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
                 }
+
                 case "crear_orden" -> {
                     String idRecetaStr = request.getParameter("p_id_receta_orden_hidden");
                     String cantProdStr = request.getParameter("p_cant_prod_orden");
@@ -175,15 +179,15 @@ public class ProduccionServlet extends HttpServlet {
                         throw new IllegalArgumentException("El ID del Artículo Producido es requerido.");
                     if (cantProdFinalRealStr == null || cantProdFinalRealStr.isEmpty())
                         throw new IllegalArgumentException("La Cantidad Producida Final es requerida.");
-                    // 🚨 ESTA ES LA VALIDACIÓN QUE FALLA DEBIDO A UN PARÁMETRO VACÍO DESDE EL CLIENTE
                     if (nombreArticulo == null || nombreArticulo.isEmpty())
                         throw new IllegalArgumentException("El Nombre del Artículo Producido es requerido.");
 
                     idRecetaActiva = Integer.parseInt(idRecetaStr);
                     session.setAttribute("idRecetaActiva", idRecetaActiva);
 
-                    BigDecimal cantProd = new BigDecimal(cantProdStr);
-                    BigDecimal cantProdFinalReal = new BigDecimal(cantProdFinalRealStr);
+                    double cantProd = parseDoubleSafe(cantProdStr);
+                    double cantProdFinalReal = parseDoubleSafe(cantProdFinalRealStr);
+
                     String fechaIni = request.getParameter("p_fecha_ini_orden");
                     String obs = request.getParameter("p_obs_orden");
 
@@ -218,7 +222,7 @@ public class ProduccionServlet extends HttpServlet {
                     String idOrdenStr = request.getParameter("p_id_orden");
                     if (idOrdenStr == null) throw new IllegalArgumentException("No hay una Orden Activa.");
                     int idArticuloConsumido = Integer.parseInt(request.getParameter("p_id_articulo_consumido"));
-                    BigDecimal cantidadAConsumir = new BigDecimal(request.getParameter("p_cantidad_consumida"));
+                    double cantidadAConsumir = parseDoubleSafe(request.getParameter("p_cantidad_consumida"));
                     int idUnidad = Integer.parseInt(request.getParameter("p_id_unidad"));
                     boolean esEnvase = "true".equalsIgnoreCase(request.getParameter("p_es_envase"));
                     String comentarioConsumo = request.getParameter("p_comentario_consumo");
@@ -257,17 +261,15 @@ public class ProduccionServlet extends HttpServlet {
 
                     for (int i = 0; i < idContainerArr.length; i++) {
                         int idContainer = Integer.parseInt(idContainerArr[i]);
-                        BigDecimal capacidadNum = new BigDecimal(capacidadNumericArr[i]);
+                        double capacidadNum = parseDoubleSafe(capacidadNumericArr[i]);
                         String capacidadUni = capacidadUnidadArr[i];
                         int cantidad = Integer.parseInt(cantEnvaseArr[i]);
-                        int idTapa = Integer.parseInt(idTapaArr[i]);
 
                         Map<String, Object> detalle = new LinkedHashMap<>();
                         detalle.put("idContainer", idContainer);
                         detalle.put("capacidadNum", capacidadNum);
                         detalle.put("capacidadUni", capacidadUni);
                         detalle.put("cantidad", cantidad);
-                        detalle.put("idTapa", idTapa);
                         detallesEnvase.add(detalle);
 
                         totalContainers += cantidad;
@@ -299,8 +301,8 @@ public class ProduccionServlet extends HttpServlet {
                 case "registrar_merma_y_cierre_empaque" -> {
                     if (idOrdenActiva == null) throw new IllegalArgumentException("No hay una Orden Activa.");
 
-                    BigDecimal mermaCantidad = new BigDecimal(request.getParameter("p_merma_cantidad"));
-                    BigDecimal envasesSueltos = new BigDecimal(request.getParameter("p_envases_sueltos"));
+                    double mermaCantidad = parseDoubleSafe(request.getParameter("p_merma_cantidad"));
+                    double envasesSueltos = parseDoubleSafe(request.getParameter("p_envases_sueltos"));
 
                     dao.gestionarConsumoEnvase(idOrdenActiva, mermaCantidad, envasesSueltos);
                     Auditoria.registrar(request, "PROCESO", "Merma (" + mermaCantidad + ") y envases sueltos registrados. Cierre de empaque para Orden ID: " + idOrdenActiva);
@@ -320,7 +322,7 @@ public class ProduccionServlet extends HttpServlet {
                         throw new IllegalArgumentException("Faltan datos del lote (cantidad, código o fecha de vencimiento).");
                     }
 
-                    BigDecimal cantidad = new BigDecimal(cantidadStr);
+                    double cantidad = parseDoubleSafe(cantidadStr);
 
                     Map<String, Object> loteUnico = new LinkedHashMap<>();
                     loteUnico.put("cantidad", cantidad);
@@ -329,13 +331,9 @@ public class ProduccionServlet extends HttpServlet {
 
                     List<Map<String, Object>> lotes = new ArrayList<>();
                     lotes.add(loteUnico);
-
                     dao.registrarLotes(idOrdenActiva, lotes);
-
                     Auditoria.registrar(request, "OPERACION", "Lote registrado. Código: " + codigoStr + " para Orden ID: " + idOrdenActiva);
-
                     mensaje = "Se registró el Lote: **" + codigoStr + "** para la Orden de **" + nombreArticuloActivo + "**.";
-
                     jsonResponse.put("success", true);
                     jsonResponse.put("message", mensaje);
                 }
@@ -364,7 +362,7 @@ public class ProduccionServlet extends HttpServlet {
             response.getWriter().write(gson.toJson(jsonResponse));
 
         } catch (SQLException e) {
-            mensaje = "Error de Base de Datos al procesar la acción: **" + action + "**. Detalle: " + e.getMessage() + ". Código SQL: " + e.getSQLState();
+            mensaje = "Error de Base de Datos al procesar la acción: **" + action + "**. Detalle: " + e.getMessage();
             jsonResponse.put("success", false);
             jsonResponse.put("message", mensaje);
 
@@ -402,7 +400,7 @@ public class ProduccionServlet extends HttpServlet {
         }
 
         try {
-            List<Map<String, Object>> resultados = new ArrayList<>();
+            List<Map<String, Object>> resultados;
 
             switch (action) {
                 case "buscar_articulos_terminados" -> resultados = dao.buscarArticulosTerminados(busqueda);
@@ -429,9 +427,18 @@ public class ProduccionServlet extends HttpServlet {
                 }
                 case "listar_recetas" -> resultados = dao.listarRecetasConDetalles();
                 case "generar_codigo_lote" -> {
-                    String idOrdenStr = request.getParameter("id_orden");
+                    String idOrdenStr = null;
+
+                    if (request.getSession().getAttribute("idOrdenActiva") != null) {
+                        idOrdenStr = request.getSession().getAttribute("idOrdenActiva").toString();
+                    }
+
                     if (idOrdenStr == null || idOrdenStr.isEmpty()) {
-                        throw new IllegalArgumentException("ID de Orden no especificado para generar lote.");
+                        idOrdenStr = request.getParameter("p_codigo_orden");
+                    }
+
+                    if (idOrdenStr == null || idOrdenStr.isEmpty()) {
+                        throw new IllegalArgumentException("ID de Orden Activa no encontrado para generar el lote.");
                     }
                     int idOrden = Integer.parseInt(idOrdenStr);
 

@@ -222,44 +222,45 @@ $(document).ready(function() {
         }
     });
     $("#buscar_receta_orden").autocomplete({
-        source: function(request, response) {
-            $.ajax({
-                url: PRODUCTION_SERVLET_URL,
-                type: "GET",
-                dataType: "json",
-                data: {
-                    action: "obtener_receta_por_nombre_generico",
-                    nombre_generico: request.term
-                },
-                success: function(data) {
-                    response(data.map(item => ({
-                        id_receta: item.id_receta,
-                        id_art_ter: item.id_producto_maestro,
-                        nombre_art_ter: item.nombre_generico,
-                        receta_cantidad_base: item.receta_cantidad_base,
-                        value: item.nombre_generico,
-                        label: 'Receta ' + item.id_receta + ' - ' + item.nombre_generico,
-                        unidad_nombre: item.unidad_nombre
-                    })));
-                }
-            });
-        },
-        minLength: 2,
-        select: function(event, ui) {
-            document.getElementById('p_id_receta_orden_hidden').value = ui.item.id_receta;
-            document.getElementById('p_id_art_producido_orden_hidden').value = ui.item.id_art_ter;
-            document.getElementById('p_receta_cantidad_base_hidden').value = ui.item.receta_cantidad_base;
-            document.getElementById('buscar_receta_orden').value = ui.item.value;
-            insumosCargadosPreviamente = false;
-            document.getElementById('display_order_recipe_status').textContent = 'Fórmula seleccionada. Use el botón "Cargar Insumos" para preparar el consumo.';
-            document.getElementById('insumos-orden-rows').innerHTML = '';
-            activeIdReceta = ui.item.id_receta;
-            activeNombreReceta = ui.item.nombre_art_ter;
-            activeCantBaseReceta = parseFloat(ui.item.receta_cantidad_base) || 0;
-            activeUnidadBaseReceta = ui.item.unidad_nombre;
-            return false;
-        }
-    });
+            source: function(request, response) {
+                $.ajax({
+                    url: PRODUCTION_SERVLET_URL,
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        action: "obtener_receta_por_nombre_generico",
+                        nombre_generico: request.term
+                    },
+                    success: function(data) {
+                        response(data.map(item => ({
+                            id_receta: item.id_receta,
+                            id_art_ter: item.id_producto_maestro,
+                            nombre_art_ter: item.nombre_generico,
+                            receta_cantidad_base: item.receta_cantidad_base,
+                            value: item.nombre_generico,
+                            label: 'Receta ' + item.id_receta + ' - ' + item.nombre_generico,
+                            unidad_nombre: item.unidad_nombre
+                        })));
+                    }
+                });
+            },
+            minLength: 2,
+            select: function(event, ui) {
+                document.getElementById('p_id_receta_orden_hidden').value = ui.item.id_receta;
+                document.getElementById('p_id_art_producido_orden_hidden').value = ui.item.id_art_ter;
+                document.getElementById('p_receta_cantidad_base_hidden').value = ui.item.receta_cantidad_base;
+                document.getElementById('buscar_receta_orden').value = ui.item.value;
+                document.getElementById('p_nombre_art_producido_orden_hidden').value = ui.item.nombre_art_ter;
+                insumosCargadosPreviamente = false;
+                document.getElementById('display_order_recipe_status').textContent = 'Fórmula seleccionada. Use el botón "Cargar Insumos" para preparar el consumo.';
+                document.getElementById('insumos-orden-rows').innerHTML = '';
+                activeIdReceta = ui.item.id_receta;
+                activeNombreReceta = ui.item.nombre_art_ter;
+                activeCantBaseReceta = parseFloat(ui.item.receta_cantidad_base) || 0;
+                activeUnidadBaseReceta = ui.item.unidad_nombre;
+                return false;
+            }
+        });
     $("#buscar_envase_principal_multiple").autocomplete({
         source: getPackagingAutocompleteSource(1),
         minLength: 2,
@@ -652,6 +653,7 @@ function saveFullRecipe(event) {
     event.preventDefault();
     const form = event.target;
     const artTerId = $('input[name="p_id_art_ter_hidden"]').val();
+    const nombreArtTer = document.getElementById('buscar_art_ter').value; // OBTENER EL NOMBRE DESDE EL CAMPO DE BÚSQUEDA
     const rows = document.getElementById('insumo-rows').querySelectorAll('tr');
     if (!artTerId) {
         showSwalAlert("Debe seleccionar un Producto Terminado.", 'error', 'Error de Producto');
@@ -671,8 +673,9 @@ function saveFullRecipe(event) {
     const formData = new FormData(form);
     const params = new URLSearchParams(formData);
     params.set('action', 'crear_receta_y_componentes');
-    // CORRECCIÓN: Usar p_id_art_ter_hidden para coincidir con el Servlet
     params.set('p_id_art_ter_hidden', artTerId);
+    // AÑADIR ESTE PARÁMETRO PARA EL SERVLET (Auditoría/Mensaje de éxito)
+    params.set('p_nombre_art_ter_receta', nombreArtTer);
     params.set('p_cant_prod', cantProd);
     params.set('p_nombre_uni_prod', nombreUniProd);
     params.set('p_id_unidad_producir', idUnidadProducir);
@@ -804,7 +807,7 @@ function saveOrden(event) {
     }
 
     cantProdStr = cantProdStr.replace(',', '.').trim();
-    cantProdFinalRealStr = cantProdFinalRealStr.replace(',', '.').trim();
+    cantProdFinalRealStr = cantProdFinalRealStr.replace(',', '.').trim(); // [cite: 167]
 
     if (!cantProdStr || parseFloat(cantProdStr) <= 0) {
         showSwalAlert("La Cantidad a Producir (Programada) debe ser positiva.", 'error', 'Error de Cantidad');
@@ -817,7 +820,7 @@ function saveOrden(event) {
     }
 
     if (!nombreArticulo) {
-        showSwalAlert("Error de datos: El nombre del Artículo Producido (p_nombre_art_producido_orden_hidden) está vacío. Verifique la selección de la Fórmula.", 'error', 'Error de Datos');
+        showSwalAlert("Error de datos: El nombre del Artículo Producido está vacío. Verifique la selección de la Fórmula.", 'error', 'Error de Datos');
         return;
     }
 
@@ -850,22 +853,29 @@ function saveOrden(event) {
             document.getElementById('cod_lote_generado_envasado_display').value = "Presione 'Generar'";
             document.getElementById('p_codigo_lote_envase_hidden').value = '';
             updateOrdenFields();
-            showSwalAlert(`Orden Creada: ${activeOrdenCode}. Ahora se registrará el consumo de insumos.`, 'success', 'Orden Creada');
+            showSwalAlert(`Orden Creada: ${activeOrdenCode}. Ahora registre el consumo de insumos.`, 'success', 'Orden Creada');
             const rows = document.getElementById('insumos-orden-rows').querySelectorAll('tr');
             rows.forEach(row => {
                 const form = row.querySelector('form');
                 if (form) {
                     form.querySelector('input[name="p_id_orden_temp"]').value = activeOrdenCode;
-                    handleInsumoConsumption(new Event('submit', { bubbles: true, cancelable: true }), row);
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '<i class="fas fa-edit"></i> Registrar';
+                        submitButton.classList.add('btn-warning');
+                        submitButton.classList.remove('btn-success');
+                    }
                 }
             });
-            document.getElementById('display_order_recipe_status').textContent = `Orden Activa: ${activeOrdenCode}. Consumos en proceso de registro.`;
+
+            document.getElementById('display_order_recipe_status').textContent = `Orden Activa: ${activeOrdenCode}. Revise y registre el consumo real de cada insumo.`; // [cite: 177]
         } else {
-            showSwalAlert("Error al crear la orden: " + (data.message || "Detalle desconocido."), 'error', 'Error al Crear Orden');
+            showSwalAlert("Error al crear la orden: " + (data.message || "Detalle desconocido."), 'error', 'Error al Crear Orden'); // [cite: 179]
         }
     })
     .catch(error => {
-        showSwalAlert("Error de comunicación con el servidor al crear la orden. Verifique la conexión o el backend.", 'error', 'Error de Conexión');
+        showSwalAlert("Error de comunicación con el servidor al crear la orden. Detalle: " + error.message, 'error', 'Error de Conexión');
     });
 }
 
@@ -1490,22 +1500,22 @@ function generateLotCode(event) {
         showSwalAlert("No se ha cargado el Artículo Terminado de la orden activa. Seleccione una orden nueva o verifique la existente.", 'error', 'Error de Artículo');
         return;
     }
-    const fechaLote = document.getElementById('fecha_lote').value;
+    const fechaLote = document.getElementById('fecha_lote') ? document.getElementById('fecha_lote').value : getCurrentDateFormatted();
+
     if (!fechaLote) {
         showSwalAlert("Debe seleccionar la fecha del lote.", 'error', 'Fecha Requerida');
         return;
     }
+
     const params = new URLSearchParams({
         action: 'generar_codigo_lote',
         p_id_art_ter: activeIdArtTerminado,
-        p_fecha: fechaLote
+        p_fecha: fechaLote,
+        p_codigo_orden: activeOrdenCode
     });
-    fetch(PRODUCTION_SERVLET_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: params
+
+    fetch(`${PRODUCTION_SERVLET_URL}?${params.toString()}`, {
+        method: 'GET',
     })
     .then(handleJsonResponse)
     .then(data => {
@@ -1513,8 +1523,13 @@ function generateLotCode(event) {
             activeLotCode = data.codigo_lote;
             document.getElementById('cod_lote_generado_envasado_display').value = activeLotCode;
             document.getElementById('p_codigo_lote_envase_hidden').value = activeLotCode;
-            document.getElementById('lote_code_display_empaque').textContent = activeLotCode;
-            document.getElementById('lote_code_display_finalizar').textContent = activeLotCode;
+
+            const codLoteRefLotes = document.getElementById('cod_lote_ref_lotes');
+            if (codLoteRefLotes) {
+                 codLoteRefLotes.value = activeLotCode;
+                 codLoteRefLotes.style.color = 'var(--accent-success)';
+            }
+
             showSwalAlert(`Código de Lote generado: ${activeLotCode}`, 'success', 'Lote Generado');
         } else {
             showSwalAlert("Error al generar el código de lote: " + (data.message || "Detalle desconocido."), 'error', 'Error de Generación');
@@ -1551,30 +1566,57 @@ function updateOrdenFields(forceClear = false) {
         }
         if (hiddenElement) hiddenElement.value = activeOrdenCode;
     });
-    const cleanFields = [
-        'p_id_receta_orden_hidden',
-        'p_id_art_producido_orden_hidden',
-        'p_receta_cantidad_base_hidden',
-        'buscar_receta_orden',
-        'cant_prod_orden',
-        'p_id_art_ter_envasado_hidden',
-        'p_nombre_art_ter_envasado',
-        'p_id_art_ter_caja_hidden',
-        'p_nombre_art_ter_caja',
-        'p_id_art_ter_lote_hidden',
-        'p_nombre_art_ter_lote',
-        'p_cant_prod_final_real'
-    ];
+
     if (activeOrdenCode) {
-        document.getElementById('p_id_art_ter_envasado_hidden').value = activeIdArtTerminado;
-        document.getElementById('p_nombre_art_ter_envasado').value = activeNombreArtTerminado;
-        document.getElementById('p_id_art_ter_caja_hidden').value = activeIdArtTerminado;
-        document.getElementById('p_nombre_art_ter_caja').value = activeNombreArtTerminado;
-        document.getElementById('p_id_art_ter_lote_hidden').value = activeIdArtTerminado;
-        document.getElementById('p_nombre_art_ter_lote').value = activeNombreArtTerminado;
-        document.getElementById('lote_code_display_empaque').textContent = activeLotCode || 'N/A';
-        document.getElementById('lote_code_display_finalizar').textContent = activeLotCode || 'N/A';
+        // IDs específicos para la Pestaña 4 y 5
+        const pIdArtTerEnvasadoHidden = document.getElementById('p_id_art_ter_envasado_hidden');
+        if (pIdArtTerEnvasadoHidden) pIdArtTerEnvasadoHidden.value = activeIdArtTerminado;
+
+        const pNombreArtTerEnvasado = document.getElementById('p_nombre_art_ter_envasado');
+        if (pNombreArtTerEnvasado) pNombreArtTerEnvasado.value = activeNombreArtTerminado;
+
+        const pIdArtTerCajaHidden = document.getElementById('p_id_art_ter_caja_hidden');
+        if (pIdArtTerCajaHidden) pIdArtTerCajaHidden.value = activeIdArtTerminado;
+
+        const pNombreArtTerCaja = document.getElementById('p_nombre_art_ter_caja');
+        if (pNombreArtTerCaja) pNombreArtTerCaja.value = activeNombreArtTerminado;
+
+        const pIdArtTerLoteHidden = document.getElementById('p_id_art_ter_lote_hidden');
+        if (pIdArtTerLoteHidden) pIdArtTerLoteHidden.value = activeIdArtTerminado;
+
+        const pNombreArtTerLote = document.getElementById('p_nombre_art_ter_lote');
+        if (pNombreArtTerLote) pNombreArtTerLote.value = activeNombreArtTerminado;
+
+        const loteCodeDisplayEmpaque = document.getElementById('lote_code_display_empaque');
+        if (loteCodeDisplayEmpaque) loteCodeDisplayEmpaque.textContent = activeLotCode || 'N/A';
+
+        const loteCodeDisplayFinalizar = document.getElementById('lote_code_display_finalizar');
+        if (loteCodeDisplayFinalizar) loteCodeDisplayFinalizar.textContent = activeLotCode || 'N/A';
+
+        const codLoteRefLotes = document.getElementById('cod_lote_ref_lotes');
+        if (codLoteRefLotes) codLoteRefLotes.value = activeLotCode || 'Esperando Lote Generado';
+
+        const codLoteGeneradoEnvasadoDisplay = document.getElementById('cod_lote_generado_envasado_display');
+        if (codLoteGeneradoEnvasadoDisplay) codLoteGeneradoEnvasadoDisplay.value = activeLotCode || "Presione 'Generar'";
+
     } else if (forceClear) {
+        const cleanFields = [
+            'p_id_receta_orden_hidden',
+            'p_id_art_producido_orden_hidden',
+            'p_receta_cantidad_base_hidden',
+            'buscar_receta_orden',
+            'cant_prod_orden',
+            'p_id_art_ter_envasado_hidden',
+            'p_nombre_art_ter_envasado',
+            'p_id_art_ter_caja_hidden',
+            'p_nombre_art_ter_caja',
+            'p_id_art_ter_lote_hidden',
+            'p_nombre_art_ter_lote',
+            'p_cant_prod_final_real',
+            'cod_lote_generado_envasado_display',
+            'p_codigo_lote_envase_hidden',
+            'cod_lote_ref_lotes'
+        ];
         cleanFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) field.value = '';
@@ -1582,13 +1624,13 @@ function updateOrdenFields(forceClear = false) {
         document.getElementById('insumos-orden-rows').innerHTML = '';
         document.getElementById('envase-tapa-rows').innerHTML = '';
         document.getElementById('display_order_recipe_status').textContent = 'Fórmula seleccionada. Use el botón "Cargar Insumos" para preparar el consumo.';
-        document.getElementById('lote_code_display_empaque').textContent = 'N/A';
-        document.getElementById('lote_code_display_finalizar').textContent = 'N/A';
-        document.getElementById('cod_lote_generado_envasado_display').value = '';
-        document.getElementById('p_codigo_lote_envase_hidden').value = '';
-        document.getElementById('p_id_art_ter_envasado_hidden').value = '';
-        document.getElementById('p_id_art_ter_caja_hidden').value = '';
-        document.getElementById('p_id_art_ter_lote_hidden').value = '';
+
+        const loteCodeDisplayEmpaque = document.getElementById('lote_code_display_empaque');
+        if (loteCodeDisplayEmpaque) loteCodeDisplayEmpaque.textContent = 'N/A';
+
+        const loteCodeDisplayFinalizar = document.getElementById('lote_code_display_finalizar');
+        if (loteCodeDisplayFinalizar) loteCodeDisplayFinalizar.textContent = 'N/A';
+
         const idArtTerEmpaqueFields = document.querySelectorAll('#p_id_art_ter_empaque, #p_id_art_ter_envasado_hidden, #p_id_art_ter_caja_hidden');
         idArtTerEmpaqueFields.forEach(field => field.value = '');
     }
