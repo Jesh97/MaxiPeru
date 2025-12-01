@@ -18,7 +18,8 @@ function showSwalAlert(message, type = 'info', title = null) {
             title = 'Error de Proceso';
         } else {
             switch (type) {
-                case 'success': title = 'Operación Exitosa'; break;
+                case 'success': title = 'Operación Exitosa';
+                break;
                 case 'warning': title = 'Advertencia'; break;
                 default: title = 'Información';
             }
@@ -95,7 +96,6 @@ function adjustQuantity(inputId, delta) {
     if (newValue < 0) newValue = 0;
 
     input.value = newValue.toFixed(4).replace(/\.?0+$/, '');
-
     if (input.name === 'p_cant_a_empacar_final[]') {
         updateTotalUnitsReference();
     }
@@ -110,16 +110,19 @@ $(document).ready(function() {
             $.ajax({
                 url: PRODUCTION_SERVLET_URL, type: "GET", dataType: "json",
                 data: { action: "buscar_articulos_terminados", busqueda: request.term },
+
                 success: function(data) {
                     response(data.map(item => ({
                         id: item.id, id_maestro: item.id_producto_maestro,
                         value: item.nombre_generico || item.descripcion,
+
                         label: (item.codigo || '') + ' - ' + (item.nombre_generico),
                         id_unidad: item.id_unidad, unidad_nombre: item.unidad_nombre
                     })));
                 }
             });
         },
+
         minLength: 2,
         select: function(event, ui) {
             $("#buscar_art_ter").val(ui.item.label);
@@ -135,9 +138,11 @@ $(document).ready(function() {
                 url: PRODUCTION_SERVLET_URL, type: "GET", dataType: "json",
                 data: { action: "buscar_articulos_insumos", busqueda: request.term },
                 success: function(data) {
+
                     response(data.map(item => ({
                         id: item.id, value: item.descripcion,
                         label: (item.codigo || '') + ' - ' + (item.descripcion || ''),
+
                         codigo: item.codigo, id_unidad: item.id_unidad,
                         unidad_nombre: item.unidad_nombre, density: item.densidad || '1.00000000'
                     })));
@@ -145,6 +150,7 @@ $(document).ready(function() {
             });
         },
         minLength: 2,
+
         select: function(event, ui) {
             const selectedItem = ui.item;
             document.getElementById('buscar_insumo').value = selectedItem.value;
@@ -153,17 +159,18 @@ $(document).ready(function() {
             return false;
         }
     });
-
     $("#buscar_receta_orden").autocomplete({
         source: function(request, response) {
             $.ajax({
                 url: PRODUCTION_SERVLET_URL, type: "GET", dataType: "json",
                 data: { action: "obtener_receta_por_nombre_generico", nombre_generico: request.term },
                 success: function(data) {
+
                     response(data.map(item => ({
                         id_receta: item.id_receta, id_art_ter: item.id_producto_maestro,
                         nombre_art_ter: item.nombre_generico, receta_cantidad_base: item.receta_cantidad_base,
                         value: item.nombre_generico, label: 'Receta ' + item.id_receta + ' - ' + item.nombre_generico,
+
                         unidad_nombre: item.unidad_nombre
                     })));
                 }
@@ -171,6 +178,7 @@ $(document).ready(function() {
         },
         minLength: 2,
         select: function(event, ui) {
+
             document.getElementById('p_id_receta_orden_hidden').value = ui.item.id_receta;
             document.getElementById('p_id_art_producido_orden_hidden').value = ui.item.id_art_ter;
             document.getElementById('p_receta_cantidad_base_hidden').value = ui.item.receta_cantidad_base;
@@ -188,7 +196,6 @@ $(document).ready(function() {
             return false;
         }
     });
-
     $("#buscar_envase_principal_multiple").autocomplete({
         source: getPackagingAutocompleteSource(1), minLength: 2,
         select: function(event, ui) {
@@ -222,7 +229,6 @@ $(document).ready(function() {
             return false;
         }
     });
-
     $('#btn_cargar_insumos_receta').on('click', function(event) {
        event.preventDefault();
        const idReceta = document.getElementById('p_id_receta_orden_hidden').value;
@@ -232,7 +238,6 @@ $(document).ready(function() {
        }
        loadInsumosForRecipe();
     });
-
     openTab(null, 'Receta');
     if (typeof window.activeOrdenCodeFromServlet !== 'undefined') {
         activeOrdenCode = window.activeOrdenCodeFromServlet;
@@ -250,7 +255,6 @@ $(document).ready(function() {
         if (event.target.id === 'commentModal') closeCommentModal();
     });
 });
-
 function getPackagingAutocompleteSource(tipoComponente) {
     return function(request, response) {
         $.ajax({
@@ -258,11 +262,13 @@ function getPackagingAutocompleteSource(tipoComponente) {
             data: { action: "buscar_articulos_embalado_y_embalaje", busqueda: request.term, p_tipo_componente: tipoComponente },
             success: function(data) {
                 response(data.map(item => ({
+
                     id: item.id, value: item.descripcion,
                     label: (item.codigo || '') + ' - ' + (item.descripcion || ''),
                     capacidad: item.capacidad || 'N/A', unidad_capacidad: item.unidad_capacidad || '',
                 })));
             }
+
         });
     };
 }
@@ -301,15 +307,16 @@ function openTab(evt, tabName) {
     }
     const tabButtons = document.getElementsByClassName("tab-button");
     for (let i = 0; i < tabButtons.length; i++) tabButtons[i].classList.remove('active');
-
     document.getElementById(tabName).style.display = "block";
     document.getElementById(tabName).classList.add('active');
     if (evt) evt.currentTarget.classList.add('active');
     updateOrdenFields();
 }
 
-function deleteRow(btn) { btn.parentNode.parentNode.remove(); }
-function addRowFromSearch() { showSwalAlert("La adición de insumos es automática al seleccionar de la lista.", 'info'); }
+function deleteRow(btn) { btn.parentNode.parentNode.remove();
+}
+function addRowFromSearch() { showSwalAlert("La adición de insumos es automática al seleccionar de la lista.", 'info');
+}
 
 function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
     const tableBody = document.getElementById(tableId);
@@ -322,7 +329,8 @@ function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
             <input type="number" id="${inputId}" name="p_cant_req[]" value="${qty}" step="0.0001" required placeholder="Cantidad">
         </td>
         <td><input type="text" name="p_nombre_uni_insumo[]" value="${unitName}" readonly class="readonly-field" placeholder="Unidad"></td>
-        <td><input type="number" name="p_densidad[]" value="${density}" step="0.000001" required placeholder="0.00" class="readonly-field" readonly></td>
+        <td><input type="number" name="p_densidad[]" value="${density}"
+        step="0.000001" required placeholder="0.00" class="readonly-field" readonly></td>
         <td><button type="button" class="remove-row" onclick="deleteRow(this)"><i class="fas fa-trash"></i></button></td>
         <input type="hidden" name="p_id_art_insumo_hidden[]" value="${insumoId}">
         <input type="hidden" name="p_id_uni_insumo_hidden[]" value="${unitId}">
@@ -343,10 +351,15 @@ function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
         <td class="capacity-field-group">
             <input type="number" name="p_capacidad_numeric[]" value="${capacityDetails.value}" step="0.0001" required>
             <select name="p_capacidad_unidad[]" required>
-                <option value="Litro" ${capacityDetails.unit === 'Litro' ? 'selected' : ''}>Lt</option>
-                <option value="ml" ${capacityDetails.unit === 'ml' ? 'selected' : ''}>ml</option>
-                <option value="Kg" ${capacityDetails.unit === 'Kg' ? 'selected' : ''}>Kg</option>
-                <option value="gr" ${capacityDetails.unit === 'gr' ? 'selected' : ''}>gr</option>
+
+                <option value="Litro" ${capacityDetails.unit === 'Litro' ?
+                'selected' : ''}>Lt</option>
+                <option value="ml" ${capacityDetails.unit === 'ml' ?
+                'selected' : ''}>ml</option>
+                <option value="Kg" ${capacityDetails.unit === 'Kg' ?
+                'selected' : ''}>Kg</option>
+                <option value="gr" ${capacityDetails.unit === 'gr' ?
+                'selected' : ''}>gr</option>
             </select>
         </td>
         <td class="quantity-control-compact">
@@ -354,12 +367,14 @@ function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
         </td>
         <td data-tapa-status="unassigned" id="tapassello_col_${rowId}">
             <div class="tapa-display-container">
-                <span id="tapa_assigned_display_${rowId}" class="tapa-status-tag tag-unassigned">TAPA: N/A</span>
+                <span id="tapa_assigned_display_${rowId}"
+                class="tapa-status-tag tag-unassigned">TAPA: N/A</span>
                 <input type="hidden" name="p_id_componente_cap[]" id="tapa_id_hidden_${rowId}" value="">
                 <input type="hidden" name="tapa_nombre_hidden[]" id="tapa_nombre_hidden_${rowId}" value="">
             </div>
             <div class="tapa-display-container">
                 <span id="contratapa_assigned_display_${rowId}" class="tapa-status-tag tag-unassigned">CONTRATAPA: N/A</span>
+
                 <input type="hidden" name="p_id_componente_contratapa[]" id="contratapa_id_hidden_${rowId}" value="">
                 <input type="hidden" name="contratapa_nombre_hidden[]" id="contratapa_nombre_hidden_${rowId}" value="">
             </div>
@@ -367,9 +382,11 @@ function addRowEnvaseTapa(containerId, containerLabel, containerCapacity) {
         <td class="actions-cell-grid-container">
             <div class="actions-grid-compact">
                 <button type="button" class="btn-submit btn-xs btn-primary" onclick="assignTapaToRow('${rowId}', 'tapa')">Tapa</button>
+
                 <button type="button" class="btn-submit btn-xs btn-secondary" onclick="assignTapaToRow('${rowId}', 'contratapa')">Contratapa</button>
                 <button type="button" class="btn-submit btn-xs btn-info" onclick="removeAssignedTapa('${rowId}', 'contratapa')">Quitar Contratapa</button>
-                <button type="button" class="remove-row btn-xs btn-danger" onclick="deleteRow(this); updateTotalUnitsReference()"><i class="fas fa-trash"></i> Fila</button>
+                <button type="button" class="remove-row btn-xs btn-danger" onclick="deleteRow(this);
+                updateTotalUnitsReference()"><i class="fas fa-trash"></i> Fila</button>
             </div>
         </td>
     `;
@@ -384,7 +401,8 @@ function assignTapaToRow(rowId, capType) {
         return;
     }
     const assignedName = selectedLabelText.replace(`Tapa/Sello Seleccionado: `, '');
-    let displayElementId, idHiddenId, nombreHiddenId, assignmentName;
+    let
+    displayElementId, idHiddenId, nombreHiddenId, assignmentName;
 
     if (capType === 'tapa') {
         displayElementId = `tapa_assigned_display_${rowId}`;
@@ -417,17 +435,18 @@ function openAddInsumoModal(idReceta, nombreReceta, cantBase, unidadBase) {
     document.getElementById('add_p_id_receta').value = idReceta;
     document.getElementById('add-insumo-recipe-title').textContent = `${nombreReceta} (Base: ${cantBase.toFixed(2)} ${unidadBase})`;
     document.getElementById('add-insumo-info').textContent = `Cantidad base de la receta: ${cantBase.toFixed(2)} ${unidadBase}`;
-
     $("#buscar_insumo_add").autocomplete({
         source: function(request, response) {
             $.ajax({
                 url: PRODUCTION_SERVLET_URL, type: "GET", dataType: "json",
                 data: { action: "buscar_articulos_insumos", busqueda: request.term },
                 success: function(data) {
+
                     response(data.map(item => ({
                         id: item.id, value: item.descripcion, label: (item.codigo || '') + ' - ' + (item.descripcion || ''),
                         codigo: item.codigo, id_unidad: item.id_unidad, unidad_nombre: item.unidad_nombre, densidad: item.densidad || '1.00000000'
                     })));
+
                 }
             });
         },
@@ -469,6 +488,7 @@ function saveNewInsumoToRecipe(event) {
 
     fetch(PRODUCTION_SERVLET_URL, { method: 'POST', body: params })
     .then(handleJsonResponse)
+
     .then(data => {
         if (data.success) {
             showSwalAlert("Nuevo insumo agregado.", 'success');
@@ -483,15 +503,16 @@ function saveFullRecipe(event) {
     const artTerId = $('input[name="p_id_art_ter_hidden"]').val();
     const rows = document.getElementById('insumo-rows').querySelectorAll('tr');
 
-    if (!artTerId) { showSwalAlert("Debe seleccionar un Producto Terminado.", 'error'); return; }
-    if (rows.length === 0) { showSwalAlert("Agregue al menos un insumo.", 'error'); return; }
+    if (!artTerId) { showSwalAlert("Debe seleccionar un Producto Terminado.", 'error'); return;
+    }
+    if (rows.length === 0) { showSwalAlert("Agregue al menos un insumo.", 'error'); return;
+    }
 
     const params = new URLSearchParams(new FormData(event.target));
     params.set('action', 'crear_receta_y_componentes');
     params.set('p_id_art_ter_hidden', artTerId);
     params.set('p_nombre_art_ter_receta', document.getElementById('buscar_art_ter').value);
     params.set('p_nombre_uni_prod', 'Litro');
-
     fetch(PRODUCTION_SERVLET_URL, { method: 'POST', body: params })
     .then(handleJsonResponse)
     .then(data => {
@@ -500,8 +521,32 @@ function saveFullRecipe(event) {
             document.getElementById('buscar_art_ter').value = '';
             $('input[name="p_id_art_ter_hidden"]').val('');
             document.getElementById('insumo-rows').innerHTML = '';
-        } else { showSwalAlert("Error al guardar: " + data.message, 'error'); }
+        } else { showSwalAlert("Error al guardar: " +
+        data.message, 'error'); }
     });
+}
+
+function calculateTotalConsumption(inputElement, theoreticalQty, unitName) {
+    const row = inputElement.closest('tr');
+    const operator = row.querySelector('select[name="p_desviacion_operador[]"]').value;
+    const deviation = parseFloat(inputElement.value) || 0;
+    const theoretical = parseFloat(theoreticalQty);
+
+    let consumedQty = theoretical;
+
+    if (operator === '+') {
+        consumedQty += deviation;
+    } else if (operator === '-') {
+        consumedQty -= deviation;
+    }
+
+    const consumedInput = row.querySelector('input[name="p_cantidad_consumida_final[]"]');
+
+    let formattedQty = consumedQty.toFixed(4).replace(/\.?0+$/, '').replace('.', ',');
+
+    if (consumedInput) {
+        consumedInput.value = formattedQty;
+    }
 }
 
 function loadInsumosForRecipe() {
@@ -509,18 +554,18 @@ function loadInsumosForRecipe() {
     const cantProdStr = document.getElementById('cant_prod_orden').value;
     const cantBaseRecetaStr = document.getElementById('p_receta_cantidad_base_hidden').value;
 
-    if (!idReceta) { showSwalAlert("Seleccione una Receta válida.", 'error'); return; }
-    if (!cantProdStr || parseFloat(cantProdStr) <= 0) { showSwalAlert("Cantidad a Producir inválida.", 'error'); return; }
+    if (!idReceta) { showSwalAlert("Seleccione una Receta válida.", 'error'); return;
+    }
+    if (!cantProdStr || parseFloat(cantProdStr) <= 0) { showSwalAlert("Cantidad a Producir inválida.", 'error'); return;
+    }
 
     const cantProdOrder = parseFloat(cantProdStr);
     const cantBaseReceta = parseFloat(cantBaseRecetaStr);
     const scaleFactor = cantProdOrder / cantBaseReceta;
-
     const tableBody = document.getElementById('insumos-orden-rows');
     const statusDisplay = document.getElementById('display_order_recipe_status');
     tableBody.innerHTML = '';
     statusDisplay.textContent = `Preparando listado de insumos para: ${activeNombreReceta}...`;
-
     let controlsContainer = document.getElementById('orden-controls-container');
     if (!controlsContainer) {
         controlsContainer = document.createElement('div');
@@ -531,7 +576,6 @@ function loadInsumosForRecipe() {
     controlsContainer.innerHTML = '';
 
     insumosCargadosPreviamente = true;
-
     fetch(`${PRODUCTION_SERVLET_URL}?action=obtener_insumos_receta&id_receta=${idReceta}`)
     .then(handleJsonResponse)
     .then(data => {
@@ -541,22 +585,40 @@ function loadInsumosForRecipe() {
                 const totalReq = baseReq * scaleFactor;
                 const formattedTeorica = formatQuantityDisplay(totalReq, insumo.unidad_nombre);
 
+
                 const newRow = tableBody.insertRow();
+                // MODIFICACIÓN: Mostrar solo Código, Cantidad Teórica, Desviación y Cantidad Consumida
                 newRow.innerHTML = `
                     <td>${insumo.codigo}</td>
-                    <td>${insumo.nombre_articulo}</td>
                     <td class="text-right" style="font-weight: bold; color: var(--accent-primary);">${formattedTeorica}</td>
+                    <td class="deviation-control">
+                        <select name="p_desviacion_operador[]" class="operator-select">
+                            <option value="+">+</option>
+                            <option value="-">-</option>
+                        </select>
+                        <input type="number" name="p_desviacion_cantidad[]" value="0.0000" step="0.0001" min="0"
+                               oninput="calculateTotalConsumption(this, ${totalReq}, '${insumo.unidad_nombre}')" style="width: 70px;">
+                    </td>
+                    <td class="text-right">
+                        <input type="text" name="p_cantidad_consumida_final[]" value="${formattedTeorica.replace(/[^0-9.,]/g, '')}" readonly class="readonly-consumption">
+                        <input type="hidden" name="p_cantidad_teorica[]" value="${totalReq}">
+                        <input type="hidden" name="p_id_art_insumo[]" value="${insumo.id_articulo}">
+                        <input type="hidden" name="p_id_unidad_insumo[]" value="${insumo.id_unidad}">
+                    </td>
                     <td class="text-center"><span class="badge badge-secondary" style="background-color: #6c757d; color: white; padding: 5px;">Pendiente de Proceso</span></td>
                 `;
             });
 
             if (activeOrdenCode) {
                  controlsContainer.innerHTML = `
-                    <button type="button" class="btn btn-success btn-lg btn-block" onclick="procesarConsumoAutomatico('${activeOrdenCode}')" style="width: 100%; padding: 15px; font-size: 1.2rem;">
+
+                    <button type="button" class="btn btn-success btn-lg btn-block" onclick="procesarConsumoAutomatico('${activeOrdenCode}')" style="width: 100%;
+                    padding: 15px; font-size: 1.2rem;">
                         <i class="fas fa-cogs"></i> PROCESAR CONSUMO DE MATERIA PRIMA (AUTOMÁTICO)
                     </button>
                 `;
                 statusDisplay.textContent = `Lista cargada. Presione el botón verde para descontar el stock automáticamente.`;
+
             } else {
                  statusDisplay.textContent = `Lista preliminar. Cree la Orden primero para habilitar el consumo.`;
             }
@@ -564,6 +626,7 @@ function loadInsumosForRecipe() {
         } else {
             insumosCargadosPreviamente = false;
             statusDisplay.textContent = `No se encontraron insumos para esta receta.`;
+
         }
     })
     .catch(error => {
@@ -578,6 +641,7 @@ function procesarConsumoAutomatico(idOrden) {
     Swal.fire({
         title: '¿Confirmar Consumo Automático?',
         text: "Se descontará el stock de inventario (Lotes FIFO y General).",
+
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#28a745',
@@ -586,7 +650,6 @@ function procesarConsumoAutomatico(idOrden) {
     }).then((result) => {
         if (result.isConfirmed) {
             Swal.fire({title: 'Procesando...', text: 'Descontando inventario...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
-
             const params = new URLSearchParams();
             params.append('action', 'ejecutar_consumo');
             params.append('p_id_orden', idOrden);
@@ -596,14 +659,17 @@ function procesarConsumoAutomatico(idOrden) {
             .then(data => {
                 if (data.success) {
                     Swal.fire('¡Proceso Completado!', data.message, 'success');
+
                     const rows = document.getElementById('insumos-orden-rows').querySelectorAll('tr');
                     rows.forEach(row => {
                         const badge = row.querySelector('.badge');
                         if(badge) {
+
                             badge.textContent = 'Consumido';
                             badge.style.backgroundColor = '#28a745';
                         }
                     });
+
                     const btnContainer = document.getElementById('orden-controls-container');
                     if(btnContainer) btnContainer.innerHTML = '<div class="alert alert-success">Consumo Registrado Correctamente</div>';
 
@@ -621,9 +687,9 @@ function procesarConsumoAutomatico(idOrden) {
 function saveOrden(event) {
     event.preventDefault();
     const idReceta = document.getElementById('p_id_receta_orden_hidden').value;
-
     if (!idReceta || !insumosCargadosPreviamente) {
-        showSwalAlert("Debe seleccionar una Receta y Cargar la lista preliminar primero.", 'error'); return;
+        showSwalAlert("Debe seleccionar una Receta y Cargar la lista preliminar primero.", 'error');
+        return;
     }
 
     const params = new URLSearchParams(new FormData(event.target));
@@ -632,7 +698,6 @@ function saveOrden(event) {
     params.set('p_cant_prod_orden', cant);
     params.set('p_cant_prod_final_real', real);
     params.set('action', 'crear_orden');
-
     fetch(PRODUCTION_SERVLET_URL, { method: 'POST', body: params })
     .then(handleJsonResponse)
     .then(data => {
@@ -643,6 +708,7 @@ function saveOrden(event) {
             activeLotCode = '';
 
             updateOrdenFields();
+
             showSwalAlert(`Orden Creada: ${activeOrdenCode}.`, 'success');
 
             loadInsumosForRecipe();
@@ -655,7 +721,6 @@ function calculateLooseContainers() {
     const finalProducedQty = parseFloat(document.getElementById('cant_producida_final_envasado').value) || 0;
     const rows = document.getElementById('envase-tapa-rows').querySelectorAll('tr');
     let totalContainersCapacity = 0;
-
     rows.forEach(row => {
         const capacityValue = parseFloat(row.querySelector('input[name="p_capacidad_numeric[]"]').value) || 0;
         const qtyContainers = parseInt(row.querySelector('input[name="p_cant_a_empacar_final[]"]').value) || 0;
@@ -666,12 +731,10 @@ function calculateLooseContainers() {
 
         totalContainersCapacity += capacityInLitros * qtyContainers;
     });
-
     const envasesSueltos = Math.ceil(finalProducedQty * 1000) - Math.ceil(totalContainersCapacity * 1000);
 
     const looseInput = document.getElementById('envases_sueltos_display');
     const looseDisplay = document.getElementById('envases_sueltos_group');
-
     if (envasesSueltos > 0) {
         looseInput.value = envasesSueltos.toFixed(0);
         document.getElementById('p_envases_sueltos_hidden').value = envasesSueltos.toFixed(0);
@@ -708,7 +771,8 @@ function submitPackagingStep(event, stepAction, message) {
 
 function submitMerma(event) {
     event.preventDefault();
-    if (!activeOrdenCode) { showSwalAlert("No hay orden activa.", 'error'); return; }
+    if (!activeOrdenCode) { showSwalAlert("No hay orden activa.", 'error'); return;
+    }
 
     document.getElementById('hidden_orden_merma_submit').value = activeOrdenCode;
     const params = new URLSearchParams({
@@ -717,7 +781,6 @@ function submitMerma(event) {
         p_merma_cantidad: document.getElementById('merma_cantidad').value,
         p_envases_sueltos: document.getElementById('p_envases_sueltos_hidden').value
     });
-
     fetch(PRODUCTION_SERVLET_URL, { method: 'POST', body: params })
     .then(handleJsonResponse)
     .then(data => {
@@ -728,7 +791,8 @@ function submitMerma(event) {
 
 function submitFinalLotRegistration(event) {
     event.preventDefault();
-    if (!activeOrdenCode || !activeLotCode) { showSwalAlert("Falta Orden o Lote.", 'error'); return; }
+    if (!activeOrdenCode || !activeLotCode) { showSwalAlert("Falta Orden o Lote.", 'error'); return;
+    }
 
     document.getElementById('hidden_orden_lote_submit').value = activeOrdenCode;
     document.getElementById('p_id_art_ter_lote_hidden').value = activeIdArtTerminado;
@@ -749,13 +813,13 @@ function submitFinalLotRegistration(event) {
 
 function generateLotCode(event) {
     event.preventDefault();
-    if (!activeOrdenCode) { showSwalAlert("Requiere Orden Activa.", 'error'); return; }
+    if (!activeOrdenCode) { showSwalAlert("Requiere Orden Activa.", 'error'); return;
+    }
 
     const params = new URLSearchParams({
         action: 'generar_codigo_lote',
         id_orden: activeOrdenCode
     });
-
     fetch(`${PRODUCTION_SERVLET_URL}?${params.toString()}`, { method: 'GET' })
     .then(handleJsonResponse)
     .then(data => {
@@ -766,6 +830,7 @@ function generateLotCode(event) {
 
             const hidden = document.getElementById('p_codigo_lote_envase_hidden');
             if(hidden) hidden.value = activeLotCode;
+
 
             const refDisplay = document.getElementById('cod_lote_ref_lotes');
             if(refDisplay) refDisplay.value = activeLotCode;
@@ -779,13 +844,12 @@ function generateLotCode(event) {
 
 function updateOrdenFields(forceClear = false) {
     if (forceClear) {
-        activeOrdenCode = ''; activeLotCode = ''; activeIdArtTerminado = ''; activeNombreArtTerminado = '';
+        activeOrdenCode = '';
+        activeLotCode = ''; activeIdArtTerminado = ''; activeNombreArtTerminado = '';
     }
     const fields = [ { s: 'consumo', c: 'warning' }, { s: 'envase', c: 'primary' }, { s: 'finalizar', c: 'danger' }, { s: 'lote', c: 'success' } ];
-
     const mainDisplay = document.getElementById('active-orden-code-display');
     if (mainDisplay) mainDisplay.textContent = activeOrdenCode || 'N/A';
-
     fields.forEach(f => {
         const d = document.getElementById(`display_orden_${f.s}`);
         const h = document.getElementById(`hidden_orden_${f.s}`);
@@ -795,7 +859,6 @@ function updateOrdenFields(forceClear = false) {
         }
         if (h) h.value = activeOrdenCode;
     });
-
     if (activeOrdenCode) {
         const fills = ['p_id_art_ter_envasado_hidden', 'p_id_art_ter_caja_hidden', 'p_id_art_ter_lote_hidden'];
         fills.forEach(id => { const el = document.getElementById(id); if(el) el.value = activeIdArtTerminado; });
@@ -805,7 +868,6 @@ function updateOrdenFields(forceClear = false) {
 
         const lotDisplays = ['lote_code_display_empaque', 'lote_code_display_finalizar'];
         lotDisplays.forEach(id => { const el = document.getElementById(id); if(el) el.textContent = activeLotCode || 'N/A'; });
-
     } else if (forceClear) {
         document.getElementById('insumos-orden-rows').innerHTML = '';
         document.getElementById('envase-tapa-rows').innerHTML = '';
@@ -831,6 +893,7 @@ function loadRecetasList() {
         list.forEach(r => unique.set(r.id_receta, r));
 
         unique.forEach(receta => {
+
             const row = tableBody.insertRow();
             row.innerHTML = `
                 <td>${receta.nombre_generico}</td>
@@ -838,6 +901,7 @@ function loadRecetasList() {
                 <td>${receta.unidad_producir_nombre}</td>
                 <td>${receta.fecha_creacion}</td>
                 <td>
+
                     <button class="btn-submit btn-compact btn-info" onclick="loadRecetaDetalle(${receta.id_receta}, '${escapeJsStringForHtml(receta.nombre_generico)}', ${receta.receta_cantidad_base}, '${receta.unidad_producir_nombre}')">Ver</button>
                     <button class="btn-submit btn-compact btn-danger" onclick="confirmDeactivateReceta(${receta.id_receta}, '${escapeJsStringForHtml(receta.nombre_generico)}')">Desactivar</button>
                 </td>
@@ -863,7 +927,8 @@ function loadRecetaDetalle(id, nombre, base, unidad) {
                 <td>${item.codigo}</td><td>${item.nombre_articulo}</td>
                 <td>${formatQuantityDisplay(parseFloat(item.cantidad_requerida), item.unidad_nombre)}</td>
                 <td>
-                   <button class="btn-submit btn-compact btn-warning" onclick="loadInsumoDetalleForEdit(${item.id_detalle_receta}, ${id}, '${nombre}', ${base}, '${unidad}')">Editar</button>
+
+                    <button class="btn-submit btn-compact btn-warning" onclick="loadInsumoDetalleForEdit(${item.id_detalle_receta}, ${id}, '${nombre}', ${base}, '${unidad}')">Editar</button>
                    <button class="btn-submit btn-compact btn-danger" onclick="removeDetalleReceta(${item.id_detalle_receta}, ${id}, '${nombre}', ${base}, '${unidad}')">Quitar</button>
                 </td>`;
         });
@@ -877,7 +942,8 @@ function loadInsumoDetalleForEdit(idDetalle, idReceta, nombreReceta, cantBase, u
     document.getElementById('edit_p_id_receta').value = idReceta;
 }
 function closeEditDetalleModal() { document.getElementById('edit-detalle-modal').style.display = 'none'; }
-function submitEditDetalleReceta(e) { e.preventDefault(); }
+function submitEditDetalleReceta(e) { e.preventDefault();
+}
 function removeDetalleReceta(idDetalle, idReceta, nombre, base, unit) { }
 function confirmDeactivateReceta(id) { }
 
@@ -891,7 +957,8 @@ function loadOrdenesList() {
                 <td>${o.codigo_orden}</td><td>${o.nombre_articulo_terminado}</td>
                 <td>${parseFloat(o.cantidad_programada).toFixed(2)}</td><td>${o.estado_produccion}</td><td>${o.codigo_lote||'N/A'}</td>
                 <td><button class="btn-submit btn-compact btn-info" onclick="loadDetalleOrden('${o.codigo_orden}', '${escapeJsStringForHtml(o.nombre_articulo_terminado)}', '${o.estado_produccion}')">Ver</button></td>
-            `;
+
+             `;
         });
     });
 }
@@ -907,6 +974,7 @@ function loadDetalleOrden(code, name, status) {
             tbody.insertRow().innerHTML = `
                 <td>${c.codigo_articulo}</td><td>${c.nombre_articulo}</td>
                 <td>${parseFloat(c.cantidad_teorica).toFixed(4)}</td>
+
                 <td>${parseFloat(c.cantidad_consumida).toFixed(4)}</td>
                 <td>${c.fecha_registro}</td>
             `;
