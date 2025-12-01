@@ -74,7 +74,7 @@ public class ProduccionController implements ProducionRepository {
                 }
             }
         }
-        if (idReceta <= 0) throw new SQLException("Error: El registro de la receta falló, se obtuvo un ID inválido.");
+        if (idReceta <= 0) throw new SQLException("Error: El registro de la receta falló.");
         return idReceta;
     }
 
@@ -108,7 +108,7 @@ public class ProduccionController implements ProducionRepository {
                 receta.put("receta_cantidad_base", rs.getDouble("receta_cantidad_base"));
                 receta.put("unidad_producir_nombre", rs.getString("unidad_producir_nombre"));
                 receta.put("fecha_creacion", rs.getString("fecha_creacion"));
-                receta.put("estado", rs.getString("estado"));
+                try { receta.put("estado", rs.getString("estado")); } catch (Exception e) { receta.put("estado", "Activa"); }
 
                 recetas.add(receta);
             }
@@ -119,7 +119,6 @@ public class ProduccionController implements ProducionRepository {
     @Override
     public void actualizarInsumoReceta(int idDetalleReceta, double cantReq, int idUniInsumo) throws SQLException {
         String sql = "{CALL sp_actualizar_insumo_receta(?, ?, ?)}";
-
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idDetalleReceta);
             cs.setDouble(2, cantReq);
@@ -131,7 +130,6 @@ public class ProduccionController implements ProducionRepository {
     @Override
     public void eliminarDetalleRecetaIndividual(int idDetalleReceta) throws SQLException {
         String sql = "{CALL sp_eliminar_detalle_receta_individual(?)}";
-
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idDetalleReceta);
             cs.execute();
@@ -141,7 +139,6 @@ public class ProduccionController implements ProducionRepository {
     @Override
     public void desactivarReceta(int idReceta) throws SQLException {
         String sql = "{CALL sp_desactivar_receta(?)}";
-
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idReceta);
             cs.execute();
@@ -155,7 +152,6 @@ public class ProduccionController implements ProducionRepository {
 
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setString(1, nombreGenerico);
-
             try (ResultSet rs = cs.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> detalle = new LinkedHashMap<>();
@@ -178,7 +174,6 @@ public class ProduccionController implements ProducionRepository {
 
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idReceta);
-
             try (ResultSet rs = cs.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> insumo = new LinkedHashMap<>();
@@ -188,6 +183,9 @@ public class ProduccionController implements ProducionRepository {
                     insumo.put("cantidad_requerida", rs.getDouble("cantidad_requerida"));
                     insumo.put("id_unidad", rs.getInt("id_unidad"));
                     insumo.put("unidad_nombre", rs.getString("unidad_nombre"));
+                    try { insumo.put("id_detalle_receta", rs.getInt("id_detalle_receta")); } catch (Exception e) {}
+                    try { insumo.put("densidad", rs.getDouble("densidad")); } catch (Exception e) {}
+
                     insumos.add(insumo);
                 }
             }
@@ -197,7 +195,31 @@ public class ProduccionController implements ProducionRepository {
 
     @Override
     public List<Map<String, Object>> obtenerDetalleInsumoReceta(int idDetalleReceta) throws SQLException {
-        throw new UnsupportedOperationException("Método no implementado: SP 'sp_obtener_detalle_insumo_receta' no proporcionado.");
+        List<Map<String, Object>> detalles = new ArrayList<>();
+        String sql = "SELECT dr.id_detalle_receta, dr.id_articulo_insumo, dr.cantidad_requerida, dr.id_unidad_insumo, " +
+                "a.descripcion as nombre_articulo, a.densidad, um.abreviatura as unidad_nombre " +
+                "FROM detalle_receta dr " +
+                "JOIN articulo a ON dr.id_articulo_insumo = a.id " +
+                "JOIN unidad_medida um ON dr.id_unidad_insumo = um.id_unidad " +
+                "WHERE dr.id_detalle_receta = ?";
+
+        try (Connection conn = getConnection(); java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idDetalleReceta);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Map<String, Object> d = new LinkedHashMap<>();
+                    d.put("id_detalle_receta", rs.getInt("id_detalle_receta"));
+                    d.put("id_articulo", rs.getInt("id_articulo_insumo"));
+                    d.put("nombre_articulo", rs.getString("nombre_articulo"));
+                    d.put("cantidad_requerida", rs.getDouble("cantidad_requerida"));
+                    d.put("id_unidad", rs.getInt("id_unidad_insumo"));
+                    d.put("unidad_nombre", rs.getString("unidad_nombre"));
+                    d.put("densidad", rs.getDouble("densidad"));
+                    detalles.add(d);
+                }
+            }
+        }
+        return detalles;
     }
 
     @Override
@@ -219,14 +241,13 @@ public class ProduccionController implements ProducionRepository {
                 }
             }
         }
-        if (idOrden <= 0) throw new SQLException("Error: La creación de la orden falló, se obtuvo un ID inválido.");
+        if (idOrden <= 0) throw new SQLException("Error: La creación de la orden falló.");
         return idOrden;
     }
 
     @Override
     public void gestionarConsumoMateriaPrima(int idOrden) throws SQLException {
         String sql = "{CALL sp_gestionar_consumo_mp(?)}";
-
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idOrden);
             cs.execute();
@@ -236,7 +257,6 @@ public class ProduccionController implements ProducionRepository {
     @Override
     public void registrarConsumoComponente(int idOrden, int idArticuloConsumido, double cantidadAConsumir, int idUnidad, boolean esEnvase, String comentarioConsumo) throws SQLException {
         String sql = "{CALL sp_registrar_consumo_produccion_componente(?, ?, ?, ?, ?, ?)}";
-
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idOrden);
             cs.setInt(2, idArticuloConsumido);
@@ -255,7 +275,6 @@ public class ProduccionController implements ProducionRepository {
 
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idOrden);
-
             try (ResultSet rs = cs.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> consumo = new LinkedHashMap<>();
@@ -276,14 +295,10 @@ public class ProduccionController implements ProducionRepository {
     @Override
     public void gestionarConsumoEnvase(int idOrden, double mermaCantidad, double envasesSueltos) throws SQLException {
         String sql = "{CALL sp_gestionar_consumo_envase(?, ?, ?)}";
-
-        try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idOrden);
             cs.setDouble(2, mermaCantidad);
             cs.setDouble(3, envasesSueltos);
-
             cs.execute();
         }
     }
@@ -297,13 +312,11 @@ public class ProduccionController implements ProducionRepository {
     @Override
     public void registrarLotes(int idOrden, List<Map<String, Object>> lotes) throws SQLException {
         String sql = "{CALL sp_reg_lote(?, ?, ?, ?)}";
-
         int idArticuloProducido = obtenerIdArticuloProducidoPorOrden(idOrden);
 
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try (CallableStatement cs = conn.prepareCall(sql)) {
-
                 for (Map<String, Object> lote : lotes) {
                     double cantidad = ((Number) lote.get("cantidad")).doubleValue();
                     String codigoLote = (String) lote.get("codigo_lote");
@@ -313,7 +326,6 @@ public class ProduccionController implements ProducionRepository {
                     if (codigoLote == null || codigoLote.isEmpty()) {
                         codigoLote = generarCodigoLoteDB(idArticuloProducido);
                     }
-
                     cs.setInt(1, idOrden);
                     cs.setDouble(2, cantidad);
                     cs.setString(3, codigoLote);
@@ -323,7 +335,7 @@ public class ProduccionController implements ProducionRepository {
                 conn.commit();
             } catch (SQLException e) {
                 conn.rollback();
-                throw new SQLException("Error al registrar los lotes. Transacción revertida.", e);
+                throw new SQLException("Error al registrar los lotes.", e);
             } finally {
                 conn.setAutoCommit(true);
             }
@@ -333,7 +345,6 @@ public class ProduccionController implements ProducionRepository {
     @Override
     public void finalizarOrden(int idOrden) throws SQLException {
         String sql = "{CALL sp_finalizar_orden(?)}";
-
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setInt(1, idOrden);
             cs.execute();
@@ -341,20 +352,42 @@ public class ProduccionController implements ProducionRepository {
     }
 
     @Override
+    public List<Map<String, Object>> listarOrdenesActivas() throws SQLException {
+        List<Map<String, Object>> ordenes = new ArrayList<>();
+        String sql = "{CALL sp_listar_ordenes_activas()}";
+
+        try (Connection conn = getConnection();
+             CallableStatement cs = conn.prepareCall(sql);
+             ResultSet rs = cs.executeQuery()) {
+
+            while (rs.next()) {
+                Map<String, Object> orden = new LinkedHashMap<>();
+                orden.put("codigo_orden", rs.getInt("id_orden"));
+                orden.put("nombre_articulo_terminado", rs.getString("nombre_articulo_terminado"));
+                orden.put("cantidad_programada", rs.getDouble("cantidad_a_producir"));
+                orden.put("fecha_creacion", rs.getString("fecha_creacion"));
+                orden.put("estado_produccion", rs.getString("estado"));
+                try { orden.put("codigo_lote", rs.getString("codigo_lote_generado")); } catch (Exception e) { orden.put("codigo_lote", "N/A"); }
+                try { orden.put("unidad_nombre", rs.getString("unidad_nombre")); } catch (Exception e) { orden.put("unidad_nombre", ""); }
+
+                ordenes.add(orden);
+            }
+        }
+        return ordenes;
+    }
+
+    @Override
     public List<String> obtenerPresentacionesPorProductoMaestro(int idProductoMaestro) throws SQLException {
-        throw new UnsupportedOperationException("Método no implementado: SP 'sp_obtener_presentaciones_por_pm' no proporcionado.");
+        return new ArrayList<>();
     }
 
     private List<Map<String, Object>> ejecutarBusqueda(String sql, String busqueda) throws SQLException {
         List<Map<String, Object>> articulos = new ArrayList<>();
-
         try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setString(1, busqueda);
-
             try (ResultSet rs = cs.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> articulo = new LinkedHashMap<>();
-
                     try { articulo.put("id", rs.getInt("id")); } catch (SQLException e) { try { articulo.put("id", rs.getInt("id_articulo")); } catch (SQLException e2) { articulo.put("id", 0); } }
                     try { articulo.put("codigo", rs.getString("codigo")); } catch (SQLException e) { articulo.put("codigo", ""); }
                     try { articulo.put("descripcion", rs.getString("descripcion")); } catch (SQLException e) { articulo.put("descripcion", "Artículo Desconocido"); }
@@ -362,19 +395,11 @@ public class ProduccionController implements ProducionRepository {
                     try { articulo.put("id_producto_maestro", rs.getInt("id_producto_maestro")); } catch (SQLException e) { }
                     try { articulo.put("id_unidad", rs.getInt("id_unidad")); } catch (SQLException e) { articulo.put("id_unidad", 0); }
                     try { articulo.put("unidad_nombre", rs.getString("unidad_nombre")); } catch (SQLException e) {
-                        try { articulo.put("unidad_nombre", rs.getString("unidad")); } catch (SQLException e2) {
-                            articulo.put("unidad_nombre", "UND");
-                        }
+                        try { articulo.put("unidad_nombre", rs.getString("unidad")); } catch (SQLException e2) { articulo.put("unidad_nombre", "UND"); }
                     }
-
-                    try { articulo.put("presentacion_detalle", rs.getString("presentacion_detalle")); } catch (SQLException e) { }
-                    try { articulo.put("cantidad", rs.getDouble("cantidad")); } catch (SQLException e) { }
-                    try { articulo.put("precio_compra", rs.getDouble("precio_compra")); } catch (SQLException e) { }
-                    try { articulo.put("precio_venta", rs.getDouble("precio_venta")); } catch (SQLException e) { }
-                    try { articulo.put("peso_unitario", rs.getDouble("peso_unitario")); } catch (SQLException e) { }
-                    try { articulo.put("aroma", rs.getString("aroma")); } catch (SQLException e) { }
-                    try { articulo.put("color", rs.getString("color")); } catch (SQLException e) { }
                     try { articulo.put("densidad", rs.getDouble("densidad")); } catch (SQLException e) { articulo.put("densidad", 1.0); }
+                    try { articulo.put("capacidad", rs.getDouble("capacidad")); } catch (SQLException e) {}
+                    try { articulo.put("unidad_capacidad", rs.getString("unidad_capacidad")); } catch (SQLException e) {}
 
                     articulos.add(articulo);
                 }

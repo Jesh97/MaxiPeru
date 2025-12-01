@@ -573,7 +573,6 @@ function loadInsumosForRecipe() {
 }
 
 function procesarConsumoAutomatico(idOrden) {
-    // Validación: El Servlet usa la sesión, pero validamos en cliente por seguridad visual
     if(!idOrden) { showSwalAlert("No hay orden activa para procesar.", "error"); return; }
 
     Swal.fire({
@@ -589,21 +588,14 @@ function procesarConsumoAutomatico(idOrden) {
             Swal.fire({title: 'Procesando...', text: 'Descontando inventario...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }});
 
             const params = new URLSearchParams();
-            // CORRECCIÓN: Tu Servlet espera "ejecutar_consumo" en el switch(action)
             params.append('action', 'ejecutar_consumo');
-
-            // Nota: Tu Servlet usa (Integer) session.getAttribute("idOrdenActiva"),
-            // así que tomará el ID de la sesión del servidor, no necesariamente el parámetro,
-            // pero lo enviamos por si decides cambiar el Servlet en el futuro.
             params.append('p_id_orden', idOrden);
 
             fetch(PRODUCTION_SERVLET_URL, { method: 'POST', body: params })
             .then(handleJsonResponse)
             .then(data => {
                 if (data.success) {
-                    Swal.fire('¡Proceso Completado!', data.message, 'success'); // Usamos el mensaje del Servlet
-
-                    // Actualizar interfaz visual
+                    Swal.fire('¡Proceso Completado!', data.message, 'success');
                     const rows = document.getElementById('insumos-orden-rows').querySelectorAll('tr');
                     rows.forEach(row => {
                         const badge = row.querySelector('.badge');
@@ -769,8 +761,6 @@ function generateLotCode(event) {
     .then(data => {
         if (data.success) {
             activeLotCode = data.codigo_lote;
-
-            // Actualizar campos en pantalla
             const display = document.getElementById('cod_lote_generado_envasado_display');
             if(display) display.value = activeLotCode;
 

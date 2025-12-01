@@ -1302,4 +1302,17 @@ BEGIN
     ORDER BY A.descripcion;
 END$$
 
+DROP PROCEDURE IF EXISTS sp_listar_ordenes_activas$$
+CREATE PROCEDURE sp_listar_ordenes_activas()
+BEGIN
+    SELECT op.id_orden, pm.nombre_generico AS nombre_articulo_terminado, op.cantidad_a_producir,
+        op.fecha_creacion, op.estado, op.cantidad_producida_final_real, u.nombre AS unidad_nombre,
+        (SELECT pr.codigo_lote FROM produccion_realizada pr WHERE pr.id_orden = op.id_orden LIMIT 1) AS codigo_lote_generado
+    FROM orden_produccion op
+    JOIN receta_producto rp ON op.id_receta = rp.id_receta
+    JOIN producto_maestro pm ON rp.id_producto_maestro = pm.id_producto_maestro
+    JOIN unidad_medida u ON op.id_unidad_producir = u.id_unidad
+    ORDER BY op.id_orden DESC;
+END$$
+
 DELIMITER ;

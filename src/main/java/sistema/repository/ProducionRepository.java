@@ -12,6 +12,7 @@ public interface ProducionRepository {
     void actualizarInsumoReceta(int idDetalleReceta, double cantReq, int idUniInsumo) throws SQLException;
     void eliminarDetalleRecetaIndividual(int idDetalleReceta) throws SQLException;
     void desactivarReceta(int idReceta) throws SQLException;
+    List<Map<String, Object>> listarOrdenesActivas() throws SQLException;
     List<Map<String, Object>> obtenerRecetaPorNombreGenerico(String nombreGenerico) throws SQLException;
     List<Map<String, Object>> obtenerInsumosPorIdReceta(int idReceta) throws SQLException;
     List<Map<String, Object>> obtenerDetalleInsumoReceta(int idDetalleReceta) throws SQLException;
