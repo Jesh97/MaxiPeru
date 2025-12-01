@@ -233,10 +233,6 @@ public class ProduccionServlet extends HttpServlet {
                 case "consumo_envase_tapa_etiqueta_multiple_step" -> {
                     String ordenCode = request.getParameter("p_codigo_orden");
                     String[] idContainerArr = request.getParameterValues("p_id_componente_container[]");
-                    String[] capacidadNumericArr = request.getParameterValues("p_capacidad_numeric[]");
-                    String[] capacidadUnidadArr = request.getParameterValues("p_capacidad_unidad[]");
-                    String[] cantEnvaseArr = request.getParameterValues("p_cant_a_empacar_final[]");
-                    String[] idTapaArr = request.getParameterValues("p_id_componente_cap[]");
 
                     if (ordenCode == null || idContainerArr == null) {
                         throw new IllegalArgumentException("Datos de empaque incompletos.");
@@ -340,18 +336,21 @@ public class ProduccionServlet extends HttpServlet {
             response.getWriter().write(gson.toJson(jsonResponse));
 
         } catch (SQLException e) {
-            mensaje = "Error SQL: " + e.getMessage();
+            mensaje = "Error de Base de Datos: " + e.getMessage();
             jsonResponse.put("success", false);
             jsonResponse.put("message", mensaje);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+
+            response.setStatus(HttpServletResponse.SC_OK);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write(gson.toJson(jsonResponse));
+
         } catch (Exception e) {
-            mensaje = "Error: " + e.getMessage();
+            mensaje = "Error inesperado: " + e.getMessage();
             jsonResponse.put("success", false);
             jsonResponse.put("message", mensaje);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+
+            response.setStatus(HttpServletResponse.SC_OK);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write(gson.toJson(jsonResponse));
@@ -432,7 +431,7 @@ public class ProduccionServlet extends HttpServlet {
             response.getWriter().write(gson.toJson(resultados));
 
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.setStatus(HttpServletResponse.SC_OK);
             Map<String, Object> jsonErrorResponse = new LinkedHashMap<>();
             jsonErrorResponse.put("success", false);
             jsonErrorResponse.put("message", "Error: " + e.getMessage());
