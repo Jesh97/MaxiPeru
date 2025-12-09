@@ -262,13 +262,11 @@ function getPackagingAutocompleteSource(tipoComponente) {
             data: { action: "buscar_articulos_embalado_y_embalaje", busqueda: request.term, p_tipo_componente: tipoComponente },
             success: function(data) {
                 response(data.map(item => ({
-
                     id: item.id, value: item.descripcion,
                     label: (item.codigo || '') + ' - ' + (item.descripcion || ''),
                     capacidad: item.capacidad || 'N/A', unidad_capacidad: item.unidad_capacidad || '',
                 })));
             }
-
         });
     };
 }
@@ -281,9 +279,7 @@ function showPasswordModal(tabName, colorSuffix) {
     document.getElementById('password-error').textContent = '';
 }
 
-function closePasswordModal() {
-    document.getElementById('password-modal-overlay').style.display = 'none';
-}
+function closePasswordModal() {document.getElementById('password-modal-overlay').style.display = 'none';}
 
 function checkPasswordAndOpenTab() {
     const passwordInput = document.getElementById('password-input');
@@ -313,12 +309,10 @@ function openTab(evt, tabName) {
     updateOrdenFields();
 }
 
-function deleteRow(btn) { btn.parentNode.parentNode.remove();
-}
-function addRowFromSearch() { showSwalAlert("La adición de insumos es automática al seleccionar de la lista.", 'info');
-}
+function deleteRow(btn) { btn.parentNode.parentNode.remove();}
+function addRowFromSearch() { showSwalAlert("La adición de insumos es automática al seleccionar de la lista.", 'info');}
 
-function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
+function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId){
     const tableBody = document.getElementById(tableId);
     const newRow = tableBody.insertRow();
     const inputId = `qty-receta-${Date.now()}`;
@@ -326,7 +320,7 @@ function addRow(tableId, code, name, qty, unitName, density, insumoId, unitId) {
         <td><input type="text" name="p_codigo_insumo[]" value="${code}" readonly class="readonly-field" placeholder="CÓDIGO"></td>
         <td><input type="text" name="p_nombre_art_insumo[]" value="${name}" required placeholder="Nombre Insumo"></td>
         <td class="quantity-control-receta">
-            <input type="number" id="${inputId}" name="p_cant_req[]" value="${qty}" step="0.0001" required placeholder="Cantidad">
+            <input type="number" id="${inputId}" name="p_cant_req[]" value="${qty}" step="0.00001" required placeholder="Cantidad">
         </td>
         <td><input type="text" name="p_nombre_uni_insumo[]" value="${unitName}" readonly class="readonly-field" placeholder="Unidad"></td>
         <td><input type="number" name="p_densidad[]" value="${density}"
@@ -481,8 +475,7 @@ function saveNewInsumoToRecipe(event) {
     const unidadBase = cantBaseMatch ? cantBaseMatch[2].trim() : 'Unidad';
 
     if (!document.getElementById('add_p_id_articulo').value) {
-        showSwalAlert("Debe seleccionar un insumo válido.", 'error'); return;
-    }
+        showSwalAlert("Debe seleccionar un insumo válido.", 'error'); return;}
     const params = new URLSearchParams(new FormData(event.target));
     params.set('action', 'agregar_detalle_receta');
 
@@ -831,7 +824,6 @@ function generateLotCode(event) {
             const hidden = document.getElementById('p_codigo_lote_envase_hidden');
             if(hidden) hidden.value = activeLotCode;
 
-
             const refDisplay = document.getElementById('cod_lote_ref_lotes');
             if(refDisplay) refDisplay.value = activeLotCode;
 
@@ -901,7 +893,6 @@ function loadRecetasList() {
                 <td>${receta.unidad_producir_nombre}</td>
                 <td>${receta.fecha_creacion}</td>
                 <td>
-
                     <button class="btn-submit btn-compact btn-info" onclick="loadRecetaDetalle(${receta.id_receta}, '${escapeJsStringForHtml(receta.nombre_generico)}', ${receta.receta_cantidad_base}, '${receta.unidad_producir_nombre}')">Ver</button>
                     <button class="btn-submit btn-compact btn-danger" onclick="confirmDeactivateReceta(${receta.id_receta}, '${escapeJsStringForHtml(receta.nombre_generico)}')">Desactivar</button>
                 </td>
@@ -927,7 +918,6 @@ function loadRecetaDetalle(id, nombre, base, unidad) {
                 <td>${item.codigo}</td><td>${item.nombre_articulo}</td>
                 <td>${formatQuantityDisplay(parseFloat(item.cantidad_requerida), item.unidad_nombre)}</td>
                 <td>
-
                     <button class="btn-submit btn-compact btn-warning" onclick="loadInsumoDetalleForEdit(${item.id_detalle_receta}, ${id}, '${nombre}', ${base}, '${unidad}')">Editar</button>
                    <button class="btn-submit btn-compact btn-danger" onclick="removeDetalleReceta(${item.id_detalle_receta}, ${id}, '${nombre}', ${base}, '${unidad}')">Quitar</button>
                 </td>`;
@@ -942,8 +932,7 @@ function loadInsumoDetalleForEdit(idDetalle, idReceta, nombreReceta, cantBase, u
     document.getElementById('edit_p_id_receta').value = idReceta;
 }
 function closeEditDetalleModal() { document.getElementById('edit-detalle-modal').style.display = 'none'; }
-function submitEditDetalleReceta(e) { e.preventDefault();
-}
+function submitEditDetalleReceta(e) { e.preventDefault();}
 function removeDetalleReceta(idDetalle, idReceta, nombre, base, unit) { }
 function confirmDeactivateReceta(id) { }
 
