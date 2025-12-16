@@ -215,9 +215,11 @@ async function abrirFormulario(id = 0) {
         }
     }
 
-    await manejarCambioFormulario(document.getElementById('idMarca'), idMarcaOriginal);
-    await manejarCambioFormulario(document.getElementById('idCategoria'), idCategoriaOriginal);
-    await manejarCambioFormulario(document.getElementById('idTipoArticulo'), idTipoArticuloOriginal);
+    // Al cargar el formulario, aseguramos que los selectores mantengan el valor original si estamos editando,
+    // pero no ejecutamos lógica de filtrado dinámica entre ellos.
+    document.getElementById('idMarca').value = idMarcaOriginal;
+    document.getElementById('idCategoria').value = idCategoriaOriginal;
+    document.getElementById('idTipoArticulo').value = idTipoArticuloOriginal;
 
     modal.style.display = 'flex';
 }
@@ -309,46 +311,20 @@ async function manejarCambioFiltro(changedSelect) {
     }
 
     if (changedSelect.id === 'filtroMarca' || changedSelect.id === 'filtroCategoria') {
-        await cargarFiltroDinamico('Tipo', 'filtroTipo', 'listar_tipos_dinamicos', { idMarca, idCategoria });
+        await cargarFiltroDinamico('Tipo', 'filtroTipo', 'listar_tipos_dinamicas', { idMarca, idCategoria });
     }
 
     showLoading(false);
     aplicarFiltros();
 }
 
-async function manejarCambioFormulario(changedSelect, valorPreseleccionado = null) {
-    showLoading(true);
-    const idMarca = document.getElementById('idMarca').value || null;
-    const idCategoria = document.getElementById('idCategoria').value || null;
-    const idTipoArticulo = document.getElementById('idTipoArticulo').value || null;
+function manejarCambioFormulario(changedSelect) {
+    // FUNCIÓN MODIFICADA: Ahora solo asegura que los selects estén cargados
+    // con todas las opciones (al abrir el formulario) y no aplica filtros dinámicos.
+    // La funcionalidad de autocompletado/filtrado entre selects del formulario ha sido eliminada.
 
-    const isEdit = valorPreseleccionado !== null;
-
-    if (changedSelect.id === 'idMarca' || changedSelect.id === 'idTipoArticulo' || isEdit) {
-        if (changedSelect.id !== 'idCategoria' || isEdit) {
-            await cargarFiltroDinamico('Categoria', 'idCategoria', 'listar_categorias_dinamicas', { idMarca, idTipoArticulo }, idCategoria);
-        }
-    }
-
-    if (changedSelect.id === 'idCategoria' || changedSelect.id === 'idTipoArticulo' || isEdit) {
-        if (changedSelect.id !== 'idMarca' || isEdit) {
-            await cargarFiltroDinamico('Marca', 'idMarca', 'listar_marcas_dinamicas', { idCategoria, idTipoArticulo }, idMarca);
-        }
-    }
-
-    if (changedSelect.id === 'idMarca' || changedSelect.id === 'idCategoria' || isEdit) {
-        if (changedSelect.id !== 'idTipoArticulo' || isEdit) {
-            await cargarFiltroDinamico('Tipo', 'idTipoArticulo', 'listar_tipos_dinamicos', { idMarca, idCategoria }, idTipoArticulo);
-        }
-    }
-
-    if (isEdit) {
-        document.getElementById('idMarca').value = idMarca;
-        document.getElementById('idCategoria').value = idCategoria;
-        document.getElementById('idTipoArticulo').value = idTipoArticulo;
-    }
-
-    showLoading(false);
+    // Si se necesita asegurar que el select mantenga su valor al cambiar, no se hace nada
+    // ya que el HTML maneja la selección nativamente.
 }
 
 
@@ -406,13 +382,12 @@ async function cargarFiltroDinamico(entidadNombre, selectId, accion, parametros,
                 validIds.push(String(item[idKey]));
             });
 
-            // Corrección: Validar si el valor seleccionado previamente sigue siendo una opción válida
             const isValidSelection = validIds.includes(String(currentSelectedId));
 
             if (isValidSelection) {
                 select.value = currentSelectedId;
             } else {
-                select.value = ""; // Reinicia el valor si ya no es una opción
+                select.value = "";
             }
         }
 
@@ -615,7 +590,7 @@ function mostrarTabla(listaCompleta) {
         paginaActual = Math.max(1, totalPaginas);
     }
 
-    const COLSPAN = 8;
+    const COLSPAN = 6;
     const inicio = (paginaActual - 1) * ARTICULOS_POR_PAGINA;
     const fin = inicio + ARTICULOS_POR_PAGINA;
     const articulosPagina = articulosFiltrados.slice(inicio, fin);
@@ -628,9 +603,6 @@ function mostrarTabla(listaCompleta) {
 
     articulosPagina.forEach(p => {
         const unidadDisplay = getUnidadDisplay(p);
-
-        const precioCompra = (p.precioCompra !== undefined && p.precioCompra !== null) ? p.precioCompra.toFixed(2) : '0.00';
-        const precioVenta = (p.precioVenta !== undefined && p.precioVenta !== null) ? p.precioVenta.toFixed(2) : '0.00';
         const pesoUnitario = (p.pesoUnitario !== undefined && p.pesoUnitario !== null) ? p.pesoUnitario.toFixed(3) : '0.000';
 
         const tr = document.createElement('tr');
@@ -639,8 +611,6 @@ function mostrarTabla(listaCompleta) {
             <td>${p.codigo || '-'}</td>
             <td>${p.descripcion || 'Sin descripción'}</td>
             <td class="data-center">${p.cantidad || 0}</td>
-            <td class="data-center">S/ ${precioCompra}</td>
-            <td class="data-center">S/ ${precioVenta}</td>
             <td class="data-center">${pesoUnitario}</td>
             <td class="data-unit">${unidadDisplay}</td>
             <td class="actions">
@@ -655,6 +625,121 @@ function mostrarTabla(listaCompleta) {
 
     renderPaginacion(totalPaginas);
 }
+
+function generarReporteImprimible() {
+    const idCategoriaSeleccionada = document.getElementById('filtroCategoria').value;
+    const idTipoSeleccionado = document.getElementById('filtroTipo').value;
+
+    let tituloReporte = "Reporte General de Artículos";
+
+    if (idCategoriaSeleccionada) {
+        const categoria = catalogos['categoria'] ? catalogos['categoria'].find(c => String(c.idCategoria) === String(idCategoriaSeleccionada)) : null;
+        if (categoria) {
+            tituloReporte = `Reporte por Categoría: ${categoria.nombre}`;
+        }
+    } else if (idTipoSeleccionado) {
+        const tipo = catalogos['tipo'] ? catalogos['tipo'].find(t => String(t.id) === String(idTipoSeleccionado)) : null;
+        if (tipo) {
+            tituloReporte = `Reporte por Tipo de Artículo: ${tipo.nombre}`;
+        }
+    }
+
+    const datosReporte = articulosFiltrados;
+
+    if (!datosReporte || datosReporte.length === 0) {
+        showCustomAlert('Alerta', 'No hay artículos para generar el reporte con los filtros actuales.');
+        return;
+    }
+
+    let htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${tituloReporte}</title>
+            <style>
+                body {
+                    font-family: 'Inter', sans-serif;
+                    margin: 10mm;
+                    color: #333;
+                    font-size: 10pt;
+                }
+                h1 {
+                    text-align: center;
+                    color: #007bff;
+                    margin-bottom: 10px;
+                    font-size: 14pt;
+                }
+                p {
+                    font-size: 9pt;
+                    margin-bottom: 5px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 10px;
+                    font-size: 9pt;
+                }
+                th, td {
+                    border: 1px solid #ccc;
+                    padding: 4px 6px;
+                    text-align: left;
+                }
+                th {
+                    background-color: #e9ecef;
+                    color: #495057;
+                    font-weight: 600;
+                }
+                .data-center {
+                    text-align: center;
+                }
+                @media print {
+                    @page { margin: 10mm; }
+                }
+            </style>
+        </head>
+        <body>
+            <h1>${tituloReporte}</h1>
+            <p>Fecha de Generación: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Código</th>
+                        <th style="width: 50%;">Nombre del Producto (Descripción)</th>
+                        <th class="data-center" style="width: 15%;">Stock</th>
+                        <th class="data-center" style="width: 20%;">Coincide Stock?</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    datosReporte.forEach(articulo => {
+        htmlContent += `
+            <tr>
+                <td>${articulo.codigo || ''}</td>
+                <td>${articulo.descripcion || ''}</td>
+                <td class="data-center">${articulo.cantidad || 0}</td>
+                <td class="data-center"></td>
+            </tr>
+        `;
+    });
+
+    htmlContent += `
+                </tbody>
+            </table>
+            <p style="margin-top: 15px;">Total de Artículos: ${datosReporte.length}</p>
+        </body>
+        </html>
+    `;
+
+    const ventanaReporte = window.open('', '_blank');
+    ventanaReporte.document.write(htmlContent);
+    ventanaReporte.document.close();
+
+    ventanaReporte.onload = () => {
+        ventanaReporte.print();
+    };
+}
+
 
 function cambiarPagina(nuevaPagina) {
     const totalPaginas = Math.ceil(articulosFiltrados.length / ARTICULOS_POR_PAGINA);
@@ -873,7 +958,6 @@ function exportarDatos(format) {
 
 
 document.getElementById('articuloForm').addEventListener('submit', guardarArticulo);
-
 document.getElementById('idMarca').addEventListener('change', () => manejarCambioFormulario(document.getElementById('idMarca')));
 document.getElementById('idCategoria').addEventListener('change', () => manejarCambioFormulario(document.getElementById('idCategoria')));
 document.getElementById('idTipoArticulo').addEventListener('change', () => manejarCambioFormulario(document.getElementById('idTipoArticulo')));
@@ -897,6 +981,7 @@ window.onload = async () => {
     window.abrirModalTipo = abrirModalTipo;
     window.cerrarModalTipo = cerrarModalTipo;
     window.exportarDatos = exportarDatos;
+    window.generarReporteImprimible = generarReporteImprimible;
 
     await cargarCatalogos();
     await listarArticulos();
@@ -914,24 +999,13 @@ window.onclick = function(event) {
     const tipoModal = document.getElementById('tipoModal');
     const messageModal = document.getElementById('messageModal');
 
-    if (event.target == articuloModal) {
-        cerrarFormulario();
-    }
-    if (event.target == detallesModal) {
-        detallesModal.style.display = 'none';
-    }
-    if (event.target == lotesModal) {
-        lotesModal.style.display = 'none';
-    }
-    if (event.target == marcaModal) {
-        cerrarModalMarca();
-    }
-    if (event.target == categoriaModal) {
-        cerrarModalCategoria();
-    }
-    if (event.target == tipoModal) {
-        cerrarModalTipo();
-    }
+    if (event.target == articuloModal) { cerrarFormulario(); }
+    if (event.target == detallesModal) { detallesModal.style.display = 'none'; }
+    if (event.target == lotesModal) { lotesModal.style.display = 'none'; }
+    if (event.target == marcaModal) { cerrarModalMarca(); }
+    if (event.target == categoriaModal) { cerrarModalCategoria(); }
+    if (event.target == tipoModal) { cerrarModalTipo(); }
+
     if (event.target == messageModal) {
         messageModal.style.display = 'none';
         if (document.getElementById('messageCancelBtn').style.display === 'inline-block') {

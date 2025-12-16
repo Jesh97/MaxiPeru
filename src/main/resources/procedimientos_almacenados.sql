@@ -3,32 +3,26 @@ use bd_maxiperu;
 DELIMITER $$
 
 DROP PROCEDURE IF EXISTS `sp_crear_usuario`$$
-CREATE PROCEDURE sp_crear_usuario (
-    IN p_nombre VARCHAR(45), IN p_correo VARCHAR(45), IN p_username VARCHAR(45),
+CREATE PROCEDURE sp_crear_usuario (IN p_nombre VARCHAR(45), IN p_correo VARCHAR(45), IN p_username VARCHAR(45),
     IN p_password VARCHAR(255), IN p_rol VARCHAR(45))
 BEGIN
     INSERT INTO usuario (nombre, correo, username, password, rol, estado)
     VALUES (p_nombre, p_correo, p_username, p_password, p_rol, 0);
 
     INSERT INTO actividad_usuario (usuario_id, tipo, descripcion)
-    VALUES (LAST_INSERT_ID(), 'CREACION_CUENTA',
-        CONCAT('El usuario ', p_username, ' ha sido registrado y está pendiente de aprobación.'));
+    VALUES (LAST_INSERT_ID(), 'CREACION_CUENTA', CONCAT('El usuario ', p_username, ' ha sido registrado y está pendiente de aprobación.'));
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_editar_usuario`$$
-CREATE PROCEDURE sp_editar_usuario(
-    IN p_id INT, IN p_nombre VARCHAR(45), IN p_correo VARCHAR(45),
+CREATE PROCEDURE sp_editar_usuario(IN p_id INT, IN p_nombre VARCHAR(45), IN p_correo VARCHAR(45),
     IN p_username VARCHAR(45), IN p_password VARCHAR(255), IN p_rol VARCHAR(45))
 BEGIN
     IF EXISTS (SELECT 1 FROM usuario WHERE id = p_id) THEN
         IF p_password IS NOT NULL AND p_password != '' THEN
-            UPDATE usuario
-            SET nombre = p_nombre, correo = p_correo, username = p_username, password = p_password, rol = p_rol
+            UPDATE usuario SET nombre = p_nombre, correo = p_correo, username = p_username, password = p_password, rol = p_rol
             WHERE id = p_id;
         ELSE
-            UPDATE usuario
-            SET nombre = p_nombre, correo = p_correo, username = p_username, rol = p_rol
-            WHERE id = p_id;
+            UPDATE usuario SET nombre = p_nombre, correo = p_correo, username = p_username, rol = p_rol WHERE id = p_id;
         END IF;
         SELECT 1 AS resultado;
     ELSE SELECT 0 AS resultado;
@@ -38,25 +32,18 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_aceptar_usuario`$$
 CREATE PROCEDURE sp_aceptar_usuario (IN p_usuario_id INT, IN p_admin_principal_id INT)
 BEGIN
-    DECLARE v_username VARCHAR(45);
-    DECLARE v_admin_principal_username VARCHAR(45);
-    DECLARE v_admin_principal_rol VARCHAR(45);
+    DECLARE v_username VARCHAR(45); DECLARE v_admin_principal_username VARCHAR(45); DECLARE v_admin_principal_rol VARCHAR(45);
 
-    SELECT username, rol INTO v_admin_principal_username, v_admin_principal_rol
-    FROM usuario
+    SELECT username, rol INTO v_admin_principal_username, v_admin_principal_rol FROM usuario
     WHERE id = p_admin_principal_id AND rol = 'administrador principal';
 
     IF v_admin_principal_username IS NOT NULL THEN
-        UPDATE usuario
-        SET estado = 1
-        WHERE id = p_usuario_id;
+        UPDATE usuario SET estado = 1 WHERE id = p_usuario_id;
 
         SELECT username INTO v_username FROM usuario WHERE id = p_usuario_id;
-
         IF v_username IS NOT NULL THEN
             INSERT INTO actividad_usuario (usuario_id, tipo, descripcion)
-            VALUES (p_usuario_id, 'CUENTA_HABILITADA',
-                CONCAT('Cuenta de usuario ', v_username, ' habilitada/aceptada por el administrador principal ', v_admin_principal_username, '.'));
+            VALUES (p_usuario_id, 'CUENTA_HABILITADA', CONCAT('Cuenta de usuario ', v_username, ' habilitada/aceptada por el administrador principal ', v_admin_principal_username, '.'));
         END IF;
     END IF;
 END$$
@@ -68,21 +55,17 @@ BEGIN
     DECLARE v_admin_principal_username VARCHAR(45);
     DECLARE v_admin_principal_rol VARCHAR(45);
 
-    SELECT username, rol INTO v_admin_principal_username, v_admin_principal_rol
-    FROM usuario
+    SELECT username, rol INTO v_admin_principal_username, v_admin_principal_rol FROM usuario
     WHERE id = p_admin_principal_id AND rol = 'administrador principal';
 
     IF v_admin_principal_username IS NOT NULL THEN
-        UPDATE usuario
-        SET permite_acceso_irrestricto = 1
-        WHERE id = p_usuario_id;
+        UPDATE usuario SET permite_acceso_irrestricto = 1 WHERE id = p_usuario_id;
 
         SELECT username INTO v_username FROM usuario WHERE id = p_usuario_id;
 
         IF v_username IS NOT NULL THEN
             INSERT INTO actividad_usuario (usuario_id, tipo, descripcion)
-            VALUES (p_usuario_id, 'PERMISO_HORARIO',
-                CONCAT('El administrador principal ', v_admin_principal_username, ' otorgó acceso irrestricto al usuario ', v_username, '.'));
+            VALUES (p_usuario_id, 'PERMISO_HORARIO', CONCAT('El administrador principal ', v_admin_principal_username, ' otorgó acceso irrestricto al usuario ', v_username, '.'));
         END IF;
     END IF;
 END$$
@@ -150,11 +133,9 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_articulo`$$
-CREATE PROCEDURE `sp_agregar_articulo`(
-    IN p_codigo VARCHAR(50), IN p_descripcion VARCHAR(255), IN p_cantidad INT, IN p_precio_compra DECIMAL(12,2), IN p_precio_venta DECIMAL(12,2),
+CREATE PROCEDURE `sp_agregar_articulo`(IN p_codigo VARCHAR(50), IN p_descripcion VARCHAR(255), IN p_cantidad INT, IN p_precio_compra DECIMAL(12,2), IN p_precio_venta DECIMAL(12,2),
     IN p_peso_unitario DECIMAL(10,3), IN p_densidad DECIMAL(10,3), IN p_aroma VARCHAR(50), IN p_color VARCHAR(50),
-    IN p_id_marca INT, IN p_id_categoria INT, IN p_id_unidad INT, IN p_id_tipo_articulo INT
-)
+    IN p_id_marca INT, IN p_id_categoria INT, IN p_id_unidad INT, IN p_id_tipo_articulo INT)
 BEGIN
     INSERT INTO articulo(codigo, descripcion, cantidad, precio_compra, precio_venta, peso_unitario, densidad, aroma, color, id_marca, id_categoria, id_unidad, id_tipo_articulo)
     VALUES (p_codigo, p_descripcion, p_cantidad, p_precio_compra, p_precio_venta, p_peso_unitario, p_densidad, p_aroma, p_color, p_id_marca, p_id_categoria, p_id_unidad, p_id_tipo_articulo);
@@ -230,16 +211,14 @@ BEGIN
     SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario, a.aroma, a.color
     FROM articulo a
     WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
-    AND a.id_tipo_articulo IN (1, 3)
-    AND a.cantidad > 0;
+    AND a.id_tipo_articulo IN (1, 3) AND a.cantidad > 0;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_terminados`$$
 CREATE PROCEDURE `sp_buscar_articulos_terminados`(IN p_busqueda VARCHAR(100))
 BEGIN
-SELECT a.id, a.codigo, pm.id_producto_maestro, pm.nombre_generico, a.cantidad, a.precio_compra,
-        a.precio_venta, a.peso_unitario, a.aroma, a.color, a.densidad, um.nombre AS unidad
-        FROM articulo a
+SELECT a.id, a.codigo, pm.id_producto_maestro, pm.nombre_generico, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario, a.aroma, a.color, a.densidad, um.nombre AS unidad
+FROM articulo a
         LEFT JOIN producto_maestro pm ON a.id_producto_maestro = pm.id_producto_maestro
         JOIN unidad_medida um ON a.id_unidad = um.id_unidad
         WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%') OR pm.nombre_generico LIKE CONCAT('%', p_busqueda, '%'))
@@ -261,8 +240,7 @@ DROP PROCEDURE IF EXISTS `sp_buscar_articulos_embalado_y_embalaje`$$
 CREATE PROCEDURE `sp_buscar_articulos_embalado_y_embalaje`(IN p_busqueda VARCHAR(100))
 BEGIN
     SELECT a.id, a.codigo, a.descripcion, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario,
-        a.aroma, a.color, a.densidad, um.nombre AS unidad
-    FROM articulo a
+        a.aroma, a.color, a.densidad, um.nombre AS unidad FROM articulo a
     JOIN unidad_medida um ON a.id_unidad = um.id_unidad
     WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
       AND a.id_tipo_articulo = 4 AND a.cantidad > 0;
@@ -310,16 +288,14 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_listar_clientes`$$
 CREATE PROCEDURE `sp_listar_clientes`()
 BEGIN
-    SELECT id, tipoDocumento, n_documento, razonSocial, direccion, telefono, correo
-    FROM cliente
+    SELECT id, tipoDocumento, n_documento, razonSocial, direccion, telefono, correo FROM cliente
     ORDER BY razonSocial ASC;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_cliente`$$
 CREATE PROCEDURE `sp_buscar_cliente`(IN p_busqueda VARCHAR(100))
 BEGIN
-    SELECT id, tipoDocumento, n_documento, razonSocial, direccion, telefono, correo
-    FROM cliente
+    SELECT id, tipoDocumento, n_documento, razonSocial, direccion, telefono, correo FROM cliente
     WHERE n_documento LIKE CONCAT('%', p_busqueda, '%') OR razonSocial LIKE CONCAT('%', p_busqueda, '%');
 END$$
 
@@ -352,16 +328,14 @@ END$$
 DROP PROCEDURE IF EXISTS `sp_listar_proveedores`$$
 CREATE PROCEDURE `sp_listar_proveedores`()
 BEGIN
-    SELECT id, ruc, razonSocial, direccion, telefono, correo, ciudad
-    FROM proveedor
+    SELECT id, ruc, razonSocial, direccion, telefono, correo, ciudad FROM proveedor
     ORDER BY razonSocial ASC;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_proveedor`$$
 CREATE PROCEDURE `sp_buscar_proveedor`(IN p_busqueda VARCHAR(100))
 BEGIN
-    SELECT id, ruc, razonSocial, direccion, telefono, correo, ciudad
-    FROM proveedor
+    SELECT id, ruc, razonSocial, direccion, telefono, correo, ciudad FROM proveedor
     WHERE ruc LIKE CONCAT('%', p_busqueda, '%') OR razonSocial LIKE CONCAT('%', p_busqueda, '%');
 END$$
 
@@ -409,19 +383,16 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_regla_compra`$$
-CREATE PROCEDURE `sp_agregar_regla_compra`(
-    IN p_id_compra INT, IN p_aplica_costo_adicional BOOLEAN, IN p_monto_minimo DECIMAL(12,2), IN p_costo_adicional DECIMAL(12,2)
-)
+CREATE PROCEDURE `sp_agregar_regla_compra`(IN p_id_compra INT, IN p_aplica_costo_adicional BOOLEAN,
+IN p_monto_minimo DECIMAL(12,2), IN p_costo_adicional DECIMAL(12,2))
 BEGIN
     INSERT INTO regla_aplicada_compra (id_compra, aplica_costo_adicional, monto_minimo_condicion, costo_adicional_aplicado)
     VALUES (p_id_compra, p_aplica_costo_adicional, p_monto_minimo, p_costo_adicional);
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_registrar_lote_compra`$$
-CREATE PROCEDURE `sp_registrar_lote_compra`(
-    IN p_id_detalle_compra INT, IN p_id_articulo INT, IN p_codigo_lote VARCHAR(50),
-    IN p_fecha_vencimiento DATE, IN p_cantidad_lote DECIMAL(12,2)
-)
+CREATE PROCEDURE `sp_registrar_lote_compra`(IN p_id_detalle_compra INT, IN p_id_articulo INT, IN p_codigo_lote VARCHAR(50),
+    IN p_fecha_vencimiento DATE, IN p_cantidad_lote DECIMAL(12,2))
 BEGIN
     INSERT INTO inventario_lote(id_articulo, id_detalle_compra, codigo_lote, fecha_vencimiento, cantidad_ingreso, cantidad_disponible)
     VALUES (p_id_articulo, p_id_detalle_compra, p_codigo_lote, p_fecha_vencimiento, p_cantidad_lote, p_cantidad_lote);
@@ -429,9 +400,7 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_referencia_compra`$$
-CREATE PROCEDURE `sp_agregar_referencia_compra`(
-    IN p_id_compra INT, IN p_numero_cotizacion VARCHAR(50), IN p_numero_pedido VARCHAR(50)
-)
+CREATE PROCEDURE `sp_agregar_referencia_compra`(IN p_id_compra INT, IN p_numero_cotizacion VARCHAR(50), IN p_numero_pedido VARCHAR(50))
 BEGIN
     INSERT INTO referencia_compra (id_compra, numero_cotizacion, numero_pedido)
     VALUES (p_id_compra, p_numero_cotizacion, p_numero_pedido);
@@ -991,14 +960,8 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS sp_consumir_stock_lote_produccion$$
-CREATE PROCEDURE sp_consumir_stock_lote_produccion(
-    IN p_id_orden INT, IN p_id_articulo INT,
-    IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT,
-    IN p_es_envase BOOLEAN,
-    IN p_comentario_consumo TEXT,
-    IN p_cant_req_orden_base DECIMAL(12,8),
-    IN p_id_unidad_req_receta INT
-)
+CREATE PROCEDURE sp_consumir_stock_lote_produccion(IN p_id_orden INT, IN p_id_articulo INT, IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT,
+    IN p_es_envase BOOLEAN, IN p_comentario_consumo TEXT, IN p_cant_req_orden_base DECIMAL(12,8), IN p_id_unidad_req_receta INT)
 BEGIN
     DECLARE v_cantidad_restante DECIMAL(12,8);
     DECLARE v_id_lote_actual INT;
@@ -1014,22 +977,18 @@ BEGIN
     DECLARE v_desviacion_kg DECIMAL(12,8);
 
     DECLARE cur_lotes CURSOR FOR
-        SELECT id_lote, cantidad_disponible
-        FROM inventario_lote
+        SELECT id_lote, cantidad_disponible FROM inventario_lote
         WHERE id_articulo = p_id_articulo AND cantidad_disponible > 0
         ORDER BY fecha_ingreso ASC;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET finished = TRUE;
 
     SELECT id_unidad INTO v_id_unidad_kg FROM unidad_medida WHERE abreviatura = 'KG' LIMIT 1;
 
-    SELECT a.densidad, u.factor_a_kg
-    INTO v_densidad, v_factor_conversion_consumo
-    FROM articulo a
+    SELECT a.densidad, u.factor_a_kg INTO v_densidad, v_factor_conversion_consumo FROM articulo a
     JOIN unidad_medida u ON p_id_unidad = u.id_unidad
     WHERE a.id = p_id_articulo;
 
-    SELECT factor_a_kg INTO v_factor_conversion_req
-    FROM unidad_medida
+    SELECT factor_a_kg INTO v_factor_conversion_req FROM unidad_medida
     WHERE id_unidad = p_id_unidad_req_receta;
 
     IF p_id_unidad = 3 THEN
@@ -1056,14 +1015,10 @@ BEGIN
         SET v_cantidad_consumida = LEAST(v_cantidad_restante, v_disponible_lote);
         UPDATE inventario_lote SET cantidad_disponible = cantidad_disponible - v_cantidad_consumida WHERE id_lote = v_id_lote_actual;
 
-        INSERT INTO consumo_produccion (
-            id_orden, id_articulo_consumido, id_lote_consumido, cantidad_consumida, id_unidad_consumida, es_envase_embalaje, comentario_consumo,
-            cantidad_requerida_kg, desviacion_kg
-        )
-        VALUES (
-            p_id_orden, p_id_articulo, v_id_lote_actual, v_cantidad_consumida, v_id_unidad_kg, p_es_envase, p_comentario_consumo,
-            v_cant_req_en_kg, v_desviacion_kg
-        );
+        INSERT INTO consumo_produccion (id_orden, id_articulo_consumido, id_lote_consumido, cantidad_consumida, id_unidad_consumida, es_envase_embalaje, comentario_consumo,
+            cantidad_requerida_kg, desviacion_kg)
+        VALUES (p_id_orden, p_id_articulo, v_id_lote_actual, v_cantidad_consumida, v_id_unidad_kg, p_es_envase, p_comentario_consumo,
+            v_cant_req_en_kg, v_desviacion_kg);
 
         SET v_cantidad_restante = v_cantidad_restante - v_cantidad_consumida;
     END LOOP lote_consumo_prod_loop;
@@ -1116,8 +1071,7 @@ BEGIN
 
         SET v_cantidad_a_consumir = v_cantidad_requerida_base * v_factor;
 
-        SELECT EXISTS (
-            SELECT 1 FROM inventario_lote WHERE id_articulo = v_id_articulo_insumo AND cantidad_disponible > 0
+        SELECT EXISTS (SELECT 1 FROM inventario_lote WHERE id_articulo = v_id_articulo_insumo AND cantidad_disponible > 0
         ) INTO v_usa_lotes;
 
         IF v_usa_lotes THEN
@@ -1132,12 +1086,8 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS sp_registrar_consumo_produccion_componente$$
-CREATE PROCEDURE sp_registrar_consumo_produccion_componente(
-    IN p_id_orden INT, IN p_id_articulo_consumido INT,
-    IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT,
-    IN p_es_envase BOOLEAN,
-    IN p_comentario_consumo TEXT
-)
+CREATE PROCEDURE sp_registrar_consumo_produccion_componente(IN p_id_orden INT, IN p_id_articulo_consumido INT,
+    IN p_cantidad_a_consumir DECIMAL(12,8), IN p_id_unidad INT, IN p_es_envase BOOLEAN, IN p_comentario_consumo TEXT)
 BEGIN
     DECLARE v_usa_lotes BOOLEAN;
     DECLARE v_id_receta INT;
@@ -1170,20 +1120,15 @@ BEGIN
 
     SET v_cant_req_orden_base = v_cant_req_receta * v_factor_escala;
 
-    SELECT EXISTS (
-        SELECT 1 FROM inventario_lote WHERE id_articulo = p_id_articulo_consumido AND cantidad_disponible > 0)
+    SELECT EXISTS (SELECT 1 FROM inventario_lote WHERE id_articulo = p_id_articulo_consumido AND cantidad_disponible > 0)
         INTO v_usa_lotes;
 
     IF v_usa_lotes THEN
-        CALL sp_consumir_stock_lote_produccion(
-            p_id_orden, p_id_articulo_consumido, p_cantidad_a_consumir, p_id_unidad, p_es_envase, p_comentario_consumo,
-            v_cant_req_orden_base, v_id_unidad_req_receta
-        );
+        CALL sp_consumir_stock_lote_produccion(p_id_orden, p_id_articulo_consumido, p_cantidad_a_consumir, p_id_unidad, p_es_envase, p_comentario_consumo,
+            v_cant_req_orden_base, v_id_unidad_req_receta);
     ELSE
-        CALL sp_consumir_stock_general_produccion(
-            p_id_orden, p_id_articulo_consumido, p_cantidad_a_consumir, p_id_unidad, p_es_envase, p_comentario_consumo,
-            v_cant_req_orden_base, v_id_unidad_req_receta
-        );
+        CALL sp_consumir_stock_general_produccion(p_id_orden, p_id_articulo_consumido, p_cantidad_a_consumir, p_id_unidad, p_es_envase, p_comentario_consumo,
+            v_cant_req_orden_base, v_id_unidad_req_receta);
     END IF;
 
     UPDATE orden_produccion
@@ -1210,10 +1155,7 @@ END$$
 DROP PROCEDURE IF EXISTS sp_finalizar_orden$$
 CREATE PROCEDURE sp_finalizar_orden(IN p_id_orden INT)
 BEGIN
-    UPDATE orden_produccion
-    SET estado = 'Terminada'
-    WHERE id_orden = p_id_orden;
-
+    UPDATE orden_produccion SET estado = 'Terminada' WHERE id_orden = p_id_orden;
     IF ROW_COUNT() = 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Orden de producción no encontrada.';
     ELSE SELECT 'Orden terminada.' AS resultado;
@@ -1238,9 +1180,7 @@ BEGIN
         INSERT INTO inventario_lote (id_articulo, codigo_lote, cantidad_ingreso, cantidad_disponible, fecha_vencimiento)
         VALUES (v_id_articulo_terminado, p_cod_lote, p_cant_envases, p_cant_envases, p_fecha_vencimiento);
 
-        UPDATE articulo
-        SET cantidad = cantidad + p_cant_envases
-        WHERE id = v_id_articulo_terminado;
+        UPDATE articulo SET cantidad = cantidad + p_cant_envases WHERE id = v_id_articulo_terminado;
 
         UPDATE orden_produccion
         SET cantidad_producida_final_real = p_cant_envases
@@ -1257,8 +1197,7 @@ CREATE PROCEDURE sp_generar_siguiente_codigo_lote(IN p_id_articulo INT, OUT p_co
 BEGIN
     DECLARE v_abreviatura VARCHAR(10); DECLARE v_hora_min_seg VARCHAR(6); DECLARE v_fecha_hoy DATE; DECLARE v_nuevo_num_remesa INT;
 
-    SELECT pm.abreviatura INTO v_abreviatura
-    FROM articulo a
+    SELECT pm.abreviatura INTO v_abreviatura FROM articulo a
     INNER JOIN producto_maestro pm ON a.id_producto_maestro = pm.id_producto_maestro
     WHERE a.id = p_id_articulo;
 
@@ -1275,12 +1214,9 @@ BEGIN
     VALUES (v_fecha_hoy, 1)
     ON DUPLICATE KEY UPDATE ultimo_numero_remesa = ultimo_numero_remesa + 1;
 
-    SELECT ultimo_numero_remesa INTO v_nuevo_num_remesa
-    FROM control_remesa_lote
+    SELECT ultimo_numero_remesa INTO v_nuevo_num_remesa FROM control_remesa_lote
     WHERE fecha_actual = v_fecha_hoy;
-
     SET p_codigo_lote_generado = CONCAT(v_abreviatura, v_hora_min_seg, '-', LPAD(v_nuevo_num_remesa, 2, '0'));
-
     COMMIT;
 END$$
 
@@ -1292,8 +1228,7 @@ BEGIN
         MAX(CP.desviacion_kg) AS desviacion_neta_kg, UM.nombre AS unidad_medida_base,
         (SELECT comentario_consumo FROM consumo_produccion
          WHERE id_orden = p_id_orden AND id_articulo_consumido = CP.id_articulo_consumido
-         ORDER BY id_consumo DESC
-         LIMIT 1) AS ultimo_comentario_desviacion
+         ORDER BY id_consumo DESC LIMIT 1) AS ultimo_comentario_desviacion
     FROM consumo_produccion CP
     JOIN articulo A ON CP.id_articulo_consumido = A.id
     JOIN unidad_medida UM ON CP.id_unidad_consumida = UM.id_unidad

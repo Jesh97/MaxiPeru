@@ -61,8 +61,6 @@
                 <th>Código</th>
                 <th>Descripción</th>
                 <th class="data-center">Stock</th>
-                <th class="data-center">Precio Compra (S/)</th>
-                <th class="data-center">Precio Venta (S/)</th>
                 <th class="data-center">Peso (Kg)</th>
                 <th class="data-unit">Unidad</th>
                 <th>Acciones</th>
@@ -83,6 +81,7 @@
         <div class="export-controls">
             <button class="btn-export-csv" onclick="exportarDatos('csv')"><i class="fas fa-file-csv"></i> Exportar CSV</button>
             <button class="btn-export-excel" onclick="exportarDatos('xlsx')"><i class="fas fa-file-excel"></i> Exportar Excel</button>
+            <button class="btn-print" onclick="generarReporteImprimible()"><i class="fas fa-print"></i> Reporte Artículos</button>
         </div>
     </div>
 </div>
