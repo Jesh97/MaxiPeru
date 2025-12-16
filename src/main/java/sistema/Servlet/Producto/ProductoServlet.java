@@ -178,6 +178,15 @@ public class ProductoServlet extends HttpServlet {
             int idUnidad = Integer.parseInt(request.getParameter("id_unidad"));
             int idTipoArticulo = Integer.parseInt(request.getParameter("id_tipo_articulo"));
 
+            double capacidad = 0.0;
+            String capacidadParam = request.getParameter("capacidad");
+            if (capacidadParam != null && !capacidadParam.isEmpty()) {
+                try {
+                    capacidad = Double.parseDouble(capacidadParam);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+
             Marca marca = new Marca(idMarca, null);
             Categoria categoria = new Categoria(idCategoria, null);
             UnidadMedida unidad = new UnidadMedida(idUnidad, null, null);
@@ -186,6 +195,8 @@ public class ProductoServlet extends HttpServlet {
             Articulo nuevoArticulo = new Articulo(0, codigo, descripcion, cantidad, precioCompra, precioVenta,
                     pesoUnitario, densidad, aroma, color, marca,
                     categoria, unidad, tipoArticulo);
+
+            nuevoArticulo.setCapacidad(capacidad);
 
             exito = articuloDAO.agregarArticulo(nuevoArticulo);
 
@@ -223,7 +234,7 @@ public class ProductoServlet extends HttpServlet {
         String descripcion = request.getParameter("descripcion");
         String idProductoParam = request.getParameter("id_producto");
         String tipoAccionAuditoria = "PRODUCTO_ACTUALIZAR";
-        String descripcionAuditoria = "Inicio de actualización para Artículo ID: " + idProductoParam;
+        String descripcionAuditoria;
         boolean exito = false;
 
         try {
@@ -241,6 +252,15 @@ public class ProductoServlet extends HttpServlet {
             int idUnidad = Integer.parseInt(request.getParameter("id_unidad"));
             int idTipoArticulo = Integer.parseInt(request.getParameter("id_tipo_articulo"));
 
+            double capacidad = 0.0;
+            String capacidadParam = request.getParameter("capacidad");
+            if (capacidadParam != null && !capacidadParam.isEmpty()) {
+                try {
+                    capacidad = Double.parseDouble(capacidadParam);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+
             Marca marca = new Marca(idMarca, null);
             Categoria categoria = new Categoria(idCategoria, null);
             UnidadMedida unidad = new UnidadMedida(idUnidad, null, null);
@@ -249,6 +269,8 @@ public class ProductoServlet extends HttpServlet {
             Articulo articuloActualizado = new Articulo(idProducto, codigo, descripcion, cantidad, precioCompra, precioVenta,
                     pesoUnitario, densidad, aroma, color, marca,
                     categoria, unidad, tipoArticulo);
+
+            articuloActualizado.setCapacidad(capacidad);
 
             exito = articuloDAO.actualizarArticulo(articuloActualizado);
 
@@ -284,7 +306,7 @@ public class ProductoServlet extends HttpServlet {
 
         String idProductoParam = request.getParameter("id_producto");
         String tipoAccionAuditoria = "PRODUCTO_ELIMINAR";
-        String descripcionAuditoria = "Inicio de eliminación para Artículo ID: " + idProductoParam;
+        String descripcionAuditoria;
         boolean exito = false;
 
         try {

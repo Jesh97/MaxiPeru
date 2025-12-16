@@ -179,6 +179,22 @@ async function verLotes(idArticulo, descripcionArticulo) {
     }
 }
 
+function manejarCapacidadTipo() {
+    const tipoSelect = document.getElementById('idTipoArticulo');
+    const capacidadGroup = document.getElementById('groupCapacidad');
+    const capacidadInput = document.getElementById('capacidad');
+    const TIPO_ENVASES = '4';
+
+    if (tipoSelect.value === TIPO_ENVASES) {
+        capacidadGroup.style.display = 'block';
+        capacidadInput.setAttribute('required', 'required');
+    } else {
+        capacidadGroup.style.display = 'none';
+        capacidadInput.removeAttribute('required');
+        capacidadInput.value = ''; // Limpiar el valor si se oculta
+    }
+}
+
 async function abrirFormulario(id = 0) {
     const modal = document.getElementById('articuloModal');
     const form = document.getElementById('articuloForm');
@@ -211,15 +227,21 @@ async function abrirFormulario(id = 0) {
             document.getElementById('color').value = articulo.color || '';
             document.getElementById('idUnidad').value = String(articulo.unidad?.idUnidad || articulo.idUnidad || '');
 
+            // Asignar Capacidad si existe (asumiendo que el campo se llama 'capacidad' en tu objeto Artículo)
+            if (document.getElementById('capacidad')) {
+                 document.getElementById('capacidad').value = articulo.capacidad || '';
+            }
+
             document.getElementById('articuloModalHeader').querySelector('h2').textContent = 'Editar Artículo';
         }
     }
 
-    // Al cargar el formulario, aseguramos que los selectores mantengan el valor original si estamos editando,
-    // pero no ejecutamos lógica de filtrado dinámica entre ellos.
     document.getElementById('idMarca').value = idMarcaOriginal;
     document.getElementById('idCategoria').value = idCategoriaOriginal;
     document.getElementById('idTipoArticulo').value = idTipoArticuloOriginal;
+
+    // Ejecutar control de visibilidad de capacidad después de cargar los datos
+    manejarCapacidadTipo();
 
     modal.style.display = 'flex';
 }
@@ -298,33 +320,12 @@ async function cargarCatalogos() {
 
 async function manejarCambioFiltro(changedSelect) {
     showLoading(true);
-    const idMarca = document.getElementById('filtroMarca').value || null;
-    const idCategoria = document.getElementById('filtroCategoria').value || null;
-    const idTipoArticulo = document.getElementById('filtroTipo').value || null;
-
-    if (changedSelect.id === 'filtroMarca' || changedSelect.id === 'filtroTipo') {
-        await cargarFiltroDinamico('Categoria', 'filtroCategoria', 'listar_categorias_dinamicas', { idMarca, idTipoArticulo });
-    }
-
-    if (changedSelect.id === 'filtroCategoria' || changedSelect.id === 'filtroTipo') {
-        await cargarFiltroDinamico('Marca', 'filtroMarca', 'listar_marcas_dinamicas', { idCategoria, idTipoArticulo });
-    }
-
-    if (changedSelect.id === 'filtroMarca' || changedSelect.id === 'filtroCategoria') {
-        await cargarFiltroDinamico('Tipo', 'filtroTipo', 'listar_tipos_dinamicas', { idMarca, idCategoria });
-    }
 
     showLoading(false);
     aplicarFiltros();
 }
 
 function manejarCambioFormulario(changedSelect) {
-    // FUNCIÓN MODIFICADA: Ahora solo asegura que los selects estén cargados
-    // con todas las opciones (al abrir el formulario) y no aplica filtros dinámicos.
-    // La funcionalidad de autocompletado/filtrado entre selects del formulario ha sido eliminada.
-
-    // Si se necesita asegurar que el select mantenga su valor al cambiar, no se hace nada
-    // ya que el HTML maneja la selección nativamente.
 }
 
 
@@ -659,29 +660,29 @@ function generarReporteImprimible() {
             <style>
                 body {
                     font-family: 'Inter', sans-serif;
-                    margin: 10mm;
+                    margin: 5mm;
                     color: #333;
-                    font-size: 10pt;
+                    font-size: 8pt;
                 }
                 h1 {
                     text-align: center;
                     color: #007bff;
-                    margin-bottom: 10px;
-                    font-size: 14pt;
+                    margin-bottom: 8px;
+                    font-size: 12pt;
                 }
                 p {
-                    font-size: 9pt;
-                    margin-bottom: 5px;
+                    font-size: 8pt;
+                    margin-bottom: 3px;
                 }
                 table {
                     width: 100%;
                     border-collapse: collapse;
-                    margin-top: 10px;
-                    font-size: 9pt;
+                    margin-top: 5px;
+                    font-size: 8pt;
                 }
                 th, td {
                     border: 1px solid #ccc;
-                    padding: 4px 6px;
+                    padding: 2px 4px;
                     text-align: left;
                 }
                 th {
@@ -693,7 +694,7 @@ function generarReporteImprimible() {
                     text-align: center;
                 }
                 @media print {
-                    @page { margin: 10mm; }
+                    @page { margin: 5mm; }
                 }
             </style>
         </head>
@@ -726,7 +727,7 @@ function generarReporteImprimible() {
     htmlContent += `
                 </tbody>
             </table>
-            <p style="margin-top: 15px;">Total de Artículos: ${datosReporte.length}</p>
+            <p style="margin-top: 10px;">Total de Artículos: ${datosReporte.length}</p>
         </body>
         </html>
     `;
@@ -960,8 +961,7 @@ function exportarDatos(format) {
 document.getElementById('articuloForm').addEventListener('submit', guardarArticulo);
 document.getElementById('idMarca').addEventListener('change', () => manejarCambioFormulario(document.getElementById('idMarca')));
 document.getElementById('idCategoria').addEventListener('change', () => manejarCambioFormulario(document.getElementById('idCategoria')));
-document.getElementById('idTipoArticulo').addEventListener('change', () => manejarCambioFormulario(document.getElementById('idTipoArticulo')));
-
+document.getElementById('idTipoArticulo').addEventListener('change', () => manejarCapacidadTipo()); // Usamos manejarCapacidadTipo
 
 window.onload = async () => {
     window.abrirFormulario = abrirFormulario;
@@ -973,6 +973,7 @@ window.onload = async () => {
     window.renderSugerencias = renderSugerencias;
     window.verLotes = verLotes;
     window.manejarCambioFiltro = manejarCambioFiltro;
+    window.manejarCapacidadTipo = manejarCapacidadTipo; // Exponer para el onchange en el HTML
 
     window.abrirModalMarca = abrirModalMarca;
     window.cerrarModalMarca = cerrarModalMarca;

@@ -5,7 +5,7 @@ public class Articulo {
     private int idProducto;
     private String codigo;
     private String descripcion;
-    private int cantidad;
+    private double cantidad; // Cambiado a double/BigDecimal en el SP/Controller, reflejando DECIMAL(12,8) en BD
     private double precioCompra;
     private double precioVenta;
     private double pesoUnitario;
@@ -16,10 +16,11 @@ public class Articulo {
     private Categoria categoria;
     private UnidadMedida unidad;
     private TipoArticulo tipoArticulo;
+    private double capacidad; // NUEVO CAMPO AÑADIDO
 
-    public Articulo(int idProducto, String codigo, String descripcion, int cantidad, double precioCompra,
+    public Articulo(int idProducto, String codigo, String descripcion, double cantidad, double precioCompra,
                     double precioVenta, double pesoUnitario, double densidad, String aroma, String color,
-                    Marca marca, Categoria categoria, UnidadMedida unidad, TipoArticulo tipoArticulo) {
+                    Marca marca, Categoria categoria, UnidadMedida unidad, TipoArticulo tipoArticulo, double capacidad) {
         this.idProducto = idProducto;
         this.codigo = codigo;
         this.descripcion = descripcion;
@@ -34,7 +35,17 @@ public class Articulo {
         this.categoria = categoria;
         this.unidad = unidad;
         this.tipoArticulo = tipoArticulo;
+        this.capacidad = capacidad;
     }
+
+    // Constructor sin capacidad (para compatibilidad)
+    public Articulo(int idProducto, String codigo, String descripcion, double cantidad, double precioCompra,
+                    double precioVenta, double pesoUnitario, double densidad, String aroma, String color,
+                    Marca marca, Categoria categoria, UnidadMedida unidad, TipoArticulo tipoArticulo) {
+        this(idProducto, codigo, descripcion, cantidad, precioCompra, precioVenta, pesoUnitario, densidad, aroma, color,
+                marca, categoria, unidad, tipoArticulo, 0.0); // Capacidad por defecto
+    }
+
 
     public Articulo() {
     }
@@ -63,12 +74,21 @@ public class Articulo {
         this.descripcion = descripcion;
     }
 
-    public int getCantidad() {
+    public double getCantidad() {
         return cantidad;
     }
 
-    public void setCantidad(int cantidad) {
+    public void setCantidad(double cantidad) {
         this.cantidad = cantidad;
+    }
+
+    // Nuevo Getter y Setter para capacidad
+    public double getCapacidad() {
+        return capacidad;
+    }
+
+    public void setCapacidad(double capacidad) {
+        this.capacidad = capacidad;
     }
 
     public double getPrecioCompra() {
@@ -168,6 +188,7 @@ public class Articulo {
                 ", categoria=" + categoria +
                 ", unidad=" + unidad +
                 ", tipoArticulo=" + tipoArticulo +
+                ", capacidad=" + capacidad + // Incluido en toString
                 '}';
     }
 }
