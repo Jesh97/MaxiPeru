@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Inventario Premium</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <link rel="stylesheet" href="../../CSS/Producto/listarProducto.css">
 </head>
 
@@ -26,31 +27,58 @@
         </div>
 
         <div class="controls-buttons">
-            <button class="btn-primary" onclick="abrirFormulario()">+ Agregar Artículo</button>
-            <button class="btn-info" onclick="aplicarFiltros()">Actualizar Lista</button>
+            <button class="btn-primary" onclick="abrirFormulario()">
+                <i class="fas fa-plus"></i> Agregar Artículo
+            </button>
+            <button class="btn-info" onclick="aplicarFiltros()">
+                <i class="fas fa-sync-alt"></i> Actualizar Lista
+            </button>
         </div>
     </div>
 
     <div class="filters">
         <div class="filter-group">
             <label>Marca:
-                <select id="filtroMarca" onchange="manejarCambioFiltro(this)"><option value="">Todas</option></select>
+                <select id="filtroMarca" onchange="manejarCambioFiltro(this)">
+                    <option value="">Todas</option>
+                </select>
             </label>
-            <button class="btn-add-catalog" title="Agregar Nueva Marca" onclick="abrirModalMarca()"><i class="fas fa-plus"></i></button>
+            <button class="btn-add-catalog" title="Agregar Nueva Marca" onclick="abrirModalMarca()">
+                <i class="fas fa-plus"></i>
+            </button>
         </div>
 
         <div class="filter-group">
             <label>Categoría:
-                <select id="filtroCategoria" onchange="manejarCambioFiltro(this)"><option value="">Todas</option></select>
+                <select id="filtroCategoria" onchange="manejarCambioFiltro(this)">
+                    <option value="">Todas</option>
+                </select>
             </label>
-            <button class="btn-add-catalog" title="Agregar Nueva Categoría" onclick="abrirModalCategoria()"><i class="fas fa-plus"></i></button>
+            <button class="btn-add-catalog" title="Agregar Nueva Categoría" onclick="abrirModalCategoria()">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <div class="filter-group">
+            <label>Unidad:
+                <select id="filtroUnidad">
+                    <option value="">Todas</option>
+                </select>
+            </label>
+            <button class="btn-add-catalog" title="Agregar Nueva Unidad" onclick="abrirModalUnidad()">
+                <i class="fas fa-plus"></i>
+            </button>
         </div>
 
         <div class="filter-group">
             <label>Tipo:
-                <select id="filtroTipo" onchange="manejarCambioFiltro(this)"><option value="">Todos</option></select>
+                <select id="filtroTipo" onchange="manejarCambioFiltro(this)">
+                    <option value="">Todos</option>
+                </select>
             </label>
-            <button class="btn-add-catalog" title="Agregar Nuevo Tipo de Producto" onclick="abrirModalTipo()"><i class="fas fa-plus"></i></button>
+            <button class="btn-add-catalog" title="Agregar Nuevo Tipo" onclick="abrirModalTipo()">
+                <i class="fas fa-plus"></i>
+            </button>
         </div>
     </div>
 
@@ -73,15 +101,12 @@
 
     <div id="paginacion-controles" class="pagination-controls">
         <div class="page-controls-container">
-            <button class="btn-page" onclick="goToPage(paginaActual - 1)" disabled><i class="fas fa-chevron-left"></i> Anterior</button>
-            <button class="btn-page" onclick="goToPage(paginaActual + 1)">Siguiente <i class="fas fa-chevron-right"></i></button>
-            <span class="page-info" id="pagina-info">Mostrando 1 - 35 de 125 Artículos</span>
         </div>
 
         <div class="export-controls">
-            <button class="btn-export-csv" onclick="exportarDatos('csv')"><i class="fas fa-file-csv"></i> Exportar CSV</button>
-            <button class="btn-export-excel" onclick="exportarDatos('xlsx')"><i class="fas fa-file-excel"></i> Exportar Excel</button>
-            <button class="btn-print" onclick="generarReporteImprimible()"><i class="fas fa-print"></i> Reporte Artículos</button>
+            <button class="btn-export-csv" onclick="exportarDatos('csv')"><i class="fas fa-file-csv"></i> CSV</button>
+            <button class="btn-export-excel" onclick="exportarDatos('xlsx')"><i class="fas fa-file-excel"></i> Excel</button>
+            <button class="btn-print" onclick="generarReporteImprimible()"><i class="fas fa-print"></i> Imprimir</button>
         </div>
     </div>
 </div>
@@ -94,36 +119,37 @@
         </div>
         <div class="modal-body">
             <form id="articuloForm">
-                <input type="hidden" id="idProducto" name="id_producto">
+                <input type="hidden" id="idProducto" name="id_producto" value="0">
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="codigo">Código:</label>
+                        <label for="codigo">Código: <span style="color:red">*</span></label>
                         <input type="text" id="codigo" name="codigo" required>
                     </div>
                     <div class="form-group">
-                        <label for="descripcion">Descripción:</label>
+                        <label for="descripcion">Descripción: <span style="color:red">*</span></label>
                         <input type="text" id="descripcion" name="descripcion" required>
                     </div>
+
                     <div class="form-group">
                         <label for="cantidad">Stock (Cantidad):</label>
-                        <input type="number" id="cantidad" name="cantidad" required min="0">
+                        <input type="number" id="cantidad" name="cantidad" min="0">
                     </div>
                     <div class="form-group">
                         <label for="precioCompra">Precio de Compra (S/):</label>
-                        <input type="number" id="precioCompra" name="precio_compra" step="0.01" required min="0">
+                        <input type="number" id="precioCompra" name="precio_compra" step="0.01" min="0">
                     </div>
                     <div class="form-group">
                         <label for="precioVenta">Precio de Venta (S/):</label>
-                        <input type="number" id="precioVenta" name="precio_venta" step="0.01" required min="0">
+                        <input type="number" id="precioVenta" name="precio_venta" step="0.01" min="0">
                     </div>
                     <div class="form-group">
                         <label for="pesoUnitario">Peso Unitario (kg):</label>
-                        <input type="number" id="pesoUnitario" name="peso_unitario" step="0.001" required min="0">
+                        <input type="number" id="pesoUnitario" name="peso_unitario" step="0.001" min="0">
                     </div>
                     <div class="form-group">
                         <label for="densidad">Densidad:</label>
-                        <input type="number" id="densidad" name="densidad" step="0.001" required min="0">
+                        <input type="number" id="densidad" name="densidad" step="0.001" min="0">
                     </div>
                     <div class="form-group">
                         <label for="aroma">Aroma:</label>
@@ -133,22 +159,33 @@
                         <label for="color">Color:</label>
                         <input type="text" id="color" name="color">
                     </div>
+
                     <div class="form-group">
                         <label for="idMarca">Marca:</label>
-                        <select id="idMarca" name="id_marca"></select>
+                        <select id="idMarca" name="id_marca">
+                            <option value="">-- Seleccione --</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="idCategoria">Categoría:</label>
-                        <select id="idCategoria" name="id_categoria"></select>
+                        <select id="idCategoria" name="id_categoria">
+                            <option value="">-- Seleccione --</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="idUnidad">Unidad de Medida:</label>
-                        <select id="idUnidad" name="id_unidad"></select>
+                        <select id="idUnidad" name="id_unidad">
+                            <option value="">-- Seleccione --</option>
+                        </select>
                     </div>
+
                     <div class="form-group">
                         <label for="idTipoArticulo">Tipo de Artículo:</label>
-                        <select id="idTipoArticulo" name="id_tipo_articulo" required onchange="manejarCapacidadTipo()"></select>
+                        <select id="idTipoArticulo" name="id_tipo_articulo" onchange="manejarCapacidadTipo()">
+                            <option value="">-- Seleccione --</option>
+                        </select>
                     </div>
+
                     <div class="form-group" id="groupCapacidad" style="display: none;">
                         <label for="capacidad">Capacidad (Litros/Kg):</label>
                         <input type="number" id="capacidad" name="capacidad" step="0.01" min="0">
@@ -170,9 +207,7 @@
             <h2>Detalles Secundarios</h2>
         </div>
         <div class="modal-body">
-            <div id="detallesContent">
-
-            </div>
+            <div id="detallesContent"></div>
         </div>
     </div>
 </div>
@@ -193,11 +228,10 @@
                         <th class="data-center">Fecha Venc.</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
-            <p id="lotesEmptyMessage" style="text-align: center; margin-top: 20px; color: #777; display: none;">No se encontraron lotes activos para este artículo.</p>
+            <p id="lotesEmptyMessage" style="text-align: center; margin-top: 20px; color: #777; display: none;">No se encontraron lotes activos.</p>
         </div>
     </div>
 </div>
@@ -262,12 +296,12 @@
     <div class="modal-content">
         <span class="close" onclick="cerrarModalTipo()">&times;</span>
         <div class="modal-header-gradient">
-            <h2>Agregar Nuevo Tipo de Artículo</h2>
+            <h2>Agregar Nuevo Tipo</h2>
         </div>
         <div class="modal-body">
             <form id="tipoForm" onsubmit="guardarTipo(event)">
                 <div class="form-group">
-                    <label for="nombreTipo">Nombre del Tipo de Artículo:</label>
+                    <label for="nombreTipo">Nombre del Tipo:</label>
                     <input type="text" id="nombreTipo" name="nombre" required>
                 </div>
                 <div class="form-actions">
@@ -278,6 +312,31 @@
     </div>
 </div>
 
+<div id="unidadModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="cerrarModalUnidad()">&times;</span>
+        <div class="modal-header-gradient">
+            <h2>Agregar Nueva Unidad</h2>
+        </div>
+        <div class="modal-body">
+            <form id="unidadForm" onsubmit="guardarUnidad(event)">
+                <div class="form-group">
+                    <label for="nombreUnidad">Nombre (Ej. Litro):</label>
+                    <input type="text" id="nombreUnidad" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="abreviaturaUnidad">Abreviatura (Ej. Lt):</label>
+                    <input type="text" id="abreviaturaUnidad" name="abreviatura">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Guardar Unidad</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="../../JS/Producto/listarProducto.js"></script>
+
 </body>
 </html>

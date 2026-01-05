@@ -133,26 +133,34 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_articulo`$$
-CREATE PROCEDURE `sp_agregar_articulo`(IN p_codigo VARCHAR(50), IN p_descripcion VARCHAR(255), IN p_cantidad INT, IN p_precio_compra DECIMAL(12,2), IN p_precio_venta DECIMAL(12,2),
-    IN p_peso_unitario DECIMAL(10,3), IN p_densidad DECIMAL(10,3), IN p_aroma VARCHAR(50), IN p_color VARCHAR(50),
-    IN p_id_marca INT, IN p_id_categoria INT, IN p_id_unidad INT, IN p_id_tipo_articulo INT)
+CREATE PROCEDURE `sp_agregar_articulo`(IN p_codigo VARCHAR(50), IN p_descripcion VARCHAR(255), IN p_cantidad DECIMAL(12,8), IN p_precio_compra DECIMAL(12,2), IN p_precio_venta DECIMAL(12,2),
+    IN p_peso_unitario DECIMAL(10,3), IN p_densidad DECIMAL(12,8), IN p_aroma VARCHAR(50), IN p_color VARCHAR(50),
+    IN p_id_marca INT, IN p_id_categoria INT, IN p_id_unidad INT, IN p_id_tipo_articulo INT, IN p_capacidad DECIMAL(12,4))
 BEGIN
+    DECLARE v_new_articulo_id INT;
+
     INSERT INTO articulo(codigo, descripcion, cantidad, precio_compra, precio_venta, peso_unitario, densidad, aroma, color, id_marca, id_categoria, id_unidad, id_tipo_articulo)
-    VALUES (p_codigo, p_descripcion, p_cantidad, p_precio_compra, p_precio_venta, p_peso_unitario, p_densidad, p_aroma, p_color, p_id_marca, p_id_categoria, p_id_unidad, p_id_tipo_articulo);
+    VALUES (p_codigo, p_descripcion, p_cantidad, p_precio_compra, p_precio_venta, p_peso_unitario, p_densidad, p_aroma, p_color, NULLIF(p_id_marca, 0), NULLIF(p_id_categoria, 0), NULLIF(p_id_unidad, 0), NULLIF(p_id_tipo_articulo, 0));
+
+    SET v_new_articulo_id = LAST_INSERT_ID();
+
+    IF p_id_tipo_articulo = 4 AND p_capacidad IS NOT NULL AND p_capacidad > 0 THEN
+        INSERT INTO capacidad_articulo_envase (id_articulo, capacidad, id_unidad_capacidad)
+        VALUES (v_new_articulo_id, p_capacidad, NULLIF(p_id_unidad, 0));
+    END IF;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_actualizar_articulo`$$
-CREATE PROCEDURE `sp_actualizar_articulo`(
-    IN p_id INT, IN p_descripcion VARCHAR(255), IN p_cantidad INT,
-    IN p_precio_compra DECIMAL(12,2), IN p_precio_venta DECIMAL(12,2),
-    IN p_peso_unitario DECIMAL(10,3), IN p_densidad DECIMAL(10,3), IN p_aroma VARCHAR(50), IN p_color VARCHAR(50),
-    IN p_id_marca INT, IN p_id_categoria INT, IN p_id_unidad INT, IN p_id_tipo_articulo INT)
+CREATE PROCEDURE `sp_actualizar_articulo`(IN p_id INT, IN p_codigo VARCHAR(50), IN p_descripcion VARCHAR(255), IN p_cantidad DECIMAL(12,8), IN p_precio_compra DECIMAL(12,2),
+    IN p_precio_venta DECIMAL(12,2), IN p_peso_unitario DECIMAL(10,3), IN p_densidad DECIMAL(12,8), IN p_aroma VARCHAR(50),
+    IN p_color VARCHAR(50), IN p_id_marca INT, IN p_id_categoria INT, IN p_id_unidad INT, IN p_id_tipo_articulo INT)
 BEGIN
     UPDATE articulo
-    SET descripcion = p_descripcion, cantidad = p_cantidad, precio_compra = p_precio_compra, precio_venta = p_precio_venta,
-        peso_unitario = p_peso_unitario, densidad = p_densidad, aroma = p_aroma, color = p_color,
-        id_marca = p_id_marca, id_categoria = p_id_categoria, id_unidad = p_id_unidad, id_tipo_articulo = p_id_tipo_articulo
-    WHERE id = p_id;
+    SET codigo = p_codigo, descripcion = p_descripcion, cantidad = p_cantidad, precio_compra = p_precio_compra,
+        precio_venta = p_precio_venta, peso_unitario = p_peso_unitario, densidad = p_densidad, aroma = p_aroma,
+        color = p_color, id_marca = NULLIF(p_id_marca, 0), id_categoria = NULLIF(p_id_categoria, 0),
+        id_unidad = NULLIF(p_id_unidad, 0), id_tipo_articulo = NULLIF(p_id_tipo_articulo, 0)
+    WHERE id_producto = p_id;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_eliminar_articulo`$$

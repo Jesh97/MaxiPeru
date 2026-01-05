@@ -16,7 +16,6 @@ import sistema.Modelo.Articulo.Marca;
 import sistema.Modelo.Articulo.TipoArticulo;
 import sistema.Modelo.Articulo.UnidadMedida;
 import sistema.repository.ArticuloRepository;
-import sistema.Modelo.Compra.Lote;
 
 @WebServlet("/productos")
 public class ProductoServlet extends HttpServlet {

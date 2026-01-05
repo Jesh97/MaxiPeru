@@ -49,35 +49,26 @@ function showCustomConfirm(title, message, callback) {
     modal.style.display = 'flex';
 }
 
-function cerrarFormulario() {
-    document.getElementById('articuloModal').style.display = 'none';
-}
-
 function getNombreCatalogoById(entidad, id, keyId, keyNombre, keyAbrev = null) {
-    if (!catalogos[entidad] || !id) return 'Desconocida';
+    if (!catalogos[entidad] || !id || id == 0) return 'Desconocida';
     const item = catalogos[entidad].find(i => String(i[keyId]) === String(id));
 
     if (item) {
-        if (keyAbrev && item[keyAbrev]) {
-            return `${item[keyNombre]} - ${item[keyAbrev]}`;
-        }
-        return item[keyNombre];
+        return (keyAbrev && item[keyAbrev]) ? `${item[keyNombre]} - ${item[keyAbrev]}` : item[keyNombre];
     }
     return 'Desconocida';
 }
 
 function getUnidadDisplay(articulo) {
     const unidadId = articulo.unidad?.idUnidad || articulo.idUnidad;
-    if (!unidadId) return 'N/A';
-
+    if (!unidadId || unidadId == 0) return 'N/A';
     const item = catalogos['unidad'] ? catalogos['unidad'].find(i => String(i.idUnidad) === String(unidadId)) : null;
-
-    if (item) {
-        return `${item.nombre} - ${item.abreviatura || 's/a'}`;
-    }
-    return 'Desconocida';
+    return item ? `${item.nombre} - ${item.abreviatura || 's/a'}` : 'Desconocida';
 }
 
+function cerrarFormulario() {
+    document.getElementById('articuloModal').style.display = 'none';
+}
 
 function mostrarDetalles(id) {
     const articulo = articulos.find(a => a.idProducto === id);
@@ -93,17 +84,11 @@ function mostrarDetalles(id) {
     const marcaId = articulo.marca?.idMarca || articulo.idMarca || 0;
     const tipoId = articulo.tipoArticulo?.id || articulo.idTipoArticulo || 0;
 
-    const categoriaNombre = articulo.categoria?.nombre || getNombreCatalogoById('categoria', categoriaId, 'idCategoria', 'nombre');
-    const marcaNombre = articulo.marca?.nombre || getNombreCatalogoById('marca', marcaId, 'idMarca', 'nombre');
-    const tipoNombre = articulo.tipoArticulo?.nombre || getNombreCatalogoById('tipo', tipoId, 'id', 'nombre');
-    const unidadNombreDisplay = getUnidadDisplay(articulo);
-
-
     const details = [
-        { label: 'Marca', value: marcaNombre },
-        { label: 'Categoría', value: categoriaNombre },
-        { label: 'Tipo de Artículo', value: tipoNombre },
-        { label: 'Unidad de Medida', value: unidadNombreDisplay },
+        { label: 'Marca', value: articulo.marca?.nombre || getNombreCatalogoById('marca', marcaId, 'idMarca', 'nombre') },
+        { label: 'Categoría', value: articulo.categoria?.nombre || getNombreCatalogoById('categoria', categoriaId, 'idCategoria', 'nombre') },
+        { label: 'Tipo de Artículo', value: articulo.tipoArticulo?.nombre || getNombreCatalogoById('tipo', tipoId, 'id', 'nombre') },
+        { label: 'Unidad de Medida', value: getUnidadDisplay(articulo) },
         { label: 'Densidad', value: (articulo.densidad !== undefined && articulo.densidad !== null) ? articulo.densidad.toFixed(3) : 'N/A' },
         { label: 'Color', value: articulo.color || 'N/A' },
         { label: 'Aroma', value: articulo.aroma || 'N/A' }
@@ -124,25 +109,21 @@ async function verLotes(idArticulo, descripcionArticulo) {
     const lotesModalTitle = document.getElementById('lotesModalTitle');
     const tablaLotesBody = document.querySelector('#tabla-lotes tbody');
     const lotesEmptyMessage = document.getElementById('lotesEmptyMessage');
-    const loadingOverlay = document.getElementById('loadingOverlay');
 
     tablaLotesBody.innerHTML = '';
     lotesEmptyMessage.style.display = 'none';
     lotesModalTitle.textContent = `Lotes del Artículo: ${descripcionArticulo}`;
-    loadingOverlay.style.display = 'flex';
+    showLoading(true);
 
     try {
         const response = await fetch(`${API_ARTICULOS}?accion=ver_lotes&id_articulo=${idArticulo}`);
 
         if (!response.ok) {
             const contentType = response.headers.get("content-type");
-            let errorDetail = `Error HTTP ${response.status} (${response.statusText}).`;
-
+            let errorDetail = `Error HTTP ${response.status}.`;
             if (contentType && contentType.includes("application/json")) {
                 const errorJson = await response.json();
                 errorDetail = errorJson.mensaje || errorDetail;
-            } else {
-                errorDetail = `Respuesta inesperada del servidor. Posiblemente sesión expirada o Servlet caído. (Status: ${response.status})`;
             }
             throw new Error(errorDetail);
         }
@@ -155,7 +136,6 @@ async function verLotes(idArticulo, descripcionArticulo) {
                     const row = document.createElement('tr');
                     const fechaVencimiento = lote.fechaVencimiento ? new Date(lote.fechaVencimiento).toLocaleDateString('es-PE') : 'N/A';
                     const cantidadDisponible = parseFloat(lote.cantidadLote).toFixed(2);
-
                     row.innerHTML = `
                         <td>${lote.numeroLote || 'SIN NÚMERO'}</td>
                         <td class="data-center">${cantidadDisponible}</td>
@@ -167,15 +147,13 @@ async function verLotes(idArticulo, descripcionArticulo) {
                 lotesEmptyMessage.style.display = 'block';
             }
         } else {
-             throw new Error(lotes.mensaje || "Error al cargar los lotes: La respuesta no es una lista válida.");
+             throw new Error(lotes.mensaje || "Error al cargar los lotes.");
         }
-
         lotesModal.style.display = 'flex';
-
     } catch (error) {
         showCustomAlert("Error de Lotes", `No se pudieron cargar los lotes. Detalle: ${error.message}`, false);
     } finally {
-        loadingOverlay.style.display = 'none';
+        showLoading(false);
     }
 }
 
@@ -191,7 +169,7 @@ function manejarCapacidadTipo() {
     } else {
         capacidadGroup.style.display = 'none';
         capacidadInput.removeAttribute('required');
-        capacidadInput.value = ''; // Limpiar el valor si se oculta
+        capacidadInput.value = '';
     }
 }
 
@@ -204,9 +182,7 @@ async function abrirFormulario(id = 0) {
 
     await cargarFormularioSelects();
 
-    let idMarcaOriginal = '';
-    let idCategoriaOriginal = '';
-    let idTipoArticuloOriginal = '';
+    let idMarcaOriginal = '', idCategoriaOriginal = '', idTipoArticuloOriginal = '';
 
     if (id > 0) {
         const articulo = articulos.find(a => a.idProducto === id);
@@ -227,11 +203,9 @@ async function abrirFormulario(id = 0) {
             document.getElementById('color').value = articulo.color || '';
             document.getElementById('idUnidad').value = String(articulo.unidad?.idUnidad || articulo.idUnidad || '');
 
-            // Asignar Capacidad si existe (asumiendo que el campo se llama 'capacidad' en tu objeto Artículo)
             if (document.getElementById('capacidad')) {
                  document.getElementById('capacidad').value = articulo.capacidad || '';
             }
-
             document.getElementById('articuloModalHeader').querySelector('h2').textContent = 'Editar Artículo';
         }
     }
@@ -240,9 +214,7 @@ async function abrirFormulario(id = 0) {
     document.getElementById('idCategoria').value = idCategoriaOriginal;
     document.getElementById('idTipoArticulo').value = idTipoArticuloOriginal;
 
-    // Ejecutar control de visibilidad de capacidad después de cargar los datos
     manejarCapacidadTipo();
-
     modal.style.display = 'flex';
 }
 
@@ -261,17 +233,10 @@ async function cargarFormularioSelects() {
         selectForm.innerHTML = `<option value="">-- Seleccione --</option>`;
 
         catalogos[end.entidad].forEach(item => {
-            let optionText;
-
-            if (end.entidad === 'unidad' && item.abreviatura) {
-                optionText = `${item[end.keyNombre]} - ${item[end.keyAbrev]}`;
-            } else {
-                optionText = item[end.keyNombre];
-            }
-
-            const optionValue = item[end.keyId];
-            const option = `<option value="${optionValue}">${optionText}</option>`;
-            selectForm.innerHTML += option;
+            let optionText = (end.entidad === 'unidad' && item.abreviatura)
+                ? `${item[end.keyNombre]} - ${item[end.keyAbrev]}`
+                : item[end.keyNombre];
+            selectForm.innerHTML += `<option value="${item[end.keyId]}">${optionText}</option>`;
         });
     }
 }
@@ -281,124 +246,41 @@ async function cargarCatalogos() {
     const endpoints = [
         { id: 'idMarca', entidad: 'marca', keyId: 'idMarca', keyNombre: 'nombre', filtro: 'filtroMarca' },
         { id: 'idCategoria', entidad: 'categoria', keyId: 'idCategoria', keyNombre: 'nombre', filtro: 'filtroCategoria' },
-        { id: 'idUnidad', entidad: 'unidad', keyId: 'idUnidad', keyNombre: 'nombre', keyAbrev: 'abreviatura', filtro: null },
+        { id: 'idUnidad', entidad: 'unidad', keyId: 'idUnidad', keyNombre: 'nombre', keyAbrev: 'abreviatura', filtro: 'filtroUnidad' },
         { id: 'idTipoArticulo', entidad: 'tipo', keyId: 'id', keyNombre: 'nombre', filtro: 'filtroTipo' }
     ];
 
     for (const end of endpoints) {
         try {
-            let data = null;
             const res = await fetch(`${API_CATALOGO}?entidad=${end.entidad}`);
-            if (res.ok) {
-                data = await res.json();
-            } else {
-                throw new Error(`Error HTTP: ${res.status}`);
-            }
+            if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
 
+            const data = await res.json();
             if (!data) throw new Error(`Fallo al obtener datos de ${end.entidad}.`);
 
             catalogos[end.entidad] = data;
-
             const selectForm = document.getElementById(end.id);
             selectForm.innerHTML = `<option value="">-- Seleccione --</option>`;
 
             if (end.filtro) {
                 const selectFiltro = document.getElementById(end.filtro);
-                selectFiltro.innerHTML = '<option value="">Todas</option>';
-                data.forEach(item => {
-                    selectFiltro.innerHTML += `<option value="${item[end.keyId]}">${item[end.keyNombre]}</option>`;
-                });
+                if (selectFiltro) {
+                    selectFiltro.innerHTML = '<option value="">Todas</option>';
+                    data.forEach(item => {
+                        selectFiltro.innerHTML += `<option value="${item[end.keyId]}">${item[end.keyNombre]}</option>`;
+                    });
+                }
             }
         } catch (error) {
             console.error(`Error al cargar ${end.entidad}:`, error);
-            showCustomAlert('Error de Catálogo', `No se pudo cargar la lista de ${end.entidad}. Verifica el Servlet: ${error.message}`);
         }
     }
     showLoading(false);
 }
 
-
-async function manejarCambioFiltro(changedSelect) {
-    showLoading(true);
-
-    showLoading(false);
+function manejarCambioFiltro() {
     aplicarFiltros();
 }
-
-function manejarCambioFormulario(changedSelect) {
-}
-
-
-async function cargarFiltroDinamico(entidadNombre, selectId, accion, parametros, valorPreseleccionado = null) {
-    const select = document.getElementById(selectId);
-    let idKey;
-    let nombreKey;
-    let optionPrefix = (selectId.includes('filtro')) ? 'Todas' : '-- Seleccione --';
-
-    switch (entidadNombre) {
-        case 'Marca':
-            idKey = 'idMarca';
-            nombreKey = 'nombre';
-            break;
-        case 'Categoria':
-            idKey = 'idCategoria';
-            nombreKey = 'nombre';
-            break;
-        case 'Tipo':
-            idKey = 'id';
-            nombreKey = 'nombre';
-            break;
-        default:
-            return;
-    }
-
-    const currentSelectedId = valorPreseleccionado || select.value;
-    select.innerHTML = `<option value="">${optionPrefix}</option>`;
-    select.disabled = true;
-
-    const queryParams = new URLSearchParams({ accion: accion });
-
-    if (parametros.idMarca) queryParams.append('id_marca', parametros.idMarca);
-    if (parametros.idCategoria) queryParams.append('id_categoria', parametros.idCategoria);
-    if (parametros.idTipoArticulo) queryParams.append('id_tipo_articulo', parametros.idTipoArticulo);
-
-    try {
-        const res = await fetch(`${API_ARTICULOS}?${queryParams.toString()}`);
-
-        if (!res.ok) {
-            console.error(`Error HTTP ${res.status} al cargar filtro ${entidadNombre}`);
-            select.disabled = false;
-            return;
-        }
-
-        const data = await res.json();
-        let validIds = [];
-
-        if (Array.isArray(data)) {
-            data.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item[idKey];
-                option.textContent = item[nombreKey];
-                select.appendChild(option);
-                validIds.push(String(item[idKey]));
-            });
-
-            const isValidSelection = validIds.includes(String(currentSelectedId));
-
-            if (isValidSelection) {
-                select.value = currentSelectedId;
-            } else {
-                select.value = "";
-            }
-        }
-
-    } catch (error) {
-        console.error(`Error al cargar datos dinámicos para ${entidadNombre}:`, error);
-    } finally {
-        select.disabled = false;
-    }
-}
-
 
 async function listarArticulos() {
     showLoading(true);
@@ -407,106 +289,35 @@ async function listarArticulos() {
         if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
 
         articulos = await res.json();
-
-        if (!Array.isArray(articulos)) {
-            articulos = [];
-        }
+        if (!Array.isArray(articulos)) articulos = [];
 
         paginaActual = 1;
         aplicarFiltros();
     } catch (error) {
         console.error('Error al listar artículos:', error);
-        showCustomAlert('Error de Carga', 'Error al cargar la lista de artículos. Verifica si el Servlet "/productos" está activo.');
+        showCustomAlert('Error de Carga', 'Error al cargar la lista de artículos.');
     } finally {
         showLoading(false);
     }
-}
-
-async function guardarArticulo(event) {
-    event.preventDefault();
-    showLoading(true);
-    const idProducto = document.getElementById('idProducto').value;
-    const formData = new URLSearchParams(new FormData(event.target)).toString();
-
-    let url = API_ARTICULOS;
-    let method = idProducto === "0" ? 'POST' : 'PUT';
-    let statusMensaje = idProducto === "0" ? 'agregado' : 'actualizado';
-
-    try {
-        const res = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData
-        });
-
-        const data = await res.json();
-
-        if (data.exito) {
-            showCustomAlert('Éxito', `Artículo ${statusMensaje} con éxito.`, async () => {
-                cerrarFormulario();
-                await listarArticulos();
-            });
-
-        } else {
-            let msg = `Error al guardar el artículo: ${data.mensaje}`;
-            showCustomAlert('Error', msg);
-        }
-
-    } catch (error) {
-        console.error('Error al guardar:', error);
-        showCustomAlert('Error de Conexión', 'Error de conexión al guardar el artículo. Revisa tu red o el log del servidor.');
-    } finally {
-        showLoading(false);
-    }
-}
-
-async function eliminarArticulo(id) {
-    showCustomConfirm('Confirmar Eliminación', '¿Estás seguro de que deseas eliminar este artículo? Esta acción es irreversible.', async (confirmed) => {
-        if (!confirmed) return;
-
-        showLoading(true);
-        try {
-            const url = `${API_ARTICULOS}?id_producto=${id}`;
-            const res = await fetch(url, { method: 'DELETE' });
-            const data = await res.json();
-
-            if (data.exito) {
-                showCustomAlert('Eliminado', 'Artículo eliminado con éxito.', async () => {
-                    await listarArticulos();
-                });
-            } else {
-                showCustomAlert('Error', `Error al eliminar: ${data.mensaje}`);
-            }
-        } catch (error) {
-            console.error('Error al eliminar:', error);
-            showCustomAlert('Error de Conexión', 'Error de conexión al eliminar el artículo.');
-        } finally {
-            showLoading(false);
-        }
-    });
 }
 
 function getHighlightedMatch(queryLower, p) {
     const codigo = p.codigo || '';
     const descripcion = p.descripcion || 'Sin descripción';
-
     let index = codigo.toLowerCase().indexOf(queryLower);
+
     if (index !== -1) {
-        const highlightedText =
-            `${codigo.substring(0, index)}<span class="highlight">${codigo.substring(index, index + queryLower.length)}</span>${codigo.substring(index + queryLower.length)}`;
+        const highlightedText = `${codigo.substring(0, index)}<span class="highlight">${codigo.substring(index, index + queryLower.length)}</span>${codigo.substring(index + queryLower.length)}`;
         return [`${highlightedText} - ${descripcion}`, p.idProducto];
     }
 
     index = descripcion.toLowerCase().indexOf(queryLower);
     if (index !== -1) {
-        const highlightedText =
-            `${descripcion.substring(0, index)}<span class="highlight">${descripcion.substring(index, index + queryLower.length)}</span>${descripcion.substring(index + queryLower.length)}`;
+        const highlightedText = `${descripcion.substring(0, index)}<span class="highlight">${descripcion.substring(index, index + queryLower.length)}</span>${descripcion.substring(index + queryLower.length)}`;
         return [`${codigo} - ${highlightedText}`, p.idProducto];
     }
-
     return null;
 }
-
 
 function renderSugerencias(query) {
     const queryLower = query.toLowerCase().trim();
@@ -528,9 +339,9 @@ function renderSugerencias(query) {
             const item = document.createElement('div');
             item.className = 'sugerencia-item';
             item.innerHTML = htmlContent;
-
             item.onclick = () => {
-                document.getElementById('busquedaGeneral').value = `${articulos.find(p => p.idProducto === idProducto)?.codigo || ''} - ${articulos.find(p => p.idProducto === idProducto)?.descripcion || ''}`;
+                const prod = articulos.find(p => p.idProducto === idProducto);
+                document.getElementById('busquedaGeneral').value = `${prod?.codigo || ''} - ${prod?.descripcion || ''}`;
                 sugerenciasDiv.style.display = 'none';
                 aplicarFiltros(idProducto);
             };
@@ -541,7 +352,6 @@ function renderSugerencias(query) {
         sugerenciasDiv.style.display = 'none';
     }
 }
-
 
 function aplicarFiltros(idArticuloSeleccionado = null) {
     const marcaId = document.getElementById('filtroMarca').value;
@@ -554,7 +364,6 @@ function aplicarFiltros(idArticuloSeleccionado = null) {
 
     if (idArticuloSeleccionado !== null) {
         filtrados = articulos.filter(p => p.idProducto === idArticuloSeleccionado);
-
         document.getElementById('filtroMarca').value = '';
         document.getElementById('filtroCategoria').value = '';
         document.getElementById('filtroTipo').value = '';
@@ -572,7 +381,6 @@ function aplicarFiltros(idArticuloSeleccionado = null) {
                 (p.codigo && p.codigo.toLowerCase().includes(busquedaQuery)) ||
                 (p.descripcion && p.descripcion.toLowerCase().includes(busquedaQuery))
             );
-
             return categoryMatches && textMatches;
         });
     }
@@ -587,27 +395,22 @@ function mostrarTabla(listaCompleta) {
     tbody.innerHTML = '';
     const totalPaginas = Math.ceil(articulosFiltrados.length / ARTICULOS_POR_PAGINA);
 
-    if (paginaActual > totalPaginas) {
-        paginaActual = Math.max(1, totalPaginas);
-    }
+    if (paginaActual > totalPaginas) paginaActual = Math.max(1, totalPaginas);
 
-    const COLSPAN = 6;
     const inicio = (paginaActual - 1) * ARTICULOS_POR_PAGINA;
     const fin = inicio + ARTICULOS_POR_PAGINA;
     const articulosPagina = articulosFiltrados.slice(inicio, fin);
+    const COLSPAN = 6;
 
-    if (articulosPagina.length === 0 && articulos.length > 0) {
-        tbody.innerHTML = `<tr><td colspan="${COLSPAN}" class="data-center" style="padding: 30px; color: var(--light-text-color);">No se encontraron artículos que coincidan con los filtros aplicados.</td></tr>`;
-    } else if (articulos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${COLSPAN}" class="data-center" style="padding: 30px; color: var(--light-text-color);">No se encontraron artículos en la base de datos.</td></tr>`;
+    if (articulosPagina.length === 0) {
+        const msg = articulos.length > 0 ? 'No se encontraron artículos con los filtros aplicados.' : 'No se encontraron artículos en la base de datos.';
+        tbody.innerHTML = `<tr><td colspan="${COLSPAN}" class="data-center" style="padding: 30px; color: var(--light-text-color);">${msg}</td></tr>`;
     }
 
     articulosPagina.forEach(p => {
         const unidadDisplay = getUnidadDisplay(p);
         const pesoUnitario = (p.pesoUnitario !== undefined && p.pesoUnitario !== null) ? p.pesoUnitario.toFixed(3) : '0.000';
-
         const tr = document.createElement('tr');
-
         tr.innerHTML = `
             <td>${p.codigo || '-'}</td>
             <td>${p.descripcion || 'Sin descripción'}</td>
@@ -623,128 +426,11 @@ function mostrarTabla(listaCompleta) {
         `;
         tbody.appendChild(tr);
     });
-
     renderPaginacion(totalPaginas);
 }
 
-function generarReporteImprimible() {
-    const idCategoriaSeleccionada = document.getElementById('filtroCategoria').value;
-    const idTipoSeleccionado = document.getElementById('filtroTipo').value;
-
-    let tituloReporte = "Reporte General de Artículos";
-
-    if (idCategoriaSeleccionada) {
-        const categoria = catalogos['categoria'] ? catalogos['categoria'].find(c => String(c.idCategoria) === String(idCategoriaSeleccionada)) : null;
-        if (categoria) {
-            tituloReporte = `Reporte por Categoría: ${categoria.nombre}`;
-        }
-    } else if (idTipoSeleccionado) {
-        const tipo = catalogos['tipo'] ? catalogos['tipo'].find(t => String(t.id) === String(idTipoSeleccionado)) : null;
-        if (tipo) {
-            tituloReporte = `Reporte por Tipo de Artículo: ${tipo.nombre}`;
-        }
-    }
-
-    const datosReporte = articulosFiltrados;
-
-    if (!datosReporte || datosReporte.length === 0) {
-        showCustomAlert('Alerta', 'No hay artículos para generar el reporte con los filtros actuales.');
-        return;
-    }
-
-    let htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>${tituloReporte}</title>
-            <style>
-                body {
-                    font-family: 'Inter', sans-serif;
-                    margin: 5mm;
-                    color: #333;
-                    font-size: 8pt;
-                }
-                h1 {
-                    text-align: center;
-                    color: #007bff;
-                    margin-bottom: 8px;
-                    font-size: 12pt;
-                }
-                p {
-                    font-size: 8pt;
-                    margin-bottom: 3px;
-                }
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 5px;
-                    font-size: 8pt;
-                }
-                th, td {
-                    border: 1px solid #ccc;
-                    padding: 2px 4px;
-                    text-align: left;
-                }
-                th {
-                    background-color: #e9ecef;
-                    color: #495057;
-                    font-weight: 600;
-                }
-                .data-center {
-                    text-align: center;
-                }
-                @media print {
-                    @page { margin: 5mm; }
-                }
-            </style>
-        </head>
-        <body>
-            <h1>${tituloReporte}</h1>
-            <p>Fecha de Generación: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 15%;">Código</th>
-                        <th style="width: 50%;">Nombre del Producto (Descripción)</th>
-                        <th class="data-center" style="width: 15%;">Stock</th>
-                        <th class="data-center" style="width: 20%;">Coincide Stock?</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-
-    datosReporte.forEach(articulo => {
-        htmlContent += `
-            <tr>
-                <td>${articulo.codigo || ''}</td>
-                <td>${articulo.descripcion || ''}</td>
-                <td class="data-center">${articulo.cantidad || 0}</td>
-                <td class="data-center"></td>
-            </tr>
-        `;
-    });
-
-    htmlContent += `
-                </tbody>
-            </table>
-            <p style="margin-top: 10px;">Total de Artículos: ${datosReporte.length}</p>
-        </body>
-        </html>
-    `;
-
-    const ventanaReporte = window.open('', '_blank');
-    ventanaReporte.document.write(htmlContent);
-    ventanaReporte.document.close();
-
-    ventanaReporte.onload = () => {
-        ventanaReporte.print();
-    };
-}
-
-
 function cambiarPagina(nuevaPagina) {
     const totalPaginas = Math.ceil(articulosFiltrados.length / ARTICULOS_POR_PAGINA);
-
     if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas && paginaActual !== nuevaPagina) {
         paginaActual = nuevaPagina;
         mostrarTabla(articulosFiltrados);
@@ -753,24 +439,14 @@ function cambiarPagina(nuevaPagina) {
 
 function renderPaginacion(totalPaginas) {
     const paginacionDiv = document.getElementById('paginacion-controles');
-
     const pageControlsContainer = paginacionDiv.querySelector('.page-controls-container');
-    const exportControls = paginacionDiv.querySelector('.export-controls');
-
     pageControlsContainer.innerHTML = '';
-
     const totalItems = articulosFiltrados.length;
 
-    if (totalItems === 0) {
-        pageControlsContainer.innerHTML = '';
-        return;
-    }
+    if (totalItems === 0) return;
 
     if (totalPaginas <= 1) {
-        const pageInfo = document.createElement('span');
-        pageInfo.className = 'page-info';
-        pageInfo.textContent = `Total: ${totalItems} artículo${totalItems === 1 ? '' : 's'}`;
-        pageControlsContainer.appendChild(pageInfo);
+        pageControlsContainer.innerHTML = `<span class="page-info">Total: ${totalItems} artículo${totalItems === 1 ? '' : 's'}</span>`;
     } else {
         const btnPrev = document.createElement('button');
         btnPrev.className = 'btn-page';
@@ -793,11 +469,80 @@ function renderPaginacion(totalPaginas) {
     }
 }
 
-async function guardarCatalogoItem(entidad, inputId, modalCloser) {
+async function guardarArticulo(event) {
     event.preventDefault();
     showLoading(true);
-    const nombre = document.getElementById(inputId).value;
+    const formElement = event.target;
+    const idProducto = document.getElementById('idProducto').value;
+    const url = API_ARTICULOS;
+    const method = idProducto === "0" ? 'POST' : 'PUT';
+    const statusMensaje = idProducto === "0" ? 'agregado' : 'actualizado';
 
+    const formData = new FormData(formElement);
+
+    const numericFields = [
+        'cantidad', 'precio_compra', 'precio_venta', 'peso_unitario', 'densidad',
+        'id_marca', 'id_categoria', 'id_unidad', 'id_tipo_articulo', 'capacidad'
+    ];
+
+    numericFields.forEach(field => {
+        if (!formData.get(field) || formData.get(field).trim() === '') {
+            formData.set(field, '0');
+        }
+    });
+
+    const params = new URLSearchParams(formData).toString();
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params
+        });
+        const data = await res.json();
+
+        if (data.exito) {
+            showCustomAlert('Éxito', `Artículo ${statusMensaje} con éxito.`, async () => {
+                cerrarFormulario();
+                await listarArticulos();
+            });
+        } else {
+            showCustomAlert('Error', `Error al guardar el artículo: ${data.mensaje}`);
+        }
+    } catch (error) {
+        console.error('Error al guardar:', error);
+        showCustomAlert('Error de Conexión', 'Error de conexión al guardar el artículo.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function eliminarArticulo(id) {
+    showCustomConfirm('Confirmar Eliminación', '¿Estás seguro de que deseas eliminar este artículo? Esta acción es irreversible.', async (confirmed) => {
+        if (!confirmed) return;
+        showLoading(true);
+        try {
+            const res = await fetch(`${API_ARTICULOS}?id_producto=${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.exito) {
+                showCustomAlert('Eliminado', 'Artículo eliminado con éxito.', async () => {
+                    await listarArticulos();
+                });
+            } else {
+                showCustomAlert('Error', `Error al eliminar: ${data.mensaje}`);
+            }
+        } catch (error) {
+            console.error('Error al eliminar:', error);
+            showCustomAlert('Error de Conexión', 'Error de conexión al eliminar el artículo.');
+        } finally {
+            showLoading(false);
+        }
+    });
+}
+
+async function guardarCatalogoItem(entidad, inputId, modalCloser) {
+    showLoading(true);
+    const nombre = document.getElementById(inputId).value;
     const formData = new URLSearchParams();
     formData.append('entidad', entidad);
     formData.append('accion', 'insertar');
@@ -819,9 +564,7 @@ async function guardarCatalogoItem(entidad, inputId, modalCloser) {
              try {
                 const json = JSON.parse(textResponse);
                 data.mensaje = json.mensaje || textResponse;
-            } catch (e) {
-                data.mensaje = textResponse;
-            }
+            } catch (e) {}
         }
 
         if (data.exito) {
@@ -833,189 +576,176 @@ async function guardarCatalogoItem(entidad, inputId, modalCloser) {
         } else {
             showCustomAlert('Error', `Error al agregar ${entidad}: ${data.mensaje}`);
         }
-
     } catch (error) {
         console.error(`Error al guardar ${entidad}:`, error);
-        showCustomAlert('Error de Conexión', 'Error de conexión al guardar el catálogo. Revisa tu red o el log del servidor.');
+        showCustomAlert('Error de Conexión', 'No se pudo guardar el catálogo.');
     } finally {
         showLoading(false);
     }
 }
 
-function abrirModalMarca() {
-    document.getElementById('marcaForm').reset();
-    document.getElementById('marcaModal').style.display = 'flex';
-}
-function cerrarModalMarca() {
-    document.getElementById('marcaModal').style.display = 'none';
-}
-function guardarMarca(event) {
-    guardarCatalogoItem('marca', 'nombreMarca', cerrarModalMarca);
-}
+function abrirModalMarca() { document.getElementById('marcaForm').reset(); document.getElementById('marcaModal').style.display = 'flex'; }
+function cerrarModalMarca() { document.getElementById('marcaModal').style.display = 'none'; }
+function guardarMarca(event) { event.preventDefault(); guardarCatalogoItem('marca', 'nombreMarca', cerrarModalMarca); }
 
+function abrirModalCategoria() { document.getElementById('categoriaForm').reset(); document.getElementById('categoriaModal').style.display = 'flex'; }
+function cerrarModalCategoria() { document.getElementById('categoriaModal').style.display = 'none'; }
+function guardarCategoria(event) { event.preventDefault(); guardarCatalogoItem('categoria', 'nombreCategoria', cerrarModalCategoria); }
 
-function abrirModalCategoria() {
-    document.getElementById('categoriaForm').reset();
-    document.getElementById('categoriaModal').style.display = 'flex';
-}
-function cerrarModalCategoria() {
-    document.getElementById('categoriaModal').style.display = 'none';
-}
-function guardarCategoria(event) {
-    guardarCatalogoItem('categoria', 'nombreCategoria', cerrarModalCategoria);
-}
+function abrirModalTipo() { document.getElementById('tipoForm').reset(); document.getElementById('tipoModal').style.display = 'flex'; }
+function cerrarModalTipo() { document.getElementById('tipoModal').style.display = 'none'; }
+function guardarTipo(event) { event.preventDefault(); guardarCatalogoItem('tipo', 'nombreTipo', cerrarModalTipo); }
 
+function abrirModalUnidad() { document.getElementById('unidadForm').reset(); document.getElementById('unidadModal').style.display = 'flex'; }
+function cerrarModalUnidad() { document.getElementById('unidadModal').style.display = 'none'; }
+function guardarUnidad(event) { event.preventDefault(); guardarCatalogoItem('unidad', 'nombreUnidad', cerrarModalUnidad); }
 
-function abrirModalTipo() {
-    document.getElementById('tipoForm').reset();
-    document.getElementById('tipoModal').style.display = 'flex';
-}
-function cerrarModalTipo() {
-    document.getElementById('tipoModal').style.display = 'none';
-}
-function guardarTipo(event) {
-    guardarCatalogoItem('tipo', 'nombreTipo', cerrarModalTipo);
+function generarReporteImprimible() {
+    const idCategoriaSeleccionada = document.getElementById('filtroCategoria').value;
+    const idTipoSeleccionado = document.getElementById('filtroTipo').value;
+    let tituloReporte = "Reporte General de Artículos";
+
+    if (idCategoriaSeleccionada) {
+        const cat = catalogos['categoria']?.find(c => String(c.idCategoria) === String(idCategoriaSeleccionada));
+        if (cat) tituloReporte = `Reporte por Categoría: ${cat.nombre}`;
+    } else if (idTipoSeleccionado) {
+        const tip = catalogos['tipo']?.find(t => String(t.id) === String(idTipoSeleccionado));
+        if (tip) tituloReporte = `Reporte por Tipo de Artículo: ${tip.nombre}`;
+    }
+
+    if (!articulosFiltrados || articulosFiltrados.length === 0) {
+        showCustomAlert('Alerta', 'No hay artículos para generar el reporte con los filtros actuales.');
+        return;
+    }
+
+    let htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${tituloReporte}</title>
+            <style>
+                body { font-family: 'Inter', sans-serif; margin: 5mm; color: #333; font-size: 8pt; }
+                h1 { text-align: center; color: #007bff; margin-bottom: 8px; font-size: 12pt; }
+                p { font-size: 8pt; margin-bottom: 3px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 8pt; }
+                th, td { border: 1px solid #ccc; padding: 2px 4px; text-align: left; }
+                th { background-color: #e9ecef; color: #495057; font-weight: 600; }
+                .data-center { text-align: center; }
+                @media print { @page { margin: 5mm; } }
+            </style>
+        </head>
+        <body>
+            <h1>${tituloReporte}</h1>
+            <p>Fecha de Generación: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Código</th>
+                        <th style="width: 50%;">Nombre del Producto (Descripción)</th>
+                        <th class="data-center" style="width: 15%;">Stock</th>
+                        <th class="data-center" style="width: 20%;">Coincide Stock?</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    articulosFiltrados.forEach(articulo => {
+        htmlContent += `
+            <tr>
+                <td>${articulo.codigo || ''}</td>
+                <td>${articulo.descripcion || ''}</td>
+                <td class="data-center">${articulo.cantidad || 0}</td>
+                <td class="data-center"></td>
+            </tr>
+        `;
+    });
+
+    htmlContent += `</tbody></table><p style="margin-top: 10px;">Total de Artículos: ${articulosFiltrados.length}</p></body></html>`;
+    const ventanaReporte = window.open('', '_blank');
+    ventanaReporte.document.write(htmlContent);
+    ventanaReporte.document.close();
+    ventanaReporte.onload = () => { ventanaReporte.print(); };
 }
 
 function exportarDatos(format) {
     if (articulosFiltrados.length === 0) {
-        showCustomAlert('Información', 'No hay artículos para exportar. Aplica los filtros o carga la lista completa.');
+        showCustomAlert('Información', 'No hay artículos para exportar.');
         return;
     }
 
-    const headers = [
-        "ID Producto", "Código", "Descripción", "Stock", "Precio Compra (S/)", "Precio Venta (S/)", "Peso Unitario (kg)",
-        "Densidad", "Aroma", "Color",
-        "Marca", "Categoría", "Tipo", "Unidad de Medida", "Abreviatura Unidad"
-    ];
-
-    const sanitize = (value) => {
-        if (value === null || value === undefined) return '';
-        return `"${String(value).replace(/"/g, '""')}"`;
-    };
+    const headers = ["ID Producto", "Código", "Descripción", "Stock", "Precio Compra (S/)", "Precio Venta (S/)", "Peso Unitario (kg)", "Densidad", "Aroma", "Color", "Marca", "Categoría", "Tipo", "Unidad de Medida", "Abreviatura Unidad"];
+    const sanitize = (value) => (value === null || value === undefined) ? '' : `"${String(value).replace(/"/g, '""')}"`;
 
     const csvRows = articulosFiltrados.map(articulo => {
         const marca = articulo.marca?.nombre || getNombreCatalogoById('marca', articulo.idMarca, 'idMarca', 'nombre');
         const categoria = articulo.categoria?.nombre || getNombreCatalogoById('categoria', articulo.idCategoria, 'idCategoria', 'nombre');
         const tipo = articulo.tipoArticulo?.nombre || getNombreCatalogoById('tipo', articulo.idTipoArticulo, 'id', 'nombre');
-
         const unidad = catalogos['unidad'] ? catalogos['unidad'].find(u => u.idUnidad === (articulo.unidad?.idUnidad || articulo.idUnidad)) : {};
-        const unidadNombre = unidad?.nombre || '';
-        const unidadAbreviatura = unidad?.abreviatura || '';
 
         return [
-            sanitize(articulo.idProducto),
-            sanitize(articulo.codigo),
-            sanitize(articulo.descripcion),
-            sanitize(articulo.cantidad),
-            sanitize(articulo.precioCompra),
-            sanitize(articulo.precioVenta),
-            sanitize(articulo.pesoUnitario),
-            sanitize(articulo.densidad),
-            sanitize(articulo.aroma),
-            sanitize(articulo.color),
-            sanitize(marca),
-            sanitize(categoria),
-            sanitize(tipo),
-            sanitize(unidadNombre),
-            sanitize(unidadAbreviatura)
+            sanitize(articulo.idProducto), sanitize(articulo.codigo), sanitize(articulo.descripcion), sanitize(articulo.cantidad),
+            sanitize(articulo.precioCompra), sanitize(articulo.precioVenta), sanitize(articulo.pesoUnitario), sanitize(articulo.densidad),
+            sanitize(articulo.aroma), sanitize(articulo.color), sanitize(marca), sanitize(categoria), sanitize(tipo),
+            sanitize(unidad?.nombre || ''), sanitize(unidad?.abreviatura || '')
         ].join(',');
     });
 
-    const csvContent = [
-        headers.join(','),
-        ...csvRows
-    ].join('\n');
+    const csvContent = [headers.join(','), ...csvRows].join('\n');
+    const isXlsx = format === 'xlsx';
+    const mimeType = isXlsx ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv;charset=utf-8;';
+    const extension = isXlsx ? 'xlsx' : 'csv';
 
-    let mimeType;
-    let extension;
-    let fileNameFormat;
-
-    if (format === 'xlsx') {
-        mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-        extension = 'xlsx';
-        fileNameFormat = 'Inventario_Excel_';
-    } else {
-        mimeType = 'text/csv;charset=utf-8;';
-        extension = 'csv';
-        fileNameFormat = 'Inventario_CSV_';
-    }
-
-    const BOM = "\ufeff";
-    const blob = new Blob([BOM + csvContent], { type: mimeType });
-
+    const blob = new Blob(["\ufeff" + csvContent], { type: mimeType });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-
-    const fileName = fileNameFormat + new Date().toISOString().slice(0, 10) + '.' + extension;
-    link.setAttribute('download', fileName);
-
+    link.setAttribute('download', `Inventario_${isXlsx ? 'Excel' : 'CSV'}_${new Date().toISOString().slice(0, 10)}.${extension}`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    showCustomAlert('Exportación Completa', `Se exportaron ${articulosFiltrados.length} artículos al archivo .${extension}.`);
+    showCustomAlert('Exportación Completa', `Se exportaron ${articulosFiltrados.length} artículos.`);
 }
 
-
 document.getElementById('articuloForm').addEventListener('submit', guardarArticulo);
-document.getElementById('idMarca').addEventListener('change', () => manejarCambioFormulario(document.getElementById('idMarca')));
-document.getElementById('idCategoria').addEventListener('change', () => manejarCambioFormulario(document.getElementById('idCategoria')));
-document.getElementById('idTipoArticulo').addEventListener('change', () => manejarCapacidadTipo()); // Usamos manejarCapacidadTipo
+document.getElementById('idTipoArticulo').addEventListener('change', () => manejarCapacidadTipo());
 
 window.onload = async () => {
-    window.abrirFormulario = abrirFormulario;
-    window.cerrarFormulario = cerrarFormulario;
-    window.mostrarDetalles = mostrarDetalles;
-    window.eliminarArticulo = eliminarArticulo;
-    window.aplicarFiltros = aplicarFiltros;
-    window.listarArticulos = listarArticulos;
-    window.renderSugerencias = renderSugerencias;
-    window.verLotes = verLotes;
-    window.manejarCambioFiltro = manejarCambioFiltro;
-    window.manejarCapacidadTipo = manejarCapacidadTipo; // Exponer para el onchange en el HTML
-
-    window.abrirModalMarca = abrirModalMarca;
-    window.cerrarModalMarca = cerrarModalMarca;
-    window.abrirModalCategoria = abrirModalCategoria;
-    window.cerrarModalCategoria = cerrarModalCategoria;
-    window.abrirModalTipo = abrirModalTipo;
-    window.cerrarModalTipo = cerrarModalTipo;
-    window.exportarDatos = exportarDatos;
-    window.generarReporteImprimible = generarReporteImprimible;
+    Object.assign(window, {
+        abrirFormulario, cerrarFormulario, mostrarDetalles, eliminarArticulo, aplicarFiltros, listarArticulos,
+        renderSugerencias, verLotes, manejarCambioFiltro, manejarCapacidadTipo,
+        abrirModalMarca, cerrarModalMarca, guardarMarca,
+        abrirModalCategoria, cerrarModalCategoria, guardarCategoria,
+        abrirModalTipo, cerrarModalTipo, guardarTipo,
+        abrirModalUnidad, cerrarModalUnidad, guardarUnidad,
+        exportarDatos, generarReporteImprimible
+    });
 
     await cargarCatalogos();
     await listarArticulos();
 };
 
 window.onclick = function(event) {
-    const articuloModal = document.getElementById('articuloModal');
-    const detallesModal = document.getElementById('detallesModal');
-    const sugerenciasDiv = document.getElementById('sugerencias');
-    const busquedaInput = document.getElementById('busquedaGeneral');
-    const lotesModal = document.getElementById('lotesModal');
+    const modals = [
+        document.getElementById('articuloModal'),
+        document.getElementById('detallesModal'),
+        document.getElementById('lotesModal'),
+        document.getElementById('marcaModal'),
+        document.getElementById('categoriaModal'),
+        document.getElementById('tipoModal'),
+        document.getElementById('unidadModal')
+    ];
 
-    const marcaModal = document.getElementById('marcaModal');
-    const categoriaModal = document.getElementById('categoriaModal');
-    const tipoModal = document.getElementById('tipoModal');
+    modals.forEach(m => { if (event.target == m) m.style.display = 'none'; });
+
     const messageModal = document.getElementById('messageModal');
-
-    if (event.target == articuloModal) { cerrarFormulario(); }
-    if (event.target == detallesModal) { detallesModal.style.display = 'none'; }
-    if (event.target == lotesModal) { lotesModal.style.display = 'none'; }
-    if (event.target == marcaModal) { cerrarModalMarca(); }
-    if (event.target == categoriaModal) { cerrarModalCategoria(); }
-    if (event.target == tipoModal) { cerrarModalTipo(); }
-
     if (event.target == messageModal) {
         messageModal.style.display = 'none';
-        if (document.getElementById('messageCancelBtn').style.display === 'inline-block') {
-            document.getElementById('messageCancelBtn').click();
-        } else {
-            document.getElementById('messageOkBtn').click();
-        }
+        const cancelBtn = document.getElementById('messageCancelBtn');
+        (cancelBtn.style.display === 'inline-block') ? cancelBtn.click() : document.getElementById('messageOkBtn').click();
     }
 
+    const sugerenciasDiv = document.getElementById('sugerencias');
+    const busquedaInput = document.getElementById('busquedaGeneral');
     if (sugerenciasDiv.style.display === 'block' && event.target !== busquedaInput && !sugerenciasDiv.contains(event.target)) {
         sugerenciasDiv.style.display = 'none';
     }
