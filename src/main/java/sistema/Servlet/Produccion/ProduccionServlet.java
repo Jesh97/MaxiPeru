@@ -69,7 +69,6 @@ public class ProduccionServlet extends HttpServlet {
                     String[] cantReqArr = request.getParameterValues("p_cant_req[]");
                     String[] idUniInsumoArr = request.getParameterValues("p_id_uni_insumo_hidden[]");
 
-                    int componentesGuardados = 0;
                     if (idArtInsumoArr != null) {
                         for (int i = 0; i < idArtInsumoArr.length; i++) {
                             int idArtInsumo = Integer.parseInt(idArtInsumoArr[i]);
@@ -77,7 +76,6 @@ public class ProduccionServlet extends HttpServlet {
                             double cantReq = Double.parseDouble(cantReqArr[i]);
 
                             dao.agregarDetalleReceta(idRecetaActiva, idArtInsumo, cantReq, idUniInsumo);
-                            componentesGuardados++;
                         }
                     }
 

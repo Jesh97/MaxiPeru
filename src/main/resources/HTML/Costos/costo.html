@@ -7,6 +7,48 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
     <link rel="stylesheet" href="../../CSS/Costo/costo.css">
+    <style>
+        .autocomplete-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .suggestions-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            z-index: 1000;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .suggestions-list li {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 11px;
+            color: #334155;
+            display: flex;
+            justify-content: space-between;
+        }
+        .suggestions-list li:hover {
+            background-color: #f0f9ff;
+            color: #0284c7;
+        }
+        .suggestions-list li:last-child {
+            border-bottom: none;
+        }
+        .item-desc { font-weight: 600; }
+        .item-meta { color: #64748b; font-size: 10px; }
+    </style>
 </head>
 <body>
 
@@ -73,14 +115,22 @@
             <div class="search-box" style="display: flex; gap: 10px; align-items: flex-end;">
                 <div style="flex:2">
                     <label style="display:block; font-size:10px; color:#64748b; font-weight:bold; margin-bottom:5px;">BUSCAR PRESENTACIÓN (ENVASE)</label>
-                    <input type="text" id="inputBusqueda" list="listaPresentaciones" placeholder="Escriba para buscar envase..." style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
-                    <datalist id="listaPresentaciones"></datalist>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" id="inputBusqueda"
+                               autocomplete="off"
+                               placeholder="Escriba para buscar envase..."
+                               onkeyup="buscarEnBD(this.value)"
+                               style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                        <ul id="listaSugerencias" class="suggestions-list"></ul>
+                    </div>
                 </div>
 
                 <div style="flex:1; max-width: 100px;">
                     <label style="display:block; font-size:10px; color:#64748b; font-weight:bold; margin-bottom:5px;">CAPACIDAD (L)</label>
                     <input type="number" id="inputCapacidad" step="0.001" placeholder="0.000" style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
                 </div>
+
+                <input type="hidden" id="inputPrecioBD" value="0">
 
                 <button class="btn-add" onclick="agregarPresentacion()" style="height: 35px; white-space: nowrap;">
                     <i class="fas fa-plus"></i> AÑADIR
@@ -158,29 +208,11 @@
     };
 
     let listaActiva = ["350ML", "500ML", "1LTAPA", "1LVALV", "GALON", "BIDON"];
+    let timeoutBusqueda = null;
 
     function inicializar() {
-        const datalist = document.getElementById('listaPresentaciones');
-        const inputBusqueda = document.getElementById('inputBusqueda');
-        const inputCap = document.getElementById('inputCapacidad');
         const inputBusquedaPack = document.getElementById('inputBusquedaPack');
         const inputCantPack = document.getElementById('inputCantPack');
-
-        DATA.alcohol_gel.presentaciones.forEach(p => {
-            let opt = document.createElement('option');
-            opt.value = p.nombreEnvase || p.nombre;
-            datalist.appendChild(opt);
-        });
-
-        inputBusqueda.addEventListener('input', function() {
-            const val = this.value;
-            const encontrado = DATA.alcohol_gel.presentaciones.find(p => p.nombreEnvase === val || p.nombre === val);
-            if (encontrado) {
-                inputCap.value = encontrado.vol;
-            } else {
-                if(val === "") inputCap.value = "";
-            }
-        });
 
         inputBusquedaPack.addEventListener('input', function() {
             const val = this.value;
@@ -195,22 +227,95 @@
         actualizarTodo();
     }
 
+    function buscarEnBD(texto) {
+        const lista = document.getElementById('listaSugerencias');
+
+        if (texto.length < 2) {
+            lista.style.display = 'none';
+            return;
+        }
+
+        clearTimeout(timeoutBusqueda);
+        timeoutBusqueda = setTimeout(() => {
+            ejecutarFetch(texto);
+        }, 300);
+    }
+
+    function ejecutarFetch(texto) {
+        const url = `ProduccionServlet?action=buscar_articulos_embalado_y_embalaje&busqueda=${encodeURIComponent(texto)}`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                renderizarSugerencias(data);
+            })
+            .catch(err => console.error(err));
+    }
+
+    function renderizarSugerencias(data) {
+        const lista = document.getElementById('listaSugerencias');
+        lista.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            lista.style.display = 'none';
+            return;
+        }
+
+        const top5 = data.slice(0, 5);
+
+        top5.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <div>
+                    <div class="item-desc">${item.descripcion}</div>
+                    <div class="item-meta">Código: ${item.codigo}</div>
+                </div>
+                <div style="text-align:right">
+                    <div class="item-desc">Cap: ${item.capacidad} ${item.unidad_capacidad || 'L'}</div>
+                    <div class="item-meta">S/ ${item.precio_compra}</div>
+                </div>
+            `;
+            li.onclick = () => seleccionarItem(item);
+            lista.appendChild(li);
+        });
+
+        lista.style.display = 'block';
+    }
+
+    function seleccionarItem(item) {
+        document.getElementById('inputBusqueda').value = item.descripcion;
+        document.getElementById('inputCapacidad').value = item.capacidad;
+        document.getElementById('inputPrecioBD').value = item.precio_compra;
+        document.getElementById('listaSugerencias').style.display = 'none';
+    }
+
+    document.addEventListener('click', function(e) {
+        const wrapper = document.querySelector('.autocomplete-wrapper');
+        const lista = document.getElementById('listaSugerencias');
+        if (wrapper && !wrapper.contains(e.target)) {
+            lista.style.display = 'none';
+        }
+    });
+
     function agregarPresentacion() {
         const inputBusqueda = document.getElementById('inputBusqueda');
         const inputCap = document.getElementById('inputCapacidad');
+        const inputPrecio = document.getElementById('inputPrecioBD');
 
         const nombreBuscado = inputBusqueda.value;
         const capManual = parseFloat(inputCap.value);
+        const precioEnvase = parseFloat(inputPrecio.value) || 0;
 
         if (!capManual || capManual <= 0) {
             alert("Ingrese una capacidad válida o seleccione un producto de la lista.");
             return;
         }
 
-        procesarAgregar(nombreBuscado, capManual, null);
+        procesarAgregar(nombreBuscado, capManual, null, precioEnvase);
 
         inputBusqueda.value = "";
         inputCap.value = "";
+        inputPrecio.value = "0";
     }
 
     function agregarPack() {
@@ -225,13 +330,13 @@
             return;
         }
 
-        procesarAgregar(nombreBuscado, null, cantPack);
+        procesarAgregar(nombreBuscado, null, cantPack, 0);
 
         inputBusquedaPack.value = "";
         inputCantPack.value = "";
     }
 
-    function procesarAgregar(nombreBuscado, capManual, cantPackManual) {
+    function procesarAgregar(nombreBuscado, capManual, cantPackManual, precioEnvaseBD) {
         let itemExistente = DATA.alcohol_gel.presentaciones.find(p => p.nombreEnvase === nombreBuscado || p.nombre === nombreBuscado);
 
         if (!itemExistente && !capManual && !cantPackManual) {
@@ -262,9 +367,10 @@
             nuevoItem = {
                 id: idFinal,
                 nombre: `Pack Cust ${vol}L (x${pack})`,
-                nombreEnvase: `Env. ${vol}L`,
+                nombreEnvase: nombreBuscado || `Env. ${vol}L`,
                 vol: vol,
-                env: 0, eti: 0, flete: 0,
+                env: precioEnvaseBD || 0,
+                eti: 0.10, flete: 0.05,
                 pack: pack, emb: 0,
                 pvMin: 0, pvMay: 0, pvDist: 0
             };
