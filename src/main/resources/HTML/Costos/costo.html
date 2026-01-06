@@ -7,186 +7,190 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
     <link rel="stylesheet" href="../../CSS/Costo/costo.css">
-    <style>
-        .autocomplete-wrapper {
-            position: relative;
-            width: 100%;
-        }
-        .suggestions-list {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #cbd5e1;
-            border-top: none;
-            border-radius: 0 0 6px 6px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            z-index: 1000;
-            display: none;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        .suggestions-list li {
-            padding: 10px;
-            cursor: pointer;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 11px;
-            color: #334155;
-            display: flex;
-            justify-content: space-between;
-        }
-        .suggestions-list li:hover {
-            background-color: #f0f9ff;
-            color: #0284c7;
-        }
-        .suggestions-list li:last-child {
-            border-bottom: none;
-        }
-        .item-desc { font-weight: 600; }
-        .item-meta { color: #64748b; font-size: 10px; }
-    </style>
 </head>
 <body>
-
 <div class="container">
-    <div class="main-header">COSTOS DE PRODUCCIÓN</div>
-    <div class="top-bar">
-        <div class="config-group">
-            <div>
-                <label style="display: block;">PRODUCTO</label>
-                <select id="productoSelect" onchange="actualizarTodo()">
-                    <option value="alcohol_gel">ALCOHOL EN GEL</option>
-                </select>
-            </div>
-            <div>
-                <label style="display: block;">TIPO DE PRECIO</label>
-                <select id="nivelSelect" onchange="actualizarTodo()">
-                    <option value="pvMin">MINORISTA</option>
-                    <option value="pvMay">MAYORISTA</option>
-                    <option value="pvDist">DISTRIBUIDOR</option>
-                </select>
-            </div>
-        </div>
-        <div style="text-align: right">
-            <span id="labelModo" style="color: var(--gold); font-weight: 700; font-size: 10px; background: #fffbeb; padding: 2px 8px; border: 1px solid #fcd34d; border-radius: 4px;">MODO: MINORISTA</span>
-        </div>
-    </div>
-
-    <div class="section-title">Uso de Materia Prima y Dosificación por Lote</div>
-    <div style="display: flex;">
-        <div class="vertical-text" id="verticalNombre">ALCOHOL EN GEL</div>
-        <table id="tablaMP">
-            <thead>
-            <tr>
-                <th rowspan="2" class="text-left">CODIGO</th>
-                <th rowspan="2" class="text-left">MATERIA PRIMA</th>
-                <th rowspan="2">DENS.</th>
-                <th rowspan="2">COSTO KG</th>
-                <th rowspan="2">CANT. LITROS (LOTE)</th>
-                <th colspan="6" style="text-align: center; background: #334155;">DOSIFICACIÓN EN KILOGRAMOS</th>
-            </tr>
-            <tr>
-                <th>240 L</th><th>120 L</th><th>60 L</th><th>20 L</th><th>4 L</th><th>1 L</th>
-            </tr>
-            </thead>
-            <tbody id="bodyMP"></tbody>
-        </table>
-    </div>
-
-    <div class="grid-3">
-        <div>
-            <div class="section-title">Costo a Granel Sin Envasar</div>
-            <table>
-                <thead>
-                <tr><th class="text-left">U/M (L)</th><th>COSTO UNIT</th><th>TOTAL LOTE</th></tr>
-                </thead>
-                <tbody id="bodyGranel"></tbody>
-                <tfoot id="footGranel"></tfoot>
-            </table>
-        </div>
-
-        <div style="grid-column: span 2;">
-            <div class="section-title">Costo de Envasado</div>
-
-            <div class="search-box" style="display: flex; gap: 10px; align-items: flex-end;">
-                <div style="flex:2">
-                    <label style="display:block; font-size:10px; color:#64748b; font-weight:bold; margin-bottom:5px;">BUSCAR PRESENTACIÓN (ENVASE)</label>
+    <div id="viewCalculadora">
+        <div class="main-header">COSTOS DE PRODUCCIÓN</div>
+        <div class="top-bar">
+            <div class="config-group" style="flex: 2; display: flex; gap: 10px; align-items: flex-end;">
+                <div style="flex: 1;">
+                    <label style="display: block;">BUSCAR PRODUCTO A PRODUCIR</label>
                     <div class="autocomplete-wrapper">
-                        <input type="text" id="inputBusqueda"
-                               autocomplete="off"
-                               placeholder="Escriba para buscar envase..."
-                               onkeyup="buscarEnBD(this.value)"
-                               style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
-                        <ul id="listaSugerencias" class="suggestions-list"></ul>
+                        <input type="text" id="inputBusquedaMain" placeholder="Escriba para buscar producto..." onkeyup="buscarProductoMain(this.value)"
+                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-weight: 600; color: #334155; height: 35px;">
+                        <input type="hidden" id="productoSelect" value="alcohol_gel">
+                        <ul id="listaSugerenciasMain" class="suggestions-list"></ul>
                     </div>
                 </div>
 
-                <div style="flex:1; max-width: 100px;">
-                    <label style="display:block; font-size:10px; color:#64748b; font-weight:bold; margin-bottom:5px;">CAPACIDAD (L)</label>
-                    <input type="number" id="inputCapacidad" step="0.001" placeholder="0.000" style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                <div>
+                    <button class="btn-go-report" onclick="irAlReporte()">
+                        <i class="fas fa-chart-pie"></i> VER COMPARATIVO
+                    </button>
                 </div>
 
-                <input type="hidden" id="inputPrecioBD" value="0">
+                <div style="margin-left: 20px;">
+                    <label style="display: block;">TIPO DE PRECIO (Visualización)</label>
+                    <select id="nivelSelect" onchange="actualizarTodo()" style="height: 35px;">
+                        <option value="pvMin">MINORISTA</option>
+                        <option value="pvMay">MAYORISTA</option>
+                        <option value="pvDist">DISTRIBUIDOR</option>
+                    </select>
+                </div>
+            </div>
 
-                <button class="btn-add" onclick="agregarPresentacion()" style="height: 35px; white-space: nowrap;">
-                    <i class="fas fa-plus"></i> AÑADIR
+            <div style="text-align: right; display: flex; align-items: center;">
+                <span id="labelModo" style="color: var(--gold); font-weight: 700; font-size: 10px; background: #fffbeb; padding: 2px 8px; border: 1px solid #fcd34d; border-radius: 4px;">MODO: MINORISTA</span>
+            </div>
+        </div>
+
+        <div class="top-tables-container">
+            <div>
+                <div class="section-title">Uso de Materia Prima y Dosificación por Lote</div>
+                <div style="display: flex;">
+                    <div class="vertical-text" id="verticalNombre">ALCOHOL EN GEL</div>
+                    <div style="overflow-x: auto; width: 100%;">
+                        <table id="tablaMP" style="width: 100%;">
+                            <thead>
+                            <tr>
+                                <th rowspan="2" class="text-left">CODIGO</th>
+                                <th rowspan="2" class="text-left">MATERIA PRIMA</th>
+                                <th rowspan="2">DENS.</th>
+                                <th rowspan="2">COSTO KG</th>
+                                <th rowspan="2">CANT. LITROS (LOTE)</th>
+                                <th colspan="6" style="text-align: center; background: #334155;">DOSIFICACIÓN EN KILOGRAMOS</th>
+                            </tr>
+                            <tr>
+                                <th>240 L</th><th>120 L</th><th>60 L</th><th>20 L</th><th>4 L</th><th>1 L</th>
+                            </tr>
+                            </thead>
+                            <tbody id="bodyMP"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-title">Costo a Granel Sin Envasar</div>
+                <table style="width: 100%;">
+                    <thead>
+                    <tr><th class="text-left">U/M (L)</th><th>COSTO UNIT</th><th>TOTAL LOTE</th></tr>
+                    </thead>
+                    <tbody id="bodyGranel"></tbody>
+                    <tfoot id="footGranel"></tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="section-title">Costo de Envasado</div>
+
+        <div class="search-box" style="display: flex; gap: 10px; align-items: flex-end;">
+            <div style="flex:2">
+                <label style="display:block; font-size:10px; color:#64748b; font-weight:bold; margin-bottom:5px;">BUSCAR PRESENTACIÓN (ENVASE)</label>
+                <div class="autocomplete-wrapper">
+                    <input type="text" id="inputBusqueda"
+                           autocomplete="off"
+                           placeholder="Escriba para buscar envase..."
+                           onkeyup="buscarEnBD(this.value)"
+                           style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                    <ul id="listaSugerencias" class="suggestions-list"></ul>
+                </div>
+            </div>
+
+            <div style="flex:1; max-width: 100px;">
+                <label style="display:block; font-size:10px; color:#64748b; font-weight:bold; margin-bottom:5px;">CAPACIDAD (L)</label>
+                <input type="number" id="inputCapacidad" step="0.001" placeholder="0.000" style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+            </div>
+
+            <input type="hidden" id="inputPrecioBD" value="0">
+
+            <button class="btn-add" onclick="agregarPresentacion()" style="height: 35px; white-space: nowrap;">
+                <i class="fas fa-plus"></i> AÑADIR
+            </button>
+        </div>
+
+        <div style="overflow-x: auto; margin-bottom: 20px;">
+            <table id="tablaEnvasado"></table>
+        </div>
+
+        <div class="section-title" id="tituloRentabilidad">Análisis de Rentabilidad a Minoristas</div>
+
+        <div class="search-box" style="display: flex; gap: 10px; align-items: flex-end; background: #fff; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 15px;">
+            <div style="flex:2">
+                <label style="display:block; font-size:10px; color:#10b981; font-weight:bold; margin-bottom:5px;">BUSCAR CAJA / EMBALAJE</label>
+                <input type="text" id="inputBusquedaPack" list="listaPresentaciones" placeholder="Buscar caja..." style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+            </div>
+
+            <div style="flex:1; max-width: 120px;">
+                <label style="display:block; font-size:10px; color:#10b981; font-weight:bold; margin-bottom:5px;">CANT. ENVASES</label>
+                <input type="number" id="inputCantPack" step="1" placeholder="0" style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+            </div>
+
+            <button class="btn-add" onclick="agregarPack()" style="height: 35px; white-space: nowrap; background-color: #10b981;">
+                <i class="fas fa-box-open"></i> ACTUALIZAR
+            </button>
+        </div>
+
+        <div class="grid-3">
+            <div style="grid-column: span 1;">
+                <table id="tablaRentSimple"></table>
+            </div>
+            <div style="grid-column: span 2;">
+                <div style="overflow-x: auto;">
+                    <table id="tablaPacks"></table>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">Resumen Final de Compras Mínimas</div>
+        <table id="tablaResumen"></table>
+        <div style="height: 50px;"></div>
+    </div>
+
+    <div id="viewReporte">
+        <div class="report-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;" class="no-print">
+                <button class="btn-back" onclick="volverACalculadora()">
+                    <i class="fas fa-arrow-left"></i> VOLVER AL CÁLCULO
                 </button>
-
-                <button onclick="limpiarTodo()" title="Eliminar todas las columnas" style="background: #ef4444; color: white; border: none; padding: 0 15px; border-radius: 6px; cursor: pointer; height: 35px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-trash-alt"></i>
+                <button class="btn-print" onclick="imprimirReporte()">
+                    <i class="fas fa-print"></i> IMPRIMIR
                 </button>
             </div>
 
-            <div style="overflow-x: auto;">
-                <table id="tablaEnvasado"></table>
+            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px;">
+
+                <h2 class="screen-only" style="margin:0; font-size: 24px; color: #1e293b;">
+                    CUADRO COMPARATIVO DE COSTOS MINORISTA, MAYORISTA Y DISTRIBUIDOR<br>
+                    <span style="color:var(--primary); font-size:0.9em;" id="lblProductoScreen"></span>
+                </h2>
+
+                <h2 class="print-only" style="margin:0; font-size: 24px; color: #1e293b;">
+                    REPORTE DE ANÁLISIS COMPARATIVO<br>
+                    <span style="font-size:0.8em;" id="lblProductoPrint"></span>
+                </h2>
+
+                <div id="fechaImpresion" style="font-size: 14px; color: #64748b; margin-top:5px;"></div>
             </div>
+
+            <div class="section-title">Detalle de Costos y Utilidades</div>
+            <table id="tablaComparativa"></table>
         </div>
     </div>
 
-    <div class="section-title" id="tituloRentabilidad">Análisis de Rentabilidad a Minoristas</div>
-
-    <div class="search-box" style="display: flex; gap: 10px; align-items: flex-end; background: #fff; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 15px;">
-        <div style="flex:2">
-            <label style="display:block; font-size:10px; color:#10b981; font-weight:bold; margin-bottom:5px;">BUSCAR CAJA / EMBALAJE</label>
-            <input type="text" id="inputBusquedaPack" list="listaPresentaciones" placeholder="Buscar caja..." style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
-        </div>
-
-        <div style="flex:1; max-width: 120px;">
-            <label style="display:block; font-size:10px; color:#10b981; font-weight:bold; margin-bottom:5px;">CANT. ENVASES</label>
-            <input type="number" id="inputCantPack" step="1" placeholder="0" style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
-        </div>
-
-        <button class="btn-add" onclick="agregarPack()" style="height: 35px; white-space: nowrap; background-color: #10b981;">
-            <i class="fas fa-box-open"></i> ACTUALIZAR
-        </button>
-
-        <button onclick="limpiarTodo()" title="Eliminar todas las columnas" style="background: #ef4444; color: white; border: none; padding: 0 15px; border-radius: 6px; cursor: pointer; height: 35px; display: flex; align-items: center; justify-content: center;">
-            <i class="fas fa-trash-alt"></i>
-        </button>
-    </div>
-
-    <div class="grid-3">
-        <div style="grid-column: span 1;">
-            <table id="tablaRentSimple"></table>
-        </div>
-        <div style="grid-column: span 2;">
-            <div style="overflow-x: auto;">
-                <table id="tablaPacks"></table>
-            </div>
-        </div>
-    </div>
-
-    <div class="section-title">Resumen Final de Compras Mínimas</div>
-    <table id="tablaResumen"></table>
 </div>
 
 <script>
+    const CATALOGO_PRODUCTOS = [
+        { id: "alcohol_gel", nombre: "ALCOHOL EN GEL" },
+        { id: "jabon_liq", nombre: "JABÓN LÍQUIDO (Demo)" },
+        { id: "lejia", nombre: "LEJÍA (Demo)" }
+    ];
+
     const DATA = {
         alcohol_gel: {
+            nombreLargo: "ALCOHOL EN GEL",
             insumos: [
                 { cod: "CARB", nombre: "Carbopol", dens: 1.000, costoKg: 67.16, cilL: 0.700 },
                 { cod: "GLINA", nombre: "Glicerina", dens: 1.210, costoKg: 5.95, cilL: 3.000 },
@@ -197,26 +201,42 @@
                 { cod: "PROPB", nombre: "Propilparabeno", dens: 1.000, costoKg: 59.322, cilL: 0.040 }
             ],
             presentaciones: [
-                { id: "350ML", nombre: "400 ML Caja x12", nombreEnvase: "Envase 400 ML", vol: 0.350, env: 0.43, eti: 0.09, flete: 0.09, pack: 12, emb: 1.50, pvMin: 8.75, pvMay: 7.50, pvDist: 6.80 },
-                { id: "500ML", nombre: "500 ML Caja x9", nombreEnvase: "Envase 500 ML", vol: 0.500, env: 2.11, eti: 0.09, flete: 0.09, pack: 9, emb: 1.50, pvMin: 10.83, pvMay: 9.50, pvDist: 8.50 },
-                { id: "1LTAPA", nombre: "C/Tapa Caja x12", nombreEnvase: "Envase 1L Tapa", vol: 1.000, env: 0.55, eti: 0.09, flete: 0.09, pack: 12, emb: 1.84, pvMin: 10.00, pvMay: 9.00, pvDist: 8.00 },
-                { id: "1LVALV", nombre: "C/Vál. Caja x12", nombreEnvase: "Envase 1L Válvula", vol: 1.000, env: 0.94, eti: 0.09, flete: 0.09, pack: 12, emb: 1.84, pvMin: 11.00, pvMay: 10.00, pvDist: 9.00 },
-                { id: "GALON", nombre: "Caja x 4 gln", nombreEnvase: "Galonera 3.8L", vol: 3.800, env: 2.01, eti: 0.09, flete: 0.09, pack: 4, emb: 1.83, pvMin: 30.00, pvMay: 27.00, pvDist: 25.00 },
-                { id: "BIDON", nombre: "Bidón 17.5L", nombreEnvase: "Bidón 17.5L", vol: 17.500, env: 5.92, eti: 0.09, flete: 0.09, pack: 1, emb: 0.00, pvMin: 125.00, pvMay: 115.00, pvDist: 105.00 }
+                { id: "350ML", nombre: "400 ML Caja x12", nombreEnvase: "Envase 400 ML", vol: 0.350, env: 0.43, eti: 0.09, flete: 0.09, pack: 12, emb: 1.50, pvMin: 8.75, pvMay: 7.50, pvDist: 6.80, cantMinima: 1 },
+                { id: "500ML", nombre: "500 ML Caja x9", nombreEnvase: "Envase 500 ML", vol: 0.500, env: 2.11, eti: 0.09, flete: 0.09, pack: 9, emb: 1.50, pvMin: 10.83, pvMay: 9.50, pvDist: 8.50, cantMinima: 1 },
+                { id: "1LTAPA", nombre: "C/Tapa Caja x12", nombreEnvase: "Envase 1L Tapa", vol: 1.000, env: 0.55, eti: 0.09, flete: 0.09, pack: 12, emb: 1.84, pvMin: 10.00, pvMay: 9.00, pvDist: 8.00, cantMinima: 1 },
+                { id: "1LVALV", nombre: "C/Vál. Caja x12", nombreEnvase: "Envase 1L Válvula", vol: 1.000, env: 0.94, eti: 0.09, flete: 0.09, pack: 12, emb: 1.84, pvMin: 11.00, pvMay: 10.00, pvDist: 9.00, cantMinima: 1 },
+                { id: "GALON", nombre: "Caja x 4 gln", nombreEnvase: "Galonera 3.8L", vol: 3.800, env: 2.01, eti: 0.09, flete: 0.09, pack: 4, emb: 1.83, pvMin: 30.00, pvMay: 27.00, pvDist: 25.00, cantMinima: 1 },
+                { id: "BIDON", nombre: "Bidón 17.5L", nombreEnvase: "Bidón 17.5L", vol: 17.500, env: 5.92, eti: 0.09, flete: 0.09, pack: 1, emb: 0.00, pvMin: 125.00, pvMay: 115.00, pvDist: 105.00, cantMinima: 1 }
             ]
+        },
+        jabon_liq: {
+            nombreLargo: "JABÓN LÍQUIDO (Demo)",
+            insumos: [ { cod: "TEX", nombre: "Texapon 70", dens: 1.1, costoKg: 8.50, cilL: 40.000 }, { cod: "H2O", nombre: "Agua", dens: 1.0, costoKg: 0.10, cilL: 150.000 } ],
+            presentaciones: [ { id: "1L-JAB", nombre: "1 Litro Jabón", nombreEnvase: "Envase 1L", vol: 1.0, env: 1.20, eti: 0.10, flete: 0.10, pack: 12, emb: 2.00, pvMin: 15.00, pvMay: 12.00, pvDist: 10.00, cantMinima: 1 } ]
+        },
+        lejia: {
+            nombreLargo: "LEJÍA (Demo)",
+            insumos: [ { cod: "HIPO", nombre: "Hipoclorito", dens: 1.2, costoKg: 1.50, cilL: 200.000 } ],
+            presentaciones: [ { id: "1GL-LEJ", nombre: "1 Galón Lejía", nombreEnvase: "Galonera", vol: 3.8, env: 1.50, eti: 0.10, flete: 0.10, pack: 4, emb: 1.50, pvMin: 8.00, pvMay: 7.00, pvDist: 6.00, cantMinima: 1 } ]
         }
     };
 
-    let listaActiva = ["350ML", "500ML", "1LTAPA", "1LVALV", "GALON", "BIDON"];
+    let listaActivaEnvasado = [];
+    let listaActivaRentabilidad = [];
     let timeoutBusqueda = null;
+    let timeoutBusquedaMain = null;
 
     function inicializar() {
+        document.getElementById('inputBusquedaMain').value = "ALCOHOL EN GEL";
+        cargarProductoInicial("alcohol_gel");
+
         const inputBusquedaPack = document.getElementById('inputBusquedaPack');
         const inputCantPack = document.getElementById('inputCantPack');
 
         inputBusquedaPack.addEventListener('input', function() {
+            const prodKey = document.getElementById('productoSelect').value;
             const val = this.value;
-            const encontrado = DATA.alcohol_gel.presentaciones.find(p => p.nombreEnvase === val || p.nombre === val);
+            const encontrado = DATA[prodKey].presentaciones.find(p => p.nombreEnvase === val || p.nombre === val);
             if (encontrado) {
                 inputCantPack.value = encontrado.pack;
             } else {
@@ -224,17 +244,86 @@
             }
         });
 
-        actualizarTodo();
+        const now = new Date();
+        document.getElementById('fechaImpresion').innerText = `Fecha: ${now.toLocaleDateString()}`;
     }
 
-    function buscarEnBD(texto) {
-        const lista = document.getElementById('listaSugerencias');
+    function irAlReporte() {
+        document.getElementById('viewCalculadora').style.display = 'none';
+        document.getElementById('viewReporte').style.display = 'block';
 
-        if (texto.length < 2) {
+        const now = new Date();
+        const fechaStr = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('fechaImpresion').innerText = `Generado el: ${fechaStr}`;
+        window.scrollTo(0, 0);
+    }
+
+    function volverACalculadora() {
+        document.getElementById('viewReporte').style.display = 'none';
+        document.getElementById('viewCalculadora').style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    function imprimirReporte() {
+        window.print();
+    }
+
+    function cargarProductoInicial(key) {
+        if(DATA[key]) {
+            listaActivaEnvasado = DATA[key].presentaciones.map(p => p.id);
+            listaActivaRentabilidad = DATA[key].presentaciones.map(p => p.id);
+            actualizarTodo();
+        }
+    }
+
+    function buscarProductoMain(texto) {
+        const lista = document.getElementById('listaSugerenciasMain');
+        if (texto.length < 1) {
             lista.style.display = 'none';
             return;
         }
 
+        clearTimeout(timeoutBusquedaMain);
+        timeoutBusquedaMain = setTimeout(() => {
+            const resultados = CATALOGO_PRODUCTOS.filter(p => p.nombre.toLowerCase().includes(texto.toLowerCase()));
+            renderizarSugerenciasMain(resultados);
+        }, 200);
+    }
+
+    function renderizarSugerenciasMain(data) {
+        const lista = document.getElementById('listaSugerenciasMain');
+        lista.innerHTML = '';
+        if (!data || data.length === 0) {
+            lista.style.display = 'none';
+            return;
+        }
+        data.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `<div class="item-desc">${item.nombre}</div>`;
+            li.onclick = () => seleccionarProductoMain(item);
+            lista.appendChild(li);
+        });
+        lista.style.display = 'block';
+    }
+
+    function seleccionarProductoMain(item) {
+        document.getElementById('inputBusquedaMain').value = item.nombre;
+        document.getElementById('productoSelect').value = item.id;
+        document.getElementById('listaSugerenciasMain').style.display = 'none';
+
+        if(DATA[item.id]) {
+            cargarProductoInicial(item.id);
+        } else {
+            alert("Datos de producción no cargados para este demo.");
+        }
+    }
+
+    function buscarEnBD(texto) {
+        const lista = document.getElementById('listaSugerencias');
+        if (texto.length < 2) {
+            lista.style.display = 'none';
+            return;
+        }
         clearTimeout(timeoutBusqueda);
         timeoutBusqueda = setTimeout(() => {
             ejecutarFetch(texto);
@@ -243,26 +332,20 @@
 
     function ejecutarFetch(texto) {
         const url = `ProduccionServlet?action=buscar_articulos_embalado_y_embalaje&busqueda=${encodeURIComponent(texto)}`;
-
         fetch(url)
             .then(res => res.json())
-            .then(data => {
-                renderizarSugerencias(data);
-            })
+            .then(data => renderizarSugerencias(data))
             .catch(err => console.error(err));
     }
 
     function renderizarSugerencias(data) {
         const lista = document.getElementById('listaSugerencias');
         lista.innerHTML = '';
-
         if (!data || data.length === 0) {
             lista.style.display = 'none';
             return;
         }
-
         const top5 = data.slice(0, 5);
-
         top5.forEach(item => {
             const li = document.createElement('li');
             li.innerHTML = `
@@ -278,7 +361,6 @@
             li.onclick = () => seleccionarItem(item);
             lista.appendChild(li);
         });
-
         lista.style.display = 'block';
     }
 
@@ -290,18 +372,19 @@
     }
 
     document.addEventListener('click', function(e) {
-        const wrapper = document.querySelector('.autocomplete-wrapper');
-        const lista = document.getElementById('listaSugerencias');
-        if (wrapper && !wrapper.contains(e.target)) {
-            lista.style.display = 'none';
-        }
+        const wrappers = document.querySelectorAll('.autocomplete-wrapper');
+        wrappers.forEach(wrapper => {
+            if (!wrapper.contains(e.target)) {
+                const ul = wrapper.querySelector('ul');
+                if(ul) ul.style.display = 'none';
+            }
+        });
     });
 
     function agregarPresentacion() {
         const inputBusqueda = document.getElementById('inputBusqueda');
         const inputCap = document.getElementById('inputCapacidad');
         const inputPrecio = document.getElementById('inputPrecioBD');
-
         const nombreBuscado = inputBusqueda.value;
         const capManual = parseFloat(inputCap.value);
         const precioEnvase = parseFloat(inputPrecio.value) || 0;
@@ -310,9 +393,7 @@
             alert("Ingrese una capacidad válida o seleccione un producto de la lista.");
             return;
         }
-
         procesarAgregar(nombreBuscado, capManual, null, precioEnvase);
-
         inputBusqueda.value = "";
         inputCap.value = "";
         inputPrecio.value = "0";
@@ -321,7 +402,6 @@
     function agregarPack() {
         const inputBusquedaPack = document.getElementById('inputBusquedaPack');
         const inputCantPack = document.getElementById('inputCantPack');
-
         const nombreBuscado = inputBusquedaPack.value;
         const cantPack = parseInt(inputCantPack.value);
 
@@ -329,15 +409,16 @@
             alert("Ingrese una cantidad de envases válida.");
             return;
         }
-
         procesarAgregar(nombreBuscado, null, cantPack, 0);
-
         inputBusquedaPack.value = "";
         inputCantPack.value = "";
     }
 
     function procesarAgregar(nombreBuscado, capManual, cantPackManual, precioEnvaseBD) {
-        let itemExistente = DATA.alcohol_gel.presentaciones.find(p => p.nombreEnvase === nombreBuscado || p.nombre === nombreBuscado);
+        const prodKey = document.getElementById('productoSelect').value;
+        const productoData = DATA[prodKey];
+
+        let itemExistente = productoData.presentaciones.find(p => p.nombreEnvase === nombreBuscado || p.nombre === nombreBuscado);
 
         if (!itemExistente && !capManual && !cantPackManual) {
              alert("Producto no encontrado. Especifique detalles.");
@@ -350,11 +431,11 @@
         if (itemExistente) {
             if (cantPackManual && cantPackManual !== itemExistente.pack) {
                  idFinal = itemExistente.id + "-P" + cantPackManual;
-                 nuevoItem = { ...itemExistente, id: idFinal, pack: cantPackManual, nombre: itemExistente.nombre + " (x" + cantPackManual + ")" };
+                 nuevoItem = { ...itemExistente, id: idFinal, pack: cantPackManual, nombre: itemExistente.nombre + " (x" + cantPackManual + ")", cantMinima: 1 };
             }
             else if (capManual && Math.abs(itemExistente.vol - capManual) > 0.001) {
                  idFinal = "CUST-" + capManual.toFixed(3);
-                 nuevoItem = { ...itemExistente, id: idFinal, vol: capManual, nombreEnvase: `Env. ${capManual}L` };
+                 nuevoItem = { ...itemExistente, id: idFinal, vol: capManual, nombreEnvase: `Env. ${capManual}L`, cantMinima: 1 };
             }
             else {
                 idFinal = itemExistente.id;
@@ -372,32 +453,38 @@
                 env: precioEnvaseBD || 0,
                 eti: 0.10, flete: 0.05,
                 pack: pack, emb: 0,
-                pvMin: 0, pvMay: 0, pvDist: 0
+                pvMin: 0, pvMay: 0, pvDist: 0,
+                cantMinima: 1
             };
         }
 
         if (nuevoItem) {
-            const yaExisteEnData = DATA.alcohol_gel.presentaciones.find(p => p.id === nuevoItem.id);
+            const yaExisteEnData = productoData.presentaciones.find(p => p.id === nuevoItem.id);
             if (!yaExisteEnData) {
-                DATA.alcohol_gel.presentaciones.push(nuevoItem);
+                productoData.presentaciones.push(nuevoItem);
             }
         }
 
-        if (!listaActiva.includes(idFinal)) {
-            listaActiva.push(idFinal);
+        if (!listaActivaEnvasado.includes(idFinal)) {
+            listaActivaEnvasado.push(idFinal);
+        }
+        if (!listaActivaRentabilidad.includes(idFinal)) {
+            listaActivaRentabilidad.push(idFinal);
         }
 
         actualizarTodo();
     }
 
-    function eliminarPresentacion(id) {
-        listaActiva = listaActiva.filter(i => i !== id);
-        actualizarTodo();
+    function eliminarColumnaEnvasado(id) {
+        if(confirm(`¿Desea eliminar la columna ${id} de la tabla Envasado?`)){
+            listaActivaEnvasado = listaActivaEnvasado.filter(i => i !== id);
+            actualizarTodo();
+        }
     }
 
-    function limpiarTodo() {
-        if(confirm("¿Estás seguro de que deseas eliminar todas las columnas?")) {
-            listaActiva = [];
+    function eliminarColumnaRentabilidad(id) {
+        if(confirm(`¿Desea eliminar la columna ${id} de la tabla Rentabilidad?`)){
+            listaActivaRentabilidad = listaActivaRentabilidad.filter(i => i !== id);
             actualizarTodo();
         }
     }
@@ -414,12 +501,45 @@
         }
     }
 
+    function actualizarCantMinima(idProducto, nuevaCant) {
+        const prodKey = document.getElementById('productoSelect').value;
+        const producto = DATA[prodKey].presentaciones.find(p => p.id === idProducto);
+
+        if (producto) {
+            let val = parseInt(nuevaCant);
+            if(val < 1 || isNaN(val)) val = 1;
+            producto.cantMinima = val;
+            actualizarTodo();
+        }
+    }
+
+    function actualizarPackSize(idProducto, nuevoPack) {
+        const prodKey = document.getElementById('productoSelect').value;
+        const producto = DATA[prodKey].presentaciones.find(p => p.id === idProducto);
+
+        if (producto) {
+            let val = parseInt(nuevoPack);
+            if(val < 1 || isNaN(val)) val = 1;
+            producto.pack = val;
+            actualizarTodo();
+        }
+    }
+
     function actualizarTodo() {
         const prodKey = document.getElementById('productoSelect').value;
         const nivelKey = document.getElementById('nivelSelect').value;
         const producto = DATA[prodKey];
+
+        if (!producto) return;
+
         const nivelSelect = document.getElementById('nivelSelect');
         const nivelTexto = nivelSelect.options[nivelSelect.selectedIndex].text;
+
+        const nombreProd = producto.nombreLargo || "PRODUCTO";
+
+        document.getElementById('verticalNombre').innerText = nombreProd;
+        document.getElementById('lblProductoScreen').innerText = nombreProd;
+        document.getElementById('lblProductoPrint').innerText = nombreProd;
 
         document.getElementById('labelModo').innerText = `MODO: ${nivelTexto}`;
         document.getElementById('tituloRentabilidad').innerText = `ANÁLISIS DE RENTABILIDAD A ${nivelTexto}`;
@@ -453,16 +573,16 @@
             <tr class="bg-cream font-bold"><td style="color:#b45309">GRANEL LITRO</td><td colspan="2" style="color:#b45309">S/ ${costoLitroGranel.toFixed(2)}</td></tr>
         `;
 
-        const itemsComparar = producto.presentaciones.filter(p => listaActiva.includes(p.id));
+        const itemsEnvasado = producto.presentaciones.filter(p => listaActivaEnvasado.includes(p.id));
 
         let htmlEnv = `<thead>
             <tr>
                 <th class="text-left" style="background:#0f172a; color:white; vertical-align: bottom; padding-bottom: 10px;">DESCRIPCIÓN</th>
-                ${itemsComparar.map(p => `
+                ${itemsEnvasado.map(p => `
                     <th style="background:#0f172a; color:white; vertical-align: top; padding: 10px; text-align: center;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                             <span style="font-size:11px; font-weight:bold; color:#fbbf24;">${p.id}</span>
-                            <span class="remove-col" onclick="eliminarPresentacion('${p.id}')" style="color:#ef4444; cursor:pointer;">×</span>
+                            <span class="remove-col" onclick="eliminarColumnaEnvasado('${p.id}')" style="color:#ef4444; cursor:pointer;" title="Eliminar columna">×</span>
                         </div>
                         <div style="font-size:10px; color:#e2e8f0; line-height:1.2; margin-bottom:2px;">${p.nombreEnvase || p.nombre}</div>
                         <div style="font-size:11px; font-weight:bold;">${p.vol.toFixed(3)} L</div>
@@ -480,25 +600,27 @@
         ];
 
         filasEnv.forEach(fila => {
-            htmlEnv += `<tr><td class="text-left" style="color:#64748b">${fila.n}</td>${itemsComparar.map(p => `<td style="text-align:center">S/ ${fila.f(p).toFixed(2)}</td>`).join('')}</tr>`;
+            htmlEnv += `<tr><td class="text-left" style="color:#64748b">${fila.n}</td>${itemsEnvasado.map(p => `<td style="text-align:center">S/ ${fila.f(p).toFixed(2)}</td>`).join('')}</tr>`;
         });
 
-        htmlEnv += `<tr class="bg-cream font-bold"><td class="text-left" style="color:#b45309">SUB-TOTAL</td>${itemsComparar.map(p => {
+        htmlEnv += `<tr class="bg-cream font-bold"><td class="text-left" style="color:#b45309">SUB-TOTAL</td>${itemsEnvasado.map(p => {
             p.subtotalUnit = (costoLitroGranel * p.vol) + p.env + p.eti + p.flete;
             return `<td style="color:#b45309; text-align:center">S/ ${p.subtotalUnit.toFixed(2)}</td>`;
         }).join('')}</tr>`;
 
-        htmlEnv += `<tr><td class="text-left">IGV 18%</td>${itemsComparar.map(p => {
+        htmlEnv += `<tr><td class="text-left">IGV 18%</td>${itemsEnvasado.map(p => {
             p.igvUnit = p.subtotalUnit * 0.18;
             return `<td style="text-align:center">S/ ${p.igvUnit.toFixed(2)}</td>`;
         }).join('')}</tr>`;
 
-        htmlEnv += `<tr class="row-dark"><td class="text-left">TOTAL COSTO</td>${itemsComparar.map(p => {
+        htmlEnv += `<tr class="row-dark"><td class="text-left">TOTAL COSTO</td>${itemsEnvasado.map(p => {
             p.costoFinalUnit = p.subtotalUnit + p.igvUnit;
             return `<td style="text-align:center">S/ ${p.costoFinalUnit.toFixed(2)}</td>`;
         }).join('')}</tr></tbody>`;
 
         document.getElementById('tablaEnvasado').innerHTML = htmlEnv;
+
+        const itemsRentabilidad = producto.presentaciones.filter(p => listaActivaRentabilidad.includes(p.id));
 
         let htmlRentSimple = `<thead>
             <tr>
@@ -512,10 +634,15 @@
         let htmlPacks = `<thead>
             <tr>
                 <th class="text-left" style="background:#10b981; color:white; vertical-align: bottom; padding-bottom: 10px;">UTILIDAD FINAL</th>
-                ${itemsComparar.map(p => `
+                ${itemsRentabilidad.map(p => `
                     <th style="background:#10b981; color:white; vertical-align: top; padding: 10px; text-align: center;">
-                        <div style="font-size:11px; font-weight:bold; color:#fff; margin-bottom:2px;">${p.id}</div>
-                        <div style="font-size:11px; color:#ecfdf5; font-weight:bold;">${p.pack} Und.</div>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <span style="font-size:11px; font-weight:bold; color:#fff; margin-bottom:2px;">${p.id}</span>
+                            <span onclick="eliminarColumnaRentabilidad('${p.id}')" style="cursor:pointer; color: #fff; font-weight:bold; margin-left:5px;" title="Eliminar columna">×</span>
+                        </div>
+                        <div style="margin-top:2px; margin-bottom:2px;">
+                            <input type="number" value="${p.pack}" onchange="actualizarPackSize('${p.id}', this.value)" style="width:50px; text-align:center; border:none; border-radius:3px; font-size:11px; font-weight:bold; color:#10b981;">
+                        </div>
                         <div style="font-size:10px; color:#d1fae5;">${p.vol.toFixed(3)} L</div>
                     </th>`).join('')}
             </tr>
@@ -538,7 +665,7 @@
             </tr>
         </thead><tbody>`;
 
-        itemsComparar.forEach(p => {
+        itemsRentabilidad.forEach(p => {
             const pvUnit = p[nivelKey];
             const costoUnit = p.costoFinalUnit;
             const utilUnit = pvUnit - costoUnit;
@@ -568,12 +695,21 @@
             let colorMargen = margen < 20 ? '#dc2626' : '#16a34a';
             filaMargen += `<td style="text-align:center; color:${colorMargen}; font-weight:bold">${margen.toFixed(0)}%</td>`;
 
+            let cantMin = p.cantMinima || 1;
+            let totalCosto = costoPack * cantMin;
+            let totalVenta = pvPack * cantMin;
+            let totalUtil = utilPack * cantMin;
+
             htmlResumen += `<tr>
                 <td class="text-left font-bold">${p.nombre}</td>
-                <td style="text-align:center">1</td>
-                <td style="text-align:center">S/ ${costoPack.toFixed(2)}</td>
-                <td style="text-align:center">S/ ${pvPack.toFixed(2)}</td>
-                <td class="font-bold" style="text-align:center; color:#16a34a">S/ ${utilPack.toFixed(2)}</td>
+                <td style="text-align:center">
+                    <input type="number" min="1" step="1" value="${cantMin}"
+                           onchange="actualizarCantMinima('${p.id}', this.value)"
+                           style="width:60px; text-align:center; border:1px solid #ccc; border-radius:4px;">
+                </td>
+                <td style="text-align:center">S/ ${totalCosto.toFixed(2)}</td>
+                <td style="text-align:center">S/ ${totalVenta.toFixed(2)}</td>
+                <td class="font-bold" style="text-align:center; color:#16a34a">S/ ${totalUtil.toFixed(2)}</td>
                 <td style="white-space:nowrap; text-align:center">
                     <div class="utility-bar-container" style="display:inline-block; width:50px; vertical-align:middle; margin-right:5px;">
                         <div class="utility-bar" style="width:${Math.max(0, Math.min(100, margen))}%; height:6px; background:${colorMargen}; border-radius:3px;"></div>
@@ -590,10 +726,55 @@
         document.getElementById('tablaRentSimple').innerHTML = htmlRentSimple;
         document.getElementById('tablaPacks').innerHTML = htmlPacks;
         document.getElementById('tablaResumen').innerHTML = htmlResumen;
+
+        let htmlComp = `<thead>
+            <tr>
+                <th class="text-left" style="background:#1e293b; color:white">PRODUCTO</th>
+                <th style="background:#1e293b; color:white">NIVEL</th>
+                <th style="background:#1e293b; color:white">PRECIO PACK</th>
+                <th style="background:#1e293b; color:white">CANT. MÍN</th>
+                <th style="background:#1e293b; color:white">COSTO TOTAL</th>
+                <th style="background:#1e293b; color:white">VENTA TOTAL</th>
+                <th style="background:#1e293b; color:white">UTILIDAD</th>
+            </tr>
+        </thead><tbody>`;
+
+        itemsRentabilidad.forEach(p => {
+            const qty = p.cantMinima || 1;
+            const costPack = (p.costoFinalUnit * p.pack) + p.emb;
+            const totalCost = costPack * qty;
+
+            const levels = [
+                { lbl: "MINORISTA", val: p.pvMin, bg: "#fffbeb", txt: "#b45309" },
+                { lbl: "MAYORISTA", val: p.pvMay, bg: "#eff6ff", txt: "#1d4ed8" },
+                { lbl: "DISTRIBUIDOR", val: p.pvDist, bg: "#fdf2f8", txt: "#be185d" }
+            ];
+
+            levels.forEach((l, index) => {
+                const pvPack = l.val * p.pack;
+                const totalVenta = pvPack * qty;
+                const util = totalVenta - totalCost;
+
+                htmlComp += `<tr>`;
+                if(index === 0) {
+                    htmlComp += `<td rowspan="3" class="text-left font-bold" style="vertical-align:middle; background:#f8fafc;">${p.nombre}</td>`;
+                }
+                htmlComp += `
+                    <td style="background:${l.bg}; color:${l.txt}; font-weight:bold;">${l.lbl}</td>
+                    <td style="text-align:center">S/ ${pvPack.toFixed(2)}</td>
+                    <td style="text-align:center">${qty}</td>
+                    <td style="text-align:center">S/ ${totalCost.toFixed(2)}</td>
+                    <td style="text-align:center">S/ ${totalVenta.toFixed(2)}</td>
+                    <td style="text-align:center; font-weight:bold; color:${util > 0 ? '#16a34a' : '#dc2626'}">S/ ${util.toFixed(2)}</td>
+                </tr>`;
+            });
+        });
+
+        htmlComp += "</tbody>";
+        document.getElementById('tablaComparativa').innerHTML = htmlComp;
     }
 
     window.onload = inicializar;
 </script>
-
 </body>
 </html>
