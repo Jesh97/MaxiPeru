@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Costos de Producción</title>
+    <title>Costos de Producción - Maxiperú</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
@@ -12,13 +12,13 @@
 <div class="container">
     <div id="viewCalculadora">
         <div class="main-header">COSTOS DE PRODUCCIÓN</div>
+
         <div class="top-bar">
             <div class="config-group" style="flex: 2; display: flex; gap: 10px; align-items: flex-end;">
                 <div style="flex: 1;">
                     <label style="display: block;">BUSCAR PRODUCTO A PRODUCIR</label>
                     <div class="autocomplete-wrapper">
-                        <input type="text" id="inputBusquedaMain" placeholder="Escriba para buscar producto..." onkeyup="buscarProductoMain(this.value)"
-                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-weight: 600; color: #334155; height: 35px;">
+                        <input type="text" id="inputBusquedaMain" placeholder="Escriba para buscar producto..." onkeyup="buscarProductoMain(this.value)">
                         <input type="hidden" id="productoSelect" value="alcohol_gel">
                         <ul id="listaSugerenciasMain" class="suggestions-list"></ul>
                     </div>
@@ -41,7 +41,7 @@
             </div>
 
             <div style="text-align: right; display: flex; align-items: center;">
-                <span id="labelModo" style="color: var(--gold); font-weight: 700; font-size: 10px; background: #fffbeb; padding: 2px 8px; border: 1px solid #fcd34d; border-radius: 4px;">MODO: MINORISTA</span>
+                <span id="labelModo" style="color: #005EB8; font-weight: 700; font-size: 10px; background: rgba(0, 159, 227, 0.1); padding: 4px 10px; border: 1px solid #009FE3; border-radius: 4px;">MODO: MINORISTA</span>
             </div>
         </div>
 
@@ -59,7 +59,7 @@
                                 <th rowspan="2">DENS.</th>
                                 <th rowspan="2">COSTO KG</th>
                                 <th rowspan="2">CANT. LITROS (LOTE)</th>
-                                <th colspan="6" style="text-align: center; background: #334155;">DOSIFICACIÓN EN KILOGRAMOS</th>
+                                <th colspan="6" style="text-align: center; background: #005EB8;">DOSIFICACIÓN EN KILOGRAMOS</th>
                             </tr>
                             <tr>
                                 <th>240 L</th><th>120 L</th><th>60 L</th><th>20 L</th><th>4 L</th><th>1 L</th>
@@ -87,20 +87,20 @@
 
         <div class="search-box" style="display: flex; gap: 10px; align-items: flex-end;">
             <div style="flex:2">
-                <label style="display:block; font-size:10px; color:#64748b; font-weight:bold; margin-bottom:5px;">BUSCAR PRESENTACIÓN (ENVASE)</label>
+                <label style="display:block; font-size:10px; color:#005EB8; font-weight:bold; margin-bottom:5px;">BUSCAR PRESENTACIÓN (ENVASE)</label>
                 <div class="autocomplete-wrapper">
                     <input type="text" id="inputBusqueda"
                            autocomplete="off"
                            placeholder="Escriba para buscar envase..."
                            onkeyup="buscarEnBD(this.value)"
-                           style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                           style="width:100%;">
                     <ul id="listaSugerencias" class="suggestions-list"></ul>
                 </div>
             </div>
 
             <div style="flex:1; max-width: 100px;">
-                <label style="display:block; font-size:10px; color:#64748b; font-weight:bold; margin-bottom:5px;">CAPACIDAD (L)</label>
-                <input type="number" id="inputCapacidad" step="0.001" placeholder="0.000" style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                <label style="display:block; font-size:10px; color:#005EB8; font-weight:bold; margin-bottom:5px;">CAPACIDAD (L)</label>
+                <input type="number" id="inputCapacidad" step="0.001" placeholder="0.000" style="width:100%;">
             </div>
 
             <input type="hidden" id="inputPrecioBD" value="0">
@@ -116,18 +116,18 @@
 
         <div class="section-title" id="tituloRentabilidad">Análisis de Rentabilidad a Minoristas</div>
 
-        <div class="search-box" style="display: flex; gap: 10px; align-items: flex-end; background: #fff; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 15px;">
+        <div class="search-box" style="display: flex; gap: 10px; align-items: flex-end; padding: 15px; margin-bottom: 15px;">
             <div style="flex:2">
-                <label style="display:block; font-size:10px; color:#10b981; font-weight:bold; margin-bottom:5px;">BUSCAR CAJA / EMBALAJE</label>
-                <input type="text" id="inputBusquedaPack" list="listaPresentaciones" placeholder="Buscar caja..." style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                <label style="display:block; font-size:10px; color:#005EB8; font-weight:bold; margin-bottom:5px;">BUSCAR CAJA / EMBALAJE</label>
+                <input type="text" id="inputBusquedaPack" list="listaPresentaciones" placeholder="Buscar caja..." style="width:100%;">
             </div>
 
             <div style="flex:1; max-width: 120px;">
-                <label style="display:block; font-size:10px; color:#10b981; font-weight:bold; margin-bottom:5px;">CANT. ENVASES</label>
-                <input type="number" id="inputCantPack" step="1" placeholder="0" style="width:100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                <label style="display:block; font-size:10px; color:#005EB8; font-weight:bold; margin-bottom:5px;">CANT. ENVASES</label>
+                <input type="number" id="inputCantPack" step="1" placeholder="0" style="width:100%;">
             </div>
 
-            <button class="btn-add" onclick="agregarPack()" style="height: 35px; white-space: nowrap; background-color: #10b981;">
+            <button class="btn-add" onclick="agregarPack()" style="height: 35px; white-space: nowrap; background-color: #E3007E;">
                 <i class="fas fa-box-open"></i> ACTUALIZAR
             </button>
         </div>
@@ -159,29 +159,34 @@
                 </button>
             </div>
 
-            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px;">
-
-                <h2 class="screen-only" style="margin:0; font-size: 24px; color: #1e293b;">
+            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #005EB8; padding-bottom: 10px;">
+                <h2 class="screen-only" style="margin:0; font-size: 24px; color: #005EB8;">
                     CUADRO COMPARATIVO DE COSTOS MINORISTA, MAYORISTA Y DISTRIBUIDOR<br>
-                    <span style="color:var(--primary); font-size:0.9em;" id="lblProductoScreen"></span>
+                    <span style="color:#E3007E; font-size:0.9em;" id="lblProductoScreen"></span>
                 </h2>
-
-                <h2 class="print-only" style="margin:0; font-size: 24px; color: #1e293b;">
+                <h2 class="print-only" style="margin:0; font-size: 24px; color: #005EB8;">
                     REPORTE DE ANÁLISIS COMPARATIVO<br>
                     <span style="font-size:0.8em;" id="lblProductoPrint"></span>
                 </h2>
-
-                <div id="fechaImpresion" style="font-size: 14px; color: #64748b; margin-top:5px;"></div>
+                <div id="fechaImpresion" style="font-size: 14px; color: #6D6E71; margin-top:5px;"></div>
             </div>
 
             <div class="section-title">Detalle de Costos y Utilidades</div>
             <table id="tablaComparativa"></table>
         </div>
     </div>
-
 </div>
 
 <script>
+    const BRAND = {
+        AZUL: "#005EB8",
+        MAGENTA: "#E3007E",
+        CELESTE: "#009FE3",
+        GRIS: "#6D6E71",
+        BG_AZUL_LIGHT: "rgba(0, 94, 184, 0.05)",
+        BG_MAGENTA_LIGHT: "rgba(227, 0, 126, 0.05)"
+    };
+
     const CATALOGO_PRODUCTOS = [
         { id: "alcohol_gel", nombre: "ALCOHOL EN GEL" },
         { id: "jabon_liq", nombre: "JABÓN LÍQUIDO (Demo)" },
@@ -558,7 +563,7 @@
             totalLoteMp += subtotal;
 
             htmlMP += `<tr>
-                <td class="text-left font-bold" style="color:var(--primary)">${i.cod}</td><td class="text-left">${i.nombre}</td><td>${i.dens.toFixed(3)}</td><td>S/ ${i.costoKg.toFixed(2)}</td><td>${i.cilL.toFixed(3)}</td>
+                <td class="text-left font-bold" style="color:${BRAND.AZUL}">${i.cod}</td><td class="text-left">${i.nombre}</td><td>${i.dens.toFixed(3)}</td><td>S/ ${i.costoKg.toFixed(2)}</td><td>${i.cilL.toFixed(3)}</td>
                 <td>${kgLote.toFixed(3)}</td><td>${(kgLote/2).toFixed(3)}</td><td>${(kgLote/4).toFixed(3)}</td><td>${(kgLote/12).toFixed(3)}</td><td>${(kgLote/60).toFixed(3)}</td><td>${(kgLote/240).toFixed(3)}</td>
             </tr>`;
 
@@ -568,21 +573,22 @@
         const costoLitroGranel = totalLoteMp / 240;
         document.getElementById('bodyMP').innerHTML = htmlMP;
         document.getElementById('bodyGranel').innerHTML = htmlGranel;
+
         document.getElementById('footGranel').innerHTML = `
             <tr class="row-dark"><td>TOTAL LOTE</td><td colspan="2">S/ ${totalLoteMp.toFixed(2)}</td></tr>
-            <tr class="bg-cream font-bold"><td style="color:#b45309">GRANEL LITRO</td><td colspan="2" style="color:#b45309">S/ ${costoLitroGranel.toFixed(2)}</td></tr>
+            <tr class="bg-cream font-bold"><td style="color:${BRAND.MAGENTA}">GRANEL LITRO</td><td colspan="2" style="color:${BRAND.AZUL}">S/ ${costoLitroGranel.toFixed(2)}</td></tr>
         `;
 
         const itemsEnvasado = producto.presentaciones.filter(p => listaActivaEnvasado.includes(p.id));
 
         let htmlEnv = `<thead>
             <tr>
-                <th class="text-left" style="background:#0f172a; color:white; vertical-align: bottom; padding-bottom: 10px;">DESCRIPCIÓN</th>
+                <th class="text-left" style="background:${BRAND.AZUL}; color:white; vertical-align: bottom; padding-bottom: 10px;">DESCRIPCIÓN</th>
                 ${itemsEnvasado.map(p => `
-                    <th style="background:#0f172a; color:white; vertical-align: top; padding: 10px; text-align: center;">
+                    <th style="background:${BRAND.AZUL}; color:white; vertical-align: top; padding: 10px; text-align: center;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <span style="font-size:11px; font-weight:bold; color:#fbbf24;">${p.id}</span>
-                            <span class="remove-col" onclick="eliminarColumnaEnvasado('${p.id}')" style="color:#ef4444; cursor:pointer;" title="Eliminar columna">×</span>
+                            <span style="font-size:11px; font-weight:bold; color:#fff;">${p.id}</span>
+                            <span class="remove-col" onclick="eliminarColumnaEnvasado('${p.id}')" style="color:${BRAND.MAGENTA}; cursor:pointer; background:white; border-radius:50%; width:16px; height:16px; line-height:16px; display:block;" title="Eliminar columna">×</span>
                         </div>
                         <div style="font-size:10px; color:#e2e8f0; line-height:1.2; margin-bottom:2px;">${p.nombreEnvase || p.nombre}</div>
                         <div style="font-size:11px; font-weight:bold;">${p.vol.toFixed(3)} L</div>
@@ -600,12 +606,12 @@
         ];
 
         filasEnv.forEach(fila => {
-            htmlEnv += `<tr><td class="text-left" style="color:#64748b">${fila.n}</td>${itemsEnvasado.map(p => `<td style="text-align:center">S/ ${fila.f(p).toFixed(2)}</td>`).join('')}</tr>`;
+            htmlEnv += `<tr><td class="text-left" style="color:${BRAND.GRIS}">${fila.n}</td>${itemsEnvasado.map(p => `<td style="text-align:center">S/ ${fila.f(p).toFixed(2)}</td>`).join('')}</tr>`;
         });
 
-        htmlEnv += `<tr class="bg-cream font-bold"><td class="text-left" style="color:#b45309">SUB-TOTAL</td>${itemsEnvasado.map(p => {
+        htmlEnv += `<tr class="bg-cream font-bold"><td class="text-left" style="color:${BRAND.MAGENTA}">SUB-TOTAL</td>${itemsEnvasado.map(p => {
             p.subtotalUnit = (costoLitroGranel * p.vol) + p.env + p.eti + p.flete;
-            return `<td style="color:#b45309; text-align:center">S/ ${p.subtotalUnit.toFixed(2)}</td>`;
+            return `<td style="color:${BRAND.AZUL}; text-align:center">S/ ${p.subtotalUnit.toFixed(2)}</td>`;
         }).join('')}</tr>`;
 
         htmlEnv += `<tr><td class="text-left">IGV 18%</td>${itemsEnvasado.map(p => {
@@ -624,26 +630,26 @@
 
         let htmlRentSimple = `<thead>
             <tr>
-                <th class="text-left" style="background:#f8fafc; color:#334155">${labelPrecio}</th>
-                <th style="background:#f8fafc; color:#334155">P.V PROMEDIO</th>
-                <th style="background:#f8fafc; color:#334155">COSTO PROD.</th>
-                <th style="background:#f8fafc; color:#334155">UTILIDAD</th>
+                <th class="text-left" style="background:${BRAND.BG_AZUL_LIGHT}; color:${BRAND.AZUL}">${labelPrecio}</th>
+                <th style="background:${BRAND.BG_AZUL_LIGHT}; color:${BRAND.AZUL}">P.V PROMEDIO</th>
+                <th style="background:${BRAND.BG_AZUL_LIGHT}; color:${BRAND.AZUL}">COSTO PROD.</th>
+                <th style="background:${BRAND.BG_AZUL_LIGHT}; color:${BRAND.AZUL}">UTILIDAD</th>
             </tr>
         </thead><tbody>`;
 
         let htmlPacks = `<thead>
             <tr>
-                <th class="text-left" style="background:#10b981; color:white; vertical-align: bottom; padding-bottom: 10px;">UTILIDAD FINAL</th>
+                <th class="text-left" style="background:${BRAND.AZUL}; color:white; vertical-align: bottom; padding-bottom: 10px;">UTILIDAD FINAL</th>
                 ${itemsRentabilidad.map(p => `
-                    <th style="background:#10b981; color:white; vertical-align: top; padding: 10px; text-align: center;">
+                    <th style="background:${BRAND.AZUL}; color:white; vertical-align: top; padding: 10px; text-align: center;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                             <span style="font-size:11px; font-weight:bold; color:#fff; margin-bottom:2px;">${p.id}</span>
-                            <span onclick="eliminarColumnaRentabilidad('${p.id}')" style="cursor:pointer; color: #fff; font-weight:bold; margin-left:5px;" title="Eliminar columna">×</span>
+                            <span onclick="eliminarColumnaRentabilidad('${p.id}')" style="cursor:pointer; color:${BRAND.MAGENTA}; background:white; border-radius:50%; width:16px; height:16px; line-height:16px; margin-left:5px;" title="Eliminar columna">×</span>
                         </div>
                         <div style="margin-top:2px; margin-bottom:2px;">
-                            <input type="number" value="${p.pack}" onchange="actualizarPackSize('${p.id}', this.value)" style="width:50px; text-align:center; border:none; border-radius:3px; font-size:11px; font-weight:bold; color:#10b981;">
+                            <input type="number" value="${p.pack}" onchange="actualizarPackSize('${p.id}', this.value)" style="width:50px; text-align:center; border:none; border-radius:3px; font-size:11px; font-weight:bold; color:${BRAND.AZUL};">
                         </div>
-                        <div style="font-size:10px; color:#d1fae5;">${p.vol.toFixed(3)} L</div>
+                        <div style="font-size:10px; color:#e2e8f0;">${p.vol.toFixed(3)} L</div>
                     </th>`).join('')}
             </tr>
         </thead><tbody>`;
@@ -651,17 +657,17 @@
         let filaPV = `<tr><td class="text-left">Precio de Venta</td>`;
         let filaCP = `<tr><td class="text-left">Costo x Paquete</td>`;
         let filaEMB = `<tr><td class="text-left">Embalaje</td>`;
-        let filaUtil = `<tr class="util-cell"><td class="text-left font-bold" style="color:#16a34a">UTILIDAD</td>`;
+        let filaUtil = `<tr class="util-cell"><td class="text-left font-bold" style="color:${BRAND.AZUL}">UTILIDAD</td>`;
         let filaMargen = `<tr><td class="text-left font-bold">MARGEN %</td>`;
 
         let htmlResumen = `<thead>
             <tr>
-                <th class="text-left" style="background:#0f172a; color:white">PRODUCTO</th>
-                <th style="background:#0f172a; color:white">CANT. MÍN</th>
-                <th style="background:#0f172a; color:white">COSTO TOTAL</th>
-                <th style="background:#0f172a; color:white">VENTA TOTAL</th>
-                <th style="background:#0f172a; color:white">UTILIDAD NETA</th>
-                <th style="background:#0f172a; color:white">MARGEN %</th>
+                <th class="text-left" style="background:${BRAND.AZUL}; color:white">PRODUCTO</th>
+                <th style="background:${BRAND.AZUL}; color:white">CANT. MÍN</th>
+                <th style="background:${BRAND.AZUL}; color:white">COSTO TOTAL</th>
+                <th style="background:${BRAND.AZUL}; color:white">VENTA TOTAL</th>
+                <th style="background:${BRAND.AZUL}; color:white">UTILIDAD NETA</th>
+                <th style="background:${BRAND.AZUL}; color:white">MARGEN %</th>
             </tr>
         </thead><tbody>`;
 
@@ -674,7 +680,7 @@
                 <td class="text-center" style="background:rgba(255,255,255,0.4)">S/ ${pvUnit.toFixed(2)}</td>
                 <td style="text-align:center">S/ ${pvUnit.toFixed(2)}</td>
                 <td style="text-align:center">S/ ${costoUnit.toFixed(2)}</td>
-                <td class="util-cell" style="text-align:center; color:${utilUnit>0?'#16a34a':'#dc2626'}">S/ ${utilUnit.toFixed(2)}</td>
+                <td class="util-cell" style="text-align:center; color:${utilUnit>0 ? BRAND.AZUL : BRAND.MAGENTA}">S/ ${utilUnit.toFixed(2)}</td>
             </tr>`;
 
             const pvPack = pvUnit * p.pack;
@@ -685,14 +691,14 @@
             filaPV += `<td class="text-center" style="padding:4px;">
                     <input type="number" step="1.00" value="${pvPack.toFixed(2)}"
                            onchange="actualizarPrecioPack('${p.id}', this.value)"
-                           style="width:80px; text-align:center; border:2px solid #10b981; border-radius:4px; font-weight:bold; color:#0f172a; outline:none;">
+                           style="width:80px; text-align:center; border:2px solid ${BRAND.CELESTE}; border-radius:4px; font-weight:bold; color:${BRAND.AZUL}; outline:none;">
                 </td>`;
 
             filaCP += `<td style="text-align:center">S/ ${costoPack.toFixed(2)}</td>`;
             filaEMB += `<td style="text-align:center">S/ ${p.emb.toFixed(2)}</td>`;
-            filaUtil += `<td style="text-align:center; font-weight:bold; color:${utilPack>0?'#16a34a':'#dc2626'}">S/ ${utilPack.toFixed(2)}</td>`;
+            filaUtil += `<td style="text-align:center; font-weight:bold; color:${utilPack>0 ? BRAND.AZUL : BRAND.MAGENTA}">S/ ${utilPack.toFixed(2)}</td>`;
 
-            let colorMargen = margen < 20 ? '#dc2626' : '#16a34a';
+            let colorMargen = margen < 20 ? BRAND.MAGENTA : BRAND.AZUL;
             filaMargen += `<td style="text-align:center; color:${colorMargen}; font-weight:bold">${margen.toFixed(0)}%</td>`;
 
             let cantMin = p.cantMinima || 1;
@@ -709,9 +715,9 @@
                 </td>
                 <td style="text-align:center">S/ ${totalCosto.toFixed(2)}</td>
                 <td style="text-align:center">S/ ${totalVenta.toFixed(2)}</td>
-                <td class="font-bold" style="text-align:center; color:#16a34a">S/ ${totalUtil.toFixed(2)}</td>
+                <td class="font-bold" style="text-align:center; color:${totalUtil>0 ? BRAND.AZUL : BRAND.MAGENTA}">S/ ${totalUtil.toFixed(2)}</td>
                 <td style="white-space:nowrap; text-align:center">
-                    <div class="utility-bar-container" style="display:inline-block; width:50px; vertical-align:middle; margin-right:5px;">
+                    <div class="utility-bar-container" style="display:inline-block; width:50px; vertical-align:middle; margin-right:5px; background:#eee;">
                         <div class="utility-bar" style="width:${Math.max(0, Math.min(100, margen))}%; height:6px; background:${colorMargen}; border-radius:3px;"></div>
                     </div>
                     ${margen.toFixed(1)}%
@@ -729,13 +735,13 @@
 
         let htmlComp = `<thead>
             <tr>
-                <th class="text-left" style="background:#1e293b; color:white">PRODUCTO</th>
-                <th style="background:#1e293b; color:white">NIVEL</th>
-                <th style="background:#1e293b; color:white">PRECIO PACK</th>
-                <th style="background:#1e293b; color:white">CANT. MÍN</th>
-                <th style="background:#1e293b; color:white">COSTO TOTAL</th>
-                <th style="background:#1e293b; color:white">VENTA TOTAL</th>
-                <th style="background:#1e293b; color:white">UTILIDAD</th>
+                <th class="text-left" style="background:${BRAND.AZUL}; color:white">PRODUCTO</th>
+                <th style="background:${BRAND.AZUL}; color:white">NIVEL</th>
+                <th style="background:${BRAND.AZUL}; color:white">PRECIO PACK</th>
+                <th style="background:${BRAND.AZUL}; color:white">CANT. MÍN</th>
+                <th style="background:${BRAND.AZUL}; color:white">COSTO TOTAL</th>
+                <th style="background:${BRAND.AZUL}; color:white">VENTA TOTAL</th>
+                <th style="background:${BRAND.AZUL}; color:white">UTILIDAD</th>
             </tr>
         </thead><tbody>`;
 
@@ -745,9 +751,9 @@
             const totalCost = costPack * qty;
 
             const levels = [
-                { lbl: "MINORISTA", val: p.pvMin, bg: "#fffbeb", txt: "#b45309" },
-                { lbl: "MAYORISTA", val: p.pvMay, bg: "#eff6ff", txt: "#1d4ed8" },
-                { lbl: "DISTRIBUIDOR", val: p.pvDist, bg: "#fdf2f8", txt: "#be185d" }
+                { lbl: "MINORISTA", val: p.pvMin, bg: "#f0f9ff", txt: BRAND.AZUL },
+                { lbl: "MAYORISTA", val: p.pvMay, bg: "#fdf2f8", txt: BRAND.MAGENTA },
+                { lbl: "DISTRIBUIDOR", val: p.pvDist, bg: "#ffffff", txt: BRAND.GRIS }
             ];
 
             levels.forEach((l, index) => {
@@ -757,7 +763,7 @@
 
                 htmlComp += `<tr>`;
                 if(index === 0) {
-                    htmlComp += `<td rowspan="3" class="text-left font-bold" style="vertical-align:middle; background:#f8fafc;">${p.nombre}</td>`;
+                    htmlComp += `<td rowspan="3" class="text-left font-bold" style="vertical-align:middle; background:#fff;">${p.nombre}</td>`;
                 }
                 htmlComp += `
                     <td style="background:${l.bg}; color:${l.txt}; font-weight:bold;">${l.lbl}</td>
@@ -765,7 +771,7 @@
                     <td style="text-align:center">${qty}</td>
                     <td style="text-align:center">S/ ${totalCost.toFixed(2)}</td>
                     <td style="text-align:center">S/ ${totalVenta.toFixed(2)}</td>
-                    <td style="text-align:center; font-weight:bold; color:${util > 0 ? '#16a34a' : '#dc2626'}">S/ ${util.toFixed(2)}</td>
+                    <td style="text-align:center; font-weight:bold; color:${util > 0 ? BRAND.AZUL : BRAND.MAGENTA}">S/ ${util.toFixed(2)}</td>
                 </tr>`;
             });
         });

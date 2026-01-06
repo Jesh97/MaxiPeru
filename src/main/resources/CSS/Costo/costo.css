@@ -246,7 +246,6 @@ td:not(.text-left) { text-align: center; }
     .no-print, .btn-print, .btn-back, .top-bar, .search-box, .btn-add { display: none !important; }
     #viewCalculadora { display: none !important; }
     #viewReporte { display: block !important; }
-
     th { background-color: #eee !important; color: black !important; border: 1px solid #000 !important; }
     td { border: 1px solid #000 !important; }
     .print-only { display: block !important; }
