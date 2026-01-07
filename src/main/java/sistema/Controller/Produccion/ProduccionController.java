@@ -398,8 +398,10 @@ public class ProduccionController implements ProducionRepository {
                         try { articulo.put("unidad_nombre", rs.getString("unidad")); } catch (SQLException e2) { articulo.put("unidad_nombre", "UND"); }
                     }
                     try { articulo.put("densidad", rs.getDouble("densidad")); } catch (SQLException e) { articulo.put("densidad", 1.0); }
-                    try { articulo.put("capacidad", rs.getDouble("capacidad")); } catch (SQLException e) {}
-                    try { articulo.put("unidad_capacidad", rs.getString("unidad_capacidad")); } catch (SQLException e) {}
+                    try { articulo.put("capacidad", rs.getDouble("capacidad")); } catch (SQLException e) { articulo.put("capacidad", 0.0); }
+                    try { articulo.put("unidad_capacidad", rs.getString("unidad_capacidad")); } catch (SQLException e) { articulo.put("unidad_capacidad", ""); }
+                    try { articulo.put("precio_compra", rs.getDouble("precio_compra")); } catch (SQLException e) { articulo.put("precio_compra", 0.0); }
+                    try { articulo.put("cantidad", rs.getDouble("cantidad")); } catch (SQLException e) { articulo.put("cantidad", 0.0); }
 
                     articulos.add(articulo);
                 }

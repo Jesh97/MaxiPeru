@@ -37,6 +37,7 @@ public class ProduccionServlet extends HttpServlet {
         String nombreArticuloActivo = (String) session.getAttribute("nombreArticuloActivo");
 
         if (nombreArticuloActivo == null) {
+            nombreArticuloActivo = "Artículo Desconocido";
         }
 
         if (action == null || action.trim().isEmpty()) {
