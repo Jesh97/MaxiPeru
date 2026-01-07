@@ -11,7 +11,6 @@
 <div class="container">
     <div id="viewCalculadora">
         <div class="main-header">COSTOS DE PRODUCCIÓN</div>
-
         <div class="top-bar">
             <div class="config-group" style="flex: 2; display: flex; gap: 10px; align-items: flex-end;">
                 <div style="flex: 1;">
@@ -239,11 +238,14 @@
         }
     };
 
-    let listaActivaEnvasado = [];
-    let listaActivaRentabilidad = [];
+    let listaItemsActivos = [];
     let timeoutBusqueda = null;
     let timeoutBusquedaPack = null;
     let timeoutBusquedaMain = null;
+
+    function round6(num) {
+        return Number(Math.round(num + "e+6") + "e-6");
+    }
 
     function inicializar() {
         document.getElementById('inputBusquedaMain').value = "ALCOHOL EN GEL";
@@ -259,8 +261,7 @@
 
         const paqueteDatos = {
             main: DATA,
-            cols_env: listaActivaEnvasado,
-            cols_rent: listaActivaRentabilidad,
+            items: listaItemsActivos,
             prod_sel: document.getElementById('productoSelect').value
         };
 
@@ -288,8 +289,8 @@
             .then(json => {
                 if(!json) { alert("No encontrado."); return; }
                 if(json.main) Object.assign(DATA, json.main);
-                if(json.cols_env) listaActivaEnvasado = json.cols_env;
-                if(json.cols_rent) listaActivaRentabilidad = json.cols_rent;
+                if(json.items) listaItemsActivos = json.items;
+                else if(json.cols_env) listaItemsActivos = json.cols_env;
                 if(json.prod_sel) document.getElementById('productoSelect').value = json.prod_sel;
                 actualizarTodo();
                 alert("Costos recuperados.");
@@ -499,11 +500,31 @@
             alert("Ingrese una cantidad de envases válida.");
             return;
         }
-        procesarAgregar(nombreBuscado, null, cantPack, 0, precioCajaBD, codigo, 'RENT');
-        inputBusquedaPack.value = "";
-        inputCantPack.value = "";
-        inputPrecioPackBD.value = "0";
-        inputCodigoPack.value = "";
+
+        const prodKey = document.getElementById('productoSelect').value;
+        const productoData = DATA[prodKey];
+
+        if(listaItemsActivos.length > 0) {
+            const idUltimoEnvase = listaItemsActivos[listaItemsActivos.length - 1];
+            const itemExistente = productoData.presentaciones.find(p => p.id === idUltimoEnvase);
+
+            if(itemExistente) {
+                itemExistente.pack = cantPack;
+                itemExistente.emb = precioCajaBD;
+                itemExistente.codigoPack = codigo;
+                itemExistente.nombrePack = nombreBuscado;
+
+                actualizarTodo();
+
+                inputBusquedaPack.value = "";
+                inputCantPack.value = "";
+                inputPrecioPackBD.value = "0";
+                inputCodigoPack.value = "";
+                return;
+            }
+        }
+
+        alert("Primero agregue un envase antes de configurar la caja.");
     }
 
     function procesarAgregar(nombreBuscado, capManual, cantPackManual, precioEnvaseBD, precioCajaBD = 0, codigo = "", origen = "AMBOS") {
@@ -517,72 +538,52 @@
             itemExistente = productoData.presentaciones.find(p => p.nombreEnvase === nombreBuscado || p.nombre === nombreBuscado);
         }
 
-        if (!itemExistente && !capManual && !cantPackManual) {
-             alert("Producto no encontrado. Especifique detalles.");
-             return;
-        }
-
         let idFinal;
         let nuevoItem = null;
 
         if (itemExistente) {
             idFinal = itemExistente.id;
-            if (cantPackManual && cantPackManual !== itemExistente.pack) {
-                 itemExistente.pack = cantPackManual;
-                 itemExistente.nombre = itemExistente.nombre + " (x" + cantPackManual + ")";
-                 if(precioCajaBD > 0) itemExistente.emb = precioCajaBD;
-            } else if (capManual && Math.abs(itemExistente.vol - capManual) > 0.001) {
+            if (capManual && Math.abs(itemExistente.vol - capManual) > 0.001) {
                  itemExistente.vol = capManual;
                  itemExistente.nombreEnvase = `Env. ${capManual}L`;
             }
         } else {
             let vol = capManual || 1.0;
             let pack = cantPackManual || 1;
-            idFinal = codigo ? codigo : ("CUST-" + vol.toFixed(3) + (pack > 1 ? "-P"+pack : ""));
+            idFinal = codigo ? codigo : ("CUST-" + vol.toFixed(3) + "-" + new Date().getTime());
 
             nuevoItem = {
                 id: idFinal,
                 codigo: codigo,
-                nombre: codigo ? `${nombreBuscado} (x${pack})` : `Pack Cust ${vol}L (x${pack})`,
+                codigoPack: "",
+                nombrePack: "",
+                nombre: codigo ? `${nombreBuscado}` : `Prod. ${vol}L`,
                 nombreEnvase: nombreBuscado || `Env. ${vol}L`,
                 vol: vol,
                 env: precioEnvaseBD || 0,
-                eti: 0,
+                eti: 0.09,
                 flete: 0,
-                pack: pack, emb: precioCajaBD || 0,
+                pack: pack,
+                emb: precioCajaBD || 0,
                 pvMin: 0, pvMay: 0, pvDist: 0,
                 cantMinima: 1
             };
         }
 
         if (nuevoItem) {
-            if (!productoData.presentaciones.find(p => p.id === nuevoItem.id)) {
-                productoData.presentaciones.push(nuevoItem);
-            }
+            productoData.presentaciones.push(nuevoItem);
         }
 
-        if (origen === 'ENV' && !listaActivaEnvasado.includes(idFinal)) {
-            listaActivaEnvasado.push(idFinal);
-        } else if (origen === 'RENT' && !listaActivaRentabilidad.includes(idFinal)) {
-            listaActivaRentabilidad.push(idFinal);
-        } else if (origen === 'AMBOS') {
-            if (!listaActivaEnvasado.includes(idFinal)) listaActivaEnvasado.push(idFinal);
-            if (!listaActivaRentabilidad.includes(idFinal)) listaActivaRentabilidad.push(idFinal);
+        if (!listaItemsActivos.includes(idFinal)) {
+            listaItemsActivos.push(idFinal);
         }
 
         actualizarTodo();
     }
 
-    function eliminarColumnaEnvasado(id) {
+    function eliminarColumna(id) {
         if(confirm(`¿Desea eliminar la columna?`)){
-            listaActivaEnvasado = listaActivaEnvasado.filter(i => i !== id);
-            actualizarTodo();
-        }
-    }
-
-    function eliminarColumnaRentabilidad(id) {
-        if(confirm(`¿Desea eliminar la columna?`)){
-            listaActivaRentabilidad = listaActivaRentabilidad.filter(i => i !== id);
+            listaItemsActivos = listaItemsActivos.filter(i => i !== id);
             actualizarTodo();
         }
     }
@@ -646,28 +647,28 @@
         document.getElementById('labelModo').innerText = `MODO: ${nivelTexto}`;
         document.getElementById('tituloRentabilidad').innerText = `ANÁLISIS DE RENTABILIDAD A ${nivelTexto}`;
 
-        let labelPrecio = "PRECIO MINORISTA";
+        let labelPrecio = "PRECIO X MENOR";
         if (nivelKey === 'pvMay') labelPrecio = "PRECIO MAYORISTA";
-        if (nivelKey === 'pvDist') labelPrecio = "PRECIO DISTRIB.";
+        if (nivelKey === 'pvDist') labelPrecio = "PRECIO DISTRIBUIDOR";
 
         let totalLoteMp = 0;
         let htmlMP = "";
         let htmlGranel = "";
 
         producto.insumos.forEach(i => {
-            const kgLote = i.cilL * i.dens;
-            const subtotal = kgLote * i.costoKg;
+            const kgLote = round6(i.cilL * i.dens);
+            const subtotal = round6(kgLote * i.costoKg);
             totalLoteMp += subtotal;
 
             htmlMP += `<tr>
                 <td class="text-left font-bold" style="color:${BRAND.AZUL}">${i.cod}</td><td class="text-left">${i.nombre}</td><td>${i.dens.toFixed(3)}</td><td>S/ ${i.costoKg.toFixed(2)}</td><td>${i.cilL.toFixed(3)}</td>
-                <td>${kgLote.toFixed(3)}</td><td>${(kgLote/2).toFixed(3)}</td><td>${(kgLote/4).toFixed(3)}</td><td>${(kgLote/12).toFixed(3)}</td><td>${(kgLote/60).toFixed(3)}</td><td>${(kgLote/240).toFixed(3)}</td>
+                <td>${kgLote.toFixed(3)}</td><td>${round6(kgLote/2).toFixed(3)}</td><td>${round6(kgLote/4).toFixed(3)}</td><td>${round6(kgLote/12).toFixed(3)}</td><td>${round6(kgLote/60).toFixed(3)}</td><td>${round6(kgLote/240).toFixed(3)}</td>
             </tr>`;
 
             htmlGranel += `<tr><td class="text-left">1.000</td><td>S/ ${i.costoKg.toFixed(3)}</td><td>S/ ${subtotal.toFixed(2)}</td></tr>`;
         });
 
-        const costoLitroGranel = totalLoteMp / 240;
+        const costoLitroGranel = round6(totalLoteMp / 240);
         document.getElementById('bodyMP').innerHTML = htmlMP;
         document.getElementById('bodyGranel').innerHTML = htmlGranel;
 
@@ -676,14 +677,14 @@
             <tr class="bg-cream font-bold"><td style="color:${BRAND.MAGENTA}">GRANEL LITRO</td><td colspan="2" style="color:${BRAND.AZUL}">S/ ${costoLitroGranel.toFixed(2)}</td></tr>
         `;
 
-        const itemsEnvasado = producto.presentaciones.filter(p => listaActivaEnvasado.includes(p.id));
+        const itemsVisibles = producto.presentaciones.filter(p => listaItemsActivos.includes(p.id));
 
         let htmlEnv = `<thead>
             <tr>
                 <th class="text-left" style="background:${BRAND.AZUL}; color:white; vertical-align: bottom; padding-bottom: 10px;">DESCRIPCIÓN</th>
-                ${itemsEnvasado.map(p => `
+                ${itemsVisibles.map(p => `
                     <th style="background:${BRAND.AZUL}; color:white; vertical-align: top; padding: 10px; text-align: center; position: relative;">
-                        <span class="remove-col" onclick="eliminarColumnaEnvasado('${p.id}')" style="position: absolute; top: 5px; right: 5px; color:${BRAND.MAGENTA}; cursor:pointer; background:white; border-radius:50%; width:16px; height:16px; line-height:16px; display:block;" title="Eliminar columna">×</span>
+                        <span class="remove-col" onclick="eliminarColumna('${p.id}')" style="position: absolute; top: 5px; right: 5px; color:${BRAND.MAGENTA}; cursor:pointer; background:white; border-radius:50%; width:16px; height:16px; line-height:16px; display:block;" title="Eliminar columna">×</span>
                         <div style="font-size:11px; font-weight:bold; color:#fff; margin-top: 5px; margin-bottom:2px;">${p.codigo || p.id}</div>
                         <div style="font-size:11px; font-weight:bold;">${p.vol.toFixed(3)} L</div>
                     </th>
@@ -692,29 +693,27 @@
         </thead>
         <tbody>`;
 
-        htmlEnv += `<tr><td class="text-left" style="color:${BRAND.GRIS}">Producto a granel</td>${itemsEnvasado.map(p => `<td style="text-align:center">S/ ${(costoLitroGranel * p.vol).toFixed(2)}</td>`).join('')}</tr>`;
-        htmlEnv += `<tr><td class="text-left" style="color:${BRAND.GRIS}">Envase</td>${itemsEnvasado.map(p => `<td style="text-align:center">S/ ${p.env.toFixed(2)}</td>`).join('')}</tr>`;
-        htmlEnv += `<tr><td class="text-left" style="color:${BRAND.GRIS}">Etiqueta</td>${itemsEnvasado.map(p => `<td style="text-align:center">S/ ${p.eti.toFixed(2)}</td>`).join('')}</tr>`;
-        htmlEnv += `<tr><td class="text-left" style="color:${BRAND.GRIS}">Flete y otros</td>${itemsEnvasado.map(p => `<td style="text-align:center; padding:2px;"><input type="number" step="0.01" value="${p.flete.toFixed(2)}" onchange="actualizarFlete('${p.id}', this.value)" style="width:60px; text-align:center; border:1px solid #ccc; border-radius:4px;"></td>`).join('')}</tr>`;
+        htmlEnv += `<tr><td class="text-left" style="color:${BRAND.GRIS}">Producto a granel</td>${itemsVisibles.map(p => `<td style="text-align:center">S/ ${round6(costoLitroGranel * p.vol).toFixed(2)}</td>`).join('')}</tr>`;
+        htmlEnv += `<tr><td class="text-left" style="color:${BRAND.GRIS}">Envase</td>${itemsVisibles.map(p => `<td style="text-align:center">S/ ${p.env.toFixed(2)}</td>`).join('')}</tr>`;
+        htmlEnv += `<tr><td class="text-left" style="color:${BRAND.GRIS}">Etiqueta</td>${itemsVisibles.map(p => `<td style="text-align:center">S/ ${p.eti.toFixed(2)}</td>`).join('')}</tr>`;
+        htmlEnv += `<tr><td class="text-left" style="color:${BRAND.GRIS}">Flete y otros</td>${itemsVisibles.map(p => `<td style="text-align:center; padding:2px;"><input type="number" step="0.01" value="${p.flete.toFixed(2)}" onchange="actualizarFlete('${p.id}', this.value)" style="width:60px; text-align:center; border:1px solid #ccc; border-radius:4px;"></td>`).join('')}</tr>`;
 
-        htmlEnv += `<tr class="bg-cream font-bold"><td class="text-left" style="color:${BRAND.MAGENTA}">SUB-TOTAL</td>${itemsEnvasado.map(p => {
-            p.subtotalUnit = (costoLitroGranel * p.vol) + p.env + p.eti + p.flete;
+        htmlEnv += `<tr class="bg-cream font-bold"><td class="text-left" style="color:${BRAND.MAGENTA}">SUB-TOTAL</td>${itemsVisibles.map(p => {
+            p.subtotalUnit = round6((costoLitroGranel * p.vol) + p.env + p.eti + p.flete);
             return `<td style="color:${BRAND.AZUL}; text-align:center">S/ ${p.subtotalUnit.toFixed(2)}</td>`;
         }).join('')}</tr>`;
 
-        htmlEnv += `<tr><td class="text-left">IGV 18%</td>${itemsEnvasado.map(p => {
-            p.igvUnit = p.subtotalUnit * 0.18;
+        htmlEnv += `<tr><td class="text-left">IGV 18%</td>${itemsVisibles.map(p => {
+            p.igvUnit = round6(p.subtotalUnit * 0.18);
             return `<td style="text-align:center">S/ ${p.igvUnit.toFixed(2)}</td>`;
         }).join('')}</tr>`;
 
-        htmlEnv += `<tr class="row-dark"><td class="text-left">TOTAL COSTO</td>${itemsEnvasado.map(p => {
-            p.costoFinalUnit = p.subtotalUnit + p.igvUnit;
+        htmlEnv += `<tr class="row-dark"><td class="text-left">TOTAL COSTO</td>${itemsVisibles.map(p => {
+            p.costoFinalUnit = round6(p.subtotalUnit + p.igvUnit);
             return `<td style="text-align:center">S/ ${p.costoFinalUnit.toFixed(2)}</td>`;
         }).join('')}</tr></tbody>`;
 
         document.getElementById('tablaEnvasado').innerHTML = htmlEnv;
-
-        const itemsRentabilidad = producto.presentaciones.filter(p => listaActivaRentabilidad.includes(p.id));
 
         let htmlRentSimple = `<thead>
             <tr>
@@ -728,10 +727,10 @@
         let htmlPacks = `<thead>
             <tr>
                 <th class="text-left" style="background:${BRAND.AZUL}; color:white; vertical-align: bottom; padding-bottom: 10px;">UTILIDAD FINAL</th>
-                ${itemsRentabilidad.map(p => `
+                ${itemsVisibles.map(p => `
                     <th style="background:${BRAND.AZUL}; color:white; vertical-align: top; padding: 10px; text-align: center; position: relative;">
-                        <span onclick="eliminarColumnaRentabilidad('${p.id}')" style="position: absolute; top: 5px; right: 5px; cursor:pointer; color:${BRAND.MAGENTA}; background:white; border-radius:50%; width:16px; height:16px; line-height:16px;" title="Eliminar columna">×</span>
-                        <div style="font-size:11px; font-weight:bold; color:#fff; margin-top: 5px; margin-bottom:5px;">${p.codigo || p.id}</div>
+                        <span onclick="eliminarColumna('${p.id}')" style="position: absolute; top: 5px; right: 5px; cursor:pointer; color:${BRAND.MAGENTA}; background:white; border-radius:50%; width:16px; height:16px; line-height:16px;" title="Eliminar columna">×</span>
+                        <div style="font-size:11px; font-weight:bold; color:#fff; margin-top: 5px; margin-bottom:5px;">${p.codigoPack ? p.codigoPack : (p.codigo || p.id)}</div>
                         <div style="margin-bottom:5px;">
                             <input type="number" value="${p.pack}" onchange="actualizarPackSize('${p.id}', this.value)" style="width:50px; text-align:center; border:none; border-radius:3px; font-size:11px; font-weight:bold; color:${BRAND.AZUL};">
                         </div>
@@ -757,21 +756,26 @@
             </tr>
         </thead><tbody>`;
 
-        itemsRentabilidad.forEach(p => {
-            const pvUnit = p[nivelKey] || 0;
+        itemsVisibles.forEach(p => {
+            let pvUnit = p[nivelKey] || 0;
+            if(pvUnit === 0 && p.pvMin > 0) {
+                 pvUnit = p.pvMin;
+            }
+
             const costoUnit = p.costoFinalUnit || 0;
             const utilUnit = pvUnit - costoUnit;
 
             htmlRentSimple += `<tr class="row-dark">
-                <td class="text-center" style="background:rgba(255,255,255,0.4)">S/ ${pvUnit.toFixed(2)}</td>
+                <td class="text-center" style="background:rgba(255,255,255,0.4); font-weight:bold; color:${BRAND.AZUL}">${p.vol.toFixed(3)} L</td>
                 <td style="text-align:center">S/ ${pvUnit.toFixed(2)}</td>
                 <td style="text-align:center">S/ ${costoUnit.toFixed(2)}</td>
                 <td class="util-cell" style="text-align:center; color:${utilUnit>0 ? BRAND.AZUL : BRAND.MAGENTA}">S/ ${utilUnit.toFixed(2)}</td>
             </tr>`;
 
             const pvPack = pvUnit * p.pack;
-            const costoPack = (costoUnit * p.pack) + p.emb;
-            const utilPack = pvPack - costoPack;
+            const costoSoloProducto = round6(costoUnit * p.pack);
+            const costoTotalPack = round6(costoSoloProducto + p.emb);
+            const utilPack = pvPack - costoTotalPack;
             const margen = pvPack > 0 ? (utilPack / pvPack) * 100 : 0;
 
             filaPV += `<td class="text-center" style="padding:4px;">
@@ -780,7 +784,7 @@
                            style="width:80px; text-align:center; border:2px solid ${BRAND.CELESTE}; border-radius:4px; font-weight:bold; color:${BRAND.AZUL}; outline:none;">
                 </td>`;
 
-            filaCP += `<td style="text-align:center">S/ ${costoPack.toFixed(2)}</td>`;
+            filaCP += `<td style="text-align:center">S/ ${costoSoloProducto.toFixed(2)}</td>`;
             filaEMB += `<td style="text-align:center">S/ ${p.emb.toFixed(2)}</td>`;
             filaUtil += `<td style="text-align:center; font-weight:bold; color:${utilPack>0 ? BRAND.AZUL : BRAND.MAGENTA}">S/ ${utilPack.toFixed(2)}</td>`;
 
@@ -788,12 +792,12 @@
             filaMargen += `<td style="text-align:center; color:${colorMargen}; font-weight:bold">${margen.toFixed(0)}%</td>`;
 
             let cantMin = p.cantMinima || 1;
-            let totalCosto = costoPack * cantMin;
+            let totalCosto = costoTotalPack * cantMin;
             let totalVenta = pvPack * cantMin;
             let totalUtil = utilPack * cantMin;
 
             htmlResumen += `<tr>
-                <td class="text-left font-bold">${p.nombre}</td>
+                <td class="text-left font-bold">${p.nombrePack ? p.nombrePack : p.nombre}</td>
                 <td style="text-align:center">
                     <input type="number" min="1" step="1" value="${cantMin}"
                            onchange="actualizarCantMinima('${p.id}', this.value)"
@@ -831,9 +835,10 @@
             </tr>
         </thead><tbody>`;
 
-        itemsRentabilidad.forEach(p => {
+        itemsVisibles.forEach(p => {
             const qty = p.cantMinima || 1;
-            const costPack = (p.costoFinalUnit * p.pack) + p.emb;
+            const costoSoloProducto = p.costoFinalUnit * p.pack;
+            const costPack = costoSoloProducto + p.emb;
             const totalCost = costPack * qty;
 
             const levels = [
@@ -849,7 +854,7 @@
 
                 htmlComp += `<tr>`;
                 if(index === 0) {
-                    htmlComp += `<td rowspan="3" class="text-left font-bold" style="vertical-align:middle; background:#fff;">${p.nombre}</td>`;
+                    htmlComp += `<td rowspan="3" class="text-left font-bold" style="vertical-align:middle; background:#fff;">${p.nombrePack ? p.nombrePack : p.nombre}</td>`;
                 }
                 htmlComp += `
                     <td style="background:${l.bg}; color:${l.txt}; font-weight:bold;">${l.lbl}</td>
