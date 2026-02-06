@@ -1,4 +1,4 @@
-const ACCESS_PASSWORD = '1234';
+const ACCESS_PASSWORD = '';
 const PRODUCTION_SERVLET_URL = '/ProduccionServlet';
 
 let activeOrdenCode = '';
@@ -102,6 +102,14 @@ function adjustQuantity(inputId, delta) {
 }
 
 $(document).ready(function() {
+
+    fetch('/obtenerClaveSesion').then(response => response.json()).then(data => {
+         if (data.password) {
+                        ACCESS_PASSWORD = data.password;
+                        console.log("Validación de usuario cargada correctamente.");
+                    }
+                })
+                .catch(err => console.error("Error al obtener credenciales de sesión"));
     const fechaIniInput = document.getElementById('fecha_ini');
     if (fechaIniInput && !fechaIniInput.value) fechaIniInput.value = getCurrentDateFormatted();
 

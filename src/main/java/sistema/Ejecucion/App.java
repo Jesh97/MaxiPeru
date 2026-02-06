@@ -8,6 +8,7 @@ import sistema.Servlet.Compra.CompraServlet;
 import sistema.Servlet.Compra.EditarCompra;
 import sistema.Servlet.Compra.ListarCompra;
 import sistema.Servlet.Login.CerrarSesion;
+import sistema.Servlet.Login.GetSessionServlet;
 import sistema.Servlet.Login.LoginServlet;
 import sistema.Servlet.Produccion.ProduccionServlet;
 import sistema.Servlet.Producto.CatalogoServlet;
@@ -49,6 +50,7 @@ public class App {
         webserver.addServlet(VentaServlet.class,"/VentaServlet");
         webserver.addServlet(ListarVentas.class,"/ListarVentas");
         webserver.addServlet(ProduccionServlet.class,"/ProduccionServlet");
+        webserver.addServlet(GetSessionServlet.class,"/obtenerClaveSesion");
 
         URL myURL = new URL("http://localhost:8081");
         System.out.println("*********************************************************");

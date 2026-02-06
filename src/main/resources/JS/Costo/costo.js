@@ -1,11 +1,7 @@
 const SERVLET_URL = '/ProduccionServlet';
 
 const BRAND = {
-    AZUL: "#005EB8",
-    MAGENTA: "#E3007E",
-    CELESTE: "#009FE3",
-    GRIS: "#6D6E71",
-    NARANJA: "#F58220",
+    AZUL: "#005EB8", MAGENTA: "#E3007E", CELESTE: "#009FE3", GRIS: "#6D6E71", NARANJA: "#F58220",
     BG_AZUL_LIGHT: "rgba(0, 94, 184, 0.05)",
     BG_MAGENTA_LIGHT: "rgba(227, 0, 126, 0.05)",
     BG_NARANJA_LIGHT: "rgba(245, 130, 32, 0.05)"
