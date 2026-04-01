@@ -57,7 +57,7 @@ function inicializar() {
 }
 
 function guardarBD() {
-    const nombre = prompt("Nombre para guardar (Ej: Costos Enero):", "Config-" + new Date().toLocaleDateString());
+    const nombre = prompt("Nombre para guardar:", "Config-" + new Date().toLocaleDateString());
     if(!nombre) return;
 
     const paqueteDatos = {

@@ -1,14 +1,10 @@
-// Constantes de Elementos
 const clienteModalEl = document.getElementById("clienteModal");
 const modalContentEl = document.getElementById("modalContent");
 const customConfirmModalEl = document.getElementById("customConfirmModal");
 
-// Variables globales para la gestión de datos
 let todosLosClientes = [];
 let paginaActual = 1;
 const clientesPorPagina = 25;
-
-// --- Funciones de Modal ---
 
 window.mostrarModalCliente = function() {
     clienteModalEl.classList.remove('hidden', 'opacity-0');
@@ -40,8 +36,6 @@ function showCustomConfirm(message, onConfirm) {
 
     const executeBtn = document.getElementById("btnExecuteConfirm");
     const cancelBtn = document.getElementById("btnCancelConfirm");
-
-    // Clonar para asegurar que el evento 'once' se adjunte correctamente
     const newExecuteBtn = executeBtn.cloneNode(true);
     executeBtn.parentNode.replaceChild(newExecuteBtn, executeBtn);
 
@@ -81,16 +75,12 @@ window.verVentas = function(id) {
     alertSimulado(`Mostrando historial de ventas para: ${nombreCliente} (ID: ${id})`);
 }
 
-// --- Funciones de Datos y Tabla ---
-
 async function cargarClientes(filtro = "") {
-    // NOTA: Esta URL depende de tu backend, el código asume una API REST en /clientes
     let url = "/clientes";
     if (filtro) url += "?buscar=" + encodeURIComponent(filtro);
 
     try {
         const res = await fetch(url);
-        // Si el backend no existe o no devuelve un array, se puede simular datos
         if (!res.ok) {
             console.warn("La llamada a la API falló o devolvió un estado no OK. Usando datos simulados.");
             todosLosClientes = simularDatosClientes(); // Función de simulación
@@ -99,7 +89,7 @@ async function cargarClientes(filtro = "") {
         }
     } catch (error) {
         console.error("Error al cargar clientes desde la API:", error);
-        todosLosClientes = simularDatosClientes(); // Usar datos simulados en caso de error de red
+        todosLosClientes = simularDatosClientes();
     }
 
     paginaActual = 1;
@@ -107,7 +97,6 @@ async function cargarClientes(filtro = "") {
 }
 
 function simularDatosClientes() {
-    // Datos de ejemplo para que la tabla no esté vacía en un entorno sin backend
     const data = [];
     for (let i = 1; i <= 40; i++) {
         data.push({
@@ -230,8 +219,6 @@ function renderizarPaginacion() {
     lucide.createIcons();
 }
 
-// --- Funciones de CRUD ---
-
 function abrirModalNuevo() {
     document.getElementById("clienteForm").reset();
     document.getElementById("id").value = "";
@@ -250,19 +237,15 @@ window.editarCliente = function(id) {
     document.getElementById("direccion").value = cliente.direccion || '';
     document.getElementById("correo").value = cliente.correo || '';
     document.getElementById("telefono").value = cliente.telefono || '';
-
     window.mostrarModalCliente();
 }
 
 window.eliminarCliente = async function(id) {
     showCustomConfirm("¿Estás seguro de que quieres eliminar permanentemente este cliente?", async () => {
-        // Asume que el backend gestiona la eliminación en la ruta /clientes/{id}
         await fetch(`/clientes/${id}`, { method: "DELETE" });
         cargarClientes();
     });
 }
-
-// --- Manejadores de Eventos ---
 
 document.getElementById("clienteForm").addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -276,7 +259,6 @@ document.getElementById("clienteForm").addEventListener("submit", async function
     };
 
     const method = cliente.id == 0 ? "POST" : "PUT";
-    // Asume que el backend gestiona la creación/edición en la ruta /clientes
     await fetch("/clientes", {
         method: method,
         headers: { "Content-Type": "application/json" },
@@ -288,20 +270,17 @@ document.getElementById("clienteForm").addEventListener("submit", async function
 });
 
 document.getElementById("buscarInput").addEventListener("input", () => {
-    // Implementación de búsqueda en vivo al escribir
     const filtro = document.getElementById("buscarInput").value;
     cargarClientes(filtro);
 });
 
 document.getElementById("btnBuscar").addEventListener("click", () => {
-    // Botón de búsqueda (Aunque el evento 'input' ya lo gestiona, se mantiene por si se quiere un evento explícito)
     const filtro = document.getElementById("buscarInput").value;
     cargarClientes(filtro);
 });
 
 document.getElementById("btnNuevoCliente").addEventListener("click", abrirModalNuevo);
 
-// Inicialización
 cargarClientes();
 
 window.onload = () => {

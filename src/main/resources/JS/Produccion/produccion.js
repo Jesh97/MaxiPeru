@@ -1,4 +1,4 @@
-const ACCESS_PASSWORD = '';
+const ACCESS_PASSWORD = '1234';
 const PRODUCTION_SERVLET_URL = '/ProduccionServlet';
 
 let activeOrdenCode = '';

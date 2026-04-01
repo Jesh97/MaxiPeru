@@ -298,7 +298,7 @@
         const blob = new Blob([dataStr], { type: "application/json" });
         const url = URL.createObjectURL(blob);
 
-        const a = document.createElement('a');
+        const a = document.createElement('a');9
         a.href = url;
         a.download = nombreArchivo + ".json";
         document.body.appendChild(a);
