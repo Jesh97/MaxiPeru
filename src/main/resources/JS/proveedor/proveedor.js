@@ -269,6 +269,7 @@ async function eliminarProveedor(id) {
 }
 
 document.getElementById("proveedorForm").addEventListener("submit", async function (e) {
+    debugger;
     e.preventDefault();
 
     if (!this.checkValidity()) {
@@ -282,7 +283,7 @@ document.getElementById("proveedorForm").addEventListener("submit", async functi
     const id = isNew ? "temp-id-" + Date.now() : document.getElementById("id").value;
 
     const proveedor = {
-        id: id,
+       // id: id,
         ruc: document.getElementById("ruc").value,
         razonSocial: document.getElementById("razonSocial").value,
         correo: document.getElementById("correo").value,
@@ -290,7 +291,9 @@ document.getElementById("proveedorForm").addEventListener("submit", async functi
         ciudad: document.getElementById("ciudad").value,
         direccion: document.getElementById("direccion").value
     };
-
+    if (!isNew) {
+        proveedor.id = parseInt(document.getElementById("id").value);
+    }
     const method = isNew ? "POST" : "PUT";
     const actionText = isNew ? "creado" : "actualizado";
 

@@ -2,7 +2,6 @@ package sistema.Controller.Compra;
 
 import sistema.Ejecucion.Conexion;
 import sistema.Modelo.Compra.*;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +12,6 @@ public class AdicionalController {
         return Conexion.obtenerConexion();
     }
 
-    // ---------- TIPO COMPROBANTE ----------
     public void guardar(TipoComprobante comprobante) throws SQLException {
         String sql = "INSERT INTO tipo_comprobante (nombre) VALUES (?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -51,7 +49,6 @@ public class AdicionalController {
         }
     }
 
-    // ---------- FORMA DE PAGO ----------
     public void guardar(FormaPago forma) throws SQLException {
         String sql = "INSERT INTO forma_pago (nombre) VALUES (?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {

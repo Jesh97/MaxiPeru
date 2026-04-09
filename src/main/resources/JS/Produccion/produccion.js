@@ -1,4 +1,4 @@
-const ACCESS_PASSWORD = '1234';
+let ACCESS_PASSWORD = null;
 const PRODUCTION_SERVLET_URL = '/ProduccionServlet';
 
 let activeOrdenCode = '';
@@ -102,16 +102,17 @@ function adjustQuantity(inputId, delta) {
 }
 
 $(document).ready(function() {
-
-    fetch('/obtenerClaveSesion').then(response => response.json()).then(data => {
-         if (data.password) {
-                        ACCESS_PASSWORD = data.password;
-                        console.log("Validación de usuario cargada correctamente.");
-                    }
-                })
-                .catch(err => console.error("Error al obtener credenciales de sesión"));
-    const fechaIniInput = document.getElementById('fecha_ini');
-    if (fechaIniInput && !fechaIniInput.value) fechaIniInput.value = getCurrentDateFormatted();
+        fetch('/obtenerClaveSesion')
+            .then(response => response.json()).then(data => {
+                if (data.password) {
+                    ACCESS_PASSWORD = data.password;
+                    console.log("✅ Contraseña cargada correctamente desde sesión");
+                } else {
+                    console.warn("⚠️ No se recibió contraseña desde sesión");
+                }
+            }).catch(err => {
+                console.error("❌ Error al obtener credenciales de sesión", err);
+            });
 
     $("#buscar_art_ter").autocomplete({
         source: function(request, response) {
@@ -292,10 +293,20 @@ function closePasswordModal() {document.getElementById('password-modal-overlay')
 function checkPasswordAndOpenTab() {
     const passwordInput = document.getElementById('password-input');
     const tabName = document.getElementById('protected-tab-name').value;
+
+    if (!ACCESS_PASSWORD) {
+        showSwalAlert("La contraseña aún no se ha cargado. Intente nuevamente.", "warning");
+        return;
+    }
+
     if (passwordInput.value === ACCESS_PASSWORD) {
         closePasswordModal();
         openTab(null, tabName);
-        if (tabName === 'ListarOrdenes') loadOrdenesList();
+
+        if (tabName === 'ListarOrdenes') {
+            loadOrdenesList();
+        }
+
     } else {
         document.getElementById('password-error').textContent = 'Contraseña incorrecta.';
     }

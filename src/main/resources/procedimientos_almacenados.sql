@@ -214,15 +214,16 @@ BEGIN
     AND a.id_tipo_articulo IN (1, 3) AND a.cantidad > 0;
 END$$
 
-DROP PROCEDURE IF EXISTS `sp_buscar_articulos_terminados`$$
+DROP PROCEDURE IF EXISTS `sp_buscar_articulos_terminados`;
 CREATE PROCEDURE `sp_buscar_articulos_terminados`(IN p_busqueda VARCHAR(100))
 BEGIN
-SELECT a.id, a.codigo, pm.id_producto_maestro, pm.nombre_generico, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario, a.aroma, a.color, a.densidad, um.nombre AS unidad
+SELECT a.id, a.descripcion, a.codigo, pm.id_producto_maestro, pm.nombre_generico, a.cantidad, a.precio_compra, a.precio_venta, a.peso_unitario, a.aroma, a.color, a.densidad, um.nombre AS unidad
 FROM articulo a
-        LEFT JOIN producto_maestro pm ON a.id_producto_maestro = pm.id_producto_maestro
-        JOIN unidad_medida um ON a.id_unidad = um.id_unidad
-        WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%') OR pm.nombre_generico LIKE CONCAT('%', p_busqueda, '%'))
-        AND a.id_tipo_articulo = 1;
+LEFT JOIN producto_maestro pm ON a.id_producto_maestro = pm.id_producto_maestro
+JOIN unidad_medida um ON a.id_unidad = um.id_unidad
+WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%') OR pm.nombre_generico LIKE CONCAT('%', p_busqueda, '%'))
+AND a.id_tipo_articulo = 1
+LIMIT 20;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_buscar_articulos_insumos`$$
@@ -243,7 +244,7 @@ BEGIN
         a.aroma, a.color, a.densidad, um.nombre AS unidad FROM articulo a
     JOIN unidad_medida um ON a.id_unidad = um.id_unidad
     WHERE (a.codigo LIKE CONCAT('%', p_busqueda, '%') OR a.descripcion LIKE CONCAT('%', p_busqueda, '%'))
-      AND a.id_tipo_articulo = 4 AND a.cantidad > 0;
+      AND a.id_tipo_articulo = 4;
 END$$
 
 DROP PROCEDURE IF EXISTS `SP_VerLotesPorArticulo`$$
@@ -360,14 +361,11 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_detalle_compra`$$
-CREATE PROCEDURE `sp_agregar_detalle_compra`(IN p_id_compra INT, IN p_id_articulo INT, IN p_id_unidad INT, IN p_cantidad DECIMAL(12,2), IN p_precio_unitario DECIMAL(12,2),
-    IN p_bonificacion DECIMAL(12,2), IN p_coste_unitario_transporte DECIMAL(12,2), IN p_coste_total_transporte DECIMAL(12,2),
-    IN p_precio_con_descuento DECIMAL(12,2), IN p_igv_insumo DECIMAL(12,2), IN p_total DECIMAL(12,2),
-    IN p_peso_total DECIMAL(12,3), OUT p_id_detalle INT)
+CREATE PROCEDURE `sp_agregar_detalle_compra`(IN p_id_compra INT, IN p_id_articulo INT, IN p_id_unidad INT, IN p_cantidad DECIMAL(12,2), IN p_precio_unitario DECIMAL(12,2), IN p_bonificacion DECIMAL(12,2), IN p_coste_unitario_transporte DECIMAL(12,2), IN p_coste_total_transporte DECIMAL(12,2), IN p_precio_con_descuento DECIMAL(12,2), IN p_igv_insumo DECIMAL(12,2), IN p_total DECIMAL(12,2), IN p_peso_total DECIMAL(12,3), OUT p_id_detalle INT)
 BEGIN
-    INSERT INTO detalle_compra(id_compra, id_articulo, id_unidad, cantidad, precio_unitario, bonificacion, coste_unitario_transporte, coste_total_transporte, precio_con_descuento, igv_insumo, total, peso_total)
-    VALUES (p_id_compra, p_id_articulo, p_id_unidad, p_cantidad, p_precio_unitario, p_bonificacion, p_coste_unitario_transporte, p_coste_total_transporte, p_precio_con_descuento, p_igv_insumo, p_total, p_peso_total);
-    SET p_id_detalle = LAST_INSERT_ID();
+INSERT INTO detalle_compra(id_compra, id_articulo, id_unidad, cantidad, precio_unitario, bonificacion, coste_unitario_transporte, coste_total_transporte, precio_con_descuento, igv_insumo, total, peso_total) VALUES (p_id_compra, p_id_articulo, p_id_unidad, p_cantidad, p_precio_unitario, p_bonificacion, p_coste_unitario_transporte, p_coste_total_transporte, p_precio_con_descuento, p_igv_insumo, p_total, p_peso_total);
+SET p_id_detalle = LAST_INSERT_ID();
+UPDATE articulo SET precio_compra = p_precio_unitario WHERE id = p_id_articulo;
 END$$
 
 DROP PROCEDURE IF EXISTS `sp_agregar_regla_compra`$$
