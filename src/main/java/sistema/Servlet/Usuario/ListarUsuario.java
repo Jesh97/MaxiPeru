@@ -134,6 +134,7 @@ public class ListarUsuario extends HttpServlet {
             out.print("Acceso denegado. Se requiere un Administrador Principal activo.");
             return;
         }
+
         try {
             int usuarioId = Integer.parseInt(request.getParameter("id"));
             if (controller.deshabilitarUsuario(usuarioId, adminPrincipalId)) {
