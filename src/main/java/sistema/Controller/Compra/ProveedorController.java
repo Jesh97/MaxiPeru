@@ -59,11 +59,9 @@ public class ProveedorController implements ProveedorRepository {
     @Override
     public void eliminar(int id) {
         String sql = "{call sp_eliminar_proveedor(?)}";
-        try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
 
             cs.setInt(1, id);
-
             cs.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -118,8 +116,7 @@ public class ProveedorController implements ProveedorRepository {
         List<Proveedor> proveedores = new ArrayList<>();
         String sql = "{call sp_buscar_proveedor(?)}";
 
-        try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
 
             cs.setString(1, busqueda);
 

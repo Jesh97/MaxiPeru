@@ -16,8 +16,7 @@ import java.util.List;
 @WebServlet("/registrarUsuario")
 public class RegistrarUsuario extends HttpServlet {
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         String nombre = request.getParameter("nombre");
         String correo = request.getParameter("correo");

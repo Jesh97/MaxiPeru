@@ -39,6 +39,8 @@ public class CompraController implements CompraRepository {
                     registrarReglaAplicada(conn, idCompra, regla);
                 }
 
+
+
                 if (detalles != null) {
                     for (DetalleCompra detalle : detalles) {
                         int tempDetalleId = detalle.getIdDetalle();
@@ -94,8 +96,7 @@ public class CompraController implements CompraRepository {
         List<Map<String, Object>> compras = new ArrayList<>();
         String sql = "{CALL sp_listar_compras_final()}";
 
-        try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql);
+        try (Connection conn = getConnection(); CallableStatement cs = conn.prepareCall(sql);
              ResultSet rs = cs.executeQuery()) {
 
             Map<Integer, Map<String, Object>> compraMap = new LinkedHashMap<>();
