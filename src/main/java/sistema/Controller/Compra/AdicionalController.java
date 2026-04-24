@@ -86,7 +86,6 @@ public class AdicionalController {
         }
     }
 
-    // ---------- TIPO DE PAGO ----------
     public void guardar(TipoPago tipo) throws SQLException {
         String sql = "INSERT INTO tipo_pago (nombre) VALUES (?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -124,3 +123,6 @@ public class AdicionalController {
         }
     }
 }
+
+
+
