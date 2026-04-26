@@ -13,6 +13,8 @@ const TIPO_COMPROBANTE_SERVLET_URL = '/guardarTipoComprobante';
 const FORMA_PAGO_SERVLET_URL = '/guardarFormaPago';
 const TIPO_PAGO_SERVLET_URL = '/guardarTipoPago';
 
+const MONEDA_NOMBRES = { '1': 'Soles', '2': 'Dólares', '3': 'Euros' };
+
 let referencia = { numeroCotizacion: '', numeroPedido: '' };
 let guia = {
     rucGuia: '', fechaEmision: '', tipoComprobante: '', serie: '', correlativo: '',
@@ -607,16 +609,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function actualizarTotales() {
-        const moneda = selectMoneda.value;
+        const monedaVal = selectMoneda.value;
+        const esSoles = monedaVal === '1' || monedaVal === '';
         const incluyeIgv = igvSi.checked;
         const hayBonificacion = bonifSi.checked;
         const hayTraslado = trasladoSi.checked;
         const hayDescuento = descuentoSi.checked;
         const tipoDescuento = hayDescuento ? tipoDescuentoSelect.value : '';
 
-        if (monedaLabel) monedaLabel.textContent = moneda;
+        // ✅ Muestra el nombre legible de la moneda, no el valor numérico
+        if (monedaLabel) monedaLabel.textContent = MONEDA_NOMBRES[monedaVal] || 'Soles';
+
         toggleBonificacionColumn(hayBonificacion);
-        togglePrecioConvertidoColumn(moneda !== 'Soles');
+        togglePrecioConvertidoColumn(!esSoles);
         toggleDescuentoItemColumn(hayDescuento && tipoDescuento === 'por_item');
 
         let subtotal = 0;
@@ -625,7 +630,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalIgvPorItem = 0;
         let tipoCambioValor = 1;
 
-        if (moneda !== 'Soles' && inputTipoCambio) {
+        // ✅ Usa esSoles en lugar de comparar con el string 'Soles'
+        if (!esSoles && inputTipoCambio) {
             tipoCambioValor = parseFloat(inputTipoCambio.value);
             if (isNaN(tipoCambioValor) || tipoCambioValor <= 0) tipoCambioValor = 1;
         }
@@ -697,7 +703,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (trGuiaTransporte.querySelector('.peso-readonly')) trGuiaTransporte.querySelector('.peso-readonly').textContent = `${pesoTotalFila.toFixed(3)} kg`;
 
             const precioConvertidoCell = trFinanciero.querySelector('.precio-convertido-cell');
-            if (precioConvertidoCell) precioConvertidoCell.textContent = moneda !== 'Soles' ? formatCurrency(precioBaseUnitarioSoles, 'PEN') : '';
+            // ✅ Usa esSoles en lugar de comparar con el string 'Soles'
+            if (precioConvertidoCell) precioConvertidoCell.textContent = !esSoles ? formatCurrency(precioBaseUnitarioSoles, 'PEN') : '';
             if (trGuiaTransporte.querySelector('.costeTransporte')) trGuiaTransporte.querySelector('.costeTransporte').textContent = formatCurrency(costeTransporteFila, 'PEN');
 
             const precioUnitarioVenta = cantidad > 0 ? subtotalProducto / cantidad : 0;
@@ -772,11 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (filaCostoAdicional) {
-            if (costoAdicionalAplicado > 0) {
-                filaCostoAdicional.style.display = 'flex';
-            } else {
-                filaCostoAdicional.style.display = 'none';
-            }
+            filaCostoAdicional.style.display = costoAdicionalAplicado > 0 ? 'flex' : 'none';
         }
 
         totalPesoProductosCalculado = pesoTotalProductos;
@@ -792,7 +795,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (costeTransporteLabel) costeTransporteLabel.textContent = formatCurrency(costeTransporteCalculado, 'PEN');
-        if (subtotalSinIgvEl) subtotalSinIgvEl.textContent = formatCurrency(subtotalDespuesDescuento, 'PEN'); // Muestra el subtotal ya descontado
+        if (subtotalSinIgvEl) subtotalSinIgvEl.textContent = formatCurrency(subtotalDespuesDescuento, 'PEN');
         if (totalIgvEl) totalIgvEl.textContent = formatCurrency(totalIgvCalculado, 'PEN');
         if (totalCompraFinalEl) totalCompraFinalEl.textContent = formatCurrency(totalCompraFinalCalculado, 'PEN');
         if (totalAPagarEl) totalAPagarEl.textContent = formatCurrency(totalAPagarCalculado, 'PEN');
@@ -864,10 +867,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function actualizarTipoCambioVisibility() {
         if (selectMoneda && divTipoCambio && inputTipoCambio) {
-            const moneda = selectMoneda.value;
-            divTipoCambio.style.display = moneda !== 'Soles' ? 'block' : 'none';
-            if (moneda === 'Dólares') inputTipoCambio.value = '3.6';
-            else if (moneda === 'Euros') inputTipoCambio.value = '4.13';
+            const monedaVal = selectMoneda.value;
+            const esSoles = monedaVal === '1' || monedaVal === ''; 
+            divTipoCambio.style.display = esSoles ? 'none' : 'block';
+            if (monedaVal === '2') inputTipoCambio.value = '3.6';
+            else if (monedaVal === '3') inputTipoCambio.value = '4.13';
             else inputTipoCambio.value = '1';
         }
     }
@@ -1308,7 +1312,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const todosLosProductos = $$('#tablaProductosGeneral tr[data-fila-id]').map(tr => ({
             filaId: tr.dataset.filaId,
-            idArticulo: tr.dataset.idArticulo, // Agregado: se asume que existe este campo en el TR
+            idArticulo: tr.dataset.idArticulo,
             descripcion: tr.querySelector('.descripcion').value,
             codigo: tr.querySelector('.codigo').value,
             cantidadTotal: parseInt(tr.querySelector('.cantidad').value, 10),
@@ -1573,7 +1577,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         $$('#contenedorCajasModal .border').forEach(cajaEl => {
             const idCaja = parseInt(cajaEl.dataset.idCaja);
-            const nombreCaja = cajaEl.querySelector('.nombre-caja').value.trim(); // Nombre agregado
+            const nombreCaja = cajaEl.querySelector('.nombre-caja').value.trim();
             const fleteCajaTotal = parseFloat(cajaEl.querySelector('.flete-caja').value) || 0;
             const productosEnCaja = [];
             let cantidadTotalEnCaja = 0;
@@ -1773,15 +1777,15 @@ document.addEventListener('DOMContentLoaded', () => {
             let esValido = true;
 
             $$('#contenedorLotes .d-flex').forEach(filaLote => {
-                const numeroLoteInput = filaLote.querySelector('.lote-numero-lote'); // 🛠️ Nuevo input
+                const numeroLoteInput = filaLote.querySelector('.lote-numero-lote');
                 const cantidadInput = filaLote.querySelector('.lote-cantidad');
                 const fechaInput = filaLote.querySelector('.lote-fecha-vencimiento');
 
-                const numeroLote = numeroLoteInput.value.trim(); // 🛠️ Obtener número de lote
+                const numeroLote = numeroLoteInput.value.trim();
                 const cantidad = parseInt(cantidadInput.value, 10) || 0;
                 const fechaVencimiento = fechaInput.value;
 
-                if (cantidad <= 0 || !fechaVencimiento || numeroLote === '') { // 🛠️ Se valida numeroLote
+                if (cantidad <= 0 || !fechaVencimiento || numeroLote === '') {
                     esValido = false;
                     return;
                 }

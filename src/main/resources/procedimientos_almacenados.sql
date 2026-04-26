@@ -55,7 +55,7 @@ BEGIN
     DECLARE v_admin_principal_rol VARCHAR(45);
 
     SELECT username, rol INTO v_admin_principal_username, v_admin_principal_rol FROM usuario
-    WHERE id = p_admin_principal_id AND rol = 'administrador principal';
+    WHERE id = p_admin_principal_id AND rol = 'c';
 
     IF v_admin_principal_username IS NOT NULL THEN
         UPDATE usuario SET permite_acceso_irrestricto = 1 WHERE id = p_usuario_id;
