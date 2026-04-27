@@ -20,12 +20,17 @@ public class ClienteController implements ClienteRepository {
     @Override
     public void insertar(Cliente cliente) {
         String sql = "{call sp_agregar_cliente(?, ?, ?, ?, ?, ?)}";
-        String tipoDoc = cliente.getN_Documento().length() == 8 ? "DNI" : "RUC";
+        // String tipoDoc = cliente.getN_Documento().length() == 8 ? "DNI" : "RUC";
+
+        Cliente.TipoDocumento tipoDoc = cliente.getN_Documento().length() == 8
+                ? Cliente.TipoDocumento.DNI
+                : Cliente.TipoDocumento.RUC;
+        cliente.setTipoDocumento(tipoDoc);
 
         try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
+                CallableStatement cs = conn.prepareCall(sql)) {
 
-            cs.setString(1, tipoDoc);
+            cs.setString(1, tipoDoc.name());
             cs.setString(2, cliente.getN_Documento());
             cs.setString(3, cliente.getRazonSocial());
             cs.setString(4, cliente.getDireccion());
@@ -41,13 +46,18 @@ public class ClienteController implements ClienteRepository {
     @Override
     public void actualizar(Cliente cliente) {
         String sql = "{call sp_actualizar_cliente(?, ?, ?, ?, ?, ?, ?)}";
-        String tipoDoc = cliente.getN_Documento().length() == 8 ? "DNI" : "RUC";
+        // String tipoDoc = cliente.getN_Documento().length() == 8 ? "DNI" : "RUC";
+
+        Cliente.TipoDocumento tipoDoc = cliente.getN_Documento().length() == 8
+                ? Cliente.TipoDocumento.DNI
+                : Cliente.TipoDocumento.RUC;
+        cliente.setTipoDocumento(tipoDoc);
 
         try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
+                CallableStatement cs = conn.prepareCall(sql)) {
 
             cs.setInt(1, cliente.getId());
-            cs.setString(2, tipoDoc);
+            cs.setString(2, tipoDoc.name());
             cs.setString(3, cliente.getN_Documento());
             cs.setString(4, cliente.getRazonSocial());
             cs.setString(5, cliente.getDireccion());
@@ -64,7 +74,7 @@ public class ClienteController implements ClienteRepository {
     public void eliminar(int id) {
         String sql = "{call sp_eliminar_cliente(?)}";
         try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
+                CallableStatement cs = conn.prepareCall(sql)) {
 
             cs.setInt(1, id);
 
@@ -78,7 +88,7 @@ public class ClienteController implements ClienteRepository {
     public Cliente obtenerPorId(int id) {
         String sql = "SELECT id, tipoDocumento, n_documento, razonSocial, direccion, telefono, correo FROM cliente WHERE id=?";
         try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -96,8 +106,8 @@ public class ClienteController implements ClienteRepository {
         List<Cliente> lista = new ArrayList<>();
         String sql = "{call sp_listar_clientes()}";
         try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql);
-             ResultSet rs = cs.executeQuery()) {
+                CallableStatement cs = conn.prepareCall(sql);
+                ResultSet rs = cs.executeQuery()) {
             while (rs.next()) {
                 lista.add(mapearCliente(rs));
             }
@@ -108,11 +118,40 @@ public class ClienteController implements ClienteRepository {
     }
 
     @Override
+    public List<Cliente> listarBasico() {
+        List<Cliente> lista = new ArrayList<>();
+
+        String sql = "SELECT tipoDocumento, n_documento, razonSocial FROM cliente";
+
+        try (Connection conn = getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Cliente c = new Cliente();
+
+                c.setTipoDocumento(
+                        Cliente.TipoDocumento.valueOf(
+                                rs.getString("tipoDocumento").replace("S/D", "SD").toUpperCase()));
+                c.setN_Documento(rs.getString("n_documento"));
+                c.setRazonSocial(rs.getString("razonSocial"));
+
+                lista.add(c);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return lista;
+    }
+
+    @Override
     public List<Cliente> buscar(String filtro) {
         List<Cliente> lista = new ArrayList<>();
         String sql = "{call sp_buscar_cliente(?)}";
         try (Connection conn = getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
+                CallableStatement cs = conn.prepareCall(sql)) {
             cs.setString(1, filtro);
             try (ResultSet rs = cs.executeQuery()) {
                 while (rs.next()) {
@@ -128,11 +167,27 @@ public class ClienteController implements ClienteRepository {
     private Cliente mapearCliente(ResultSet rs) throws SQLException {
         Cliente c = new Cliente();
         c.setId(rs.getInt("id"));
+
+        String tipo = rs.getString("tipoDocumento");
+
+        if (tipo != null) {
+            tipo = tipo.toUpperCase();
+
+            if (tipo.equals("S/D")) {
+                tipo = "SD";
+            }
+
+            c.setTipoDocumento(Cliente.TipoDocumento.valueOf(tipo));
+        } else {
+            c.setTipoDocumento(null);
+        }
+
         c.setN_Documento(rs.getString("n_documento"));
         c.setRazonSocial(rs.getString("razonSocial"));
         c.setDireccion(rs.getString("direccion"));
         c.setCorreo(rs.getString("correo"));
         c.setTelefono(rs.getString("telefono"));
+
         return c;
     }
 }

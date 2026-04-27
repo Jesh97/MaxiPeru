@@ -9,5 +9,6 @@ public interface ClienteRepository {
     void eliminar(int id);
     Cliente obtenerPorId(int id);
     List<Cliente> listarTodos();
+    List<Cliente> listarBasico();
     List<Cliente> buscar(String filtro);
 }

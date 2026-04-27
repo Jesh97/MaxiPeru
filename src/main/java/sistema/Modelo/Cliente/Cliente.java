@@ -2,7 +2,7 @@ package sistema.Modelo.Cliente;
 
 public class Cliente {
 
-    public enum TipoDocumento {DNI,RUC};
+    public enum TipoDocumento {DNI,RUC,SD};
     private int id;
     private String razonSocial;
     private String direccion;
@@ -19,6 +19,15 @@ public class Cliente {
         this.direccion = direccion;
         this.correo = correo;
         this.telefono = telefono;
+    }
+
+
+    public TipoDocumento getTipoDocumento() {
+        return tipoDocumento;
+    }
+
+    public void setTipoDocumento(TipoDocumento tipoDocumento) {
+        this.tipoDocumento = tipoDocumento;
     }
 
     public Cliente() {
