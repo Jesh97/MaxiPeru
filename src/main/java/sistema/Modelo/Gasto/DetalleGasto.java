@@ -15,6 +15,12 @@ public class DetalleGasto {
     @JsonProperty("cantidad")
     private double cantidad;
 
+    @JsonProperty("id_unidad")
+    private int idUnidad;
+
+    @JsonProperty("peso_unitario")
+    private double pesoUnitario;
+
     @JsonProperty("precio_unitario")
     private double precioUnitario;
 
@@ -27,12 +33,15 @@ public class DetalleGasto {
     @JsonProperty("total")
     private double total;
 
-    public DetalleGasto(int idDetalleGasto, int idGasto, String descripcion, double cantidad, double precioUnitario,
+    public DetalleGasto(int idDetalleGasto, int idGasto, String descripcion, double cantidad, int idUnidad,
+                        double pesoUnitario, double precioUnitario,
                         double subtotal, double igv, double total) {
         this.idDetalleGasto = idDetalleGasto;
         this.idGasto = idGasto;
         this.descripcion = descripcion;
         this.cantidad = cantidad;
+        this.idUnidad = idUnidad;
+        this.pesoUnitario = pesoUnitario;
         this.precioUnitario = precioUnitario;
         this.subtotal = subtotal;
         this.igv = igv;
@@ -74,6 +83,22 @@ public class DetalleGasto {
         this.cantidad = cantidad;
     }
 
+    public int getIdUnidad() {
+        return idUnidad;
+    }
+
+    public void setIdUnidad(int idUnidad) {
+        this.idUnidad = idUnidad;
+    }
+
+    public double getPesoUnitario() {
+        return pesoUnitario;
+    }
+
+    public void setPesoUnitario(double pesoUnitario) {
+        this.pesoUnitario = pesoUnitario;
+    }
+
     public double getPrecioUnitario() {
         return precioUnitario;
     }
@@ -113,6 +138,8 @@ public class DetalleGasto {
                 ", idGasto=" + idGasto +
                 ", descripcion='" + descripcion + '\'' +
                 ", cantidad=" + cantidad +
+                ", idUnidad=" + idUnidad +
+                ", pesoUnitario=" + pesoUnitario +
                 ", precioUnitario=" + precioUnitario +
                 ", subtotal=" + subtotal +
                 ", igv=" + igv +

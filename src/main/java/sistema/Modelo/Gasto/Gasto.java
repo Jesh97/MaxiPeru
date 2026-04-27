@@ -15,6 +15,21 @@ public class Gasto {
     @JsonProperty("id_tipo_gasto")
     private int idTipoGasto;
 
+    @JsonProperty("motivo")
+    private String motivo;
+
+    @JsonProperty("placa")
+    private String placa;
+
+    @JsonProperty("id_tipo_comprobante")
+    private int idTipoComprobante;
+
+    @JsonProperty("serie_comprobante")
+    private String serieComprobante;
+
+    @JsonProperty("correlativo_comprobante")
+    private String correlativoComprobante;
+
     @JsonProperty("fecha")
     private LocalDate fecha;
 
@@ -33,20 +48,30 @@ public class Gasto {
     @JsonProperty("observacion")
     private String observacion;
 
+    @JsonProperty("total_peso")
+    private double totalPeso;
+
     @JsonProperty("fecha_registro")
     private LocalDateTime fechaRegistro;
 
-    public Gasto(int idGasto, int idProveedor, int idTipoGasto, LocalDate fecha, int idMoneda, double subtotal,
-                 double igv, double total, String observacion, LocalDateTime fechaRegistro) {
+    public Gasto(int idGasto, int idProveedor, int idTipoGasto, String motivo, String placa, int idTipoComprobante,
+                 String serieComprobante, String correlativoComprobante, LocalDate fecha, int idMoneda, double subtotal,
+                 double igv, double total, String observacion, double totalPeso, LocalDateTime fechaRegistro) {
         this.idGasto = idGasto;
         this.idProveedor = idProveedor;
         this.idTipoGasto = idTipoGasto;
+        this.motivo = motivo;
+        this.placa = placa;
+        this.idTipoComprobante = idTipoComprobante;
+        this.serieComprobante = serieComprobante;
+        this.correlativoComprobante = correlativoComprobante;
         this.fecha = fecha;
         this.idMoneda = idMoneda;
         this.subtotal = subtotal;
         this.igv = igv;
         this.total = total;
         this.observacion = observacion;
+        this.totalPeso = totalPeso;
         this.fechaRegistro = fechaRegistro;
     }
 
@@ -75,6 +100,46 @@ public class Gasto {
 
     public void setIdTipoGasto(int idTipoGasto) {
         this.idTipoGasto = idTipoGasto;
+    }
+
+    public String getMotivo() {
+        return motivo;
+    }
+
+    public void setMotivo(String motivo) {
+        this.motivo = motivo;
+    }
+
+    public String getPlaca() {
+        return placa;
+    }
+
+    public void setPlaca(String placa) {
+        this.placa = placa;
+    }
+
+    public int getIdTipoComprobante() {
+        return idTipoComprobante;
+    }
+
+    public void setIdTipoComprobante(int idTipoComprobante) {
+        this.idTipoComprobante = idTipoComprobante;
+    }
+
+    public String getSerieComprobante() {
+        return serieComprobante;
+    }
+
+    public void setSerieComprobante(String serieComprobante) {
+        this.serieComprobante = serieComprobante;
+    }
+
+    public String getCorrelativoComprobante() {
+        return correlativoComprobante;
+    }
+
+    public void setCorrelativoComprobante(String correlativoComprobante) {
+        this.correlativoComprobante = correlativoComprobante;
     }
 
     public LocalDate getFecha() {
@@ -125,6 +190,14 @@ public class Gasto {
         this.observacion = observacion;
     }
 
+    public double getTotalPeso() {
+        return totalPeso;
+    }
+
+    public void setTotalPeso(double totalPeso) {
+        this.totalPeso = totalPeso;
+    }
+
     public LocalDateTime getFechaRegistro() {
         return fechaRegistro;
     }
@@ -139,12 +212,18 @@ public class Gasto {
                 "idGasto=" + idGasto +
                 ", idProveedor=" + idProveedor +
                 ", idTipoGasto=" + idTipoGasto +
+                ", motivo='" + motivo + '\'' +
+                ", placa='" + placa + '\'' +
+                ", idTipoComprobante=" + idTipoComprobante +
+                ", serieComprobante='" + serieComprobante + '\'' +
+                ", correlativoComprobante='" + correlativoComprobante + '\'' +
                 ", fecha=" + fecha +
                 ", idMoneda=" + idMoneda +
                 ", subtotal=" + subtotal +
                 ", igv=" + igv +
                 ", total=" + total +
                 ", observacion='" + observacion + '\'' +
+                ", totalPeso=" + totalPeso +
                 ", fechaRegistro=" + fechaRegistro +
                 '}';
     }

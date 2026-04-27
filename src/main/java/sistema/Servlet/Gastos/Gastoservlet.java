@@ -64,9 +64,47 @@ public class Gastoservlet extends HttpServlet {
             JsonNode root = mapper.readTree(jsonBody);
 
             // ── Validaciones ─────────────────────────────────────────────────
-            int idProveedor = root.path("id_proveedor").asInt(0);
+            String proveedorTexto = root.path("proveedor").asText("").trim();
+            if (proveedorTexto.isEmpty()) {
+                throw new IllegalArgumentException("Ingrese un proveedor (RUC o razon social).");
+            }
+
+            int idProveedor = gastoController.buscarOCrearProveedorPorTexto(proveedorTexto);
             if (idProveedor <= 0) {
-                throw new IllegalArgumentException("El ID de proveedor es obligatorio.");
+                throw new IllegalArgumentException("Proveedor no valido. Ingrese un RUC numerico o un proveedor existente.");
+            }
+
+            String tipoGastoNombre = root.path("categoria_gasto").asText("").trim();
+            if (tipoGastoNombre.isEmpty()) {
+                throw new IllegalArgumentException("Seleccione un tipo de gasto.");
+            }
+            int idTipoGasto = gastoController.buscarOCrearTipoGastoPorNombre(tipoGastoNombre);
+            if (idTipoGasto <= 0) {
+                throw new IllegalArgumentException("El tipo de gasto no existe en la base de datos.");
+            }
+
+            String tipoComprobanteNombre = root.path("tipo_comprobante").asText("").trim();
+            if (tipoComprobanteNombre.isEmpty()) {
+                throw new IllegalArgumentException("Seleccione un tipo de comprobante.");
+            }
+            int idTipoComprobante = gastoController.buscarOCrearTipoComprobantePorNombre(tipoComprobanteNombre);
+            if (idTipoComprobante <= 0) {
+                throw new IllegalArgumentException("El tipo de comprobante no existe en la base de datos.");
+            }
+
+            String serie = root.path("serie_comprobante").asText("").trim();
+            String correlativo = root.path("correlativo_comprobante").asText("").trim();
+            String motivo = root.path("motivo").asText("").trim();
+            String placa = root.path("placa").asText("").trim();
+
+            if (serie.isEmpty()) {
+                throw new IllegalArgumentException("La serie del comprobante es obligatoria.");
+            }
+            if (correlativo.isEmpty()) {
+                throw new IllegalArgumentException("El correlativo del comprobante es obligatorio.");
+            }
+            if (motivo.isEmpty()) {
+                throw new IllegalArgumentException("Seleccione el motivo del gasto.");
             }
 
             if (!root.has("items") || !root.get("items").isArray() || root.get("items").size() == 0) {
@@ -76,24 +114,38 @@ public class Gastoservlet extends HttpServlet {
             // ── Armar Gasto ───────────────────────────────────────────────────
             Gasto gasto = new Gasto();
             gasto.setIdProveedor(idProveedor);
-            gasto.setIdTipoGasto(root.path("id_tipo_gasto").asInt(1));
-            gasto.setIdMoneda(root.path("id_moneda").asInt(1));
+            gasto.setIdTipoGasto(idTipoGasto);
+            gasto.setIdTipoComprobante(idTipoComprobante);
+            gasto.setSerieComprobante(serie);
+            gasto.setCorrelativoComprobante(correlativo);
+            gasto.setMotivo(motivo);
+            gasto.setPlaca(placa);
+            int idMonedaValida = gastoController.resolverMonedaIdValida(root.path("id_moneda").asInt(1));
+            gasto.setIdMoneda(idMonedaValida);
             gasto.setFecha(parseDate(root, "fecha"));
             gasto.setSubtotal(root.path("subtotal").asDouble(0));
             gasto.setIgv(root.path("igv").asDouble(0));
             gasto.setTotal(root.path("total").asDouble(0));
             gasto.setObservacion(root.path("observacion").asText("").trim());
+            gasto.setTotalPeso(root.path("total_peso").asDouble(0));
 
             // ── Armar Detalles ────────────────────────────────────────────────
             List<DetalleGasto> detalles = new ArrayList<>();
             for (JsonNode item : root.get("items")) {
                 String desc     = item.path("descripcion").asText("").trim();
+                String unidad   = item.path("unidad").asText("").trim();
                 double cantidad = item.path("cantidad").asDouble(0);
+                double peso     = item.path("peso_unitario").asDouble(0);
                 double precio   = item.path("precio_unitario").asDouble(0);
 
-                if (desc.isEmpty() || cantidad <= 0 || precio <= 0) {
+                if (desc.isEmpty() || unidad.isEmpty() || cantidad <= 0 || precio <= 0) {
                     throw new IllegalArgumentException(
-                        "Cada ítem debe tener descripción, cantidad y precio válidos.");
+                        "Cada ítem debe tener descripcion, unidad, cantidad y precio validos.");
+                }
+
+                int idUnidad = gastoController.buscarUnidadIdPorAbreviatura(unidad);
+                if (idUnidad <= 0) {
+                    throw new IllegalArgumentException("Unidad no reconocida: " + unidad);
                 }
 
                 double subtotal = Math.round(cantidad * precio * 100.0) / 100.0;
@@ -103,6 +155,8 @@ public class Gastoservlet extends HttpServlet {
                 DetalleGasto d = new DetalleGasto();
                 d.setDescripcion(desc);
                 d.setCantidad(cantidad);
+                d.setIdUnidad(idUnidad);
+                d.setPesoUnitario(peso);
                 d.setPrecioUnitario(precio);
                 d.setSubtotal(subtotal);
                 d.setIgv(igv);

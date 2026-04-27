@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalPesoGasto      = document.getElementById('totalPesoGasto');
     const emptyTableMessage   = document.getElementById('emptyTableMessage');
     const guardarGastoBtn     = document.getElementById('guardarGastoBtn');
+    const formGasto           = document.getElementById('formGasto');
 
     const IGV_RATE = 0.18;
 
@@ -169,6 +170,51 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
     }
 
+    function validarCamposGenerales() {
+        const proveedor = document.getElementById('busquedaProveedor').value.trim();
+        const fecha = document.getElementById('fechaGasto').value;
+        const tipoComprobante = document.getElementById('tipoComprobante').value;
+        const serie = document.getElementById('serieComprobante').value.trim();
+        const correlativo = document.getElementById('correlativoComprobante').value.trim();
+        const categoria = document.getElementById('categoriaGasto').value;
+        const motivo = document.getElementById('motivoGasto').value;
+        const placaInput = document.getElementById('placa').value.trim();
+
+        if (!proveedor) {
+            showModal('error', 'Proveedor requerido', 'Ingrese el RUC o razon social del proveedor.');
+            return false;
+        }
+        if (!fecha) {
+            showModal('error', 'Fecha requerida', 'Seleccione la fecha de emision del gasto.');
+            return false;
+        }
+        if (!tipoComprobante) {
+            showModal('error', 'Comprobante requerido', 'Seleccione el tipo de comprobante.');
+            return false;
+        }
+        if (!serie || !/^[A-Za-z0-9-]{2,20}$/.test(serie)) {
+            showModal('error', 'Serie invalida', 'La serie debe tener entre 2 y 20 caracteres alfanumericos.');
+            return false;
+        }
+        if (!correlativo || !/^[A-Za-z0-9-]{1,20}$/.test(correlativo)) {
+            showModal('error', 'Correlativo invalido', 'El correlativo debe tener entre 1 y 20 caracteres alfanumericos.');
+            return false;
+        }
+        if (!categoria) {
+            showModal('error', 'Categoria requerida', 'Seleccione el tipo de gasto.');
+            return false;
+        }
+        if (!motivo) {
+            showModal('error', 'Motivo requerido', 'Seleccione el motivo del gasto.');
+            return false;
+        }
+        if (categoria === 'Gastos Operativos' && !placaInput) {
+            showModal('error', 'Placa requerida', 'Para gastos operativos debe ingresar una placa.');
+            return false;
+        }
+        return true;
+    }
+
     // ── CONSTRUIR ITEMS ──────────────────────────────────────────────────────
     function obtenerItems() {
         const items = [];
@@ -179,7 +225,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const igv      = Math.round(subtotal * IGV_RATE * 100) / 100;
             items.push({
                 descripcion:     row.querySelector('td:first-child input').value.trim(),
+                unidad:          row.querySelector('td:nth-child(2) select').value,
                 cantidad:        cantidad,
+                peso_unitario:   parseFloat(row.querySelector('.peso-item').value) || 0,
                 precio_unitario: precio,
                 subtotal:        subtotal,
                 igv:             igv,
@@ -199,23 +247,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── SUBMIT ───────────────────────────────────────────────────────────────
-    document.getElementById('formGasto').addEventListener('submit', async (e) => {
+    formGasto.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!validarCamposGenerales()) return;
         if (!validarItems()) return;
 
         const subtotalNum = parseFloat(subtotalGasto.textContent.replace('S/ ', '')) || 0;
         const igvNum      = parseFloat(igvGasto.textContent.replace('S/ ', ''))      || 0;
         const totalNum    = parseFloat(totalGasto.textContent.replace('S/ ', ''))    || 0;
+        const totalPesoNum = parseFloat(totalPesoGasto.textContent) || 0;
 
-        // Payload alineado con Gasto.java (campos que espera Gastocontroller)
         const payload = {
-            id_proveedor:  1,   // TODO: reemplazar con ID real del proveedor
-            id_tipo_gasto: 1,   // TODO: reemplazar con ID real del tipo de gasto
+            proveedor:     document.getElementById('busquedaProveedor').value.trim(),
+            categoria_gasto: document.getElementById('categoriaGasto').value,
+            motivo:        document.getElementById('motivoGasto').value,
+            placa:         document.getElementById('placa').value.trim(),
+            tipo_comprobante: document.getElementById('tipoComprobante').selectedOptions[0].textContent.trim(),
+            serie_comprobante: document.getElementById('serieComprobante').value.trim(),
+            correlativo_comprobante: document.getElementById('correlativoComprobante').value.trim(),
             id_moneda:     1,   // TODO: reemplazar con ID real de moneda
             fecha:         document.getElementById('fechaGasto').value,
             subtotal:      subtotalNum,
             igv:           igvNum,
             total:         totalNum,
+            total_peso:    totalPesoNum,
             observacion:   document.getElementById('observacionesGasto').value.trim(),
             items:         obtenerItems()
         };
@@ -224,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
         guardarGastoBtn.innerHTML = '<i class="bi bi-hourglass-split text-xl"></i><span> Guardando...</span>';
 
         try {
-            const response = await fetch('http://localhost:8081/GastoServlet', {
+            const response = await fetch('/GastoServlet', {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify(payload)
@@ -254,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── HISTORIAL ────────────────────────────────────────────────────────────
     document.getElementById('listaGastosBtn').addEventListener('click', () => {
-    window.location.href = 'http://localhost:8081/GastoServlet?action=listar';
+    window.location.href = '/GastoServlet?action=listar';
 
 });
 });
