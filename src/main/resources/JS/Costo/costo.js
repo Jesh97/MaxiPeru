@@ -1,4 +1,5 @@
 const SERVLET_URL = '/ProduccionServlet';
+const COSTO_URL = '/CostoServlet';
 
 const BRAND = {
     AZUL: "#005EB8", MAGENTA: "#E3007E", CELESTE: "#009FE3", GRIS: "#6D6E71", NARANJA: "#F58220",
@@ -7,37 +8,12 @@ const BRAND = {
     BG_NARANJA_LIGHT: "rgba(245, 130, 32, 0.05)"
 };
 
-const CATALOGO_PRODUCTOS = [
-    { id: "alcohol_gel", nombre: "ALCOHOL EN GEL" },
-    { id: "jabon_liq", nombre: "JABÓN LÍQUIDO (Demo)" },
-    { id: "lejia", nombre: "LEJÍA (Demo)" }
-];
+/** Clave art_<id_articulo>: { nombreLargo, insumos, presentaciones, litrosLoteBase } */
+const DATA = {};
 
-const DATA = {
-    alcohol_gel: {
-        nombreLargo: "ALCOHOL EN GEL",
-        insumos: [
-            { cod: "CARB", nombre: "Carbopol", dens: 1.000, costoKg: 67.16, cilL: 0.700 },
-            { cod: "GLINA", nombre: "Glicerina", dens: 1.210, costoKg: 5.95, cilL: 3.000 },
-            { cod: "PROPL", nombre: "Propilenglicol", dens: 0.995, costoKg: 10.17, cilL: 1.200 },
-            { cod: "ALET96", nombre: "Alcohol etílico 96°", dens: 1.000, costoKg: 3.517, cilL: 190.000 },
-            { cod: "TRIENA", nombre: "Trietalonamina", dens: 1.080, costoKg: 0.957, cilL: 0.170 },
-            { cod: "H2OB", nombre: "Agua embotellada", dens: 0.960, costoKg: 0.254, cilL: 80.000 },
-            { cod: "PROPB", nombre: "Propilparabeno", dens: 1.000, costoKg: 59.322, cilL: 0.040 }
-        ],
-        presentaciones: []
-    },
-    jabon_liq: {
-        nombreLargo: "JABÓN LÍQUIDO (Demo)",
-        insumos: [ { cod: "TEX", nombre: "Texapon 70", dens: 1.1, costoKg: 8.50, cilL: 40.000 }, { cod: "H2O", nombre: "Agua", dens: 1.0, costoKg: 0.10, cilL: 150.000 } ],
-        presentaciones: []
-    },
-    lejia: {
-        nombreLargo: "LEJÍA (Demo)",
-        insumos: [ { cod: "HIPO", nombre: "Hipoclorito", dens: 1.2, costoKg: 1.50, cilL: 200.000 } ],
-        presentaciones: []
-    }
-};
+function fetchCosto(url, init) {
+    return fetch(url, Object.assign({ credentials: 'same-origin' }, init || {}));
+}
 
 let listaItemsActivos = [];
 let timeoutBusqueda = null;
@@ -49,11 +25,47 @@ function round6(num) {
 }
 
 function inicializar() {
-    document.getElementById('inputBusquedaMain').value = "ALCOHOL EN GEL";
-    cargarProductoInicial("alcohol_gel");
+    document.getElementById('inputBusquedaMain').value = "";
+    document.getElementById('productoSelect').value = "";
+    listaItemsActivos = [];
+    actualizarTodoVacio();
+
+    fetchCosto(`${COSTO_URL}?action=cargar_inicial`)
+        .then(res => {
+            if (res.status === 401) return null;
+            return res.json();
+        })
+        .then(j => {
+            if (!j || j.error) return;
+            if (j.ok === false) return;
+            const idArt = j.id_articulo_sugerido;
+            if (idArt == null) return;
+            const key = "art_" + idArt;
+            document.getElementById("productoSelect").value = key;
+            document.getElementById("inputBusquedaMain").value =
+                j.descripcion_articulo || j.nombre_producto || "";
+            aplicarInsumosDesdeServidor(key, j, {
+                descripcionFallback: j.descripcion_articulo || j.nombre_producto || ""
+            });
+        })
+        .catch(() => {});
 
     const now = new Date();
     document.getElementById('fechaImpresion').innerText = `Fecha: ${now.toLocaleDateString()}`;
+}
+
+function actualizarTodoVacio() {
+    document.getElementById('verticalNombre').innerText = "— Busque un producto terminado —";
+    document.getElementById('lblProductoScreen').innerText = "";
+    document.getElementById('lblProductoPrint').innerText = "";
+    document.getElementById('bodyMP').innerHTML = `<tr><td colspan="11" style="text-align:center;color:${BRAND.GRIS};padding:16px;">Use la búsqueda superior para cargar la receta desde la base de datos.</td></tr>`;
+    document.getElementById('bodyGranel').innerHTML = "";
+    document.getElementById('footGranel').innerHTML = "";
+    document.getElementById('tablaEnvasado').innerHTML = "";
+    document.getElementById('tablaRentSimple').innerHTML = "";
+    document.getElementById('tablaPacks').innerHTML = "";
+    document.getElementById('tablaResumen').innerHTML = "";
+    document.getElementById('tablaComparativa').innerHTML = "";
 }
 
 function guardarBD() {
@@ -67,36 +79,51 @@ function guardarBD() {
     };
 
     const params = new URLSearchParams();
-    params.append('action', 'guardar_db');
+    params.append('action', 'guardar');
     params.append('nombre', nombre);
     params.append('data', JSON.stringify(paqueteDatos));
 
-    fetch(SERVLET_URL, {
+    fetchCosto(COSTO_URL, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: params
     })
-    .then(r => r.text())
-    .then(t => alert("¡Costos guardados correctamente!"))
+    .then(r => r.json())
+    .then(j => {
+        if (j.error) alert(j.error);
+        else alert(j.mensaje || "¡Costos guardados correctamente!");
+    })
     .catch(e => alert("Error al conectar: " + e));
 }
 
 function cargarBD() {
-    const idCargar = prompt("Ingrese ID a recuperar:", "1");
+    const idCargar = prompt("Ingrese ID de configuración a recuperar:", "1");
     if(!idCargar) return;
 
-    fetch(`${SERVLET_URL}?action=cargar_db&id=${idCargar}`)
-        .then(r => r.json())
-        .then(json => {
-            if(!json) { alert("No encontrado."); return; }
-            if(json.main) Object.assign(DATA, json.main);
+    fetchCosto(`${COSTO_URL}?action=cargar&id=${encodeURIComponent(idCargar)}`)
+        .then(r => {
+            if (r.status === 404) throw new Error("No encontrado");
+            return r.text();
+        })
+        .then(text => {
+            const json = JSON.parse(text);
+            if(json.main) {
+                Object.keys(DATA).forEach(k => delete DATA[k]);
+                Object.assign(DATA, json.main);
+            }
             if(json.items) listaItemsActivos = json.items;
             else if(json.cols_env) listaItemsActivos = json.cols_env;
-            if(json.prod_sel) document.getElementById('productoSelect').value = json.prod_sel;
+            if(json.prod_sel) {
+                document.getElementById('productoSelect').value = json.prod_sel;
+                const prod = DATA[json.prod_sel];
+                if (prod && prod.nombreLargo) {
+                    document.getElementById('inputBusquedaMain').value = prod.nombreLargo;
+                }
+            }
             actualizarTodo();
-            alert("Costos recuperados.");
+            alert("Costos recuperados desde la base de datos.");
         })
-        .catch(e => alert("Error al recuperar."));
+        .catch(() => alert("Error al recuperar o ID inválido."));
 }
 
 function irAlReporte() {
@@ -126,16 +153,21 @@ function cargarProductoInicial(key) {
 
 function buscarProductoMain(texto) {
     const lista = document.getElementById('listaSugerenciasMain');
-    if (texto.length < 1) {
-        lista.style.display = 'none';
-        return;
-    }
+    const busq = texto == null ? "" : String(texto);
 
     clearTimeout(timeoutBusquedaMain);
     timeoutBusquedaMain = setTimeout(() => {
-        const resultados = CATALOGO_PRODUCTOS.filter(p => p.nombre.toLowerCase().includes(texto.toLowerCase()));
-        renderizarSugerenciasMain(resultados);
-    }, 200);
+        const url = `${COSTO_URL}?action=productos_terminados&busqueda=${encodeURIComponent(busq)}`;
+        fetchCosto(url)
+            .then(res => {
+                if (res.status === 401) throw new Error("Sesión");
+                return res.json();
+            })
+            .then(data => renderizarSugerenciasMain(Array.isArray(data) ? data : []))
+            .catch(() => {
+                lista.style.display = 'none';
+            });
+    }, busq.length === 0 ? 50 : 200);
 }
 
 function renderizarSugerenciasMain(data) {
@@ -147,23 +179,73 @@ function renderizarSugerenciasMain(data) {
     }
     data.forEach(item => {
         const li = document.createElement('li');
-        li.innerHTML = `<div class="item-desc">${item.nombre}</div>`;
+        const titulo = item.descripcion || item.nombre || "";
+        const cod = item.codigo ? ` · ${item.codigo}` : "";
+        li.innerHTML = `<div class="item-desc">${titulo}</div><div class="item-meta">${cod}</div>`;
         li.onclick = () => seleccionarProductoMain(item);
         lista.appendChild(li);
     });
     lista.style.display = 'block';
 }
 
+/**
+ * Rellena DATA[key] y la tabla a partir del JSON del servlet (insumos_desde_receta o cargar_inicial).
+ */
+function aplicarInsumosDesdeServidor(key, j, opts) {
+    const descripcionFallback = (opts && opts.descripcionFallback) || "";
+    if (j.error) {
+        alert(j.error);
+        return;
+    }
+    if (j.ok === false && j.mensaje) {
+        alert(j.mensaje);
+        DATA[key] = {
+            nombreLargo: j.nombre_producto || descripcionFallback,
+            insumos: [],
+            presentaciones: DATA[key]?.presentaciones || [],
+            litrosLoteBase: 240,
+            id_receta: 0
+        };
+        listaItemsActivos = [];
+        actualizarTodo();
+        return;
+    }
+    const ins = (j.insumos || []).map(row => ({
+        cod: row.cod,
+        nombre: row.nombre,
+        dens: Number(row.dens) || 1,
+        costoKg: Number(row.costoKg) || 0,
+        cilL: Number(row.cilL) || 0
+    }));
+    DATA[key] = {
+        nombreLargo: j.nombre_producto || descripcionFallback,
+        insumos: ins,
+        presentaciones: DATA[key]?.presentaciones || [],
+        litrosLoteBase: Number(j.litros_lote_base) > 0 ? Number(j.litros_lote_base) : 240,
+        id_receta: j.id_receta || 0
+    };
+    listaItemsActivos = [];
+    actualizarTodo();
+}
+
 function seleccionarProductoMain(item) {
-    document.getElementById('inputBusquedaMain').value = item.nombre;
-    document.getElementById('productoSelect').value = item.id;
+    const idArticulo = item.id;
+    if (idArticulo == null) {
+        alert("Artículo sin ID.");
+        return;
+    }
+    const key = item.idCatalogo || ("art_" + idArticulo);
+    document.getElementById('inputBusquedaMain').value = item.descripcion || item.nombre || "";
+    document.getElementById('productoSelect').value = key;
     document.getElementById('listaSugerenciasMain').style.display = 'none';
 
-    if(DATA[item.id]) {
-        cargarProductoInicial(item.id);
-    } else {
-        alert("Datos no cargados.");
-    }
+    const url = `${COSTO_URL}?action=insumos_desde_receta&id_articulo=${encodeURIComponent(idArticulo)}`;
+    fetchCosto(url)
+        .then(res => res.json())
+        .then(j => aplicarInsumosDesdeServidor(key, j, {
+            descripcionFallback: item.descripcion || item.nombre || ""
+        }))
+        .catch(e => alert("No se pudo cargar la receta: " + e));
 }
 
 function buscarEnBD(texto) {
@@ -304,6 +386,11 @@ function agregarPack() {
 
     const prodKey = document.getElementById('productoSelect').value;
     const productoData = DATA[prodKey];
+    if (!productoData) {
+        alert("Primero seleccione un producto terminado en la búsqueda superior.");
+        return;
+    }
+    if (!productoData.presentaciones) productoData.presentaciones = [];
 
     if(listaItemsActivos.length > 0) {
         const idUltimoEnvase = listaItemsActivos[listaItemsActivos.length - 1];
@@ -331,6 +418,11 @@ function agregarPack() {
 function procesarAgregar(nombreBuscado, capManual, cantPackManual, precioEnvaseBD, precioCajaBD = 0, codigo = "", origen = "AMBOS") {
     const prodKey = document.getElementById('productoSelect').value;
     const productoData = DATA[prodKey];
+    if (!productoData) {
+        alert("Primero seleccione un producto terminado en la búsqueda superior.");
+        return;
+    }
+    if (!productoData.presentaciones) productoData.presentaciones = [];
 
     let itemExistente = null;
     if (codigo) {
@@ -444,7 +536,10 @@ function actualizarTodo() {
     const nivelKey = document.getElementById('nivelSelect').value;
     const producto = DATA[prodKey];
 
-    if (!producto) return;
+    if (!prodKey || !producto) {
+        actualizarTodoVacio();
+        return;
+    }
 
     const nivelSelect = document.getElementById('nivelSelect');
     const nivelTexto = nivelSelect.options[nivelSelect.selectedIndex].text;
@@ -470,7 +565,7 @@ function actualizarTodo() {
     let htmlMP = "";
     let htmlGranel = "";
 
-    producto.insumos.forEach(i => {
+    (producto.insumos || []).forEach(i => {
         const kgLote = round6(i.cilL * i.dens);
         const subtotal = round6(kgLote * i.costoKg);
         totalLoteMp += subtotal;
@@ -487,7 +582,8 @@ function actualizarTodo() {
         htmlGranel += `<tr><td style="text-align:left;">1.000</td><td>S/ ${i.costoKg.toFixed(3)}</td><td>S/ ${subtotal.toFixed(2)}</td></tr>`;
     });
 
-    const costoLitroGranel = round6(totalLoteMp / 240);
+    const litrosRef = producto.litrosLoteBase && producto.litrosLoteBase > 0 ? producto.litrosLoteBase : 240;
+    const costoLitroGranel = round6(totalLoteMp / litrosRef);
     document.getElementById('bodyMP').innerHTML = htmlMP;
     document.getElementById('bodyGranel').innerHTML = htmlGranel;
 
@@ -496,7 +592,7 @@ function actualizarTodo() {
         <tr style="background-color:#eff6ff; font-weight:bold;"><td style="color:${BRAND.MAGENTA}; text-align:left;">GRANEL LITRO</td><td colspan="2" style="color:${BRAND.AZUL}">S/ ${costoLitroGranel.toFixed(2)}</td></tr>
     `;
 
-    const itemsVisibles = producto.presentaciones.filter(p => listaItemsActivos.includes(p.id));
+    const itemsVisibles = (producto.presentaciones || []).filter(p => listaItemsActivos.includes(p.id));
 
     let htmlEnv = `<thead>
         <tr>
@@ -706,6 +802,33 @@ function actualizarTodo() {
 
     htmlComp += "</tbody>";
     document.getElementById('tablaComparativa').innerHTML = htmlComp;
+}
+
+function procesarArchivo(input) {
+    const archivo = input.files[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = function(e) {
+        try {
+            const json = JSON.parse(e.target.result);
+            if (json.main) {
+                Object.keys(DATA).forEach(k => delete DATA[k]);
+                Object.assign(DATA, json.main);
+            }
+            if (json.prod_sel) {
+                document.getElementById('productoSelect').value = json.prod_sel;
+                const prod = DATA[json.prod_sel];
+                document.getElementById('inputBusquedaMain').value = prod?.nombreLargo || "";
+            }
+            if (json.items) listaItemsActivos = json.items;
+            actualizarTodo();
+            alert("Archivo JSON importado.");
+        } catch (err) {
+            alert("No se pudo leer el archivo.");
+        }
+        input.value = "";
+    };
+    lector.readAsText(archivo);
 }
 
 window.onload = inicializar;

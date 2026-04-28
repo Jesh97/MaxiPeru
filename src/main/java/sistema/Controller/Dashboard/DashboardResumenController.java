@@ -129,7 +129,7 @@ public class DashboardResumenController {
                 + "LEFT JOIN categoria c ON a.id_categoria = c.id_categoria "
                 + "LEFT JOIN unidad_medida u ON a.id_unidad = u.id_unidad "
                 + "WHERE COALESCE(a.stock_minimo,0) > 0 "
-                + "ORDER BY (a.cantidad / NULLIF(a.stock_minimo,0)) ASC, a.descripcion ASC LIMIT 40";
+                + "ORDER BY (a.cantidad / NULLIF(a.stock_minimo,0)) ASC, a.descripcion ASC LIMIT 9";
         try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 Map<String, Object> row = new LinkedHashMap<>();
@@ -155,7 +155,7 @@ public class DashboardResumenController {
                 + "WHERE il.fecha_vencimiento IS NOT NULL "
                 + "AND il.fecha_vencimiento > CURDATE() AND il.fecha_vencimiento <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) "
                 + "AND COALESCE(il.cantidad_disponible,0) > 0 "
-                + "ORDER BY il.fecha_vencimiento ASC LIMIT 30";
+                + "ORDER BY il.fecha_vencimiento ASC LIMIT 9";
         List<Map<String, Object>> rows = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {

@@ -4,6 +4,7 @@ import sistema.Ejecucion.Conexion;
 import sistema.repository.ProducionRepository;
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -390,7 +391,18 @@ public class ProduccionController implements ProducionRepository {
                     Map<String, Object> articulo = new LinkedHashMap<>();
                     try { articulo.put("id", rs.getInt("id")); } catch (SQLException e) { try { articulo.put("id", rs.getInt("id_articulo")); } catch (SQLException e2) { articulo.put("id", 0); } }
                     try { articulo.put("codigo", rs.getString("codigo")); } catch (SQLException e) { articulo.put("codigo", ""); }
-                    try { articulo.put("descripcion", rs.getString("descripcion")); } catch (SQLException e) { articulo.put("descripcion", "Artículo Desconocido"); }
+                    try {
+                        String desc = rs.getString("descripcion");
+                        if (desc == null || desc.isBlank()) {
+                            try { desc = rs.getString("nombre_generico"); } catch (SQLException e2) { desc = null; }
+                        }
+                        if (desc == null || desc.isBlank()) {
+                            desc = articulo.get("codigo") != null ? String.valueOf(articulo.get("codigo")) : "";
+                        }
+                        articulo.put("descripcion", desc != null && !desc.isBlank() ? desc : "Artículo Desconocido");
+                    } catch (SQLException e) {
+                        articulo.put("descripcion", "Artículo Desconocido");
+                    }
                     try { articulo.put("nombre_generico", rs.getString("nombre_generico")); } catch (SQLException e) { }
                     try { articulo.put("id_producto_maestro", rs.getInt("id_producto_maestro")); } catch (SQLException e) { }
                     try { articulo.put("id_unidad", rs.getInt("id_unidad")); } catch (SQLException e) { articulo.put("id_unidad", 0); }
@@ -414,6 +426,64 @@ public class ProduccionController implements ProducionRepository {
     public List<Map<String, Object>> buscarArticulosTerminados(String busqueda) throws SQLException {
         String sql = "{CALL sp_buscar_articulos_terminados(?)}";
         return ejecutarBusqueda(sql, busqueda);
+    }
+
+    @Override
+    public List<Map<String, Object>> buscarArticulosTerminadosConReceta(String busqueda) throws SQLException {
+        List<Map<String, Object>> articulos = new ArrayList<>();
+        if (busqueda == null) {
+            busqueda = "";
+        }
+        String patron = "%" + busqueda.trim() + "%";
+        String sql = "SELECT a.id AS id, a.descripcion AS descripcion, a.codigo AS codigo, "
+                + "pm.id_producto_maestro AS id_producto_maestro, pm.nombre_generico AS nombre_generico, "
+                + "a.cantidad AS cantidad, a.precio_compra AS precio_compra, a.precio_venta AS precio_venta, "
+                + "a.peso_unitario AS peso_unitario, a.aroma AS aroma, a.color AS color, a.densidad AS densidad, "
+                + "um.nombre AS unidad_nombre, a.id_unidad AS id_unidad "
+                + "FROM articulo a "
+                + "LEFT JOIN producto_maestro pm ON pm.id_producto_maestro = a.id_producto_maestro "
+                + "JOIN unidad_medida um ON um.id_unidad = a.id_unidad "
+                + "WHERE a.id_tipo_articulo = 1 AND a.id_producto_maestro IS NOT NULL "
+                + "AND (a.codigo LIKE ? OR a.descripcion LIKE ? OR IFNULL(pm.nombre_generico, '') LIKE ?) "
+                + "AND EXISTS (SELECT 1 FROM receta_producto rp "
+                + "  WHERE rp.id_producto_maestro = a.id_producto_maestro AND rp.estado = 'Activa' "
+                + "  AND EXISTS (SELECT 1 FROM detalle_receta dr WHERE dr.id_receta = rp.id_receta)) "
+                + "ORDER BY a.descripcion ASC LIMIT 20";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, patron);
+            ps.setString(2, patron);
+            ps.setString(3, patron);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> articulo = new LinkedHashMap<>();
+                    articulo.put("id", rs.getInt("id"));
+                    articulo.put("codigo", rs.getString("codigo") != null ? rs.getString("codigo") : "");
+                    String desc = rs.getString("descripcion");
+                    if (desc == null || desc.isBlank()) {
+                        desc = rs.getString("nombre_generico");
+                    }
+                    if (desc == null || desc.isBlank()) {
+                        desc = (String) articulo.get("codigo");
+                    }
+                    articulo.put("descripcion", desc != null && !desc.isBlank() ? desc : "Sin descripción");
+                    articulo.put("nombre_generico", rs.getString("nombre_generico"));
+                    articulo.put("id_producto_maestro", rs.getInt("id_producto_maestro"));
+                    if (rs.wasNull()) {
+                        articulo.put("id_producto_maestro", null);
+                    }
+                    articulo.put("id_unidad", rs.getInt("id_unidad"));
+                    articulo.put("unidad_nombre", rs.getString("unidad_nombre") != null ? rs.getString("unidad_nombre") : "");
+                    articulo.put("densidad", rs.getDouble("densidad"));
+                    articulo.put("capacidad", 0.0);
+                    articulo.put("unidad_capacidad", "");
+                    articulo.put("precio_compra", rs.getDouble("precio_compra"));
+                    articulo.put("cantidad", rs.getDouble("cantidad"));
+                    articulos.add(articulo);
+                }
+            }
+        }
+        return articulos;
     }
 
     @Override
