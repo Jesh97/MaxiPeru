@@ -679,33 +679,62 @@ function exportarDatos(format) {
 
     const headers = ["ID Producto", "Código", "Descripción", "Stock", "Precio Compra (S/)", "Precio Venta (S/)", "Peso Unitario (kg)", "Densidad", "Aroma", "Color", "Marca", "Categoría", "Tipo", "Unidad de Medida", "Abreviatura Unidad"];
     const sanitize = (value) => (value === null || value === undefined) ? '' : `"${String(value).replace(/"/g, '""')}"`;
+    const isXlsx = format === 'xlsx';
 
-    const csvRows = articulosFiltrados.map(articulo => {
+    const dataRows = articulosFiltrados.map(articulo => {
         const marca = articulo.marca?.nombre || getNombreCatalogoById('marca', articulo.idMarca, 'idMarca', 'nombre');
         const categoria = articulo.categoria?.nombre || getNombreCatalogoById('categoria', articulo.idCategoria, 'idCategoria', 'nombre');
         const tipo = articulo.tipoArticulo?.nombre || getNombreCatalogoById('tipo', articulo.idTipoArticulo, 'id', 'nombre');
         const unidad = catalogos['unidad'] ? catalogos['unidad'].find(u => u.idUnidad === (articulo.unidad?.idUnidad || articulo.idUnidad)) : {};
 
         return [
-            sanitize(articulo.idProducto), sanitize(articulo.codigo), sanitize(articulo.descripcion), sanitize(articulo.cantidad),
-            sanitize(articulo.precioCompra), sanitize(articulo.precioVenta), sanitize(articulo.pesoUnitario), sanitize(articulo.densidad),
-            sanitize(articulo.aroma), sanitize(articulo.color), sanitize(marca), sanitize(categoria), sanitize(tipo),
-            sanitize(unidad?.nombre || ''), sanitize(unidad?.abreviatura || '')
-        ].join(',');
+            articulo.idProducto ?? '',
+            articulo.codigo ?? '',
+            articulo.descripcion ?? '',
+            articulo.cantidad ?? '',
+            articulo.precioCompra ?? '',
+            articulo.precioVenta ?? '',
+            articulo.pesoUnitario ?? '',
+            articulo.densidad ?? '',
+            articulo.aroma ?? '',
+            articulo.color ?? '',
+            marca || '',
+            categoria || '',
+            tipo || '',
+            unidad?.nombre || '',
+            unidad?.abreviatura || ''
+        ];
     });
 
-    const csvContent = [headers.join(','), ...csvRows].join('\n');
-    const isXlsx = format === 'xlsx';
-    const mimeType = isXlsx ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv;charset=utf-8;';
-    const extension = isXlsx ? 'xlsx' : 'csv';
+    if (isXlsx) {
+        if (typeof XLSX === 'undefined') {
+            showCustomAlert('Error de Exportación', 'No se pudo cargar el generador de Excel (.xlsx).');
+            return;
+        }
 
-    const blob = new Blob(["\ufeff" + csvContent], { type: mimeType });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', `Inventario_${isXlsx ? 'Excel' : 'CSV'}_${new Date().toISOString().slice(0, 10)}.${extension}`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+        const worksheet = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario');
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const excelBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const excelLink = document.createElement('a');
+        excelLink.href = URL.createObjectURL(excelBlob);
+        excelLink.setAttribute('download', `Inventario_Excel_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        document.body.appendChild(excelLink);
+        excelLink.click();
+        document.body.removeChild(excelLink);
+        URL.revokeObjectURL(excelLink.href);
+    } else {
+        const csvRows = dataRows.map(row => row.map(sanitize).join(','));
+        const csvContent = [headers.join(','), ...csvRows].join('\n');
+        const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', `Inventario_CSV_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 
     showCustomAlert('Exportación Completa', `Se exportaron ${articulosFiltrados.length} artículos.`);
 }
