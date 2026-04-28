@@ -3,6 +3,9 @@ package sistema.Servlet.Gastos;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonPrimitive;
+
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,16 +19,26 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSerializer;
+import com.google.gson.JsonPrimitive;
+import java.lang.reflect.Type;
 
 @WebServlet("/GastoServlet")
 public class Gastoservlet extends HttpServlet {
 
     private final Gastocontroller gastoController = new Gastocontroller();
     private final ObjectMapper mapper = new ObjectMapper();
-    private final Gson gson = new Gson();
+    private final Gson gson = new GsonBuilder()
+    .registerTypeAdapter(LocalDate.class, (JsonSerializer<LocalDate>) 
+        (src, typeOfSrc, context) -> new JsonPrimitive(src.toString()))
+    .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) 
+        (src, typeOfSrc, context) -> new JsonPrimitive(src.toString()))
+    .create();
 
     private String readJsonBody(HttpServletRequest request) throws IOException {
         StringBuilder sb = new StringBuilder();
@@ -188,4 +201,22 @@ public class Gastoservlet extends HttpServlet {
 
         out.flush();
     }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+
+        try {
+            List<Gasto> lista = gastoController.listarTodos();
+
+            response.getWriter().write(gson.toJson(lista));
+
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(gson.toJson(
+                Map.of("success", false, "message", e.getMessage())
+            ));
+        }
+    }
+
 }

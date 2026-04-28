@@ -6,6 +6,7 @@ import sistema.Modelo.Gasto.Gasto;
 
 import java.sql.*;
 import java.text.Normalizer;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Gastocontroller {
@@ -46,14 +47,14 @@ public class Gastocontroller {
         }
 
         String sqlNombre = """
-            SELECT id
-            FROM proveedor
-            WHERE UPPER(razonSocial) = UPPER(?)
-               OR UPPER(razonSocial) LIKE CONCAT('%', UPPER(?), '%')
-            LIMIT 1
-            """;
+                SELECT id
+                FROM proveedor
+                WHERE UPPER(razonSocial) = UPPER(?)
+                   OR UPPER(razonSocial) LIKE CONCAT('%', UPPER(?), '%')
+                LIMIT 1
+                """;
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlNombre)) {
+                PreparedStatement ps = conn.prepareStatement(sqlNombre)) {
             ps.setString(1, valor);
             ps.setString(2, valor);
             try (ResultSet rs = ps.executeQuery()) {
@@ -75,11 +76,11 @@ public class Gastocontroller {
         // Solo autocrear cuando viene un RUC numerico (8 a 20 digitos).
         if (valor.matches("\\d{8,20}")) {
             String sql = """
-                INSERT INTO proveedor (ruc, razonSocial, direccion, telefono, correo, ciudad)
-                VALUES (?, ?, '', '', '', '')
-                """;
+                    INSERT INTO proveedor (ruc, razonSocial, direccion, telefono, correo, ciudad)
+                    VALUES (?, ?, '', '', '', '')
+                    """;
             try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                    PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, valor);
                 ps.setString(2, "PROVEEDOR " + valor);
                 ps.executeUpdate();
@@ -97,7 +98,7 @@ public class Gastocontroller {
     private int buscarProveedorIdPorRuc(String ruc) throws SQLException {
         String sql = "SELECT id FROM proveedor WHERE ruc = ? LIMIT 1";
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, ruc);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -110,13 +111,13 @@ public class Gastocontroller {
 
     private int buscarProveedorIdPorIdOPorRuc(String numero) throws SQLException {
         String sql = """
-            SELECT id
-            FROM proveedor
-            WHERE id = ? OR ruc = ?
-            LIMIT 1
-            """;
+                SELECT id
+                FROM proveedor
+                WHERE id = ? OR ruc = ?
+                LIMIT 1
+                """;
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             int idIngresado;
             try {
                 idIngresado = Integer.parseInt(numero);
@@ -141,14 +142,14 @@ public class Gastocontroller {
         }
 
         String sql = """
-            SELECT id_tipo_gasto
-            FROM tipo_gasto
-            WHERE UPPER(nombre) = UPPER(?)
-               OR UPPER(nombre) LIKE CONCAT('%', UPPER(?), '%')
-            LIMIT 1
-            """;
+                SELECT id_tipo_gasto
+                FROM tipo_gasto
+                WHERE UPPER(nombre) = UPPER(?)
+                   OR UPPER(nombre) LIKE CONCAT('%', UPPER(?), '%')
+                LIMIT 1
+                """;
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nombreTipo);
             ps.setString(2, nombreTipo);
             try (ResultSet rs = ps.executeQuery()) {
@@ -161,8 +162,8 @@ public class Gastocontroller {
         // Fallback tolerante para variaciones como "Gasto/Gastos", acentos, etc.
         String sqlAll = "SELECT id_tipo_gasto, nombre FROM tipo_gasto";
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlAll);
-             ResultSet rs = ps.executeQuery()) {
+                PreparedStatement ps = conn.prepareStatement(sqlAll);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String nombreDb = rs.getString("nombre");
                 String dbNormalizado = normalizarTexto(nombreDb);
@@ -189,7 +190,7 @@ public class Gastocontroller {
 
         String sqlInsert = "INSERT INTO tipo_gasto (nombre) VALUES (?)";
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement ps = conn.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, limpio);
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -217,14 +218,14 @@ public class Gastocontroller {
         String canonico = normalizarTipoComprobante(limpio);
 
         String sql = """
-            SELECT id
-            FROM tipo_comprobante
-            WHERE UPPER(nombre) = UPPER(?)
-               OR UPPER(nombre) LIKE CONCAT('%', UPPER(?), '%')
-            LIMIT 1
-            """;
+                SELECT id
+                FROM tipo_comprobante
+                WHERE UPPER(nombre) = UPPER(?)
+                   OR UPPER(nombre) LIKE CONCAT('%', UPPER(?), '%')
+                LIMIT 1
+                """;
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, limpio);
             ps.setString(2, limpio);
             try (ResultSet rs = ps.executeQuery()) {
@@ -236,8 +237,8 @@ public class Gastocontroller {
 
         String sqlAll = "SELECT id, nombre FROM tipo_comprobante";
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlAll);
-             ResultSet rs = ps.executeQuery()) {
+                PreparedStatement ps = conn.prepareStatement(sqlAll);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String db = rs.getString("nombre");
                 String dbCanon = normalizarTipoComprobante(db);
@@ -263,7 +264,7 @@ public class Gastocontroller {
         String nombreInsert = nombreComprobanteCanonicoParaBD(limpio);
         String sqlInsert = "INSERT INTO tipo_comprobante (nombre) VALUES (?)";
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement ps = conn.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, nombreInsert);
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -290,13 +291,13 @@ public class Gastocontroller {
 
         String canonica = normalizarUnidad(valor);
         String sql = """
-            SELECT id_unidad
-            FROM unidad_medida
-            WHERE UPPER(abreviatura) = UPPER(?)
-            LIMIT 1
-            """;
+                SELECT id_unidad
+                FROM unidad_medida
+                WHERE UPPER(abreviatura) = UPPER(?)
+                LIMIT 1
+                """;
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, valor);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -306,12 +307,12 @@ public class Gastocontroller {
         }
 
         String sqlFlexible = """
-            SELECT id_unidad, nombre, abreviatura
-            FROM unidad_medida
-            """;
+                SELECT id_unidad, nombre, abreviatura
+                FROM unidad_medida
+                """;
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlFlexible);
-             ResultSet rs = ps.executeQuery()) {
+                PreparedStatement ps = conn.prepareStatement(sqlFlexible);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String dbAbrev = rs.getString("abreviatura");
                 String dbNombre = rs.getString("nombre");
@@ -326,11 +327,11 @@ public class Gastocontroller {
         String nombreNueva = nombreUnidadCanonico(valor);
         String abrevNueva = abreviaturaUnidadCanonica(valor);
         String sqlInsert = """
-            INSERT INTO unidad_medida (nombre, abreviatura, factor_a_kg)
-            VALUES (?, ?, 1.00000000)
-            """;
+                INSERT INTO unidad_medida (nombre, abreviatura, factor_a_kg)
+                VALUES (?, ?, 1.00000000)
+                """;
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement ps = conn.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, nombreNueva);
             ps.setString(2, abrevNueva);
             ps.executeUpdate();
@@ -342,14 +343,14 @@ public class Gastocontroller {
         } catch (SQLException e) {
             // Si choca por UNIQUE, reintenta la búsqueda.
             String sqlRetry = """
-                SELECT id_unidad
-                FROM unidad_medida
-                WHERE UPPER(abreviatura) = UPPER(?)
-                   OR UPPER(nombre) = UPPER(?)
-                LIMIT 1
-                """;
+                    SELECT id_unidad
+                    FROM unidad_medida
+                    WHERE UPPER(abreviatura) = UPPER(?)
+                       OR UPPER(nombre) = UPPER(?)
+                    LIMIT 1
+                    """;
             try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sqlRetry)) {
+                    PreparedStatement ps = conn.prepareStatement(sqlRetry)) {
                 ps.setString(1, abrevNueva);
                 ps.setString(2, nombreNueva);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -363,12 +364,44 @@ public class Gastocontroller {
         return 0;
     }
 
+    public List<Gasto> listarTodos() throws SQLException {
+        List<Gasto> lista = new ArrayList<>();
+
+        String sql = "SELECT * FROM gasto ORDER BY id_gasto DESC";
+
+        try (Connection conn = getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Gasto g = new Gasto();
+
+                g.setIdGasto(rs.getInt("id_gasto"));
+                g.setIdProveedor(rs.getInt("id_proveedor"));
+                g.setIdTipoGasto(rs.getInt("id_tipo_gasto"));
+                g.setMotivo(rs.getString("motivo"));
+                g.setPlaca(rs.getString("placa"));
+                g.setFecha(rs.getDate("fecha").toLocalDate());
+                g.setIdMoneda(rs.getInt("id_moneda"));
+                g.setSubtotal(rs.getDouble("subtotal"));
+                g.setIgv(rs.getDouble("igv"));
+                g.setTotal(rs.getDouble("total"));
+                g.setObservacion(rs.getString("observacion"));
+                g.setTotalPeso(rs.getDouble("total_peso"));
+
+                lista.add(g);
+            }
+        }
+
+        return lista;
+    }
+
     public int resolverMonedaIdValida(int idMonedaSolicitada) throws SQLException {
         int idSolicitado = idMonedaSolicitada > 0 ? idMonedaSolicitada : 1;
 
         String sqlExiste = "SELECT id_moneda FROM moneda WHERE id_moneda = ? LIMIT 1";
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlExiste)) {
+                PreparedStatement ps = conn.prepareStatement(sqlExiste)) {
             ps.setInt(1, idSolicitado);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -379,27 +412,27 @@ public class Gastocontroller {
 
         String sqlPrimera = "SELECT id_moneda FROM moneda ORDER BY id_moneda ASC LIMIT 1";
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlPrimera);
-             ResultSet rs = ps.executeQuery()) {
+                PreparedStatement ps = conn.prepareStatement(sqlPrimera);
+                ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt("id_moneda");
             }
         }
 
         String sqlInsert = """
-            INSERT INTO moneda (id_moneda, nombre, simbolo)
-            VALUES (?, 'Soles', 'S/')
-            """;
+                INSERT INTO moneda (id_moneda, nombre, simbolo)
+                VALUES (?, 'Soles', 'S/')
+                """;
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
+                PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
             ps.setInt(1, idSolicitado);
             ps.executeUpdate();
             return idSolicitado;
         } catch (SQLException e) {
             // Si hubo conflicto al insertar, intenta recuperar una moneda existente.
             try (Connection conn = getConnection();
-                 PreparedStatement ps = conn.prepareStatement(sqlPrimera);
-                 ResultSet rs = ps.executeQuery()) {
+                    PreparedStatement ps = conn.prepareStatement(sqlPrimera);
+                    ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt("id_moneda");
                 }
@@ -460,45 +493,54 @@ public class Gastocontroller {
 
     private String nombreUnidadCanonico(String texto) {
         String t = normalizarUnidad(texto);
-        if (t.contains("kg")) return "Kilogramo";
-        if (t.contains("lt")) return "Litro";
-        if (t.contains("gl")) return "Galon";
-        if (t.contains("und")) return "Unidad";
+        if (t.contains("kg"))
+            return "Kilogramo";
+        if (t.contains("lt"))
+            return "Litro";
+        if (t.contains("gl"))
+            return "Galon";
+        if (t.contains("und"))
+            return "Unidad";
         return "Unidad";
     }
 
     private String abreviaturaUnidadCanonica(String texto) {
         String t = normalizarUnidad(texto);
-        if (t.contains("kg")) return "Kg";
-        if (t.contains("lt")) return "Lt";
-        if (t.contains("gl")) return "Gl";
-        if (t.contains("und")) return "Und";
+        if (t.contains("kg"))
+            return "Kg";
+        if (t.contains("lt"))
+            return "Lt";
+        if (t.contains("gl"))
+            return "Gl";
+        if (t.contains("und"))
+            return "Und";
         return "Und";
     }
 
     /**
      * Registra un gasto cabecera + sus detalles en una sola transacción.
+     * 
      * @return ID del gasto recién insertado.
      */
     public int registrarGasto(Gasto gasto, List<DetalleGasto> detalles) throws SQLException {
         String sqlGasto = """
-            INSERT INTO gasto
-                (id_proveedor, id_tipo_gasto, motivo, placa, fecha, id_moneda,
-                subtotal, igv, total, observacion, total_peso)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """;
+                INSERT INTO gasto
+                    (id_proveedor, id_tipo_gasto, motivo, placa, fecha, id_moneda,
+                    subtotal, igv, total, observacion, total_peso)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """;
 
         String sqlDetalle = """
-            INSERT INTO detalle_gasto
-                (id_gasto, descripcion, cantidad, id_unidad, peso_unitario, precio_unitario, subtotal, igv, total)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """;
+                INSERT INTO detalle_gasto
+                    (id_gasto, descripcion, cantidad, id_unidad, peso_unitario, precio_unitario, subtotal, igv, total)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """;
 
         String sqlDocumento = """
-            INSERT INTO documento_gasto
-                (id_gasto, id_tipo_comprobante, serie, correlativo, fecha_emision)
-            VALUES (?, ?, ?, ?, ?)
-            """;
+                INSERT INTO documento_gasto
+                    (id_gasto, id_tipo_comprobante, serie, correlativo, fecha_emision)
+                VALUES (?, ?, ?, ?, ?)
+                """;
 
         Connection conn = getConnection();
         try {
