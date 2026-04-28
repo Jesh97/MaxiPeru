@@ -309,7 +309,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── HISTORIAL ────────────────────────────────────────────────────────────
     document.getElementById('listaGastosBtn').addEventListener('click', () => {
-    window.location.href = '/GastoServlet?action=listar';
-
+    window.location.href = '/HTML/Gastos/listarGastos.html';
 });
 });
