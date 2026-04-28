@@ -35,7 +35,14 @@ function listarUsuarios() {
 function crearFilaUsuario(usuario) {
     const row = document.createElement("tr");
 
-    const estadoTexto = usuario.estado === 1 ? '<span class="badge bg-success">Habilitado</span>' : '<span class="badge bg-danger">PENDIENTE</span>';
+    let estadoTexto;
+    if (usuario.estado === 1) {
+        estadoTexto = '<span class="badge bg-success">Habilitado</span>';
+    } else if (usuario.estado === 3) {
+        estadoTexto = '<span class="badge bg-dark">Rechazado</span>';
+    } else {
+        estadoTexto = '<span class="badge bg-danger">Pendiente / Inactivo</span>';
+    }
     const permisoTexto = usuario.permiteAccesoIrrestricto === 1 ? '<span class="badge bg-success">SÍ (24/7)</span>' : '<span class="badge bg-danger">NO</span>';
 
     let botonesAccion = `
@@ -73,11 +80,15 @@ function crearFilaUsuario(usuario) {
                 </button>
             `;
         }
-    } else {
+    } else if (usuario.estado !== 3) {
         botonesAccion += `
             <button class="btn btn-success btn-sm me-1 mb-1"
                 onclick="aceptarUsuario(${usuario.id})" title="Aprobar Cuenta">
                 <i class="fas fa-check-circle"></i> Aceptar Cuenta
+            </button>
+            <button class="btn btn-outline-danger btn-sm me-1 mb-1"
+                onclick="rechazarUsuario(${usuario.id})" title="Rechazar solicitud">
+                <i class="fas fa-times-circle"></i> Rechazar
             </button>
         `;
     }
@@ -180,8 +191,38 @@ function aceptarUsuario(id) {
         method: 'POST'
     })
     .then(res => {
-        if (!res.ok) throw new Error('Error al aprobar la cuenta');
-        return res.text();
+        return res.text().then(text => {
+            if (!res.ok) {
+                throw new Error(text || 'Error al aprobar la cuenta');
+            }
+            return text;
+        });
+    })
+    .then(msg => {
+        alert(msg);
+        listarUsuarios();
+    })
+    .catch(err => {
+        alert('Hubo un problema: ' + err.message);
+    });
+}
+
+function rechazarUsuario(id) {
+    const u = listadoUsuariosCache.find(x => x.id === id);
+    const nombre = u ? u.nombre : 'este usuario';
+    const confirmMsg = '¿Rechazar la solicitud de ' + nombre + '? El registro se conservará con estado “Rechazado” (no podrá iniciar sesión).';
+    if (!confirm(confirmMsg)) return;
+
+    fetch(SERVLET_URL + `?accion=rechazar&id=${id}`, {
+        method: 'POST'
+    })
+    .then(res => {
+        return res.text().then(text => {
+            if (!res.ok) {
+                throw new Error(text || 'Error al rechazar la solicitud');
+            }
+            return text;
+        });
     })
     .then(msg => {
         alert(msg);

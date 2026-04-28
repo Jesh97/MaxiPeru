@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import sistema.Controller.Usuario.UsuarioController;
 import sistema.Modelo.Usuario.Usuario;
-import sistema.repository.UsuarioRepository;
 import java.io.IOException;
 
 @WebServlet("/login")
@@ -49,6 +48,10 @@ public class LoginServlet extends HttpServlet {
 
                 usuarioController.registrarAccion(usuario.getId(), "LOGIN_EXITO", "Inicio de sesión exitoso", request);
                 redirigirSegunRol(rol, request, response);
+
+            } else if (usuario.getEstado() == 3) {
+                usuarioController.registrarAccion(usuario.getId(), "LOGIN_FALLO_RECHAZADO", "Intento de login. Cuenta con solicitud rechazada.", request);
+                response.sendRedirect("index.html?error=rechazado");
 
             } else if (usuario.getEstado() == 0) {
                 usuarioController.registrarAccion(usuario.getId(), "LOGIN_FALLO_INACTIVO", "Intento de login. Cuenta deshabilitada o pendiente.", request);

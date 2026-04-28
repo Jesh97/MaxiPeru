@@ -48,6 +48,37 @@ BEGIN
     END IF;
 END$$
 
+-- Rechaza una solicitud pendiente: deja al usuario con estado = 3 (rechazado), sin eliminar el registro.
+-- No aplica a cuentas que ya tuvieron CUENTA_HABILITADA.
+DROP PROCEDURE IF EXISTS `sp_rechazar_solicitud_usuario`$$
+CREATE PROCEDURE sp_rechazar_solicitud_usuario (IN p_usuario_id INT, IN p_admin_principal_id INT)
+BEGIN
+    DECLARE v_username VARCHAR(45);
+    DECLARE v_admin_principal_username VARCHAR(45);
+    DECLARE v_admin_principal_rol VARCHAR(45);
+    DECLARE v_puede_rechazar TINYINT(1) DEFAULT 0;
+
+    SELECT username, rol INTO v_admin_principal_username, v_admin_principal_rol FROM usuario
+    WHERE id = p_admin_principal_id AND rol = 'administrador principal';
+
+    IF v_admin_principal_username IS NOT NULL THEN
+        SET v_username = NULL;
+        SET v_puede_rechazar = 0;
+        SELECT username INTO v_username FROM usuario
+        WHERE id = p_usuario_id AND estado = 0 LIMIT 1;
+        IF v_username IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM actividad_usuario
+                           WHERE usuario_id = p_usuario_id AND tipo = 'CUENTA_HABILITADA') THEN
+            SET v_puede_rechazar = 1;
+        END IF;
+        IF v_puede_rechazar = 1 THEN
+            UPDATE usuario SET estado = 3 WHERE id = p_usuario_id;
+            INSERT INTO actividad_usuario (usuario_id, tipo, descripcion)
+            VALUES (p_usuario_id, 'CUENTA_RECHAZADA', CONCAT('Cuenta rechazada. Solicitud de registro denegada (administrador principal: ', v_admin_principal_username, ').'));
+        END IF;
+    END IF;
+END$$
+
 DROP PROCEDURE IF EXISTS `sp_otorgar_acceso_irrestricto`$$
 CREATE PROCEDURE sp_otorgar_acceso_irrestricto (IN p_usuario_id INT, IN p_admin_principal_id INT)
 BEGIN
@@ -81,7 +112,7 @@ BEGIN
     SET v_hora_actual = CURRENT_TIME();
 
     IF v_usuario_id IS NOT NULL THEN
-        IF v_estado = 0 THEN SET v_puede_iniciar_sesion = 0;
+        IF v_estado = 0 OR v_estado = 3 THEN SET v_puede_iniciar_sesion = 0;
 
         ELSEIF v_rol = 'administrador principal' THEN SET v_puede_iniciar_sesion = 1;
 

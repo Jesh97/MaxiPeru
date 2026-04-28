@@ -15,23 +15,47 @@ import java.util.List;
 
 public class UsuarioController implements UsuarioRepository {
 
+    /**
+     * MySQL deja resultsets pendientes tras CALL hasta agotar getMoreResults();
+     * si no se hace, la misma conexión puede bloquearse al ejecutar otra sentencia.
+     */
+    private static void agotarResultadosProcedure(CallableStatement cs) throws SQLException {
+        while (cs.getMoreResults()) {
+            try (ResultSet rs = cs.getResultSet()) {
+                if (rs != null) {
+                    while (rs.next()) {
+                        // descartar filas adicionales
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public Usuario obtenerUsuario(String username, String password) {
         String sqlValidacion = "{CALL sp_validar_inicio_sesion(?, ?)}";
         int resultadoValidacion = -99;
         int usuarioIdDesdeSP = 0;
 
-        try (Connection conn = Conexion.obtenerConexion();
+        Connection connRaw = Conexion.obtenerConexion();
+        if (connRaw == null) {
+            return null;
+        }
+
+        try (Connection conn = connRaw;
              CallableStatement cs = conn.prepareCall(sqlValidacion)) {
 
             cs.setString(1, username);
             cs.setString(2, password);
 
-            try (ResultSet rs = cs.executeQuery()) {
-                if (rs.next()) {
-                    resultadoValidacion = rs.getInt("resultado_validacion");
+            if (cs.execute()) {
+                try (ResultSet rs = cs.getResultSet()) {
+                    if (rs != null && rs.next()) {
+                        resultadoValidacion = rs.getInt("resultado_validacion");
+                    }
                 }
             }
+            agotarResultadosProcedure(cs);
 
             if (resultadoValidacion == 1) {
                 String sqlDatos = "SELECT id, nombre, correo, username, password, rol, estado, permite_acceso_irrestricto FROM usuario WHERE username = ?";
@@ -52,7 +76,7 @@ public class UsuarioController implements UsuarioRepository {
                         return usuario;
                     }
                 }
-            } else if (resultadoValidacion == 0 || resultadoValidacion == -1) {
+            } else if (resultadoValidacion == -1) {
                 String sqlGetId = "SELECT id FROM usuario WHERE username = ?";
                 try (PreparedStatement psId = conn.prepareStatement(sqlGetId)) {
                     psId.setString(1, username);
@@ -61,11 +85,29 @@ public class UsuarioController implements UsuarioRepository {
                         usuarioIdDesdeSP = rsId.getInt("id");
                     }
                 }
-
                 Usuario estadoUsuario = new Usuario();
-                estadoUsuario.setEstado(resultadoValidacion);
+                estadoUsuario.setEstado(-1);
                 estadoUsuario.setId(usuarioIdDesdeSP);
                 return estadoUsuario;
+            } else if (resultadoValidacion == 0) {
+                // Sin login permitido: solo devolver el estado real si la contraseña coincide (mismo criterio que el SP);
+                // si no coincide, tratarlo como credenciales incorrectas (el SP solo devuelve 0 y no distingue).
+                String sqlEstado = "SELECT id, estado, password FROM usuario WHERE username = ?";
+                try (PreparedStatement ps = conn.prepareStatement(sqlEstado)) {
+                    ps.setString(1, username);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            String pwdBd = rs.getString("password");
+                            if (pwdBd == null || !pwdBd.equals(password)) {
+                                return null;
+                            }
+                            Usuario estadoUsuario = new Usuario();
+                            estadoUsuario.setId(rs.getInt("id"));
+                            estadoUsuario.setEstado(rs.getInt("estado"));
+                            return estadoUsuario;
+                        }
+                    }
+                }
             }
 
         } catch (SQLException e) {
@@ -123,6 +165,44 @@ public class UsuarioController implements UsuarioRepository {
         }
     }
 
+    /**
+     * Rechaza una solicitud de registro pendiente (marca estado = 3 en BD).
+     * @return true si se actualizó; false si no aplica o falló
+     */
+    public boolean rechazarSolicitudUsuario(int usuarioId, int adminPrincipalId) {
+        Connection connRaw = Conexion.obtenerConexion();
+        if (connRaw == null) {
+            return false;
+        }
+        String sql = "{CALL sp_rechazar_solicitud_usuario(?, ?)}";
+        try (Connection conn = connRaw;
+             CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setInt(1, usuarioId);
+            cs.setInt(2, adminPrincipalId);
+            if (cs.execute()) {
+                try (ResultSet rs = cs.getResultSet()) {
+                    if (rs != null) {
+                        while (rs.next()) { }
+                    }
+                }
+            }
+            agotarResultadosProcedure(cs);
+            String verificar = "SELECT estado FROM usuario WHERE id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(verificar)) {
+                ps.setInt(1, usuarioId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt("estado") == 3;
+                    }
+                }
+            }
+            return false;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean cambiarPermisoIrrestricto(int usuarioId, int adminPrincipalId, int permisoNuevo) {
         if (permisoNuevo == 1) {
             String sql = "{CALL sp_otorgar_acceso_irrestricto(?, ?)}";
@@ -152,7 +232,11 @@ public class UsuarioController implements UsuarioRepository {
 
     @Override
     public void registrarActividad(ActividadUsuario actividad) {
-        try (Connection conn = Conexion.obtenerConexion()) {
+        Connection conn = Conexion.obtenerConexion();
+        if (conn == null) {
+            return;
+        }
+        try (conn) {
             String sql = "INSERT INTO actividad_usuario (usuario_id, tipo, descripcion) VALUES (?, ?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, actividad.getUsuarioId());

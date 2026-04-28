@@ -25,7 +25,11 @@
       <version>4.13.1</version>
       <scope>test</scope>
     </dependency>
-
+  <dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-simple</artifactId>
+    <version>1.7.36</version>
+</dependency>
     <dependency>
       <groupId>jakarta.servlet</groupId>
       <artifactId>jakarta.servlet-api</artifactId>
@@ -105,12 +109,11 @@
       <version>12.4.2.jre11</version>
     </dependency>
 
-    <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-classic -->
+    <!-- Implementación SLF4J en tiempo de ejecución (Jetty y otras libs usan slf4j-api) -->
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <version>1.5.13</version>
-      <scope>test</scope>
     </dependency>
 
     <dependency>

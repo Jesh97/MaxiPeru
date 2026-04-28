@@ -74,7 +74,12 @@ public class ListarUsuario extends HttpServlet {
 
         switch (accion) {
             case "habilitar":
+            case "aceptar":
                 handleHabilitar(request, response, out, adminPrincipalId);
+                break;
+
+            case "rechazar":
+                handleRechazar(request, response, out, adminPrincipalId);
                 break;
 
             case "deshabilitar":
@@ -99,8 +104,15 @@ public class ListarUsuario extends HttpServlet {
 
     private int obtenerAdminPrincipalId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("userId") != null) {
+        if (session == null) {
+            return 0;
+        }
+        if (session.getAttribute("userId") != null) {
             return (int) session.getAttribute("userId");
+        }
+        Object usuarioAttr = session.getAttribute("usuario");
+        if (usuarioAttr instanceof Usuario) {
+            return ((Usuario) usuarioAttr).getId();
         }
         return 0;
     }
@@ -120,6 +132,27 @@ public class ListarUsuario extends HttpServlet {
             } else {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 out.print("Error al habilitar la cuenta. Verifique el rol del administrador principal.");
+            }
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            out.print("ID de usuario inválido.");
+        }
+    }
+
+    private void handleRechazar(HttpServletRequest request, HttpServletResponse response, PrintWriter out, int adminPrincipalId) throws IOException {
+        UsuarioController controller = new UsuarioController();
+        if (adminPrincipalId == 0) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            out.print("Acceso denegado. Se requiere un Administrador Principal activo.");
+            return;
+        }
+        try {
+            int usuarioId = Integer.parseInt(request.getParameter("id"));
+            if (controller.rechazarSolicitudUsuario(usuarioId, adminPrincipalId)) {
+                out.print("Solicitud rechazada. El usuario quedó con estado Rechazado (3) en el sistema.");
+            } else {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.print("No se pudo rechazar. Solo aplica a solicitudes pendientes de aprobación (nunca aceptadas).");
             }
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

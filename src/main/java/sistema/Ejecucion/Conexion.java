@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class Conexion {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/bd_maxiperu?useSSL=false&serverTimezone=UTC&cacheCallableStmts=false&useInformationSchema=true";
+    private static final String URL = "jdbc:mysql://localhost:3306/bd_maxiperu?useSSL=false&serverTimezone=UTC&cacheCallableStmts=false&useInformationSchema=true&connectTimeout=8000&socketTimeout=30000";
     private static final String USUARIO = "root";
     private static final String CONTRASENA = "";
 
@@ -17,7 +17,8 @@ public class Conexion {
 
             conexion = DriverManager.getConnection(URL, USUARIO, CONTRASENA);
         } catch (ClassNotFoundException | SQLException ex) {
-            System.out.println("Error en la conexión a la base de datos: " + ex.getMessage());
+            System.err.println("Error en la conexión a la base de datos: " + ex.getMessage());
+            ex.printStackTrace();
         }
         return conexion;
     }

@@ -49,6 +49,9 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'deshabilitado':
                 mensaje = 'Su cuenta está inactiva, deshabilitada o pendiente de aprobación. Contacte al administrador.';
                 break;
+            case 'rechazado':
+                mensaje = 'Su solicitud de registro fue rechazada. No puede acceder a la plataforma con esta cuenta. Contacte al administrador si cree que es un error.';
+                break;
             case 'credenciales':
                 mensaje = 'Credenciales inválidas. Verifique su usuario y contraseña e intente nuevamente.';
                 break;
