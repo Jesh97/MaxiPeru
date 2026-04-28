@@ -327,7 +327,7 @@ public class CompraServlet extends HttpServlet {
                         idCompra, serie, correlativo, tipoComprobante, compra.getIdProveedor(), compra.getTotal().doubleValue());
                 Auditoria.registrar(request, "CREACION", descripcion);
 
-                response.getWriter().write(gson.toJson(Map.of("success", true, "idCompra", idCompra, "message", "Compra registrada con ID: " + idCompra)));
+                response.getWriter().write(gson.toJson(Map.of("success", true, "idCompra", idCompra, "message", "Compra registrada exitosamente")));
                 return;
             }
 

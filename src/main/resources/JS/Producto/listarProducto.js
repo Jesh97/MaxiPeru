@@ -1,6 +1,6 @@
 const API_ARTICULOS = '/productos';
 const API_CATALOGO = '/CatalogoServlet';
-
+console.log("JS CARGADO");
 let articulos = [];
 const catalogos = {};
 const ARTICULOS_POR_PAGINA = 35;
@@ -356,6 +356,7 @@ function renderSugerencias(query) {
 function aplicarFiltros(idArticuloSeleccionado = null) {
     const marcaId = document.getElementById('filtroMarca').value;
     const categoriaId = document.getElementById('filtroCategoria').value;
+    const unidadId = document.getElementById('filtroUnidad').value;
     const tipoId = document.getElementById('filtroTipo').value;
     const busquedaQuery = document.getElementById('busquedaGeneral').value.toLowerCase().trim();
 
@@ -369,13 +370,16 @@ function aplicarFiltros(idArticuloSeleccionado = null) {
         document.getElementById('filtroTipo').value = '';
     } else {
         filtrados = articulos.filter(p => {
+            console.log(articulos[0]);
             const pMarcaId = String(p.marca?.idMarca || p.idMarca || '');
             const pCategoriaId = String(p.categoria?.idCategoria || p.idCategoria || '');
             const pTipoId = String(p.tipoArticulo?.id || p.idTipoArticulo || '');
+            const pUnidadId = String(p.unidad?.idUnidad || p.idUnidad || '');
 
             const categoryMatches = (marcaId === '' || pMarcaId === marcaId) &&
                 (categoriaId === '' || pCategoriaId === categoriaId) &&
-                (tipoId === '' || pTipoId === tipoId);
+                (tipoId === '' || pTipoId === tipoId) &&
+                (unidadId === '' || pUnidadId === unidadId);
 
             const textMatches = (busquedaQuery === '' ||
                 (p.codigo && p.codigo.toLowerCase().includes(busquedaQuery)) ||
