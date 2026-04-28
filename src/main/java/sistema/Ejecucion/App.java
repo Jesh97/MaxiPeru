@@ -6,6 +6,7 @@ import sistema.Servlet.Cliente.ClienteServlet;
 import sistema.Servlet.Compra.CompraServlet;
 import sistema.Servlet.Compra.EditarCompra;
 import sistema.Servlet.Compra.ListarCompra;
+import sistema.Servlet.Dashboard.DashboardResumenServlet;
 import sistema.Servlet.Gastos.Gastoservlet;
 import sistema.Servlet.Login.CerrarSesion;
 import sistema.Servlet.Login.GetSessionServlet;
@@ -55,6 +56,7 @@ public class App {
         webserver.addServlet(ProduccionServlet.class,"/ProduccionServlet");
         webserver.addServlet(GetSessionServlet.class,"/obtenerClaveSesion");
         webserver.addServlet(Gastoservlet.class,"/GastoServlet");
+        webserver.addServlet(DashboardResumenServlet.class,"/dashboardResumen");
 
         URL myURL = new URL("http://localhost:8081");
         System.out.println("*********************************************************");

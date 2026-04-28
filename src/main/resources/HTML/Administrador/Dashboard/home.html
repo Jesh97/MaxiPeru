@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inicio | MaxiPerú</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../../../CSS/Dashboard/home-inicio.css" />
+</head>
+<body>
+<div class="home-inicio">
+    <div id="home-aviso" class="alert alert-warning" style="display:none;" role="status"></div>
+    <div id="home-error" class="alert alert-danger" style="display:none;" role="alert"></div>
+    <div id="home-main">
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="valor" id="kpi-critico">—</div>
+                <div class="titulo">Stock crítico</div>
+                <div class="sub" id="kpi-critico-sub"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="valor" id="kpi-bajo">—</div>
+                <div class="titulo">Stock bajo</div>
+                <div class="sub" id="kpi-bajo-sub"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="valor" id="kpi-lotes">—</div>
+                <div class="titulo">Lotes por vencer</div>
+                <div class="sub" id="kpi-lotes-sub"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="valor" id="kpi-ventas">—</div>
+                <div class="titulo">Ventas del mes</div>
+                <div class="sub" id="kpi-ventas-sub"></div>
+            </div>
+        </div>
+        <div class="panels">
+            <div class="panel">
+                <h3>Stock mínimo alcanzado</h3>
+                <div class="table-wrap">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Artículo</th>
+                                <th>Actual</th>
+                                <th>Mínimo</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-stock"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="panel">
+                <h3>Lotes por vencer</h3>
+                <div id="lista-lotes"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../../../JS/Dashboard/homeDashboard.js"></script>
+</body>
+</html>

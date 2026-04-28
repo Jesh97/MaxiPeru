@@ -108,6 +108,7 @@ CREATE TABLE articulo (
     presentacion_detalle VARCHAR(100) DEFAULT NULL,
     descripcion VARCHAR(255) NOT NULL UNIQUE,
     cantidad DECIMAL(12,8) DEFAULT 0.00000,
+    stock_minimo DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
     precio_compra DECIMAL(12,2) DEFAULT 0.00,
     precio_venta DECIMAL(12,2) DEFAULT 0.00,
     peso_unitario DECIMAL(10,3) DEFAULT 0.000,
